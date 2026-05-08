@@ -315,7 +315,7 @@
         const themes = state.themes || [{ bg: "FFFFFF" }, { bg: "000000" }];
         return {
           name: state.name || "ctm316",
-          colors: (state.colors || []).map((g) => ({ name: g.name, shortName: g.shortName, value: g.value })),
+          colors: (state.colors || []).map((g) => ({ name: g.name, shortName: g.shortName, value: g.value, solverMode: g.solverMode || "natural" })),
           roles: (state.roles || []).map((role) => ({
             name: role.name,
             shortName: role.shortName || role.name.substring(0, 2).toLowerCase(),
@@ -323,6 +323,7 @@
             spread: Math.max(1, parseInt(role.spread) || 1),
             baseIndex: role.baseIndex !== undefined ? parseInt(role.baseIndex) : Math.floor(count / 2),
             darkBaseIndex: role.darkBaseIndex !== undefined ? parseInt(role.darkBaseIndex) : undefined,
+            variations: role.variations || { weakest: 1.5, weak: 3.0, base: 4.5, strong: 7.0, stronger: 12.0 },
           })),
           colorSteps: count,
           rampType: state.rampType || "Natural",
