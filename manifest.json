@@ -2,12 +2,12 @@
   "name": "ctm316 v1.0",
   "id": "1634129071803950106",
   "api": "1.0.0",
-  "main": "scripts.js",
+  "main": "Output_DoNotEdit/scripts.js",
   "capabilities": [],
   "enableProposedApi": false,
   "documentAccess": "dynamic-page",
   "editorType": ["figma"],
-  "ui": "ui.html",
+  "ui": "Output_DoNotEdit/ui.html",
   "networkAccess": {
     "allowedDomains": ["https://cdn.tailwindcss.com", "https://fonts.googleapis.com", "https://fonts.gstatic.com"]
   }
