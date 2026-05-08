@@ -45,7 +45,7 @@ const VariableManager = {
 
     const colorName = (appState && appState.colorsCollectionName) || "_Colors";
     const contextualName = (appState && appState.contextualCollectionName) || "contextual";
-    const skipRamps = config.skipColorRamps || false;
+    const skipRamps = config.skipColorRamps || config.roleMapping === "Direct Contrast";
     const tokenGrouping = config.tokenGrouping || "color";
     const useShortColor = config.useShortColorNames || false;
     const useShortRole = config.useShortRoleNames || false;

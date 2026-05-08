@@ -164,26 +164,28 @@ function variableMaker(config) {
   };
   const errors = { critical: [], warnings: [], notices: [] };
 
-  for (const color of colors) {
-    const colorRamp = colorRampMaker(color.value, rampLength, config.rampType);
-    const ramp = Object.create(null);
-    clrRampsCollection[color.name] = ramp;
+  if (config.roleMapping !== "Direct Contrast") {
+    for (const color of colors) {
+      const colorRamp = colorRampMaker(color.value, rampLength, config.rampType);
+      const ramp = Object.create(null);
+      clrRampsCollection[color.name] = ramp;
 
-    for (let wIdx = 0; wIdx < rampLength; wIdx++) {
-      const weight = stepNames[wIdx];
-      const value = normalizeHex(colorRamp[wIdx]);
-      const lightContrast = contrastRatio(value, lightBg);
-      const darkContrast = contrastRatio(value, darkBg);
+      for (let wIdx = 0; wIdx < rampLength; wIdx++) {
+        const weight = stepNames[wIdx];
+        const value = normalizeHex(colorRamp[wIdx]);
+        const lightContrast = contrastRatio(value, lightBg);
+        const darkContrast = contrastRatio(value, darkBg);
 
-      ramp[weight] = {
-        value,
-        stepName: `${color.name}-${weight}`,
-        shortName: `${color.shortName}-${weight}`,
-        contrast: {
-          light: { ratio: lightContrast, rating: contrastRating(value, lightBg) },
-          dark: { ratio: darkContrast, rating: contrastRating(value, darkBg) },
-        },
-      };
+        ramp[weight] = {
+          value,
+          stepName: `${color.name}-${weight}`,
+          shortName: `${color.shortName}-${weight}`,
+          contrast: {
+            light: { ratio: lightContrast, rating: contrastRating(value, lightBg) },
+            dark: { ratio: darkContrast, rating: contrastRating(value, darkBg) },
+          },
+        };
+      }
     }
   }
 

@@ -700,134 +700,137 @@
         const stepNames = config.colorStepNames || seriesMaker(rampLength);
         const lightBg = normalizeHex(config.themes[0].bg) || "#FFFFFF";
         const darkBg = normalizeHex(config.themes[1].bg) || "#000000";
+        const isDirectContrast = config.roleMapping === "Direct Contrast";
         const clrRamps = Object.create(null);
         const tokens = { light: Object.create(null), dark: Object.create(null) };
         const errors = { critical: [], warnings: [], notices: [] };
 
-        for (const color of colors) {
-          const colorRamp = colorRampMaker(color.value, rampLength, config.rampType);
-          const ramp = Object.create(null);
-          clrRamps[color.name] = ramp;
-          for (let i = 0; i < rampLength; i++) {
-            const weight = stepNames[i];
-            const value = normalizeHex(colorRamp[i]) || "#000000";
-            ramp[weight] = {
-              value,
-              stepName: `${color.name}-${weight}`,
-              shortName: `${color.shortName}-${weight}`,
-              contrast: {
-                light: { ratio: contrastRatio(value, lightBg), rating: contrastRating(value, lightBg) },
-                dark: { ratio: contrastRatio(value, darkBg), rating: contrastRating(value, darkBg) },
-              },
-            };
+        // Build color ramps — skipped entirely for Direct Contrast
+        if (!isDirectContrast) {
+          for (const color of colors) {
+            const colorRamp = colorRampMaker(color.value, rampLength, config.rampType);
+            const ramp = Object.create(null);
+            clrRamps[color.name] = ramp;
+            for (let i = 0; i < rampLength; i++) {
+              const weight = stepNames[i];
+              const value = normalizeHex(colorRamp[i]) || "#000000";
+              ramp[weight] = {
+                value,
+                stepName: `${color.name}-${weight}`,
+                shortName: `${color.shortName}-${weight}`,
+                contrast: {
+                  light: { ratio: contrastRatio(value, lightBg), rating: contrastRating(value, lightBg) },
+                  dark: { ratio: contrastRatio(value, darkBg), rating: contrastRating(value, darkBg) },
+                },
+              };
+            }
           }
         }
 
         for (const mode of config.themes) {
           const modeName = mode.name.toLowerCase();
+          const bgHex = modeName === "dark" ? darkBg : lightBg;
           for (const color of colors) {
             const clrName = color.name;
             const conGroup = Object.create(null);
             tokens[modeName][clrName] = conGroup;
             const roleNames = roles.map((_, i) => i);
 
-            for (const roleName of roleNames) {
-              const role = roles[roleName];
-              const spread = role.spread;
-              const conRole = Object.create(null);
-              conGroup[roleName] = conRole;
-              const cEnd = clrRamps[clrName][stepNames[rampLength - 1]].contrast[modeName].ratio;
-              const cStart = clrRamps[clrName][stepNames[0]].contrast[modeName].ratio;
-              const growthDir = cEnd > cStart ? 1 : -1;
-              const maxOffset = 2 * spread;
-              const minAllowed = maxOffset;
-              const maxAllowed = rampLength - 1 - maxOffset;
+            if (isDirectContrast) {
+              const variationKeys = config.roleStepNames || ["weakest", "weak", "base", "strong", "stronger"];
+              for (const roleName of roleNames) {
+                const role = roles[roleName];
+                const conRole = Object.create(null);
+                conGroup[roleName] = conRole;
+                const variationTargets = role.variations || { weakest: 1.5, weak: 3.0, base: 4.5, strong: 7.0, stronger: 12.0 };
+                for (let vi = 0; vi < variationKeys.length; vi++) {
+                  const variation = variationKeys[vi];
+                  const targetContrast = parseFloat(variationTargets[variation]) || 4.5;
+                  const solved = solveColorForContrast(color.value, targetContrast, bgHex, color.solverMode || "natural");
+                  if (solved.warning) errors.warnings.push({ color: clrName, role: role.name, variation, theme: modeName, warning: solved.warning });
+                  conRole[variation] = {
+                    tknName: `${clrName}-${role.name}-${variation}`,
+                    color: clrName, role: role.name, variation,
+                    tknRef: null,
+                    value: solved.hex,
+                    contrast: { ratio: solved.achievedContrast, rating: contrastRating(solved.hex, bgHex) },
+                    contrastTarget: targetContrast,
+                    achievedContrast: solved.achievedContrast,
+                    isAdjusted: solved.clipped || solved.achievedContrast > targetContrast + 0.3,
+                  };
+                }
+              }
+            } else {
+              for (const roleName of roleNames) {
+                const role = roles[roleName];
+                const spread = role.spread;
+                const conRole = Object.create(null);
+                conGroup[roleName] = conRole;
+                const cEnd = clrRamps[clrName][stepNames[rampLength - 1]].contrast[modeName].ratio;
+                const cStart = clrRamps[clrName][stepNames[0]].contrast[modeName].ratio;
+                const growthDir = cEnd > cStart ? 1 : -1;
+                const maxOffset = 2 * spread;
+                const minAllowed = maxOffset;
+                const maxAllowed = rampLength - 1 - maxOffset;
 
-              let baseIdx;
-              if (config.roleMapping === "Manual Base Index") {
-                const isDarkMode = modeName === "dark";
-                const baseIndexSource = isDarkMode && role.darkBaseIndex !== undefined ? role.darkBaseIndex : role.baseIndex;
-                baseIdx = baseIndexSource !== undefined ? parseInt(baseIndexSource) : rampLength >> 1;
-              } else {
-                baseIdx = -1;
-                const isDark = modeName === "dark";
-                const minC = parseFloat(role.minContrast);
-                if (isDark) {
-                  for (let i = rampLength - 1; i >= 0; i--) {
-                    if ((clrRamps[clrName][stepNames[i]].contrast[modeName].ratio || 0) >= minC) {
-                      baseIdx = i;
-                      break;
-                    }
-                  }
+                let baseIdx;
+                if (config.roleMapping === "Manual Base Index") {
+                  const isDarkMode = modeName === "dark";
+                  const baseIndexSource = isDarkMode && role.darkBaseIndex !== undefined ? role.darkBaseIndex : role.baseIndex;
+                  baseIdx = baseIndexSource !== undefined ? parseInt(baseIndexSource) : rampLength >> 1;
                 } else {
-                  for (let i = 0; i < rampLength; i++) {
-                    if ((clrRamps[clrName][stepNames[i]].contrast[modeName].ratio || 0) >= minC) {
-                      baseIdx = i;
-                      break;
+                  baseIdx = -1;
+                  const isDark = modeName === "dark";
+                  const minC = parseFloat(role.minContrast);
+                  if (isDark) {
+                    for (let i = rampLength - 1; i >= 0; i--) {
+                      if ((clrRamps[clrName][stepNames[i]].contrast[modeName].ratio || 0) >= minC) { baseIdx = i; break; }
+                    }
+                  } else {
+                    for (let i = 0; i < rampLength; i++) {
+                      if ((clrRamps[clrName][stepNames[i]].contrast[modeName].ratio || 0) >= minC) { baseIdx = i; break; }
                     }
                   }
-                }
-                if (baseIdx === -1) {
-                  let bestIdx = 0,
-                    maxC = -1;
-                  for (let i = 0; i < rampLength; i++) {
-                    const c = clrRamps[clrName][stepNames[i]].contrast[modeName].ratio || 0;
-                    if (c > maxC) {
-                      bestIdx = i;
-                      maxC = c;
+                  if (baseIdx === -1) {
+                    let bestIdx = 0, maxC = -1;
+                    for (let i = 0; i < rampLength; i++) {
+                      const c = clrRamps[clrName][stepNames[i]].contrast[modeName].ratio || 0;
+                      if (c > maxC) { bestIdx = i; maxC = c; }
                     }
+                    baseIdx = bestIdx;
+                    errors.critical.push({ color: clrName, role: roleName, theme: modeName, error: `Cannot meet minimum contrast ${minC}.` });
                   }
-                  baseIdx = bestIdx;
-                  errors.critical.push({ color: clrName, role: roleName, theme: modeName, error: `Cannot meet minimum contrast ${minC}.` });
                 }
-              }
 
-              let adjustedBase = false;
-              if (minAllowed > maxAllowed) {
-                baseIdx = Math.floor((rampLength - 1) / 2);
-                adjustedBase = true;
-              } else {
-                if (baseIdx < minAllowed) {
-                  baseIdx = minAllowed;
-                  adjustedBase = true;
+                let adjustedBase = false;
+                if (minAllowed > maxAllowed) { baseIdx = Math.floor((rampLength - 1) / 2); adjustedBase = true; }
+                else {
+                  if (baseIdx < minAllowed) { baseIdx = minAllowed; adjustedBase = true; }
+                  if (baseIdx > maxAllowed) { baseIdx = maxAllowed; adjustedBase = true; }
                 }
-                if (baseIdx > maxAllowed) {
-                  baseIdx = maxAllowed;
-                  adjustedBase = true;
-                }
-              }
-              if (adjustedBase) errors.warnings.push({ color: clrName, role: roleName, theme: modeName, warning: `Base index clamped to ${baseIdx} due to spread constraints.` });
+                if (adjustedBase) errors.warnings.push({ color: clrName, role: roleName, theme: modeName, warning: `Base index clamped to ${baseIdx} due to spread constraints.` });
 
-              const offsets = [
-                { key: "weakest", offset: -2 * spread },
-                { key: "weak", offset: -spread },
-                { key: "base", offset: 0 },
-                { key: "strong", offset: spread },
-                { key: "stronger", offset: 2 * spread },
-              ];
-
-              for (const { key: variation, offset } of offsets) {
-                let idx = baseIdx + offset * growthDir;
-                let adjusted = false;
-                if (idx < 0) {
-                  idx = 0;
-                  adjusted = true;
-                } else if (idx >= rampLength) {
-                  idx = rampLength - 1;
-                  adjusted = true;
+                const offsets = [
+                  { key: "weakest", offset: -2 * spread }, { key: "weak", offset: -spread },
+                  { key: "base", offset: 0 },
+                  { key: "strong", offset: spread }, { key: "stronger", offset: 2 * spread },
+                ];
+                for (const { key: variation, offset } of offsets) {
+                  let idx = baseIdx + offset * growthDir;
+                  let adjusted = false;
+                  if (idx < 0) { idx = 0; adjusted = true; }
+                  else if (idx >= rampLength) { idx = rampLength - 1; adjusted = true; }
+                  const data = clrRamps[clrName][stepNames[idx]];
+                  conRole[variation] = {
+                    tknName: `${clrName}-${role.name}-${variation}`,
+                    color: clrName, role: role.name, variation,
+                    tknRef: data.stepName,
+                    value: data.value,
+                    contrast: { ratio: data.contrast[modeName].ratio, rating: data.contrast[modeName].rating },
+                    isAdjusted: adjusted,
+                  };
+                  if (adjusted) errors.warnings.push({ color: clrName, role: roleName, variation, theme: modeName, warning: `Variation '${variation}' clamped due to overflow.` });
                 }
-                const data = clrRamps[clrName][stepNames[idx]];
-                conRole[variation] = {
-                  tknName: `${clrName}-${role.name}-${variation}`,
-                  color: clrName,
-                  role: role.name,
-                  variation,
-                  tknRef: data.stepName,
-                  value: data.value,
-                  contrast: { ratio: data.contrast[modeName].ratio, rating: data.contrast[modeName].rating },
-                  isAdjusted: adjusted,
-                };
-                if (adjusted) errors.warnings.push({ color: clrName, role: roleName, variation, theme: modeName, warning: `Variation '${variation}' clamped due to overflow.` });
               }
             }
           }
@@ -1272,6 +1275,11 @@
             if (r) r.classList.toggle("active", isRole);
           }
         });
+        // Hide ramp-specific settings when Direct Contrast is active
+        const isDirectContrast = appState.roleMapping === "Direct Contrast";
+        const rampSection = document.getElementById("settings-ramp-section");
+        if (rampSection) rampSection.classList.toggle("hidden", isDirectContrast);
+
         // Update settings-sheet name format preview
         const sampleColor = appState.colors && appState.colors[0];
         const sampleRole = appState.roles && appState.roles[0];
@@ -1405,41 +1413,41 @@
         // Color Ramps Tab
         const colorEl = document.getElementById("preview-colors");
         colorEl.innerHTML = "";
-        for (const [colorName, ramp] of Object.entries(result.colorRamps)) {
-          const baseColor = ramp[Object.keys(ramp)[Math.floor(Object.keys(ramp).length / 2)]].value;
-          const section = document.createElement("div");
-          section.className = "grid grid-cols-[28px_auto_1fr] grid-rows-[28px_auto] items-center gap-2 mb-2";
-          section.innerHTML = `
-              <div class="size-6 rounded-md bg-[${baseColor}]"></div>
-              <div class="text-[12px] font-bold">${colorName}</div>
-              <div class="flex items-center gap-2 text-[12px] font-mono">
-                <span id="spec-num-${colorName}"></span>
-                <span id="spec-hex-${colorName}" class="font-bold"></span>
-                <span id="spec-info-${colorName}" class="ml-auto"></span>
-              </div>
-              <div id="preview-spectrum" class="col-span-3 flex w-full h-20 rounded-[10px] overflow-hidden [box-shadow:0_10px_30px_#0000001f] border border-[#8888881A] cursor-crosshair"></div>
-              `;
-
-          const spectrum = section.querySelector("#preview-spectrum");
-          const hexDisplay = section.querySelector(`#spec-hex-${colorName}`);
-          const infoDisplay = section.querySelector(`#spec-info-${colorName}`);
-          const numDisplay = section.querySelector(`#spec-num-${colorName}`);
-
-          for (const [weight, data] of Object.entries(ramp)) {
-            const step = document.createElement("div");
-            step.className = `preview-swatch bg-[${data.value}] flex-1 h-full hover:flex-[4] hover:z-10 hover:[transform:scaleY(1.15)] hover:rounded-[8px] hover:[box-shadow:0_15px_40px_#00000044]`;
-            step.setAttribute("data-copy", data.value);
-
-            step.onmouseenter = () => {
-              hexDisplay.textContent = data.value;
-              numDisplay.textContent = weight;
-              infoDisplay.textContent = `☀️ ${data.contrast.light.ratio} | ${data.contrast.dark.ratio} 🌙`;
-              hexDisplay.style.color = data.value;
-            };
-
-            spectrum.appendChild(step);
+        if (Object.keys(result.colorRamps).length === 0) {
+          colorEl.innerHTML = `<p class="text-[12px] text-[var(--text-muted)] px-1 py-4 text-center">Color ramps are not generated in Direct Contrast mode.<br>Tokens are solved directly per role variation.</p>`;
+        } else {
+          for (const [colorName, ramp] of Object.entries(result.colorRamps)) {
+            const baseColor = ramp[Object.keys(ramp)[Math.floor(Object.keys(ramp).length / 2)]].value;
+            const section = document.createElement("div");
+            section.className = "grid grid-cols-[28px_auto_1fr] grid-rows-[28px_auto] items-center gap-2 mb-2";
+            section.innerHTML = `
+                <div class="size-6 rounded-md bg-[${baseColor}]"></div>
+                <div class="text-[12px] font-bold">${colorName}</div>
+                <div class="flex items-center gap-2 text-[12px] font-mono">
+                  <span id="spec-num-${colorName}"></span>
+                  <span id="spec-hex-${colorName}" class="font-bold"></span>
+                  <span id="spec-info-${colorName}" class="ml-auto"></span>
+                </div>
+                <div id="preview-spectrum" class="col-span-3 flex w-full h-20 rounded-[10px] overflow-hidden [box-shadow:0_10px_30px_#0000001f] border border-[#8888881A] cursor-crosshair"></div>
+                `;
+            const spectrum = section.querySelector("#preview-spectrum");
+            const hexDisplay = section.querySelector(`#spec-hex-${colorName}`);
+            const infoDisplay = section.querySelector(`#spec-info-${colorName}`);
+            const numDisplay = section.querySelector(`#spec-num-${colorName}`);
+            for (const [weight, data] of Object.entries(ramp)) {
+              const step = document.createElement("div");
+              step.className = `preview-swatch bg-[${data.value}] flex-1 h-full hover:flex-[4] hover:z-10 hover:[transform:scaleY(1.15)] hover:rounded-[8px] hover:[box-shadow:0_15px_40px_#00000044]`;
+              step.setAttribute("data-copy", data.value);
+              step.onmouseenter = () => {
+                hexDisplay.textContent = data.value;
+                numDisplay.textContent = weight;
+                infoDisplay.textContent = `☀️ ${data.contrast.light.ratio} | ${data.contrast.dark.ratio} 🌙`;
+                hexDisplay.style.color = data.value;
+              };
+              spectrum.appendChild(step);
+            }
+            colorEl.appendChild(section);
           }
-          colorEl.appendChild(section);
         }
 
         // Theme tabs helper
@@ -1459,7 +1467,8 @@
 
           for (const [colorName, roles] of Object.entries(themeTokens)) {
             const ramp = result.colorRamps[colorName];
-            const baseColor = ramp ? ramp[Object.keys(ramp)[Math.floor(Object.keys(ramp).length / 2)]].value : "#888";
+            const srcColor = (appState.colors.find((c) => c.name === colorName) || {}).value || "888888";
+            const baseColor = ramp ? ramp[Object.keys(ramp)[Math.floor(Object.keys(ramp).length / 2)]].value : `#${srcColor.replace(/^#/, "")}`;
 
             const section = document.createElement("div");
             section.innerHTML = `
@@ -1865,7 +1874,7 @@
         const existing = lastCollectionCheckResult;
         const colorName = appState.colorsCollectionName || "_Colors";
         const ctxName = appState.contextualCollectionName || "contextual";
-        const skipRamps = appState.skipColorRamps;
+        const skipRamps = appState.skipColorRamps || appState.roleMapping === "Direct Contrast";
         const tg = appState.tokenGrouping || "color";
         const shortC = appState.useShortColorNames;
         const shortR = appState.useShortRoleNames;
@@ -1941,8 +1950,11 @@
             summaryRow("System", appState.name || "—"),
             summaryRow("Colors", `${appState.colors.length}: ${colorList}`),
             summaryRow("Roles", `${appState.roles.length}: ${roleList}`),
-            summaryRow("Color Steps", String(appState.colorSteps || 25)),
-            summaryRow("Ramp Type", appState.rampType || "Natural"),
+            summaryRow("Role Mapping", appState.roleMapping || "Contrast Based"),
+            ...(appState.roleMapping === "Direct Contrast" ? [] : [
+              summaryRow("Color Steps", String(appState.colorSteps || 25)),
+              summaryRow("Ramp Type", appState.rampType || "Natural"),
+            ]),
           ].join("");
         }
 

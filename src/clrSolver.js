@@ -19,9 +19,9 @@
 // A warning is attached when the overshoot exceeds OVERSHOOT_WARN (0.3).
 
 const SOLVER_MODES = ["natural", "saturated", "luminance", "hue-locked", "chroma-maximized"];
-const OVERSHOOT_WARN = 0.3;   // warn if achieved > target + this
-const MAX_ITER       = 60;    // binary search iterations
-const L_EPS          = 1e-5;  // lightness convergence threshold
+const OVERSHOOT_WARN = 0.3; // warn if achieved > target + this
+const MAX_ITER = 60; // binary search iterations
+const L_EPS = 1e-5; // lightness convergence threshold
 
 // ---------------------------------------------------------------------------
 // WCAG relative luminance from linear-light RGB components (already linear).
@@ -57,11 +57,13 @@ function _inGamutOklch(L, C, H) {
 // Clamp C downward until in-gamut at the given (L, H). Returns max in-gamut C.
 function _maxChromaAtLH(L, H, startC) {
   if (startC <= 0.001) return 0;
-  let lo = 0, hi = startC;
+  let lo = 0,
+    hi = startC;
   for (let i = 0; i < 40; i++) {
     if (hi - lo < 0.0005) break;
     const mid = (lo + hi) / 2;
-    if (_inGamutOklch(L, mid, H)) lo = mid; else hi = mid;
+    if (_inGamutOklch(L, mid, H)) lo = mid;
+    else hi = mid;
   }
   return lo;
 }
@@ -115,7 +117,10 @@ function _searchL(bgLum, targetContrast, lo, hi, getHexAtL) {
     if (hi - lo < L_EPS) break;
     const mid = (lo + hi) / 2;
     const hex = getHexAtL(mid);
-    if (!hex) { lo = mid; continue; }
+    if (!hex) {
+      lo = mid;
+      continue;
+    }
     const midLum = _lumOfHex(hex);
     const contrast = _wcagContrast(midLum, bgLum);
 
@@ -124,12 +129,14 @@ function _searchL(bgLum, targetContrast, lo, hi, getHexAtL) {
       // Found a satisfying L. Try to find the minimum-overshoot candidate:
       // • bg light: want highest L (least dark) that still satisfies → search upper half
       // • bg dark:  want lowest L  (least bright) that still satisfies → search lower half
-      if (bgLum > 0.5) lo = mid; // bg light → try lighter (higher L)
-      else             hi = mid; // bg dark  → try darker  (lower L)
+      if (bgLum > 0.5)
+        lo = mid; // bg light → try lighter (higher L)
+      else hi = mid; // bg dark  → try darker  (lower L)
     } else {
       // Doesn't satisfy: move further from bg to increase contrast
-      if (bgLum > 0.5) hi = mid; // bg light → need darker  (lower L)
-      else             lo = mid; // bg dark  → need lighter (higher L)
+      if (bgLum > 0.5)
+        hi = mid; // bg light → need darker  (lower L)
+      else lo = mid; // bg dark  → need lighter (higher L)
     }
   }
   return bestL;
@@ -161,7 +168,7 @@ function solveColorForContrast(sourceHex, targetContrast, bgHex, solverMode) {
   // For bg-light: we need a dark color (lower L) → search L in [0, ~src.L or 1]
   // For bg-dark:  we need a light color (higher L) → search L in [~src.L or 0, 1]
   // We search the full [0,1] range so the solver is not constrained by source L.
-  const lLow  = 0.001;
+  const lLow = 0.001;
   const lHigh = 0.999;
 
   let solvedL = null;
@@ -220,7 +227,7 @@ function solveColorForContrast(sourceHex, targetContrast, bgHex, solverMode) {
     };
   }
 
-  const resultHex = oklchToHex(solvedL, solvedC ?? 0, src.H);
+  const resultHex = oklchToHex(solvedL, solvedC || 0, src.H);
   const achievedContrast = parseFloat(_wcagContrast(_lumOfHex(resultHex), bgLum).toFixed(2));
 
   let warning = null;
@@ -252,9 +259,7 @@ function validateVariationContrasts(variations) {
 
   for (let i = 1; i < keys.length; i++) {
     if (vals[i] <= vals[i - 1]) {
-      errors.push(
-        `"${keys[i]}" (${vals[i]}) must be greater than "${keys[i - 1]}" (${vals[i - 1]}).`
-      );
+      errors.push(`"${keys[i]}" (${vals[i]}) must be greater than "${keys[i - 1]}" (${vals[i - 1]}).`);
     }
   }
 
