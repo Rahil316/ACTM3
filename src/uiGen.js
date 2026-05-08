@@ -5,6 +5,33 @@
        */
 
       /**
+       * 0. PLUGIN DIMENSION & UI CONSTANTS — single source of truth for all resize logic.
+       */
+      const UI_DIMS = {
+        defaultWidth:  424,
+        defaultHeight: 720,
+        minWidth:      360,
+        minHeight:     560,
+        maxWidth:      1400,
+        maxHeight:     1400,
+      };
+
+      const UI_SCALES = [0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5];
+      const UI_THEMES = ["figma", "dark", "light"];  // "figma" = follow Figma's own theme
+
+      // Persisted UI prefs (scale, theme). Separate from appState so they survive config resets.
+      let uiPrefs = { scale: 1.0, theme: "figma" };
+
+      function applyUiPrefs() {
+        document.body.style.zoom = uiPrefs.scale;
+        document.body.setAttribute("data-ui-theme", uiPrefs.theme);
+      }
+
+      function saveUiPrefs() {
+        parent.postMessage({ pluginMessage: { type: "save-ui-prefs-meta", prefs: uiPrefs } }, "*");
+      }
+
+      /**
        * 0. STABLE IDENTITY HELPERS
        * Each color and role carries a `_id` that never changes, even when the item
        * is renamed or reordered.  The rename-detector in scripts.js relies on these
@@ -1250,6 +1277,13 @@
         renderRoles();
       }
 
+      function syncUiSettingsInputs() {
+        const scaleEl = document.getElementById("setting-ui-scale");
+        const themeEl = document.getElementById("setting-ui-theme");
+        if (scaleEl) scaleEl.value = String(uiPrefs.scale);
+        if (themeEl) themeEl.value = uiPrefs.theme;
+      }
+
       function syncInputsFromState() {
         document.getElementById("setting-name").value = appState.name || "";
         document.getElementById("setting-colorsCollectionName").value = appState.colorsCollectionName || "_Colors";
@@ -1554,6 +1588,17 @@
         updateSettingsFromInputs();
         hideSheets();
       };
+
+      document.getElementById("setting-ui-scale").addEventListener("change", (e) => {
+        uiPrefs.scale = parseFloat(e.target.value) || 1.0;
+        applyUiPrefs();
+        saveUiPrefs();
+      });
+      document.getElementById("setting-ui-theme").addEventListener("change", (e) => {
+        uiPrefs.theme = e.target.value;
+        applyUiPrefs();
+        saveUiPrefs();
+      });
       document.getElementById("close-more").onclick = hideSheets;
       document.getElementById("btn-run").onclick = () => handleSubmit("all");
       document.getElementById("btn-import").onclick = () => document.getElementById("file-input").click();
@@ -1928,10 +1973,32 @@
           `;
           renderRunErrors(msg.errors || null);
         }
+        if (msg.type === "capabilities") {
+          if (!msg.capabilities.multiMode) {
+            BannerManager.warn(
+              "Multiple modes per collection require a paid Figma plan.",
+              {
+                id: "cap-multimode",
+                title: "Figma Plan Restriction",
+                detail: "Only the light theme will be written to the contextual collection. Dark theme variables will be skipped to avoid overwriting light values in the wrong mode. Upgrade to a paid Figma plan to unlock both themes.",
+                dismissable: true,
+              }
+            );
+          }
+        }
         if (msg.type === "error") {
           hideOverlay("loading-overlay");
           showOverlay("error-overlay");
           document.getElementById("error-message").textContent = msg.message;
+        }
+        if (msg.type === "warning") {
+          BannerManager.warn(msg.message, { dismissable: true, autoClose: 8000 });
+        }
+        if (msg.type === "load-ui-prefs-meta") {
+          if (msg.prefs.scale !== undefined) uiPrefs.scale = msg.prefs.scale;
+          if (msg.prefs.theme !== undefined) uiPrefs.theme = msg.prefs.theme;
+          applyUiPrefs();
+          syncUiSettingsInputs();
         }
       };
 
@@ -1941,14 +2008,22 @@
 
       // Resize Logic
       let isResizing = false;
+      let resizeOriginX = 0, resizeOriginY = 0;
+      let resizeStartW = 0, resizeStartH = 0;
       document.getElementById("resize-handle").onmousedown = (e) => {
         isResizing = true;
+        resizeOriginX = e.clientX;
+        resizeOriginY = e.clientY;
+        resizeStartW  = window.innerWidth;
+        resizeStartH  = window.innerHeight;
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
       };
       function onMouseMove(e) {
         if (!isResizing) return;
-        parent.postMessage({ pluginMessage: { type: "resize", width: Math.max(480, e.clientX), height: Math.max(600, e.clientY) } }, "*");
+        const w = Math.min(UI_DIMS.maxWidth,  Math.max(UI_DIMS.minWidth,  resizeStartW + (e.clientX - resizeOriginX)));
+        const h = Math.min(UI_DIMS.maxHeight, Math.max(UI_DIMS.minHeight, resizeStartH + (e.clientY - resizeOriginY)));
+        parent.postMessage({ pluginMessage: { type: "resize", width: w, height: h } }, "*");
       }
       function onMouseUp() {
         isResizing = false;
@@ -1960,3 +2035,5 @@
       renderColorGroups();
       renderRoles();
       syncInputsFromState();
+      syncUiSettingsInputs();
+      applyUiPrefs();

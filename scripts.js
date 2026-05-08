@@ -160,9 +160,9 @@ function hexToHct(hex){const[r,g,b]=_h2lr(hex);const[X,Y,Z]=_m3(_LX,[r,g,b]);ret
 function _jFromTone(tone){const v=_VC,m3=(m,v2)=>[m[0][0]*v2[0]+m[0][1]*v2[1]+m[0][2]*v2[2],m[1][0]*v2[0]+m[1][1]*v2[1]+m[1][2]*v2[2],m[2][0]*v2[0]+m[2][1]*v2[1]+m[2][2]*v2[2]];if(tone<=0)return 0;if(tone>=100)return 100;const Y=tone>8?Math.pow((tone+16)/116,3):tone/903.3;const X=Y*0.95047,Z=Y*1.08883;const cat=m3(v.cat,[X,Y,Z]).map((c2,i)=>c2*v.Drgb[i]);const hR=m3(v.hpe,m3(v.ci,cat)).map(v.ad);const p2=(2*hR[0]+hR[1]+0.05*hR[2]-0.305)*v.Nbb;return 100*Math.pow(Math.max(0,p2/v.Aw),v.c*v.z);}
 function _hctRgbOrNull(hue,ch,J){const v=_VC,m3=(m,v2)=>[m[0][0]*v2[0]+m[0][1]*v2[1]+m[0][2]*v2[2],m[1][0]*v2[0]+m[1][1]*v2[1]+m[1][2]*v2[2],m[2][0]*v2[0]+m[2][1]*v2[1]+m[2][2]*v2[2]];if(J<=0)return null;const ta=ch>0?Math.pow(ch/Math.sqrt(J/100),1/0.9)/Math.pow(1.64-Math.pow(0.29,v.n),0.73):0;const hr=hue*Math.PI/180,p1=(50000/13)*v.Nc*v.Ncb,p2=Math.pow(J/100,1/(v.c*v.z))*v.Aw/v.Nbb+0.305;let a,b;if(ta<=0){a=0;b=0;}else{const g=23*(p2+0.305)*ta/(23*p1+11*ta*Math.cos(hr)+108*ta*Math.sin(hr));a=g*Math.cos(hr);b=g*Math.sin(hr);}const Ra=(460*p2+451*a+288*b)/1403,Ga=(460*p2-891*a-261*b)/1403,Ba=(460*p2-220*a-6300*b)/1403;const iv=c2=>{const s=Math.sign(c2);return s*Math.pow(Math.max(0,Math.abs(c2)*27.13/(400-Math.abs(c2))),1/0.42)/v.FL;};const lr=m3(_XL,m3(v.ci,m3(v.hpi,[Ra,Ga,Ba].map(iv)).map((c2,i)=>c2/v.Drgb[i])));if(Math.max(...lr)>1+1e-4||Math.min(...lr)<-1e-4)return null;return lr.map(x=>Math.max(0,x));}
 function hctToHex(hue,ch,tone){if(ch<0.0001||tone<=0||tone>=100){if(tone<=0)return"#000000";if(tone>=100)return"#ffffff";const Y=tone>8?Math.pow((tone+16)/116,3):tone/903.3;const v=Math.round(_dlin(Y)*255);return"#"+v.toString(16).padStart(2,"0").repeat(3);}const J=_jFromTone(tone);if(J<=0)return"#000000";let lo=0,hi=ch,best=null;for(let it=0;it<50;it++){if(hi-lo<0.01)break;const mid=(lo+hi)/2;const rgb=_hctRgbOrNull(hue,mid,J);if(rgb===null){hi=mid;}else{best=_lr2h(...rgb);lo=mid;}}return best||("#"+Math.round(_dlin(tone>8?Math.pow((tone+16)/116,3):tone/903.3)*255).toString(16).padStart(2,"0").repeat(3));}
-
-// 6b. COLOR RAMP MAKER: Simple hash cache: skip regeneration when config hasn't changed.
+// Hash cache: skip ramp regeneration when config hasn't changed.
 let lastInputHash = null;
+let cachedOutput = null;
 
 function colorRampMaker(hexIn, rampLength, rampType = "Natural") {
   const hue = hexToHue(hexIn);
@@ -788,6 +788,7 @@ function generateScss(result, config) {
   scss += `}\n`;
 
   return scss;
+}
 // 5. FIGMA VARIABLE API (CRUD)
 const VariableManager = {
   tally: { created: 0, updated: 0, renamed: 0, failed: 0 },
@@ -894,8 +895,13 @@ const VariableManager = {
         await this.applyRenames(contextualCol, renameMap.contextual);
       }
 
+      const skippedModes = [];
       for (const theme of ["light", "dark"]) {
         const modeId = this.ensureMode(contextualCol, theme);
+        if (modeId === null) {
+          skippedModes.push(theme);
+          continue;
+        }
         for (const [colorName, roles] of Object.entries(result.colorTokens[theme])) {
           for (const [roleId, variations] of Object.entries(roles)) {
             const rName = (config.roles[roleId] && config.roles[roleId].name) || roleId;
@@ -922,6 +928,12 @@ const VariableManager = {
             await this.upsertVariables(contextualCol, modeId, vars);
           }
         }
+      }
+      if (skippedModes.length > 0) {
+        figma.ui.postMessage({
+          type: "warning",
+          message: `The "${contextualName}" collection is missing the ${skippedModes.join(" and ")} mode(s). Multiple modes per collection require a paid Figma plan.`
+        });
       }
     }
 
@@ -982,7 +994,9 @@ const VariableManager = {
     try {
       return collection.addMode(modeName);
     } catch (_e) {
-      return collection.modes[0].modeId;
+      // addMode fails on Figma free plan (only 1 mode allowed per collection).
+      // Return null so the caller can skip writing rather than corrupting the wrong mode.
+      return null;
     }
   },
 
@@ -1020,8 +1034,6 @@ function hexToFigmaRgb(hex) {
   if (!rgb) return { r: 0, g: 0, b: 0 };
   return { r: rgb[0] / 255, g: rgb[1] / 255, b: rgb[2] / 255 };
 }
-};
-
 // 3. CONFIG TRANSLATOR: Converts appState (UI format) into the format expected by variableMaker.
 function translateConfig(appState) {
   const count = Math.max(1, parseInt(appState.colorSteps) || 23);
@@ -1213,11 +1225,41 @@ function buildVariableRenameMap(savedAppState, newAppState) {
  * 8. Color Math Utilities  (WCAG-correct conversions from Utils.js)
  */
 
-// 1. UI INITIALIZATION
-figma.showUI(__html__, { width: 424, height: 720, themeColors: true });
-
-// Load saved config from Figma on startup
+// 1. UI INITIALIZATION — load saved size before showing UI to avoid resize flicker.
 (async () => {
+  const UI_DEFAULT_WIDTH  = 424;
+  const UI_DEFAULT_HEIGHT = 720;
+
+  // Restore saved window size (falls back to defaults if none saved yet).
+  let savedUiSize = { width: UI_DEFAULT_WIDTH, height: UI_DEFAULT_HEIGHT };
+  try {
+    const saved = await figma.clientStorage.getAsync("uiPrefs");
+    if (saved && saved.width && saved.height) savedUiSize = saved;
+  } catch (_) {}
+  figma.showUI(__html__, { width: savedUiSize.width, height: savedUiSize.height, themeColors: true });
+
+  // Capability probe: try adding a second mode to a temp collection.
+  // This is the only reliable way to detect free-plan restrictions without
+  // exposing plan details (Figma has no plan-info API for plugins).
+  const capabilities = { multiMode: true };
+  let probeCol = null;
+  try {
+    probeCol = figma.variables.createVariableCollection("__ctm316_probe__");
+    probeCol.addMode("probe2");
+  } catch (_) {
+    capabilities.multiMode = false;
+  } finally {
+    if (probeCol) try { probeCol.remove(); } catch (_) {}
+  }
+  figma.ui.postMessage({ type: "capabilities", capabilities });
+
+  // Send saved UI meta-prefs (scale, theme) to UI thread
+  try {
+    const meta = await figma.clientStorage.getAsync("uiPrefsMeta");
+    if (meta) figma.ui.postMessage({ type: "load-ui-prefs-meta", prefs: meta });
+  } catch (_) {}
+
+  // Load saved config
   try {
     const vars = await figma.variables.getLocalVariablesAsync("STRING");
     const cfgVar = vars.find((v) => v.name === "__ctm316_config__");
@@ -1255,6 +1297,11 @@ figma.ui.onmessage = async (msg) => {
 
       case "resize":
         figma.ui.resize(msg.width, msg.height);
+        figma.clientStorage.setAsync("uiPrefs", { width: msg.width, height: msg.height }).catch(() => {});
+        break;
+
+      case "save-ui-prefs-meta":
+        figma.clientStorage.setAsync("uiPrefsMeta", msg.prefs).catch(() => {});
         break;
 
       case "request-processed-data": {
@@ -1277,3 +1324,4 @@ figma.ui.onmessage = async (msg) => {
     console.error("Plugin Error:", err);
     figma.ui.postMessage({ type: "error", message: err.message || "Unknown error" });
   }
+};

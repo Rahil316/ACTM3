@@ -11,11 +11,41 @@
  * 8. Color Math Utilities  (WCAG-correct conversions from Utils.js)
  */
 
-// 1. UI INITIALIZATION
-figma.showUI(__html__, { width: 424, height: 720, themeColors: true });
-
-// Load saved config from Figma on startup
+// 1. UI INITIALIZATION — load saved size before showing UI to avoid resize flicker.
 (async () => {
+  const UI_DEFAULT_WIDTH  = 424;
+  const UI_DEFAULT_HEIGHT = 720;
+
+  // Restore saved window size (falls back to defaults if none saved yet).
+  let savedUiSize = { width: UI_DEFAULT_WIDTH, height: UI_DEFAULT_HEIGHT };
+  try {
+    const saved = await figma.clientStorage.getAsync("uiPrefs");
+    if (saved && saved.width && saved.height) savedUiSize = saved;
+  } catch (_) {}
+  figma.showUI(__html__, { width: savedUiSize.width, height: savedUiSize.height, themeColors: true });
+
+  // Capability probe: try adding a second mode to a temp collection.
+  // This is the only reliable way to detect free-plan restrictions without
+  // exposing plan details (Figma has no plan-info API for plugins).
+  const capabilities = { multiMode: true };
+  let probeCol = null;
+  try {
+    probeCol = figma.variables.createVariableCollection("__ctm316_probe__");
+    probeCol.addMode("probe2");
+  } catch (_) {
+    capabilities.multiMode = false;
+  } finally {
+    if (probeCol) try { probeCol.remove(); } catch (_) {}
+  }
+  figma.ui.postMessage({ type: "capabilities", capabilities });
+
+  // Send saved UI meta-prefs (scale, theme) to UI thread
+  try {
+    const meta = await figma.clientStorage.getAsync("uiPrefsMeta");
+    if (meta) figma.ui.postMessage({ type: "load-ui-prefs-meta", prefs: meta });
+  } catch (_) {}
+
+  // Load saved config
   try {
     const vars = await figma.variables.getLocalVariablesAsync("STRING");
     const cfgVar = vars.find((v) => v.name === "__ctm316_config__");
@@ -53,6 +83,11 @@ figma.ui.onmessage = async (msg) => {
 
       case "resize":
         figma.ui.resize(msg.width, msg.height);
+        figma.clientStorage.setAsync("uiPrefs", { width: msg.width, height: msg.height }).catch(() => {});
+        break;
+
+      case "save-ui-prefs-meta":
+        figma.clientStorage.setAsync("uiPrefsMeta", msg.prefs).catch(() => {});
         break;
 
       case "request-processed-data": {
@@ -75,3 +110,4 @@ figma.ui.onmessage = async (msg) => {
     console.error("Plugin Error:", err);
     figma.ui.postMessage({ type: "error", message: err.message || "Unknown error" });
   }
+};

@@ -104,8 +104,13 @@ const VariableManager = {
         await this.applyRenames(contextualCol, renameMap.contextual);
       }
 
+      const skippedModes = [];
       for (const theme of ["light", "dark"]) {
         const modeId = this.ensureMode(contextualCol, theme);
+        if (modeId === null) {
+          skippedModes.push(theme);
+          continue;
+        }
         for (const [colorName, roles] of Object.entries(result.colorTokens[theme])) {
           for (const [roleId, variations] of Object.entries(roles)) {
             const rName = (config.roles[roleId] && config.roles[roleId].name) || roleId;
@@ -132,6 +137,12 @@ const VariableManager = {
             await this.upsertVariables(contextualCol, modeId, vars);
           }
         }
+      }
+      if (skippedModes.length > 0) {
+        figma.ui.postMessage({
+          type: "warning",
+          message: `The "${contextualName}" collection is missing the ${skippedModes.join(" and ")} mode(s). Multiple modes per collection require a paid Figma plan.`
+        });
       }
     }
 
@@ -192,7 +203,9 @@ const VariableManager = {
     try {
       return collection.addMode(modeName);
     } catch (_e) {
-      return collection.modes[0].modeId;
+      // addMode fails on Figma free plan (only 1 mode allowed per collection).
+      // Return null so the caller can skip writing rather than corrupting the wrong mode.
+      return null;
     }
   },
 

@@ -202,3 +202,4 @@ function generateScss(result, config) {
   scss += `}\n`;
 
   return scss;
+}

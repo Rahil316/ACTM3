@@ -1,3 +1,6 @@
+// Hash cache: skip ramp regeneration when config hasn't changed.
+let lastInputHash = null;
+let cachedOutput = null;
 
 function colorRampMaker(hexIn, rampLength, rampType = "Natural") {
   const hue = hexToHue(hexIn);
