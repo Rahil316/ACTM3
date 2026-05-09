@@ -174,7 +174,7 @@ function variableMaker(config) {
 
 function _computeInputHash(config) {
   return JSON.stringify({
-    colors: config.colors.map((g) => ({ ...g, value: normalizeHex(g.value) })),
+    colors: config.colors.map(function(g) { return Object.assign({}, g, { value: normalizeHex(g.value) }); }),
     rampLength: config.colorSteps,
     scaleAlgorithm: config.scaleAlgorithm,
     lightBg: normalizeHex(config.themes[0].bg),
@@ -223,7 +223,7 @@ function _solveDirectMode(color, mode, config, groupOutput, errors) {
     const role = config.roles[ri];
     const roleOutput = groupOutput[ri] = {};
     
-    const variations = (role.variationOverride && role.roleVariations?.length) 
+    const variations = (role.variationOverride && role.roleVariations && role.roleVariations.length)
       ? role.roleVariations : config.variations;
     
     // Determine target contrasts based on mode
@@ -269,7 +269,7 @@ function _processTonalMode(color, mode, config, clrRamps, groupOutput, errors) {
   for (let ri = 0; ri < config.roles.length; ri++) {
     const role = config.roles[ri];
     const roleOutput = groupOutput[ri] = {};
-    const variations = (role.variationOverride && role.roleVariations?.length) 
+    const variations = (role.variationOverride && role.roleVariations && role.roleVariations.length)
       ? role.roleVariations : config.variations;
 
     if (config.baseSelectionMode === "Manual") {

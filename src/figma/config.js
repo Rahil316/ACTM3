@@ -24,7 +24,7 @@ function translateConfig(appState) {
     roleMapping: appState.pluginMode === "direct" ? (appState.baseSelection === "Manual" ? "Direct Manual" : "Direct Contrast") : appState.baseSelection || "By Contrast",
     colorStepNames: stepNames,
     roleStepNames,
-    variations: variations.map((v) => ({ ...v })),
+    variations: variations.map(function(v) { return Object.assign({}, v); }),
     themes: [
       { name: "light", bg: themes[0].bg || "FFFFFF" },
       { name: "dark", bg: themes[1].bg || "000000" },
@@ -77,8 +77,8 @@ function _mapRoles(appState, variations, count) {
       : variations.map((_, i) => Math.floor(count / 2 + (i - Math.floor(variations.length / 2))))),
     description: role.description || "",
     variationOverride: role.variationOverride || false,
-    roleVariations: role.variationOverride && role.roleVariations?.length > 0 
-      ? role.roleVariations.map((v) => ({ ...v })) : [],
+    roleVariations: role.variationOverride && role.roleVariations && role.roleVariations.length > 0
+      ? role.roleVariations.map(function(v) { return Object.assign({}, v); }) : [],
   }));
 }
 
@@ -150,8 +150,8 @@ function _getRampRenames(colorPairs, oldSteps, newSteps, count) {
 function _getContextualRenames(colorPairs, rolePairs, oldCfg, newCfg) {
   const renames = {};
   const varCount = Math.min((oldCfg.variations || []).length, (newCfg.variations || []).length);
-  const oldRoleSteps = (oldCfg.variations || []).map((v, i) => v?.shortName || v?.name || String(i));
-  const newRoleSteps = (newCfg.variations || []).map((v, i) => v?.shortName || v?.name || String(i));
+  const oldRoleSteps = (oldCfg.variations || []).map(function(v, i) { return (v && v.shortName) || (v && v.name) || String(i); });
+  const newRoleSteps = (newCfg.variations || []).map(function(v, i) { return (v && v.shortName) || (v && v.name) || String(i); });
   const oldTG = oldCfg.variableStructure || "color";
   const newTG = newCfg.variableStructure || "color";
 

@@ -452,9 +452,6 @@ function showOverlay(id) {
 function hideOverlay(id) {
   document.getElementById(id).classList.add("hidden");
   if (id === "success-overlay" || id === "error-overlay") hideSheets();
-  if (id === "preview-overlay") {
-    document.getElementById("preview-errors-body").classList.remove("open");
-  }
 }
 
 function updateGroup(idx, key, value, el) {
@@ -1339,9 +1336,7 @@ function applyImport(json) {
   renderColorGroups();
   renderRoles();
   syncInputsFromState();
-  // Clear any stale run-error messages left from a previous sync before showing import result.
-  const errBar = document.getElementById("run-errors-bar");
-  if (errBar) errBar.innerHTML = "";
+  BannerManager.clear();
   showOverlay("success-overlay");
   document.getElementById("success-results").innerHTML = `<p class="text-sm font-medium">Successfully imported <span class="text-white">${appState.name || "config"}</span></p>`;
 }
