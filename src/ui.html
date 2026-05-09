@@ -322,31 +322,6 @@
         transform: translateX(-50%) translateY(0);
       }
 
-      .preview-errors-bar {
-        border-top: 1px solid var(--border);
-        background: var(--bg-input);
-        flex-shrink: 0;
-      }
-      .preview-errors-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 12px;
-        cursor: pointer;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--warning);
-        user-select: none;
-      }
-      .preview-errors-body {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.25s ease;
-      }
-      .preview-errors-body.open {
-        max-height: 160px;
-        overflow-y: auto;
-      }
       #drop-overlay {
         background: var(--bg-app);
         opacity: 0.9;
@@ -404,9 +379,8 @@
           </button>
         </div>
       </header>
-
-      <!-- Banner slot: all runtime notifications render here via BannerManager -->
-      <div id="banner-slot" class="flex flex-col"></div>
+      <!-- Banner slot: runtime notifications rendered here via BannerManager -->
+      <div id="banner-slot" class="banner-slot"></div>
 
       <!-- Sidebar Tabs -->
       <div class="sidebar-tabs">
@@ -750,16 +724,6 @@
           </div>
           <button onclick="hideOverlay('success-overlay')" class="mt-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg shadow-[var(--accent-glow)]">Back to Editor</button>
         </div>
-        <!-- Collapsible error summary (shown only when errors exist) -->
-        <div id="run-errors-bar" class="preview-errors-bar hidden">
-          <div class="preview-errors-header" onclick="toggleRunErrors()">
-            <span id="run-errors-count"></span>
-            <svg id="run-errors-chevron" width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path d="M8 10.888L2.646 5.146c-.195-.195-.195-.512 0-.707s.512-.195.707 0L8 9.793l4.646-5.354c.195-.195.512-.195.707 0s.195.512 0 .707L8 10.888z" fill="var(--text-muted)" />
-            </svg>
-          </div>
-          <div id="run-errors-body" class="preview-errors-body"></div>
-        </div>
       </div>
       <!-- error-overlay -->
       <div id="error-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)] z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
@@ -794,16 +758,6 @@
             <div id="preview-light" class="preview-panel"></div>
             <div id="preview-dark" class="preview-panel"></div>
           </div>
-        </div>
-        <!-- Error Bar -->
-        <div id="preview-errors-bar" class="preview-errors-bar hidden">
-          <div class="preview-errors-header" onclick="togglePreviewErrors()">
-            <span id="preview-errors-count"></span>
-            <svg id="preview-errors-chevron" width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path d="M8 10.888L2.646 5.146c-.195-.195-.195-.512 0-.707s.512-.195.707 0L8 9.793l4.646-5.354c.195-.195.512-.195.707 0s.195.512 0 .707L8 10.888z" fill="var(--text-muted)" />
-            </svg>
-          </div>
-          <div id="preview-errors-body" class="preview-errors-body"></div>
         </div>
       </div>
 
@@ -990,9 +944,13 @@
         <path d="M11 1L1 11M11 5L5 11M11 9L9 11" stroke="var(--text-dim)" stroke-width="2" stroke-linecap="round" />
       </svg>
     </div>
-    <script src="src/bannerManager.js"></script>
-    <script src="src/clrSpaces.js"></script>
-    <script src="src/clrSolver.js"></script>
-    <script src="src/uiGen.js"></script>
+    <script src="src/ui/bannerManager.js"></script>
+    <script src="src/utils.js"></script>
+    <script src="src/ui/state.js"></script>
+    <script src="src/ui/ui-components.js"></script>
+    <script src="src/color/clrSpaces.js"></script>
+    <script src="src/color/clrSolver.js"></script>
+    <script src="src/color/clrGen.js"></script>
+    <script src="src/ui/uiGen.js"></script>
   </body>
 </html>

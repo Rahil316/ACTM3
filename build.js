@@ -17,16 +17,25 @@ try {
 }
 
 console.log('Building scripts.js...');
-const jsHdr = '/* AUTO-GENERATED — do not edit. Source: src/*.js  Run: npm run build */\n';
-const jsFiles = ['clrUtils', 'clrSpaces', 'clrSolver', 'clrGen', 'docGen', 'figmaVars', 'config', 'main'];
-const jsContent = jsFiles.map(f => fs.readFileSync(path.join(srcDir, f + '.js'), 'utf8')).join('\n');
+const jsHdr = '/* AUTO-GENERATED — do not edit. Source: src/  Run: npm run build */\n';
+const jsFiles = [
+    'utils.js',
+    'color/clrSpaces.js',
+    'color/clrSolver.js',
+    'color/clrGen.js',
+    'figma/docGen.js',
+    'figma/figmaVars.js',
+    'figma/config.js',
+    'figma/main.js',
+];
+const jsContent = jsFiles.map(f => fs.readFileSync(path.join(srcDir, f), 'utf8')).join('\n');
 fs.writeFileSync(path.join(outDir, 'scripts.js'), jsHdr + jsContent);
 
 console.log('Building ui.html...');
 let html = fs.readFileSync(path.join(srcDir, 'ui.html'), 'utf8');
-const htmlHdr = '<!-- AUTO-GENERATED — do not edit. Source: src/ui.html + src/*.js  Run: npm run build -->\n';
+const htmlHdr = '<!-- AUTO-GENERATED — do not edit. Source: src/ui.html + src/**/*.js  Run: npm run build -->\n';
 
-// 1. Inline scripts
+// 1. Inline scripts (matches src/path/to/file.js)
 html = html.replace(/<script src="src\/([^"]+)"><\/script>/g, (_, f) => {
     return '<script>\n' + fs.readFileSync(path.join(srcDir, f), 'utf8') + '\n</script>';
 });
