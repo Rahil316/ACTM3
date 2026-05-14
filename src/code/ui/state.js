@@ -73,6 +73,7 @@ const _demoConfigStr = JSON.stringify(demoConfig);
  * 2. APP STATE
  */
 let appState = JSON.parse(JSON.stringify(demoConfig));
+ensureVariations();
 
 const UI_DIMS = {
   defaultWidth: 424,
@@ -91,3 +92,23 @@ let activeSidebarTab = "color-groups";
 let _colorDragSrcIdx = null;
 let _roleDragSrcIdx = null;
 
+
+// Ensures appState.variations exists and all roles have matching variationTargets arrays.
+function ensureVariations() {
+  if (!appState.variations || appState.variations.length === 0) {
+    appState.variations = [1, 2, 3, 4, 5].map((n) => ({
+      _id: generateId(),
+      name: String(n),
+      shorthand: String(n),
+    }));
+  }
+  for (const role of appState.roles) {
+    const roleVars = role.variationOverride && role.roleVariations && role.roleVariations.length > 0 ? role.roleVariations : appState.variations;
+    const vLen = roleVars.length;
+    if (!role.variationTargets || role.variationTargets.length !== vLen) {
+      const oldVals = role.variations ? Object.values(role.variations) : Array.isArray(role.variationTargets) ? role.variationTargets : [];
+      role.variationTargets = roleVars.map((_, i) => oldVals[i] || (appState.pluginMode === "direct" ? [1.5, 3.0, 4.5, 7.0, 12.0][i] || 4.5 : Math.floor(((appState.colorSteps || 25) / Math.max(1, vLen - 1)) * i)));
+      delete role.variations;
+    }
+  }
+}

@@ -196,19 +196,22 @@ function withPreservedFocus(fn) {
   }
 }
 
-/**
- * Applies the current UI preferences (scale and theme) to the document body.
- */
-function applyUiPrefs() {
-  if (typeof document === "undefined") return;
-  document.body.style.zoom = uiPrefs.scale;
-  document.body.setAttribute("data-ui-theme", uiPrefs.theme);
-}
-
-/**
- * Persists the current UI preferences to Figma's client storage.
- */
-function saveUiPrefs() {
-  if (typeof parent === "undefined" || typeof parent.postMessage !== "function") return;
-  parent.postMessage({ pluginMessage: { type: "save-ui-prefs-meta", prefs: uiPrefs } }, "*");
+async function copyToClipboard(text) {
+  try {
+    if (!navigator.clipboard) throw new Error("Clipboard API not available");
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    console.warn("Clipboard copy failed:", err);
+    // Fallback for older browsers or non-secure contexts
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand("copy");
+    } catch (e) {}
+    document.body.removeChild(textArea);
+    return true;
+  }
 }
