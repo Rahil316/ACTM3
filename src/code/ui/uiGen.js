@@ -15,7 +15,6 @@ const UI_MODES = {
 };
 
 let pendingScope = "all";
-let savedState = null;
 let lastCollectionCheckResult = [];
 let lastRenameData = null;
 
@@ -67,13 +66,15 @@ const renderColorGroups = debounce(() => {
       bindDragDrop(card, idx, {
         cardSelector: ".color-group-card-plugin",
         getIdx: () => _colorDragSrcIdx,
-        setIdx: (v) => { _colorDragSrcIdx = v; },
+        setIdx: (v) => {
+          _colorDragSrcIdx = v;
+        },
         onDrop: (src, dst) => {
           const [moved] = appState.colors.splice(src, 1);
           appState.colors.splice(dst, 0, moved);
           renderColorGroups();
           schedulePreview();
-        }
+        },
       });
 
       Components.ColorGroupCard(group, idx, appState).forEach((node) => card.appendChild(node));
@@ -100,13 +101,15 @@ const renderRoles = debounce(() => {
       bindDragDrop(card, idx, {
         cardSelector: ".role-card-plugin",
         getIdx: () => _roleDragSrcIdx,
-        setIdx: (v) => { _roleDragSrcIdx = v; },
+        setIdx: (v) => {
+          _roleDragSrcIdx = v;
+        },
         onDrop: (src, dst) => {
           const [moved] = appState.roles.splice(src, 1);
           appState.roles.splice(dst, 0, moved);
           renderRoles();
           schedulePreview();
-        }
+        },
       });
 
       Components.RoleGroupCard(role, idx, appState).forEach((node) => card.appendChild(node));
@@ -134,7 +137,7 @@ window.onmessage = (event) => {
 
   if (msg.type === "load-config") {
     ensureIds(msg.state);
-    savedState = JSON.parse(JSON.stringify(msg.state));
+    setSavedState(msg.state);
     appState = Object.assign({}, JSON.parse(JSON.stringify(demoConfig)), msg.state);
 
     if (appState.pluginMode === 0) appState.pluginMode = "ramp";
@@ -142,6 +145,7 @@ window.onmessage = (event) => {
 
     ensureIds(appState);
     ensureVariations();
+    markClean();
     renderColorGroups();
     renderRoles();
     syncInputsFromState();
@@ -159,22 +163,15 @@ window.onmessage = (event) => {
 
   if (msg.type === "finish") {
     // Snapshot current state as the new baseline for rename detection
-    savedState = JSON.parse(JSON.stringify(appState));
+    setSavedState(appState);
+    markClean();
     hideOverlay("loading-overlay");
     showOverlay("success-overlay");
     const resultsEl = document.getElementById("success-results");
     resultsEl.innerHTML = "";
     const t = msg.tally;
-    [
-      ["Created", t.created, "text-white"],
-      ["Updated", t.updated, "text-white"],
-      ...(t.renamed > 0 ? [["Renamed", t.renamed, "text-blue-300"]] : []),
-      ["Failed", t.failed, "text-red-400"],
-    ].forEach(([label, count, cls]) => {
-      resultsEl.appendChild(el("p", { class: "text-sm" }, [
-        `${label}: `,
-        el("span", { class: `${cls} font-bold` }, String(count)),
-      ]));
+    [["Created", t.created, "text-white"], ["Updated", t.updated, "text-white"], ...(t.renamed > 0 ? [["Renamed", t.renamed, "text-blue-300"]] : []), ["Failed", t.failed, "text-red-400"]].forEach(([label, count, cls]) => {
+      resultsEl.appendChild(el("p", { class: "text-sm" }, [`${label}: `, el("span", { class: `${cls} font-bold` }, String(count))]));
     });
     showSystemBanners(msg.errors || null, msg.result || null);
   }
@@ -339,10 +336,22 @@ sidebarTabs.forEach((btn) => {
 });
 
 // Export Listeners (from More menu)
-document.getElementById("opt-save-config").onclick = () => { exportConfig(); hideSheets(); };
-document.getElementById("opt-export-css").onclick = () => { exportToCSS(); hideSheets(); };
-document.getElementById("opt-export-csv").onclick = () => { exportToCSV(); hideSheets(); };
-document.getElementById("opt-export-scss").onclick = () => { exportToSCSS(); hideSheets(); };
+document.getElementById("opt-save-config").onclick = () => {
+  exportConfig();
+  hideSheets();
+};
+document.getElementById("opt-export-css").onclick = () => {
+  exportToCSS();
+  hideSheets();
+};
+document.getElementById("opt-export-csv").onclick = () => {
+  exportToCSV();
+  hideSheets();
+};
+document.getElementById("opt-export-scss").onclick = () => {
+  exportToSCSS();
+  hideSheets();
+};
 
 // Export Listeners (from Main Tab)
 if (document.getElementById("btn-export-css")) document.getElementById("btn-export-css").onclick = exportToCSS;
@@ -354,7 +363,7 @@ document.getElementById("opt-clear").onclick = () => {
     appState = JSON.parse(JSON.stringify(demoConfig));
     ensureIds(appState);
     ensureVariations();
-    savedState = null;
+    setSavedState(null);
     renderColorGroups();
     renderRoles();
     syncInputsFromState();

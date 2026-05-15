@@ -30,25 +30,23 @@ const el = (tag, attrs = {}, children = []) => {
   const element = document.createElement(tag);
   Object.entries(attrs).forEach(([key, val]) => {
     if (val === undefined || val === null) return;
-    if (key === 'className' || key === 'class') element.className = val;
-    else if (key === 'dataset') Object.assign(element.dataset, val);
-    else if (key.startsWith('on') && typeof val === 'function') {
+    if (key === "className" || key === "class") element.className = val;
+    else if (key === "dataset") Object.assign(element.dataset, val);
+    else if (key.startsWith("on") && typeof val === "function") {
       element.addEventListener(key.substring(2).toLowerCase(), val);
-    }
-    else if (key === 'style' && typeof val === 'object') Object.assign(element.style, val);
-    else if (key === 'disabled') {
-      if (val) element.setAttribute('disabled', '');
-      else element.removeAttribute('disabled');
-    }
-    else element.setAttribute(key, val);
+    } else if (key === "style" && typeof val === "object") Object.assign(element.style, val);
+    else if (key === "disabled") {
+      if (val) element.setAttribute("disabled", "");
+      else element.removeAttribute("disabled");
+    } else element.setAttribute(key, val);
   });
   const childrenArray = Array.isArray(children) ? children : [children];
-  childrenArray.forEach(child => {
+  childrenArray.forEach((child) => {
     if (!child) return;
-    if (typeof child === 'string' || typeof child === 'number') {
+    if (typeof child === "string" || typeof child === "number") {
       const str = String(child);
-      if (str.trim().startsWith('<')) {
-        const temp = document.createElement('div');
+      if (str.trim().startsWith("<")) {
+        const temp = document.createElement("div");
         temp.innerHTML = str;
         while (temp.firstChild) element.appendChild(temp.firstChild);
       } else {
@@ -63,57 +61,57 @@ const el = (tag, attrs = {}, children = []) => {
 
 const inputsUI = {
   // Dashed "add" call-to-action button.
-  actionButton: (label, onClick, icon = null) => el('button', {
-    class: "w-full h-10 px-4 mb-2 bg-transparent text-[var(--accent)] border-2 border-dashed border-[var(--accent)] rounded-[8px] text-[13px] font-semibold cursor-pointer transition-colors duration-150 hover:bg-[var(--accent)]/10 flex items-center justify-center gap-2",
-    onclick: onClick
-  }, [
-    icon ? el('span', { class: 'flex items-center justify-center' }, icon) : null,
-    el('span', {}, label)
-  ]),
+  actionButton: (label, onClick, icon = null) =>
+    el(
+      "button",
+      {
+        class: "w-full h-10 px-4 mb-2 bg-transparent text-[var(--accent)] border-2 border-dashed border-[var(--accent)] rounded-[8px] text-[13px] font-semibold cursor-pointer transition-colors duration-150 hover:bg-[var(--accent)]/10 flex items-center justify-center gap-2",
+        onclick: onClick,
+      },
+      [icon ? el("span", { class: "flex items-center justify-center" }, icon) : null, el("span", {}, label)],
+    ),
 
   // Text/number input with optional label above.
   input: (attrs = {}, label = null) => {
     const id = attrs.id || `input-${Math.random().toString(36).substr(2, 9)}`;
-    const input = el('input', {
+    const input = el("input", {
       class: "w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[14px] outline-none focus:border-[var(--border-focus)] h-[40px] text-[var(--text-primary)]",
       id: id,
-      ...attrs
+      ...attrs,
     });
     if (!label) return input;
-    return el('div', { class: 'space-y-1 flex-1' }, [
-      el('label', { for: id, class: 'text-[var(--text-muted)] text-[12px] font-medium block ml-1' }, label),
-      input
-    ]);
+    return el("div", { class: "space-y-1 flex-1" }, [el("label", { for: id, class: "text-[var(--text-muted)] text-[12px] font-medium block ml-1" }, label), input]);
   },
 
   // Native color picker + hex text input, both wired to the same update handler.
   // onUpdate(value, inputEl?) — inputEl is passed so callers can do in-place correction.
-  colorInput: (value, onUpdate, idPrefix = null) => el('div', { class: "flex items-center gap-2 w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 pl-1 h-[40px]" }, [
-    el('input', {
-      type: 'color', value: normalizeHex(value) || "#000000",
-      id: idPrefix ? `${idPrefix}-picker` : null,
-      class: "cursor-pointer size-5 bg-transparent border-none rounded-[4px]",
-      onchange: (e) => onUpdate(e.target.value, null)
-    }),
-    el('input', {
-      type: 'text', value: value,
-      id: idPrefix ? `${idPrefix}-hex` : null,
-      class: "w-full bg-transparent text-[13px] uppercase outline-none text-[var(--text-primary)]",
-      oninput: (e) => onUpdate(e.target.value, e.target)
-    })
-  ]),
+  colorInput: (value, onUpdate, idPrefix = null) =>
+    el("div", { class: "flex items-center gap-2 w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 pl-1 h-[40px]" }, [
+      el("input", {
+        type: "color",
+        value: normalizeHex(value) || "#000000",
+        id: idPrefix ? `${idPrefix}-picker` : null,
+        class: "cursor-pointer size-5 bg-transparent border-none rounded-[4px]",
+        onchange: (e) => onUpdate(e.target.value, null),
+      }),
+      el("input", {
+        type: "text",
+        value: value,
+        id: idPrefix ? `${idPrefix}-hex` : null,
+        class: "w-full bg-transparent text-[13px] uppercase outline-none text-[var(--text-primary)]",
+        oninput: (e) => onUpdate(e.target.value, e.target),
+      }),
+    ]),
 
   // Square icon button. variant: "danger" | "ghost"
   iconButton: (icon, onClick, variant = "danger") => {
-    const cls = variant === "danger"
-      ? "bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 hover:bg-[var(--danger)]/20"
-      : "text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]";
-    return el('button', { class: `${cls} size-[40px] flex items-center justify-center rounded-[8px] transition-all`, onclick: onClick }, el('span', { class: 'flex items-center justify-center' }, icon));
+    const cls = variant === "danger" ? "bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 hover:bg-[var(--danger)]/20" : "text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]";
+    return el("button", { class: `${cls} size-[40px] flex items-center justify-center rounded-[8px] transition-all`, onclick: onClick }, el("span", { class: "flex items-center justify-center" }, icon));
   },
 
   // Toggle pill button. Controlled: pass isOn state, onChange fires with no args (caller flips state).
   toggle: (id, isOn, onChange) => {
-    const btn = el('button', {
+    const btn = el("button", {
       id: id || null,
       class: `toggle-pill${isOn ? " on" : ""}`,
       onclick: onChange,
@@ -122,18 +120,20 @@ const inputsUI = {
   },
 
   // Horizontal row: label on left, one or more controls on right.
-  row: (label, ...controls) => el('div', { class: 'flex items-center justify-between gap-2' }, [
-    el('span', { class: 'text-[var(--text-muted)] text-[12px] shrink-0' }, label),
-    el('div', { class: 'flex items-center gap-1.5' }, controls),
-  ]),
+  row: (label, ...controls) => el("div", { class: "flex items-center justify-between gap-2" }, [el("span", { class: "text-[var(--text-muted)] text-[12px] shrink-0" }, label), el("div", { class: "flex items-center gap-1.5" }, controls)]),
 
   // Uppercase section-header label — use to divide settings sections.
-  sectionLabel: (text) => el('h3', {
-    class: 'text-[var(--text-muted)] text-[11px] font-bold tracking-[1.2px] px-1 uppercase mt-1',
-  }, text),
+  sectionLabel: (text) =>
+    el(
+      "h3",
+      {
+        class: "text-[var(--text-muted)] text-[11px] font-bold tracking-[1.2px] px-1 uppercase mt-1",
+      },
+      text,
+    ),
 
   // Subtle muted caption text.
-  caption: (text) => el('p', { class: 'text-[var(--text-dim)] text-[11px] px-1 leading-snug' }, text),
+  caption: (text) => el("p", { class: "text-[var(--text-dim)] text-[11px] px-1 leading-snug" }, text),
 };
 
 const getRoleVariations = (role, config) => {
@@ -142,58 +142,51 @@ const getRoleVariations = (role, config) => {
 
 const Components = {
   // --- COLOR COMPONENTS ---
-  _ColorMainRow: (group, idx, config) => el('div', { class: "grid grid-cols-[20px_1fr_72px_40px] gap-2" }, [
-    el('div', { class: "flex flex-col gap-0.5 self-center flex-shrink-0" }, [
-      el('button', { onclick: () => moveGroup(idx, -1), disabled: idx === 0, class: "w-5 h-5 flex items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20" }, "▲"),
-      el('span', { class: "drag-handle text-[var(--text-muted)] cursor-grab text-[14px] leading-none text-center" }, "⠿"),
-      el('button', { onclick: () => moveGroup(idx, 1), disabled: idx === config.colors.length - 1, class: "w-5 h-5 flex items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20" }, "▼")
+  _ColorMainRow: (group, idx, config) =>
+    el("div", { class: "grid grid-cols-[20px_1fr_72px_40px] gap-2" }, [
+      el("div", { class: "flex flex-col gap-0.5 self-center flex-shrink-0" }, [
+        el("button", { onclick: () => moveGroup(idx, -1), disabled: idx === 0, class: "w-5 h-5 flex items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20" }, "▲"),
+        el("span", { class: "drag-handle text-[var(--text-muted)] cursor-grab text-[14px] leading-none text-center" }, "⠿"),
+        el("button", { onclick: () => moveGroup(idx, 1), disabled: idx === config.colors.length - 1, class: "w-5 h-5 flex items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20" }, "▼"),
+      ]),
+      inputsUI.input({ id: `clr-${idx}-name`, value: group.name || "", oninput: (e) => updateGroup(idx, "name", e.target.value) }, "Color Name"),
+      inputsUI.input({ id: `clr-${idx}-short`, value: group.shorthand || "", oninput: (e) => updateGroup(idx, "shorthand", e.target.value) }, "Short"),
+      inputsUI.iconButton(Icons.Trash, () => removeGroup(idx)),
     ]),
-    inputsUI.input({ id: `clr-${idx}-name`, value: group.name || "", oninput: (e) => updateGroup(idx, 'name', e.target.value) }, "Color Name"),
-    inputsUI.input({ id: `clr-${idx}-short`, value: group.shorthand || "", oninput: (e) => updateGroup(idx, 'shorthand', e.target.value) }, "Short"),
-    inputsUI.iconButton(Icons.Trash, () => removeGroup(idx))
-  ]),
 
-  _ColorStatsRow: (group, idx) => inputsUI.colorInput(
-    group.value,
-    (val, el) => updateGroup(idx, 'value', val, el),
-    `clr-${idx}`
-  ),
+  _ColorStatsRow: (group, idx) => inputsUI.colorInput(group.value, (val, el) => updateGroup(idx, "value", val, el), `clr-${idx}`),
 
   _ColorSolverRow: (group, idx, config) => {
     if (config.pluginMode !== "direct") return null;
     const mode = group.solverMode || "natural";
-    return el('div', { class: 'space-y-1' }, [
-      el('label', { class: 'text-[var(--text-muted)] text-[12px] font-medium' }, "Color Solver"),
-      el('select', { onchange: (e) => updateGroup(idx, 'solverMode', e.target.value), class: "w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px] outline-none" }, [
-        el('option', { value: 'natural', selected: mode === 'natural' ? 'selected' : null }, "Balanced"),
-        el('option', { value: 'saturated', selected: mode === 'saturated' ? 'selected' : null }, "Vivid"),
-        el('option', { value: 'luminance', selected: mode === 'luminance' ? 'selected' : null }, "Muted"),
-        el('option', { value: 'hue-locked', selected: mode === 'hue-locked' ? 'selected' : null }, "Hue Locked"),
-        el('option', { value: 'chroma-maximized', selected: mode === 'chroma-maximized' ? 'selected' : null }, "Max Chroma")
-      ])
+    return el("div", { class: "space-y-1" }, [
+      el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium" }, "Color Solver"),
+      el("select", { onchange: (e) => updateGroup(idx, "solverMode", e.target.value), class: "w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px] outline-none" }, [
+        el("option", { value: "natural", selected: mode === "natural" ? "selected" : null }, "Balanced"),
+        el("option", { value: "saturated", selected: mode === "saturated" ? "selected" : null }, "Vivid"),
+        el("option", { value: "luminance", selected: mode === "luminance" ? "selected" : null }, "Muted"),
+        el("option", { value: "hue-locked", selected: mode === "hue-locked" ? "selected" : null }, "Hue Locked"),
+        el("option", { value: "chroma-maximized", selected: mode === "chroma-maximized" ? "selected" : null }, "Max Chroma"),
+      ]),
     ]);
   },
 
-  _ColorDescriptionRow: (group, idx, config) => config.includeDescriptions ? inputsUI.input({ value: group.description || "", placeholder: "Optional...", oninput: (e) => updateGroup(idx, 'description', e.target.value) }, "Description") : null,
+  _ColorDescriptionRow: (group, idx, config) => (config.includeDescriptions ? inputsUI.input({ value: group.description || "", placeholder: "Optional...", oninput: (e) => updateGroup(idx, "description", e.target.value) }, "Description") : null),
 
-  ColorGroupCard: (group, idx, config) => [
-    Components._ColorMainRow(group, idx, config),
-    Components._ColorStatsRow(group, idx, config),
-    Components._ColorSolverRow(group, idx, config),
-    Components._ColorDescriptionRow(group, idx, config)
-  ].filter(Boolean),
+  ColorGroupCard: (group, idx, config) => [Components._ColorMainRow(group, idx, config), Components._ColorStatsRow(group, idx, config), Components._ColorSolverRow(group, idx, config), Components._ColorDescriptionRow(group, idx, config)].filter(Boolean),
 
   // --- ROLE COMPONENTS ---
-  _RoleMainRow: (role, idx, config) => el('div', { class: "grid grid-cols-[20px_1fr_72px_40px] gap-2 items-end" }, [
-    el('div', { class: "flex flex-col gap-0.5 self-center flex-shrink-0" }, [
-      el('button', { onclick: () => moveRole(idx, -1), disabled: idx === 0, class: "w-5 h-5 flex items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20" }, "▲"),
-      el('span', { class: "drag-handle text-[var(--text-muted)] cursor-grab text-[14px] leading-none text-center" }, "⠿"),
-      el('button', { onclick: () => moveRole(idx, 1), disabled: idx === config.roles.length - 1, class: "w-5 h-5 flex items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20" }, "▼")
+  _RoleMainRow: (role, idx, config) =>
+    el("div", { class: "grid grid-cols-[20px_1fr_72px_40px] gap-2 items-end" }, [
+      el("div", { class: "flex flex-col gap-0.5 self-center flex-shrink-0" }, [
+        el("button", { onclick: () => moveRole(idx, -1), disabled: idx === 0, class: "w-5 h-5 flex items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20" }, "▲"),
+        el("span", { class: "drag-handle text-[var(--text-muted)] cursor-grab text-[14px] leading-none text-center" }, "⠿"),
+        el("button", { onclick: () => moveRole(idx, 1), disabled: idx === config.roles.length - 1, class: "w-5 h-5 flex items-center justify-center rounded-[4px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] disabled:opacity-20" }, "▼"),
+      ]),
+      inputsUI.input({ id: `role-${idx}-name`, value: role.name || "", oninput: (e) => updateRole(idx, "name", e.target.value) }, "Role Name"),
+      inputsUI.input({ id: `role-${idx}-short`, value: role.shorthand || "", oninput: (e) => updateRole(idx, "shorthand", e.target.value) }, "Short"),
+      inputsUI.iconButton(Icons.Trash, () => removeRole(idx)),
     ]),
-    inputsUI.input({ id: `role-${idx}-name`, value: role.name || "", oninput: (e) => updateRole(idx, 'name', e.target.value) }, "Role Name"),
-    inputsUI.input({ id: `role-${idx}-short`, value: role.shorthand || "", oninput: (e) => updateRole(idx, 'shorthand', e.target.value) }, "Short"),
-    inputsUI.iconButton(Icons.Trash, () => removeRole(idx))
-  ]),
 
   _RoleSecondRow: (role, idx, config) => {
     const isDirect = config.pluginMode === "direct";
@@ -203,65 +196,66 @@ const Components = {
     if (isDirect && bSel === "By Contrast") {
       const baseC = role.baseContrast || 4.5;
       const gap = role.contrastGap || 1.5;
-      return el('div', { class: 'space-y-1.5' }, [
-        el('div', { class: 'grid grid-cols-2 gap-2' }, [
-          inputsUI.input({ id: `role-${idx}-baseC`, type: 'number', step: '0.1', value: baseC, onchange: (e) => updateRole(idx, 'baseContrast', e.target.value) }, "Base Contrast"),
-          inputsUI.input({ id: `role-${idx}-gap`, type: 'number', step: '0.1', value: gap, onchange: (e) => updateRole(idx, 'contrastGap', e.target.value) }, "Contrast Gap")
-        ])
+      return el("div", { class: "space-y-1.5" }, [
+        el("div", { class: "grid grid-cols-2 gap-2" }, [
+          inputsUI.input({ id: `role-${idx}-baseC`, type: "number", step: "0.1", value: baseC, onchange: (e) => updateRole(idx, "baseContrast", e.target.value) }, "Base Contrast"),
+          inputsUI.input({ id: `role-${idx}-gap`, type: "number", step: "0.1", value: gap, onchange: (e) => updateRole(idx, "contrastGap", e.target.value) }, "Contrast Gap"),
+        ]),
       ]);
     }
 
     if (isDirect && bSel === "Manual") {
       const varTargets = role.variationTargets || config.variations.map((_, i) => DEFAULT_VARIATION_TARGETS[i] || 4.5);
-      const inputs = config.variations.map((v, vi) => el('div', { class: 'space-y-1' }, [
-        el('label', { class: 'text-[var(--text-muted)] text-[11px] font-bold ml-1' }, v.name),
-        el('input', { type: 'number', step: '0.1', value: varTargets[vi], onchange: (e) => updateRoleVariationTarget(idx, vi, parseFloat(e.target.value)), class: "w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px]" })
-      ]));
-      return el('div', { class: 'grid gap-1.5', style: { gridTemplateColumns: `repeat(${config.variations.length}, 1fr)` } }, inputs);
+      const inputs = config.variations.map((v, vi) =>
+        el("div", { class: "space-y-1" }, [
+          el("label", { class: "text-[var(--text-muted)] text-[11px] font-bold ml-1" }, v.name),
+          el("input", { type: "number", step: "0.1", value: varTargets[vi], onchange: (e) => updateRoleVariationTarget(idx, vi, parseFloat(e.target.value)), class: "w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px]" }),
+        ]),
+      );
+      return el("div", { class: "grid gap-1.5", style: { gridTemplateColumns: `repeat(${config.variations.length}, 1fr)` } }, inputs);
     }
 
     // PALETTE MODE: MANUAL
     if (!isDirect && bSel === "Manual") {
-      const varTargets = role.variationTargets || config.variations.map(() => Math.floor((config.colorSteps || 25) / 2));
-      const maxStep = (config.colorSteps || 25) - 1;
-      const inputs = config.variations.map((v, vi) => el('div', { class: 'space-y-1' }, [
-        el('label', { class: 'text-[var(--text-muted)] text-[11px] font-bold ml-1' }, v.name),
-        el('input', { type: 'number', min: '0', max: String(maxStep), value: varTargets[vi], oninput: (e) => updateRoleVariationTarget(idx, vi, e.target.value), class: "w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px]" })
-      ]));
-      return el('div', { class: 'space-y-1' }, [
-        el('div', { class: 'grid gap-1.5', style: { gridTemplateColumns: `repeat(${config.variations.length}, 1fr)` } }, inputs),
-        el('p', { class: 'text-[10px] text-[var(--text-muted)] px-1' }, `Step indices (0–${maxStep})`)
-      ]);
+      const varTargets = role.variationTargets || config.variations.map(() => Math.floor((config.scaleLength || 25) / 2));
+      const maxStep = (config.scaleLength || 25) - 1;
+      const inputs = config.variations.map((v, vi) =>
+        el("div", { class: "space-y-1" }, [
+          el("label", { class: "text-[var(--text-muted)] text-[11px] font-bold ml-1" }, v.name),
+          el("input", { type: "number", min: "0", max: String(maxStep), value: varTargets[vi], oninput: (e) => updateRoleVariationTarget(idx, vi, e.target.value), class: "w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px]" }),
+        ]),
+      );
+      return el("div", { class: "space-y-1" }, [el("div", { class: "grid gap-1.5", style: { gridTemplateColumns: `repeat(${config.variations.length}, 1fr)` } }, inputs), el("p", { class: "text-[10px] text-[var(--text-muted)] px-1" }, `Step indices (0–${maxStep})`)]);
     }
 
     // PALETTE MODE: BY CONTRAST
     if (!isDirect && bSel === "By Contrast") {
       const isSteps = config.spreadUnit === "steps";
-      return el('div', { class: 'grid grid-cols-2 gap-2' }, [
-        inputsUI.input({ type: 'number', step: '0.1', value: role.minContrast || "4.5", onchange: (e) => updateRole(idx, 'minContrast', e.target.value) }, "Min Contrast"),
-        inputsUI.input({ type: 'number', step: isSteps ? '1' : '0.1', value: isSteps ? role.spread || 1 : role.contrastGap || 1.5, onchange: (e) => updateRole(idx, isSteps ? 'spread' : 'contrastGap', e.target.value) }, isSteps ? "Spread" : "Contrast Gap")
+      return el("div", { class: "grid grid-cols-2 gap-2" }, [
+        inputsUI.input({ type: "number", step: "0.1", value: role.minContrast || "4.5", onchange: (e) => updateRole(idx, "minContrast", e.target.value) }, "Min Contrast"),
+        inputsUI.input({ type: "number", step: isSteps ? "1" : "0.1", value: isSteps ? role.spread || 1 : role.contrastGap || 1.5, onchange: (e) => updateRole(idx, isSteps ? "spread" : "contrastGap", e.target.value) }, isSteps ? "Spread" : "Contrast Gap"),
       ]);
     }
 
     // PALETTE MODE: BY INDEX (DEFAULT)
-    const mid = Math.floor((config.colorSteps || 25) / 2);
+    const mid = Math.floor((config.scaleLength || 25) / 2);
     const lightBase = (role.baseIndex !== undefined ? role.baseIndex : mid) + 1;
     const darkBase = (role.darkBaseIndex !== undefined ? role.darkBaseIndex : role.baseIndex !== undefined ? role.baseIndex : mid) + 1;
     const isSteps = config.spreadUnit === "steps";
 
-    return el('div', { class: 'grid grid-cols-3 gap-2' }, [
-      inputsUI.input({ type: 'number', value: lightBase, min: '1', max: String(config.colorSteps), onchange: (e) => updateRole(idx, 'baseIndex', parseInt(e.target.value) - 1) }, "Light Base"),
-      inputsUI.input({ type: 'number', value: darkBase, min: '1', max: String(config.colorSteps), onchange: (e) => updateRole(idx, 'darkBaseIndex', parseInt(e.target.value) - 1) }, "Dark Base"),
-      inputsUI.input({ type: 'number', step: isSteps ? '1' : '0.1', value: isSteps ? role.spread || 1 : role.contrastGap || 1.5, onchange: (e) => updateRole(idx, isSteps ? 'spread' : 'contrastGap', e.target.value) }, isSteps ? "Spread" : "Contrast Gap")
+    return el("div", { class: "grid grid-cols-3 gap-2" }, [
+      inputsUI.input({ type: "number", value: lightBase, min: "1", max: String(config.scaleLength), onchange: (e) => updateRole(idx, "baseIndex", parseInt(e.target.value) - 1) }, "Light Base"),
+      inputsUI.input({ type: "number", value: darkBase, min: "1", max: String(config.scaleLength), onchange: (e) => updateRole(idx, "darkBaseIndex", parseInt(e.target.value) - 1) }, "Dark Base"),
+      inputsUI.input({ type: "number", step: isSteps ? "1" : "0.1", value: isSteps ? role.spread || 1 : role.contrastGap || 1.5, onchange: (e) => updateRole(idx, isSteps ? "spread" : "contrastGap", e.target.value) }, isSteps ? "Spread" : "Contrast Gap"),
     ]);
   },
 
   _RoleOverrideSection: (role, idx, config) => {
     if (!config.allowRoleVariations) return null;
-    
+
     const buildVariationsList = () => {
       if (!role.variationOverride) return null;
-      
+
       const roleVars = getRoleVariations(role, config);
       const isDirect = config.pluginMode === "direct";
       const isManual = !!role.variationManual;
@@ -270,7 +264,7 @@ const Components = {
         const storedTarget = (role.variationTargets || [])[vi];
         const varCount = roleVars.length;
         const baseVarIdx = Math.floor(varCount / 2);
-        
+
         let ruleVal;
         if (isDirect) {
           const _bc = parseFloat(role.baseContrast) || 4.5;
@@ -283,78 +277,100 @@ const Components = {
         const rawVal = isManual ? (storedTarget !== undefined ? storedTarget : ruleVal) : ruleVal;
         const displayVal = rawVal !== undefined ? parseFloat(parseFloat(rawVal).toFixed(2)) : "";
 
-        return el('div', { class: "flex items-center gap-1.5" }, [
-          el('div', { class: "flex flex-col gap-0.5 shrink-0" }, [
-            el('button', {
-              onclick: () => moveRoleVariation(idx, vi, -1),
-              disabled: vi === 0,
-              class: "w-4 h-4 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20 text-[9px]"
-            }, "▲"),
-            el('button', {
-              onclick: () => moveRoleVariation(idx, vi, 1),
-              disabled: vi === roleVars.length - 1,
-              class: "w-4 h-4 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20 text-[9px]"
-            }, "▼")
+        return el("div", { class: "flex items-center gap-1.5" }, [
+          el("div", { class: "flex flex-col gap-0.5 shrink-0" }, [
+            el(
+              "button",
+              {
+                onclick: () => moveRoleVariation(idx, vi, -1),
+                disabled: vi === 0,
+                class: "w-4 h-4 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20 text-[9px]",
+              },
+              "▲",
+            ),
+            el(
+              "button",
+              {
+                onclick: () => moveRoleVariation(idx, vi, 1),
+                disabled: vi === roleVars.length - 1,
+                class: "w-4 h-4 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20 text-[9px]",
+              },
+              "▼",
+            ),
           ]),
-          el('input', {
-            type: 'text', value: v.name || "", placeholder: "Name",
-            oninput: (e) => updateRoleVariation(idx, vi, 'name', e.target.value),
-            class: "flex-1 h-[32px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-2 text-[12px] text-[var(--text-primary)]"
+          el("input", {
+            type: "text",
+            value: v.name || "",
+            placeholder: "Name",
+            oninput: (e) => updateRoleVariation(idx, vi, "name", e.target.value),
+            class: "flex-1 h-[32px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-2 text-[12px] text-[var(--text-primary)]",
           }),
-          el('input', {
-            type: 'text', value: v.shorthand || "", placeholder: "Short",
-            oninput: (e) => updateRoleVariation(idx, vi, 'shorthand', e.target.value),
-            class: "w-[52px] h-[32px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-2 text-[12px] text-[var(--text-primary)]"
+          el("input", {
+            type: "text",
+            value: v.shorthand || "",
+            placeholder: "Short",
+            oninput: (e) => updateRoleVariation(idx, vi, "shorthand", e.target.value),
+            class: "w-[52px] h-[32px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-2 text-[12px] text-[var(--text-primary)]",
           }),
-          el('input', {
-            type: 'number', step: '0.1', 
+          el("input", {
+            type: "number",
+            step: "0.1",
             value: displayVal,
-            disabled: !isManual ? 'disabled' : null,
+            disabled: !isManual ? "disabled" : null,
             oninput: (e) => updateRoleVariationTarget(idx, vi, e.target.value),
-            class: `w-[60px] h-[32px] border rounded-[8px] px-2 text-[12px] ${isManual ? "bg-[var(--bg-input)] border-[var(--border)]" : "bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-muted)] cursor-not-allowed opacity-60"}`
+            class: `w-[60px] h-[32px] border rounded-[8px] px-2 text-[12px] ${isManual ? "bg-[var(--bg-input)] border-[var(--border)]" : "bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-muted)] cursor-not-allowed opacity-60"}`,
           }),
-          el('button', {
-            onclick: () => removeRoleVariation(idx, vi),
-            disabled: roleVars.length <= 1,
-            class: "w-[28px] h-[32px] shrink-0 flex items-center justify-center rounded-[8px] bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 hover:bg-[var(--danger)]/20 disabled:opacity-30"
-          }, "✕")
+          el(
+            "button",
+            {
+              onclick: () => removeRoleVariation(idx, vi),
+              disabled: roleVars.length <= 1,
+              class: "w-[28px] h-[32px] shrink-0 flex items-center justify-center rounded-[8px] bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 hover:bg-[var(--danger)]/20 disabled:opacity-30",
+            },
+            "✕",
+          ),
         ]);
       });
 
-      return el('div', { class: "mt-2 space-y-1.5" }, [
-        el('div', { class: "flex items-center justify-between py-1" }, [
-          el('span', { class: "text-[11px] text-[var(--text-muted)]" }, "Variation targets"),
-          el('div', { class: "flex gap-0.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-[6px] p-0.5" }, [
-            el('button', {
-              onclick: () => role.variationManual && toggleRoleVariationManual(idx),
-              class: `text-[11px] px-2 py-0.5 rounded-[4px] transition-all ${!role.variationManual ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm" : "text-[var(--text-muted)]"}`
-            }, "Rule"),
-            el('button', {
-              onclick: () => !role.variationManual && toggleRoleVariationManual(idx),
-              class: `text-[11px] px-2 py-0.5 rounded-[4px] transition-all ${role.variationManual ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm" : "text-[var(--text-muted)]"}`
-            }, "Manual")
-          ])
+      return el("div", { class: "mt-2 space-y-1.5" }, [
+        el("div", { class: "flex items-center justify-between py-1" }, [
+          el("span", { class: "text-[11px] text-[var(--text-muted)]" }, "Variation targets"),
+          el("div", { class: "flex gap-0.5 bg-[var(--bg-input)] border border-[var(--border)] rounded-[6px] p-0.5" }, [
+            el(
+              "button",
+              {
+                onclick: () => role.variationManual && toggleRoleVariationManual(idx),
+                class: `text-[11px] px-2 py-0.5 rounded-[4px] transition-all ${!role.variationManual ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm" : "text-[var(--text-muted)]"}`,
+              },
+              "Rule",
+            ),
+            el(
+              "button",
+              {
+                onclick: () => !role.variationManual && toggleRoleVariationManual(idx),
+                class: `text-[11px] px-2 py-0.5 rounded-[4px] transition-all ${role.variationManual ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm" : "text-[var(--text-muted)]"}`,
+              },
+              "Manual",
+            ),
+          ]),
         ]),
         ...listItems,
-        el('button', {
-          onclick: () => addRoleVariation(idx),
-          class: "w-full h-[28px] text-[11px] text-[var(--accent)] border border-[var(--border)] rounded-[8px] hover:bg-[var(--bg-hover)] transition-all"
-        }, "+ Add variation")
+        el(
+          "button",
+          {
+            onclick: () => addRoleVariation(idx),
+            class: "w-full h-[28px] text-[11px] text-[var(--accent)] border border-[var(--border)] rounded-[8px] hover:bg-[var(--bg-hover)] transition-all",
+          },
+          "+ Add variation",
+        ),
       ]);
     };
 
-    return el('div', { class: "border-t border-[var(--border)] mt-2 pt-2" }, [
-      el('div', { class: "flex items-center justify-between" }, [
-        el('span', { class: "text-[12px] font-medium" }, "Custom Variations"),
-        el('button', { onclick: () => toggleRoleVariationOverride(idx), class: `toggle-pill ${role.variationOverride ? "on" : ""}` })
-      ]),
-      buildVariationsList()
+    return el("div", { class: "border-t border-[var(--border)] mt-2 pt-2" }, [
+      el("div", { class: "flex items-center justify-between" }, [el("span", { class: "text-[12px] font-medium" }, "Custom Variations"), el("button", { onclick: () => toggleRoleVariationOverride(idx), class: `toggle-pill ${role.variationOverride ? "on" : ""}` })]),
+      buildVariationsList(),
     ]);
   },
 
-  RoleGroupCard: (role, idx, config) => [
-    Components._RoleMainRow(role, idx, config),
-    Components._RoleSecondRow(role, idx, config),
-    Components._RoleOverrideSection(role, idx, config)
-  ].filter(Boolean)
+  RoleGroupCard: (role, idx, config) => [Components._RoleMainRow(role, idx, config), Components._RoleSecondRow(role, idx, config), Components._RoleOverrideSection(role, idx, config)].filter(Boolean),
 };

@@ -1,9 +1,9 @@
 // 3. CONFIG TRANSLATOR: Converts appState (UI format) into the format expected by variableMaker.
 function translateConfig(appState) {
-  const count = Math.max(1, parseInt(appState.colorSteps) || 23);
+  const count = Math.max(1, parseInt(appState.scaleLength) || 23);
   const stepNames = _parseStepNames(appState, count);
   const variations = _parseVariations(appState);
-  const roleStepNames = variations.map((v) => (appState.useShorthandVariations && v.shorthand) ? v.shorthand : v.name);
+  const roleStepNames = variations.map((v) => (appState.useShorthandVariations && v.shorthand ? v.shorthand : v.name));
   const themes = appState.themes || [{ bg: "FFFFFF" }, { bg: "000000" }];
 
   return {
@@ -16,15 +16,17 @@ function translateConfig(appState) {
       description: g.description || "",
     })),
     roles: _mapRoles(appState, variations, count),
-    colorSteps: count,
+    scaleLength: count,
     scaleAlgorithm: appState.scaleAlgorithm || "Natural",
     pluginMode: appState.pluginMode || "ramp",
     spreadUnit: appState.spreadUnit || "steps",
     baseSelectionMode: appState.baseSelection || "By Contrast",
     roleMapping: appState.pluginMode === "direct" ? (appState.baseSelection === "Manual" ? "Direct Manual" : "Direct Contrast") : appState.baseSelection || "By Contrast",
-    colorStepNames: stepNames,
+    scaleStepNames: stepNames,
     roleStepNames,
-    variations: variations.map(function(v) { return Object.assign({}, v); }),
+    variations: variations.map(function (v) {
+      return Object.assign({}, v);
+    }),
     themes: [
       { name: "light", bg: themes[0].bg || "FFFFFF" },
       { name: "dark", bg: themes[1].bg || "000000" },
@@ -46,7 +48,7 @@ function translateConfig(appState) {
 }
 
 function _parseStepNames(appState, count) {
-  const raw = Array.isArray(appState.colorStepNames) ? appState.colorStepNames.join(",") : appState.colorStepNames || "";
+  const raw = Array.isArray(appState.scaleStepNames) ? appState.scaleStepNames.join(",") : appState.scaleStepNames || "";
   const userNames = raw.trim() ? raw.split(",").map((n) => n.trim()) : null;
   if (!userNames || userNames.length === 0) return null;
 
@@ -56,9 +58,7 @@ function _parseStepNames(appState, count) {
 }
 
 function _parseVariations(appState) {
-  return (appState.variations && appState.variations.length > 0)
-    ? appState.variations
-    : [1, 2, 3, 4, 5].map((n) => ({ _id: String(n), name: String(n), shorthand: String(n), description: "" }));
+  return appState.variations && appState.variations.length > 0 ? appState.variations : [1, 2, 3, 4, 5].map((n) => ({ _id: String(n), name: String(n), shorthand: String(n), description: "" }));
 }
 
 function _mapRoles(appState, variations, count) {
@@ -72,13 +72,15 @@ function _mapRoles(appState, variations, count) {
     baseContrast: parseFloat(role.baseContrast) || 4.5,
     contrastGap: parseFloat(role.contrastGap) || 1.5,
     useContrastGap: !!role.useContrastGap,
-    variationTargets: role.variationTargets || (appState.pluginMode === "direct"
-      ? variations.map((_, i) => DEFAULT_VARIATION_TARGETS[i] || 4.5)
-      : variations.map((_, i) => Math.floor(count / 2 + (i - Math.floor(variations.length / 2))))),
+    variationTargets: role.variationTargets || (appState.pluginMode === "direct" ? variations.map((_, i) => DEFAULT_VARIATION_TARGETS[i] || 4.5) : variations.map((_, i) => Math.floor(count / 2 + (i - Math.floor(variations.length / 2))))),
     description: role.description || "",
     variationOverride: role.variationOverride || false,
-    roleVariations: role.variationOverride && role.roleVariations && role.roleVariations.length > 0
-      ? role.roleVariations.map(function(v) { return Object.assign({}, v); }) : [],
+    roleVariations:
+      role.variationOverride && role.roleVariations && role.roleVariations.length > 0
+        ? role.roleVariations.map(function (v) {
+            return Object.assign({}, v);
+          })
+        : [],
   }));
 }
 
@@ -98,13 +100,13 @@ function buildVariableRenameMap(savedAppState, newAppState) {
 
   const oldCfg = translateConfig(savedAppState);
   const newCfg = translateConfig(newAppState);
-  const oldStepNames = oldCfg.colorStepNames || seriesMaker(oldCfg.colorSteps);
-  const newStepNames = newCfg.colorStepNames || seriesMaker(newCfg.colorSteps);
+  const oldStepNames = oldCfg.scaleStepNames || seriesMaker(oldCfg.scaleLength);
+  const newStepNames = newCfg.scaleStepNames || seriesMaker(newCfg.scaleLength);
 
   const colorLabels = _mapIdToLabel(savedAppState.colors, newAppState.colors, oldCfg.useShorthandColors, newCfg.useShorthandColors);
   const roleLabels = _mapIdToLabel(savedAppState.roles, newAppState.roles, oldCfg.useShorthandRoles, newCfg.useShorthandRoles);
 
-  const rampRenames = _getRampRenames(colorLabels.pairs, oldStepNames, newStepNames, Math.min(oldCfg.colorSteps, newCfg.colorSteps));
+  const rampRenames = _getRampRenames(colorLabels.pairs, oldStepNames, newStepNames, Math.min(oldCfg.scaleLength, newCfg.scaleLength));
   const contextualRenames = _getContextualRenames(colorLabels.pairs, roleLabels.pairs, oldCfg, newCfg);
 
   return {
@@ -121,7 +123,9 @@ function buildVariableRenameMap(savedAppState, newAppState) {
 function _mapIdToLabel(oldItems, newItems, oldShort, newShort) {
   const getMap = (items, useShort) => {
     const m = {};
-    (items || []).forEach(item => { if (item._id) m[item._id] = useShort && item.shorthand ? item.shorthand : item.name; });
+    (items || []).forEach((item) => {
+      if (item._id) m[item._id] = useShort && item.shorthand ? item.shorthand : item.name;
+    });
     return m;
   };
   const oldMap = getMap(oldItems, oldShort);
@@ -148,8 +152,12 @@ function _getRampRenames(colorPairs, oldSteps, newSteps, count) {
 function _getContextualRenames(colorPairs, rolePairs, oldCfg, newCfg) {
   const renames = {};
   const varCount = Math.min((oldCfg.variations || []).length, (newCfg.variations || []).length);
-  const oldRoleSteps = (oldCfg.variations || []).map(function(v, i) { return (oldCfg.useShorthandVariations && v && v.shorthand) ? v.shorthand : (v && v.name) || String(i); });
-  const newRoleSteps = (newCfg.variations || []).map(function(v, i) { return (newCfg.useShorthandVariations && v && v.shorthand) ? v.shorthand : (v && v.name) || String(i); });
+  const oldRoleSteps = (oldCfg.variations || []).map(function (v, i) {
+    return oldCfg.useShorthandVariations && v && v.shorthand ? v.shorthand : (v && v.name) || String(i);
+  });
+  const newRoleSteps = (newCfg.variations || []).map(function (v, i) {
+    return newCfg.useShorthandVariations && v && v.shorthand ? v.shorthand : (v && v.name) || String(i);
+  });
   const oldTG = oldCfg.variableStructure || "color";
   const newTG = newCfg.variableStructure || "color";
 
@@ -169,12 +177,16 @@ function _getContextualRenames(colorPairs, rolePairs, oldCfg, newCfg) {
 
 function _getSummaryChanges(colorPairs, rolePairs, oldCfg, newCfg, oldSteps, newSteps) {
   const changes = [];
-  colorPairs.forEach(p => { if (p.oldLabel !== p.newLabel) changes.push({ type: "color", from: p.oldLabel, to: p.newLabel }); });
-  rolePairs.forEach(p => { if (p.oldLabel !== p.newLabel) changes.push({ type: "role", from: p.oldLabel, to: p.newLabel }); });
-  
+  colorPairs.forEach((p) => {
+    if (p.oldLabel !== p.newLabel) changes.push({ type: "color", from: p.oldLabel, to: p.newLabel });
+  });
+  rolePairs.forEach((p) => {
+    if (p.oldLabel !== p.newLabel) changes.push({ type: "role", from: p.oldLabel, to: p.newLabel });
+  });
+
   const sample = (s) => s.slice(0, 3).join(",") + (s.length > 3 ? "…" : "");
   if (sample(oldSteps) !== sample(newSteps)) changes.push({ type: "stepNames", from: sample(oldSteps), to: sample(newSteps) });
   if (oldCfg.variableStructure !== newCfg.variableStructure) changes.push({ type: "grouping", from: oldCfg.variableStructure, to: newCfg.variableStructure });
-  
+
   return changes;
 }

@@ -5,23 +5,6 @@
  * ============================================================================
  */
 
-function validateState() {
-  if (!appState.colors || appState.colors.length === 0) return "Add at least one color before running.";
-  if (!appState.roles || appState.roles.length === 0) return "Add at least one color role before running.";
-
-  const hasDup = (arr) => new Set(arr).size !== arr.length;
-  const colorNames = appState.colors.map((c) => c.name.trim().toLowerCase()).filter(Boolean);
-  const colorShorts = appState.colors.map((c) => (c.shorthand || "").trim().toLowerCase()).filter(Boolean);
-  const roleNames = appState.roles.map((r) => r.name.trim().toLowerCase()).filter(Boolean);
-  const roleShorts = appState.roles.map((r) => (r.shorthand || "").trim().toLowerCase()).filter(Boolean);
-
-  if (hasDup(colorNames)) return "Two or more colors share the same name. Each color name must be unique.";
-  if (colorShorts.length && hasDup(colorShorts)) return "Two or more colors share the same shorthand. Each shorthand must be unique.";
-  if (hasDup(roleNames)) return "Two or more roles share the same name. Each role name must be unique.";
-  if (roleShorts.length && hasDup(roleShorts)) return "Two or more roles share the same shorthand. Each shorthand must be unique.";
-  return null;
-}
-
 function handleSubmit(scope = "all") {
   const dupError = validateState();
   if (dupError) {
@@ -37,7 +20,7 @@ function handleSubmit(scope = "all") {
         colorName: appState.tonalScaleCollectionName || "_scale",
         contextualName: appState.tokenCollectionName || "contextual",
         state: appState,
-        savedState: savedState,
+        savedState: getSavedState(),
       },
     },
     "*",
@@ -47,7 +30,7 @@ function handleSubmit(scope = "all") {
 function proceedWithSync() {
   showOverlay("loading-overlay");
   setTimeout(() => {
-    parent.postMessage({ pluginMessage: { type: "run-creater", state: appState, scope: pendingScope, savedState: savedState } }, "*");
+    parent.postMessage({ pluginMessage: { type: "run-creater", state: appState, scope: pendingScope, savedState: getSavedState() } }, "*");
   }, 50);
 }
 
@@ -98,10 +81,12 @@ function refreshRunDialog() {
     }
     if (entries.length) {
       entries.forEach(([name, label, isExisting]) => {
-        colsEl.appendChild(el("div", { class: "flex items-center justify-between bg-[var(--bg-card)] border border-[var(--border)] rounded-[8px] px-3 py-2" }, [
-          el("span", { class: "text-[13px] text-[var(--text-primary)] font-mono" }, name),
-          el("span", { class: `text-[11px] font-bold px-2 py-0.5 rounded ${isExisting ? "bg-[var(--warning)]/15 text-[var(--warning)]" : "bg-[var(--success)]/15 text-[var(--success)]"}` }, label),
-        ]));
+        colsEl.appendChild(
+          el("div", { class: "flex items-center justify-between bg-[var(--bg-card)] border border-[var(--border)] rounded-[8px] px-3 py-2" }, [
+            el("span", { class: "text-[13px] text-[var(--text-primary)] font-mono" }, name),
+            el("span", { class: `text-[11px] font-bold px-2 py-0.5 rounded ${isExisting ? "bg-[var(--warning)]/15 text-[var(--warning)]" : "bg-[var(--success)]/15 text-[var(--success)]"}` }, label),
+          ]),
+        );
       });
     } else {
       colsEl.appendChild(el("p", { class: "text-[12px] text-[var(--text-muted)] px-1" }, "No collections will be modified for this scope."));
@@ -132,21 +117,17 @@ function refreshRunDialog() {
       renameListEl.innerHTML = "";
       const typeLabels = { color: "Color", role: "Role", stepNames: "Scale Steps", roleStepNames: "Variation Levels", grouping: "Grouping" };
       changes.forEach((ch) => {
-        renameListEl.appendChild(el("div", { class: "flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-[8px] px-3 py-2 min-w-0" }, [
-          el("span", { class: "text-[11px] text-[var(--text-muted)] w-[68px] shrink-0" }, typeLabels[ch.type] || ch.type),
-          el("span", { class: "text-[11px] font-mono text-[var(--text-primary)] truncate flex-1" }, ch.from),
-          el("span", { class: "text-[11px] text-[var(--accent)] shrink-0 px-0.5" }, "→"),
-          el("span", { class: "text-[11px] font-mono text-[var(--accent)] truncate flex-1" }, ch.to),
-        ]));
+        renameListEl.appendChild(
+          el("div", { class: "flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-[8px] px-3 py-2 min-w-0" }, [
+            el("span", { class: "text-[11px] text-[var(--text-muted)] w-[68px] shrink-0" }, typeLabels[ch.type] || ch.type),
+            el("span", { class: "text-[11px] font-mono text-[var(--text-primary)] truncate flex-1" }, ch.from),
+            el("span", { class: "text-[11px] text-[var(--accent)] shrink-0 px-0.5" }, "→"),
+            el("span", { class: "text-[11px] font-mono text-[var(--accent)] truncate flex-1" }, ch.to),
+          ]),
+        );
       });
-      const parts = [
-        rampCount > 0 ? `${rampCount} scale var${rampCount > 1 ? "s" : ""}` : "",
-        ctxCount > 0 ? `${ctxCount} token var${ctxCount > 1 ? "s" : ""}` : "",
-      ].filter(Boolean).join(" · ");
-      renameListEl.appendChild(el("div", { class: "flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] px-1 pt-0.5" }, [
-        el("span", { class: "inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" }),
-        el("span", {}, `${parts} will be renamed`),
-      ]));
+      const parts = [rampCount > 0 ? `${rampCount} scale var${rampCount > 1 ? "s" : ""}` : "", ctxCount > 0 ? `${ctxCount} token var${ctxCount > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
+      renameListEl.appendChild(el("div", { class: "flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] px-1 pt-0.5" }, [el("span", { class: "inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" }), el("span", {}, `${parts} will be renamed`)]));
     } else {
       renameEl.classList.add("hidden");
     }
@@ -163,18 +144,19 @@ function refreshRunDialog() {
       [`Colors x${appState.colors.length}`, colorList],
       [`Roles x${appState.roles.length}`, roleList],
       ["Mode", isDirect ? "Adaptive Engine" : "Palette-Based"],
-      ...(isDirect ? [] : [
-        ["Base Selection", appState.baseSelection || "By Contrast"],
-        ...(appState.baseSelection !== "Manual" ? [["Spread Unit", (appState.spreadUnit || "steps") === "contrast" ? "Contrast Gap" : "Steps"]] : []),
-        ["Color Steps", String(appState.colorSteps || 25)],
-        ["Scale Algorithm", appState.scaleAlgorithm || "Natural"],
-      ]),
+      ...(isDirect
+        ? []
+        : [
+            ["Base Selection", appState.baseSelection || "By Contrast"],
+            ...(appState.baseSelection !== "Manual" ? [["Spread Unit", (appState.spreadUnit || "steps") === "contrast" ? "Contrast Gap" : "Steps"]] : []),
+            ["Color Steps", String(appState.scaleLength || 25)],
+            ["Scale Algorithm", appState.scaleAlgorithm || "Natural"],
+          ]),
     ];
     rows.forEach(([label, value]) => {
-      sumEl.appendChild(el("div", { class: "flex items-start justify-between gap-2 text-[12px] py-1 border-b border-[var(--border)]/40 last:border-0" }, [
-        el("span", { class: "text-[var(--text-muted)] shrink-0" }, label),
-        el("span", { class: "text-[var(--text-primary)] text-right text-[11px]" }, value),
-      ]));
+      sumEl.appendChild(
+        el("div", { class: "flex items-start justify-between gap-2 text-[12px] py-1 border-b border-[var(--border)]/40 last:border-0" }, [el("span", { class: "text-[var(--text-muted)] shrink-0" }, label), el("span", { class: "text-[var(--text-primary)] text-right text-[11px]" }, value)]),
+      );
     });
   }
 
@@ -196,10 +178,10 @@ function handleImportJSON(json) {
   try {
     const imported = typeof json === "string" ? JSON.parse(json) : json;
     if (!imported.colors || !imported.roles) throw new Error("Invalid config format");
-    
+
     _pendingImportData = imported;
     showOverlay("confirm-import-overlay");
-    
+
     document.getElementById("btn-import-save").onclick = () => {
       exportConfig();
       finalizeImport();
@@ -214,16 +196,14 @@ function handleImportJSON(json) {
 
 function finalizeImport() {
   if (!_pendingImportData) return;
-  Object.assign(appState, _pendingImportData);
+  loadState(_pendingImportData);   // merges, re-syncs ids/variations, marks clean
   _pendingImportData = null;
   hideOverlay("confirm-import-overlay");
-  ensureVariations();
   syncInputsFromState();
   renderColorGroups();
   renderRoles();
   BannerManager.success("Config imported successfully");
 }
-
 
 function exportConfig() {
   const data = JSON.stringify(appState, null, 2);
@@ -311,16 +291,22 @@ function showSystemBanners(errors, result = null) {
   }
 
   if (critCount > 0) {
-    detailNode.appendChild(_detailSection(
-      "Critical Issues:", "text-red-400",
-      errors.critical.map((e) => `${e.color}/${e.role}: ${e.error}`)
-    ));
+    detailNode.appendChild(
+      _detailSection(
+        "Critical Issues:",
+        "text-red-400",
+        errors.critical.map((e) => `${e.color}/${e.role}: ${e.error}`),
+      ),
+    );
   }
   if (warnCount > 0) {
-    detailNode.appendChild(_detailSection(
-      "Warnings:", "text-amber-400",
-      errors.warnings.map((w) => `${w.color}/${w.role}: ${w.warning}`)
-    ));
+    detailNode.appendChild(
+      _detailSection(
+        "Warnings:",
+        "text-amber-400",
+        errors.warnings.map((w) => `${w.color}/${w.role}: ${w.warning}`),
+      ),
+    );
   }
   if (auditCount > 0) {
     const section = document.createElement("div");

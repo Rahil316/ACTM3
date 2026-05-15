@@ -49,14 +49,12 @@ function setBaseSelection(idx) {
 // --- syncOutputToggles broken into focused helpers ---
 
 function _syncTogglePills() {
-  ["embedDirectly", "useShorthandColors", "useShorthandRoles", "useShorthandVariations",
-   "includeGlobalColors", "includeAlphaTints", "allowRoleVariations", "includeDescriptions"]
-    .forEach((key) => {
-      ["toggle-" + key, "rd-toggle-" + key].forEach((id) => {
-        const btn = document.getElementById(id);
-        if (btn) btn.classList.toggle("on", !!appState[key]);
-      });
+  ["embedDirectly", "useShorthandColors", "useShorthandRoles", "useShorthandVariations", "includeGlobalColors", "includeAlphaTints", "allowRoleVariations", "includeDescriptions"].forEach((key) => {
+    ["toggle-" + key, "rd-toggle-" + key].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.toggle("on", !!appState[key]);
     });
+  });
   const constOpts = document.getElementById("constants-options");
   if (constOpts) constOpts.classList.toggle("hidden", !appState.includeGlobalColors);
   const opacRow = document.getElementById("opacity-values-row");
@@ -65,14 +63,16 @@ function _syncTogglePills() {
 
 function _syncGroupingButtons() {
   const tg = appState.variableStructure || "color";
-  [["seg-group-color", "rd-seg-group-color"], ["seg-group-role", "rd-seg-group-role"]]
-    .forEach(([settingsId, rdId]) => {
-      const isActive = settingsId.includes("color") ? tg === "color" : tg === "role";
-      const s = document.getElementById(settingsId);
-      const r = document.getElementById(rdId);
-      if (s) s.classList.toggle("active", isActive);
-      if (r) r.classList.toggle("active", isActive);
-    });
+  [
+    ["seg-group-color", "rd-seg-group-color"],
+    ["seg-group-role", "rd-seg-group-role"],
+  ].forEach(([settingsId, rdId]) => {
+    const isActive = settingsId.includes("color") ? tg === "color" : tg === "role";
+    const s = document.getElementById(settingsId);
+    const r = document.getElementById(rdId);
+    if (s) s.classList.toggle("active", isActive);
+    if (r) r.classList.toggle("active", isActive);
+  });
 }
 
 function _syncModeControls() {
@@ -146,35 +146,53 @@ function renderSettingsVariations() {
 
   container.innerHTML = "";
   vars.forEach((v, idx) => {
-    container.appendChild(el("div", { class: "flex items-center gap-1.5" }, [
-      el("div", { class: "flex flex-col gap-0.5 shrink-0" }, [
-        el("button", {
-          onclick: () => moveSharedVariation(idx, -1),
-          disabled: idx === 0,
-          class: "w-4 h-4 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20 text-[9px]"
-        }, "▲"),
-        el("button", {
-          onclick: () => moveSharedVariation(idx, 1),
-          disabled: idx === vars.length - 1,
-          class: "w-4 h-4 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20 text-[9px]"
-        }, "▼")
+    container.appendChild(
+      el("div", { class: "flex items-center gap-1.5" }, [
+        el("div", { class: "flex flex-col gap-0.5 shrink-0" }, [
+          el(
+            "button",
+            {
+              onclick: () => moveSharedVariation(idx, -1),
+              disabled: idx === 0,
+              class: "w-4 h-4 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20 text-[9px]",
+            },
+            "▲",
+          ),
+          el(
+            "button",
+            {
+              onclick: () => moveSharedVariation(idx, 1),
+              disabled: idx === vars.length - 1,
+              class: "w-4 h-4 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20 text-[9px]",
+            },
+            "▼",
+          ),
+        ]),
+        el("input", {
+          type: "text",
+          value: v.name || "",
+          placeholder: "Name",
+          oninput: (e) => updateSharedVariation(idx, "name", e.target.value),
+          class: "flex-1 h-[32px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-2 text-[12px] outline-none focus:border-[var(--border-focus)] text-[var(--text-primary)]",
+        }),
+        el("input", {
+          type: "text",
+          value: v.shorthand || "",
+          placeholder: "Short",
+          oninput: (e) => updateSharedVariation(idx, "shorthand", e.target.value),
+          class: "w-[52px] h-[32px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-2 text-[12px] outline-none focus:border-[var(--border-focus)] text-[var(--text-primary)]",
+        }),
+        el(
+          "button",
+          {
+            onclick: () => removeSharedVariation(idx),
+            disabled: !canDelete,
+            class: "w-[28px] h-[32px] shrink-0 flex items-center justify-center rounded-[8px] bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 hover:bg-[var(--danger)]/20 disabled:opacity-30 disabled:cursor-not-allowed text-[13px]",
+          },
+          "✕",
+        ),
       ]),
-      el("input", {
-        type: "text", value: v.name || "", placeholder: "Name",
-        oninput: (e) => updateSharedVariation(idx, "name", e.target.value),
-        class: "flex-1 h-[32px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-2 text-[12px] outline-none focus:border-[var(--border-focus)] text-[var(--text-primary)]"
-      }),
-      el("input", {
-        type: "text", value: v.shorthand || "", placeholder: "Short",
-        oninput: (e) => updateSharedVariation(idx, "shorthand", e.target.value),
-        class: "w-[52px] h-[32px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-2 text-[12px] outline-none focus:border-[var(--border-focus)] text-[var(--text-primary)]"
-      }),
-      el("button", {
-        onclick: () => removeSharedVariation(idx),
-        disabled: !canDelete,
-        class: "w-[28px] h-[32px] shrink-0 flex items-center justify-center rounded-[8px] bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 hover:bg-[var(--danger)]/20 disabled:opacity-30 disabled:cursor-not-allowed text-[13px]"
-      }, "✕")
-    ]));
+    );
   });
 }
 
@@ -191,14 +209,18 @@ function updateSettingsFromInputs() {
     return clean;
   };
 
-  if (!appState.themes) appState.themes = [{ name: "light", bg: "FFFFFF" }, { name: "dark", bg: "000000" }];
+  if (!appState.themes)
+    appState.themes = [
+      { name: "light", bg: "FFFFFF" },
+      { name: "dark", bg: "000000" },
+    ];
   appState.themes[0].bg = readHexInput("setting-light-bg");
   appState.themes[1].bg = readHexInput("setting-dark-bg");
 
-  const wCount = parseInt(document.getElementById("setting-colorSteps").value);
-  appState.colorSteps = isNaN(wCount) ? 25 : Math.max(1, Math.min(100, wCount));
+  const wCount = parseInt(document.getElementById("setting-scaleLength").value);
+  appState.scaleLength = isNaN(wCount) ? 25 : Math.max(1, Math.min(100, wCount));
   appState.scaleAlgorithm = document.getElementById("setting-scaleAlgorithm").value;
-  appState.colorStepNames = document.getElementById("setting-colorStepNames").value;
+  appState.scaleStepNames = document.getElementById("setting-scaleStepNames").value;
 
   const bsSelect = document.getElementById("setting-baseSelection");
   appState.baseSelection = UI_MODES.selection[bsSelect.selectedIndex] || "By Contrast";
@@ -227,9 +249,9 @@ function syncInputsFromState() {
   document.getElementById("setting-light-bg").value = themes[0].bg;
   document.getElementById("setting-dark-bg").value = themes[1].bg;
 
-  document.getElementById("setting-colorSteps").value = appState.colorSteps;
+  document.getElementById("setting-scaleLength").value = appState.scaleLength;
   document.getElementById("setting-scaleAlgorithm").value = appState.scaleAlgorithm || "Natural";
-  document.getElementById("setting-colorStepNames").value = appState.colorStepNames || "";
+  document.getElementById("setting-scaleStepNames").value = appState.scaleStepNames || "";
 
   const bsEl = document.getElementById("setting-baseSelection");
   if (bsEl) {

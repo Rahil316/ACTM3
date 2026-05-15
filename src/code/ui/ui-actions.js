@@ -35,21 +35,19 @@ function hideOverlay(id) {
 }
 
 function updateGroup(idx, key, value, el) {
+  setColor(idx, key, value);
   if (key === "value") {
-    const clean = sanitizeHex(value);
+    const clean = appState.colors[idx].value; // already sanitized by setColor
     if (el && el.value !== clean) {
       const pos = el.selectionStart;
       el.value = clean;
       el.setSelectionRange(pos, pos);
     }
-    appState.colors[idx].value = clean;
     // Sync sibling inputs in-place — no re-render needed
     const textEl = document.getElementById(`clr-${idx}-hex`);
     const pickerEl = document.getElementById(`clr-${idx}-picker`);
     if (textEl && textEl !== el) textEl.value = clean;
     if (pickerEl && pickerEl !== el && clean.length === 6) pickerEl.value = "#" + clean;
-  } else {
-    appState.colors[idx][key] = value;
   }
   schedulePreview();
 }
@@ -76,29 +74,7 @@ function addGroup() {
 }
 
 function updateRole(idx, key, value) {
-  if (key.startsWith("variationTarget:")) {
-    const vi = parseInt(key.slice("variationTarget:".length));
-    if (!appState.roles[idx].variationTargets) {
-      appState.roles[idx].variationTargets = defaultVariationTargets(appState.variations.length, "direct", appState.colorSteps);
-    }
-    let v = parseFloat(value);
-    if (isNaN(v) || v < 1) v = 1;
-    appState.roles[idx].variationTargets[vi] = Math.min(21, v);
-  } else if (key === "minContrast") {
-    let v = parseFloat(value);
-    if (isNaN(v)) v = 1;
-    appState.roles[idx].minContrast = Math.max(1, Math.min(21, v));
-  } else if (key === "spread") {
-    let v = parseInt(value);
-    if (isNaN(v)) v = 1;
-    appState.roles[idx].spread = Math.max(1, Math.min(21, v));
-  } else if (key === "baseIndex" || key === "darkBaseIndex") {
-    let v = parseInt(value);
-    if (isNaN(v)) v = 0;
-    appState.roles[idx][key] = Math.max(0, Math.min(appState.colorSteps - 1, v));
-  } else {
-    appState.roles[idx][key] = value;
-  }
+  setRole(idx, key, value);
   // Text-only fields don't need a full re-render — the live input already shows the value
   if (key === "name" || key === "shorthand") {
     schedulePreview();
@@ -123,7 +99,7 @@ function moveRole(idx, dir) {
 
 function addRole() {
   const n = appState.roles.length + 1;
-  const mid = Math.floor(appState.colorSteps / 2);
+  const mid = Math.floor(appState.scaleLength / 2);
   appState.roles.unshift({
     _id: generateId(),
     name: "Role " + n,
@@ -132,7 +108,7 @@ function addRole() {
     minContrast: 4.5,
     baseIndex: mid,
     darkBaseIndex: mid,
-    variationTargets: defaultVariationTargets(appState.variations.length, appState.pluginMode, appState.colorSteps),
+    variationTargets: defaultVariationTargets(appState.variations.length, appState.pluginMode, appState.scaleLength),
     description: "",
     variationOverride: false,
     roleVariations: [],
@@ -172,8 +148,7 @@ function moveSharedVariation(idx, dir) {
 }
 
 function updateSharedVariation(idx, field, value) {
-  if (!appState.variations[idx]) return;
-  appState.variations[idx][field] = value;
+  setVariation(idx, field, value);
   renderRoles();
   schedulePreview();
 }
@@ -231,9 +206,7 @@ function moveRoleVariation(roleIdx, varIdx, dir) {
 }
 
 function updateRoleVariation(roleIdx, varIdx, field, value) {
-  const role = appState.roles[roleIdx];
-  if (!role.roleVariations || !role.roleVariations[varIdx]) return;
-  role.roleVariations[varIdx][field] = value;
+  setRoleVariation(roleIdx, varIdx, field, value);
   schedulePreview();
 }
 
@@ -246,10 +219,6 @@ function resetRoleVariationsToShared(roleIdx) {
 }
 
 function updateRoleVariationTarget(roleIdx, varIdx, value) {
-  if (!appState.roles[roleIdx].variationTargets) {
-    const vLen = getRoleVariations(appState.roles[roleIdx], appState).length;
-    appState.roles[roleIdx].variationTargets = defaultVariationTargets(vLen, appState.pluginMode, appState.colorSteps);
-  }
-  appState.roles[roleIdx].variationTargets[varIdx] = parseFloat(value) || 0;
+  setRole(roleIdx, "variationTarget:" + varIdx, value);
   schedulePreview();
 }

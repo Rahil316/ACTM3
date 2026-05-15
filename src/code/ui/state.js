@@ -1,13 +1,17 @@
 /**
  * ============================================================================
  * CTM316 STATE MANAGEMENT (The Vanilla Store)
- * Centralized source of truth for the plugin state.
+ * Single source of truth for all plugin state. Owns:
+ *   - Identity helpers (generateId, ensureIds, ensureVariations)
+ *   - appState and UI preferences
+ *   - Persistence snapshot (savedState) for rename detection
+ *   - Dirty-hash tracking (isDirty / markClean)
+ *   - Validation (validateState)
+ *   - All state mutations (setColor, setRole, setVariation, setRoleVariation)
  * ============================================================================
  */
 
-/**
- * 0. IDENTITY GENERATION
- */
+// ── IDENTITY ──
 function generateId() {
   return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
 }
@@ -24,9 +28,7 @@ function ensureIds(state) {
   return state;
 }
 
-/**
- * 1. DEFAULT CONFIGURATION
- */
+// ── DEFAULT CONFIGURATION ──
 const demoConfig = {
   name: "CTM316",
   tonalScaleCollectionName: "_scale",
@@ -40,9 +42,9 @@ const demoConfig = {
   useShorthandColors: false,
   useShorthandRoles: false,
   useShorthandVariations: false,
-  colorSteps: 25,
+  scaleLength: 25,
   scaleAlgorithm: "Natural",
-  colorStepNames: "",
+  scaleStepNames: "",
   pluginMode: "ramp", // "ramp" or "direct"
   baseSelection: "By Contrast",
   spreadUnit: "steps",
@@ -68,9 +70,7 @@ const demoConfig = {
 ensureIds(demoConfig);
 const _demoConfigStr = JSON.stringify(demoConfig);
 
-/**
- * 2. APP STATE
- */
+// ── APP STATE ──
 let appState = JSON.parse(JSON.stringify(demoConfig));
 ensureVariations();
 
@@ -102,8 +102,162 @@ function ensureVariations() {
     const vLen = roleVars.length;
     if (!role.variationTargets || role.variationTargets.length !== vLen) {
       const oldVals = role.variations ? Object.values(role.variations) : Array.isArray(role.variationTargets) ? role.variationTargets : [];
-      role.variationTargets = roleVars.map((_, i) => oldVals[i] || (appState.pluginMode === "direct" ? DEFAULT_VARIATION_TARGETS[i] || 4.5 : Math.floor(((appState.colorSteps || 25) / Math.max(1, vLen - 1)) * i)));
+      role.variationTargets = roleVars.map((_, i) => oldVals[i] || (appState.pluginMode === "direct" ? DEFAULT_VARIATION_TARGETS[i] || 4.5 : Math.floor(((appState.scaleLength || 25) / Math.max(1, vLen - 1)) * i)));
       delete role.variations;
     }
   }
+}
+
+// ── PERSISTENCE SNAPSHOT ──
+// Tracks the last appState snapshot that was successfully synced to Figma.
+// Used by config.js to build variable rename maps (old name → new name).
+let savedState = null;
+
+/**
+ * Deep-clones snapshot as the new savedState baseline.
+ * Pass null to clear (e.g. after a full reset).
+ * @param {object|null} snapshot
+ */
+function setSavedState(snapshot) {
+  savedState = snapshot ? JSON.parse(JSON.stringify(snapshot)) : null;
+}
+
+/** @returns {object|null} Last persisted appState snapshot, or null if never synced */
+function getSavedState() { return savedState; }
+
+/**
+ * Merges incoming config into appState, re-syncs ids/variations,
+ * and marks the result clean so isDirty() returns false until the next mutation.
+ * Use for imports and load-config — not for partial field updates.
+ * @param {object} incoming - Partial or full appState-shaped object
+ */
+function loadState(incoming) {
+  Object.assign(appState, incoming);
+  ensureIds(appState);
+  ensureVariations();
+  markClean();
+}
+
+// ── HASH & DIRTY TRACKING ──
+// Compares a hash of the config fields that affect engine output.
+// isDirty() returns true whenever appState has changed since the last successful sync.
+let _stateHash = null;
+
+function _computeHash() {
+  const s = appState;
+  return JSON.stringify({
+    colors: s.colors.map((c) => ({ name: c.name, shorthand: c.shorthand, value: normalizeHex(c.value || ""), _id: c._id })),
+    roles: s.roles,
+    themes: s.themes,
+    variations: s.variations,
+    scaleLength: s.scaleLength,
+    scaleAlgorithm: s.scaleAlgorithm,
+    baseSelection: s.baseSelection,
+    spreadUnit: s.spreadUnit,
+    scaleStepNames: s.scaleStepNames,
+  });
+}
+
+/**
+ * Returns true if appState has changed since the last markClean() call.
+ * @returns {boolean}
+ */
+function isDirty() { return _computeHash() !== _stateHash; }
+
+/** Records the current appState hash as the clean baseline. */
+function markClean() { _stateHash = _computeHash(); }
+
+// ── VALIDATION ──
+/**
+ * Checks appState for problems that would prevent a successful Figma sync.
+ * @returns {string|null} Human-readable error message, or null if valid
+ */
+function validateState() {
+  if (!appState.colors || appState.colors.length === 0) return "Add at least one color before running.";
+  if (!appState.roles || appState.roles.length === 0) return "Add at least one color role before running.";
+
+  const hasDup = (arr) => new Set(arr).size !== arr.length;
+  const colorNames  = appState.colors.map((c) => c.name.trim().toLowerCase()).filter(Boolean);
+  const colorShorts = appState.colors.map((c) => (c.shorthand || "").trim().toLowerCase()).filter(Boolean);
+  const roleNames   = appState.roles.map((r) => r.name.trim().toLowerCase()).filter(Boolean);
+  const roleShorts  = appState.roles.map((r) => (r.shorthand || "").trim().toLowerCase()).filter(Boolean);
+
+  if (hasDup(colorNames))  return "Two or more colors share the same name. Each color name must be unique.";
+  if (colorShorts.length && hasDup(colorShorts)) return "Two or more colors share the same shorthand. Each shorthand must be unique.";
+  if (hasDup(roleNames))   return "Two or more roles share the same name. Each role name must be unique.";
+  if (roleShorts.length && hasDup(roleShorts))   return "Two or more roles share the same shorthand. Each shorthand must be unique.";
+  return null;
+}
+
+// ── MUTATIONS: COLORS ──
+/**
+ * Sets a field on appState.colors[idx]. Sanitizes hex when key === "value".
+ * @param {number} idx
+ * @param {string} key   - e.g. "name", "value", "shorthand", "description"
+ * @param {string} value
+ */
+function setColor(idx, key, value) {
+  if (key === "value") value = sanitizeHex(value);
+  appState.colors[idx][key] = value;
+}
+
+// ── MUTATIONS: ROLES ──
+/**
+ * Sets a field on appState.roles[idx] with appropriate clamping/validation.
+ * The composite key "variationTarget:N" sets roles[idx].variationTargets[N].
+ * @param {number} idx
+ * @param {string} key   - Field name or "variationTarget:N"
+ * @param {*}      value
+ */
+function setRole(idx, key, value) {
+  if (key.startsWith("variationTarget:")) {
+    const vi = parseInt(key.slice("variationTarget:".length));
+    if (!appState.roles[idx].variationTargets)
+      appState.roles[idx].variationTargets = defaultVariationTargets(appState.variations.length, "direct", appState.scaleLength);
+    let v = parseFloat(value);
+    if (isNaN(v) || v < 1) v = 1;
+    appState.roles[idx].variationTargets[vi] = Math.min(21, v);
+    return;
+  }
+  if (key === "minContrast") {
+    let v = parseFloat(value); if (isNaN(v)) v = 1;
+    appState.roles[idx].minContrast = Math.max(1, Math.min(21, v));
+    return;
+  }
+  if (key === "spread") {
+    let v = parseInt(value); if (isNaN(v)) v = 1;
+    appState.roles[idx].spread = Math.max(1, Math.min(21, v));
+    return;
+  }
+  if (key === "baseIndex" || key === "darkBaseIndex") {
+    let v = parseInt(value); if (isNaN(v)) v = 0;
+    appState.roles[idx][key] = Math.max(0, Math.min(appState.scaleLength - 1, v));
+    return;
+  }
+  appState.roles[idx][key] = value;
+}
+
+/**
+ * Sets a field on a per-role variation entry.
+ * @param {number} roleIdx
+ * @param {number} varIdx
+ * @param {string} field
+ * @param {*}      value
+ */
+function setRoleVariation(roleIdx, varIdx, field, value) {
+  const role = appState.roles[roleIdx];
+  if (!role.roleVariations || !role.roleVariations[varIdx]) return;
+  role.roleVariations[varIdx][field] = value;
+}
+
+// ── MUTATIONS: VARIATIONS ──
+/**
+ * Sets a field on appState.variations[idx].
+ * @param {number} idx
+ * @param {string} field
+ * @param {*}      value
+ */
+function setVariation(idx, field, value) {
+  if (!appState.variations[idx]) return;
+  appState.variations[idx][field] = value;
 }

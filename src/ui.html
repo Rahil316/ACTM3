@@ -429,8 +429,8 @@
             <h3 class="text-[var(--text-muted)] text-[11px] font-bold tracking-[1.2px] px-1">Color Settings</h3>
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
-                <label for="setting-colorSteps" class="text-[var(--text-muted)] text-[12px] font-medium ml-1">Step Count</label>
-                <input type="number" id="setting-colorSteps" class="w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" />
+                <label for="setting-scaleLength" class="text-[var(--text-muted)] text-[12px] font-medium ml-1">Step Count</label>
+                <input type="number" id="setting-scaleLength" class="w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" />
               </div>
               <div class="space-y-1">
                 <label for="setting-scaleAlgorithm" class="text-[var(--text-muted)] text-[12px] font-medium ml-1">Scale Algorithm</label>
@@ -446,8 +446,8 @@
               </div>
             </div>
             <div class="space-y-1">
-              <label for="setting-colorStepNames" class="text-[var(--text-muted)] text-[12px] font-medium ml-1">Step Labels (CSV)</label>
-              <input type="text" id="setting-colorStepNames" class="w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" />
+              <label for="setting-scaleStepNames" class="text-[var(--text-muted)] text-[12px] font-medium ml-1">Step Labels (CSV)</label>
+              <input type="text" id="setting-scaleStepNames" class="w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]" />
             </div>
           </div>
 
@@ -937,12 +937,11 @@
     <div id="tooltip" class="tooltip"></div>
     <script src="src/code/ui/bannerManager.js"></script>
     <script src="src/code/utils.js"></script>
+    <script src="src/code/clrUtils.js"></script>
+    <script src="src/code/clrEngine.js"></script>
     <script src="src/code/ui/state.js"></script>
     <script src="src/code/figma/config.js"></script>
     <script src="src/code/ui/ui-components.js"></script>
-    <script src="src/code/color/clrSpaces.js"></script>
-    <script src="src/code/color/clrSolver.js"></script>
-    <script src="src/code/color/clrGen.js"></script>
     <script src="src/code/ui/ui-actions.js"></script>
     <script src="src/code/ui/ui-settings.js"></script>
     <script src="src/code/ui/ui-preview.js"></script>

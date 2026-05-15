@@ -17,15 +17,18 @@ try {
 }
 
 console.log("Building scripts.js...");
-const jsFiles = ["code/utils.js", "code/color/clrSpaces.js", "code/color/clrSolver.js", "code/color/clrGen.js", "code/figma/docGen.js", "code/figma/config.js", "code/figma/figmaVars.js", "code/figma/main.js"];
-const jsContent = jsFiles.map((f) => {
-  const content = fs.readFileSync(path.join(srcDir, f), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/^\s*\/\/.*$/gm, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  return `/* ${f} */\n${content}`;
-}).join("\n\n");
+const jsFiles = ["code/utils.js", "code/clrUtils.js", "code/clrEngine.js", "code/figma/docGen.js", "code/figma/config.js", "code/figma/figmaVars.js", "code/figma/main.js"];
+const jsContent = jsFiles
+  .map((f) => {
+    const content = fs
+      .readFileSync(path.join(srcDir, f), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    return `/* ${f} */\n${content}`;
+  })
+  .join("\n\n");
 fs.writeFileSync(path.join(outDir, "scripts.js"), jsContent);
 
 console.log("Building ui.html...");
@@ -34,10 +37,11 @@ const htmlHdr = "<!-- AUTO-GENERATED — do not edit. Source: src/ui.html + src/
 
 // 1. Inline scripts (matches src/path/to/file.js)
 html = html.replace(/<script src="src\/([^"]+)"><\/script>/g, (_, f) => {
-  const content = fs.readFileSync(path.join(srcDir, f), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")   // strip block comments
-    .replace(/^\s*\/\/.*$/gm, "")        // strip line comments
-    .replace(/\n{3,}/g, "\n\n")          // collapse excessive blank lines
+  const content = fs
+    .readFileSync(path.join(srcDir, f), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "") // strip block comments
+    .replace(/^\s*\/\/.*$/gm, "") // strip line comments
+    .replace(/\n{3,}/g, "\n\n") // collapse excessive blank lines
     .trim();
   return `<script>/* ${f} */\n${content}\n</script>`;
 });
