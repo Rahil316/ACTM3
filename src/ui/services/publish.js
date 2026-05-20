@@ -69,42 +69,42 @@ function renderRunDialog() {
   const body = el("div", { class: "flex-1 overflow-y-auto p-4 space-y-5" }, [
     // Scope
     el("div", { id: "rd-scope-section", class: "space-y-2" }, [
-      el("h3", { class: "text-[var(--text-muted)] text-[11px] font-bold tracking-[1.2px]" }, "WHAT TO UPDATE"),
-      el("div", { class: "flex gap-2" }, [
-        el("button", { id: "rd-scope-all", class: "seg-btn", onclick: () => setRunScope("all") }, "Everything"),
-        el("button", { id: "rd-scope-groups", class: "seg-btn", onclick: () => setRunScope("groups") }, "Scale Only"),
-        el("button", { id: "rd-scope-roles", class: "seg-btn", onclick: () => setRunScope("roles") }, "Roles Only"),
+      panelUI.sectionLabel("WHAT TO UPDATE"),
+      panelUI.segmented([
+        { id: "rd-scope-all",    label: "Everything", onclick: () => setRunScope("all") },
+        { id: "rd-scope-groups", label: "Scale Only", onclick: () => setRunScope("groups") },
+        { id: "rd-scope-roles",  label: "Roles Only", onclick: () => setRunScope("roles") },
       ]),
     ]),
 
     // Output options
     el("div", { class: "space-y-2" }, [
-      el("h3", { class: "text-[var(--text-muted)] text-[11px] font-bold tracking-[1.2px]" }, "OUTPUT OPTIONS"),
+      panelUI.sectionLabel("OUTPUT OPTIONS"),
       el("div", { id: "embed-colors-directly", class: "items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
         el("div", {}, [
           el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Embed Colors Directly"),
           el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "Write hex values into tokens instead of referencing the Tonal Scales"),
         ]),
-        el("button", { id: "rd-toggle-embedDirectly", class: "toggle-pill", onclick: () => { toggleBoolSetting("embedDirectly"); refreshRunDialog(); } }),
+        panelUI.togglePill("rd-toggle-embedDirectly", () => { toggleBoolSetting("embedDirectly"); refreshRunDialog(); }),
       ]),
       el("div", { class: "space-y-1" }, [
         el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium ml-1" }, "Variable Structure"),
-        el("div", { class: "flex gap-1 bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-0.5" }, [
-          el("button", { id: "rd-seg-group-color", class: "seg-btn flex-1", onclick: () => { setTokenGrouping(0); refreshRunDialog(); } }, "Color-first color/role/step"),
-          el("button", { id: "rd-seg-group-role", class: "seg-btn flex-1", onclick: () => { setTokenGrouping(1); refreshRunDialog(); } }, "Role-first role/color/step"),
+        panelUI.segmented([
+          { id: "rd-seg-group-color", label: "Color-first color/role/step", onclick: () => { setTokenGrouping(0); refreshRunDialog(); } },
+          { id: "rd-seg-group-role",  label: "Role-first role/color/step",  onclick: () => { setTokenGrouping(1); refreshRunDialog(); } },
         ]),
       ]),
       el("div", { class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
         el("div", {}, [el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Colors"), el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. primary → pr")]),
-        el("button", { id: "rd-toggle-useShorthandColors", class: "toggle-pill", onclick: () => { toggleBoolSetting("useShorthandColors"); refreshRunDialog(); } }),
+        panelUI.togglePill("rd-toggle-useShorthandColors", () => { toggleBoolSetting("useShorthandColors"); refreshRunDialog(); }),
       ]),
       el("div", { class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
         el("div", {}, [el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Roles"), el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. Text → tx")]),
-        el("button", { id: "rd-toggle-useShorthandRoles", class: "toggle-pill", onclick: () => { toggleBoolSetting("useShorthandRoles"); refreshRunDialog(); } }),
+        panelUI.togglePill("rd-toggle-useShorthandRoles", () => { toggleBoolSetting("useShorthandRoles"); refreshRunDialog(); }),
       ]),
       el("div", { class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
         el("div", {}, [el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Variations"), el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. Darker → dk")]),
-        el("button", { id: "rd-toggle-useShorthandVariations", class: "toggle-pill", onclick: () => { toggleBoolSetting("useShorthandVariations"); refreshRunDialog(); } }),
+        panelUI.togglePill("rd-toggle-useShorthandVariations", () => { toggleBoolSetting("useShorthandVariations"); refreshRunDialog(); }),
       ]),
       el("div", { class: "bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-3 py-2" }, [
         el("p", { class: "text-[11px] text-[var(--text-muted)]" }, "Example variable name:"),
@@ -114,20 +114,20 @@ function renderRunDialog() {
 
     // Collections
     el("div", { class: "space-y-2" }, [
-      el("h3", { class: "text-[var(--text-muted)] text-[11px] font-bold tracking-[1.2px]" }, "COLLECTIONS"),
+      panelUI.sectionLabel("COLLECTIONS"),
       el("div", { id: "rd-collections", class: "space-y-1.5" }),
     ]),
 
     // Renames
     el("div", { id: "rd-renames", class: "hidden space-y-2" }, [
-      el("h3", { class: "text-[var(--text-muted)] text-[11px] font-bold tracking-[1.2px]" }, "VARIABLES TO RENAME"),
+      panelUI.sectionLabel("VARIABLES TO RENAME"),
       el("div", { id: "rd-renames-list", class: "space-y-1.5" }),
       el("p", { class: "text-[11px] text-[var(--text-muted)] px-1 leading-relaxed" }, "Existing variables matching the previous names will be renamed in place — no variables are deleted or recreated."),
     ]),
 
     // Summary
     el("div", { class: "space-y-2" }, [
-      el("h3", { class: "text-[var(--text-muted)] text-[11px] font-bold tracking-[1.2px]" }, "SUMMARY"),
+      panelUI.sectionLabel("SUMMARY"),
       el("div", { id: "rd-summary", class: "space-y-1" }),
     ]),
 

@@ -358,6 +358,7 @@ document.getElementById("drop-overlay").ondrop = (e) => {
 
 // ── 5b. KEYBOARD NAVIGATION ────────────────────────────────────────────────
 //
+// Alt+Enter → Run (main editor) / Apply to Figma (run dialog)
 // Alt+0 → Project tab
 // Alt+1 → Palette tab          Alt+3 → Preview: Palette
 // Alt+2 → Color Roles tab      Alt+4..N+3 → Preview: Theme 1..N
@@ -382,6 +383,10 @@ document.getElementById("drop-overlay").ondrop = (e) => {
 
   function settingsOpen() {
     return !document.getElementById("settings-screen").classList.contains("hidden");
+  }
+
+  function runDialogOpen() {
+    return !document.getElementById("run-dialog-overlay").classList.contains("hidden");
   }
 
   function previewOpen() {
@@ -422,6 +427,16 @@ document.getElementById("drop-overlay").ondrop = (e) => {
   document.addEventListener("keydown", (e) => {
     if (!e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) return;
     if (inputFocused() || settingsOpen()) return;
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (runDialogOpen()) {
+        hideOverlay("run-dialog-overlay");
+        proceedWithSync();
+      } else if (!previewOpen()) {
+        handleSubmit(pendingScope || "all");
+      }
+      return;
+    }
     if (e.code === "Digit0") {
       e.preventDefault();
       switchMainTab("project");

@@ -17,29 +17,29 @@ Every interaction a user can perform, the state it reads, the conditions that ga
 **Then the Figma backend sends messages:**
 
 - `capabilities` → if `multiMode` is false, all `[data-requires-multimode]` elements are hidden
-- `load-config` → merges saved state over demoConfig, migrates legacy fields, calls `renderColorGroups`, `renderRoles`, `syncInputsFromState`
-- `load-ui-prefs-meta` → validates and applies scale + theme preferences
+- `load-config` → merges saved state over demoConfig, migrates legacy fields, calls `ensureIds`, `ensureVariations`, `markClean`, `renderColorGroups`, `renderRoles`, `syncInputsFromState`
+- `load-ui-prefs-meta` → validates and applies scale + theme preferences, calls `syncUiSettingsInputs`
 
 ---
 
 ## 2. Main Navigation (Sidebar Tabs)
 
-Three sidebar tabs: **Project**, **Colors** (`color-groups`), **Roles** (`roles-config`).  
-A fourth button opens the **Preview** screen (not a tab — a separate fullscreen overlay).
+Four sidebar tab buttons: **Project**, **Palette** (`color-groups`), **Roles** (`roles-config`), **Preview**.  
+Preview behaves differently — it swaps to a full-screen overlay instead of switching the sidebar content area.
 
-| Tab     | `activeSidebarTab` value | Renderer called                                |
+| Button  | `activeSidebarTab` value | Renderer called                                |
 | ------- | ------------------------ | ---------------------------------------------- |
 | Project | `"project"`              | `renderSidebarProject()`                       |
-| Colors  | `"color-groups"`         | `renderColorGroups()`                          |
+| Palette | `"color-groups"`         | `renderColorGroups()`                          |
 | Roles   | `"roles-config"`         | `renderRoles()`                                |
 | Preview | n/a (screen swap)        | `renderPreviewTabs()` + `renderPreviewPanel()` |
 
 **Keyboard shortcuts (Alt + digit, no input focused, settings closed):**
 
 - `Alt+0` → Project tab
-- `Alt+1` → Colors tab
+- `Alt+1` → Palette tab
 - `Alt+2` → Roles tab
-- `Alt+3` → Preview: Tonal Scale panel (hidden if `pluginMode === "adaptiveEngine"`)
+- `Alt+3` → Preview: Tonal Scale panel (skipped — does nothing — if `pluginMode === "adaptiveEngine"`)
 - `Alt+4` → Preview: Theme 1 panel
 - `Alt+N` → Preview: Theme N−3
 - `Escape` → close Preview
@@ -63,16 +63,16 @@ A fourth button opens the **Preview** screen (not a tab — a separate fullscree
 
 `btn-settings` → `openSettings()`
 
-**Snapshot taken of:** `scaleLength`, `scaleAlgorithm`, `scaleStepNames`, `pluginMode`, `baseSelection`, `spreadUnit`, `tonalScaleCollectionName`, `tokenCollectionName`, `embedDirectly`, `includeGlobalColors`, `globalColorsCollectionName`, `includeAlphaTints`, `alphaValues`, `variableStructure`, `useShorthandColors`, `useShorthandRoles`, `useShorthandVariations`, `includeDescriptions`, `allowRoleVariations`, `perRoleControls`, `includeTonalCollection`, `useGlobalAlgo`, `perColorAlgoScope`, `tokenNameOrder`, `variations`
+**Snapshot taken of:** `scaleLength`, `scaleAlgorithm`, `scaleStepNames`, `pluginMode`, `baseSelection`, `spreadUnit`, `tonalScaleCollectionName`, `tokenCollectionName`, `embedDirectly`, `includeGlobalColors`, `globalColorsCollectionName`, `includeAlphaTints`, `alphaValues`, `variableStructure`, `useShorthandColors`, `useShorthandRoles`, `useShorthandVariations`, `useShorthandSteps`, `includeDescriptions`, `allowRoleVariations`, `perRoleControls`, `includeTonalCollection`, `useGlobalAlgo`, `perColorAlgoScope`, `solverMode`, `tokenNameOrder`, `variations`
 
 **Note — fields NOT in snapshot (so Cancel cannot revert them):** `themes`, `colors`, `roles`, `name`. Theme and role changes made during settings are permanent even on Cancel.
 
 `syncInputsFromState()` is called → all inputs, toggles, pills, dropdowns are synced to current appState.  
-Settings screen is opened to the **Tokens** tab by default.
+Settings screen is opened to the **Token Settings** tab by default.
 
 ### Tabs
 
-Five tabs: **Project**, **Palettes**, **Roles**, **Figma**, **Plugin**
+Two tabs: **Token Settings** (`tokens`), **Plugin** (`plugin`)
 
 `switchSettingsTab(tab)` toggles `.active` on tab buttons and `.hidden` on panels.
 
@@ -86,229 +86,179 @@ Five tabs: **Project**, **Palettes**, **Roles**, **Figma**, **Plugin**
 - `setting-tokenCollectionName` → `appState.tokenCollectionName` (default `"contextual"`)
 - `setting-scaleLength` → `appState.scaleLength` (clamped 1–100, default 25)
 - `setting-scaleAlgorithm` → `appState.scaleAlgorithm`
-- `setting-scaleStepNames` → `appState.scaleStepNames`
+- `setting-solverMode` → `appState.solverMode`
 - `setting-globalColorsCollectionName` → `appState.globalColorsCollectionName` (default `"_constants"`)
 - `setting-alphaValues` → `appState.alphaValues`
 
-**Note — fields NOT read on Done (set live via toggles/buttons, already in appState):** `pluginMode`, `embedDirectly`, `includeGlobalColors`, `includeAlphaTints`, `variableStructure`, `tokenNameOrder`, `useShorthandColors/Roles/Variations`, `useGlobalAlgo`, `perColorAlgoScope`, `perRoleControls`, `allowRoleVariations`, `includeDescriptions`, `includeTonalCollection`, `baseSelection`, `spreadUnit`, `themes`, `variations`
+**Note — fields NOT read on Done (set live via toggles/buttons, already in appState):** `pluginMode`, `embedDirectly`, `includeGlobalColors`, `includeAlphaTints`, `variableStructure`, `tokenNameOrder`, `useShorthandColors/Roles/Variations/Steps`, `useGlobalAlgo`, `perColorAlgoScope`, `perRoleControls`, `allowRoleVariations`, `includeDescriptions`, `includeTonalCollection`, `baseSelection`, `spreadUnit`, `themes`, `variations`
 
-After Done: `renderColorGroups()`, `renderRoles()`, `renderPreviewTabs()`, `schedulePreview()`
+After Done: `updateSettingsFromInputs()` → `renderColorGroups()`, `renderRoles()`, `schedulePreview()`. Then outer `closeSettings` also calls `renderPreviewTabs()`, `schedulePreview()`.
 
 ### Cancel
 
-`settings-cancel` → `closeSettings(true)` → `Object.assign(appState, _settingsSnapshot)` → `syncOutputToggles()`, `syncAlgoSection()`, `renderColorGroups()`, `renderRoles()`, `renderPreviewTabs()`, `schedulePreview()`
+`settings-cancel` → `closeSettings(true)` → `Object.assign(appState, _settingsSnapshot)` → `syncOutputToggles()`, `syncAlgoSection()`, `renderColorGroups()`, `renderRoles()`. Then also `renderPreviewTabs()`, `schedulePreview()`.
 
 ---
 
-## 4. Settings — Palettes Tab (Scale)
+## 4. Settings — Token Settings Tab
 
-### Plugin Mode
+This single tab contains all algorithmic, naming, and Figma output settings. It is rendered dynamically by `renderSettingsTokensPanel()` into `#settings-panel-tokens`.
 
-Two buttons: **Tonal Scale** (`tonalScalesBased`) / **Adaptive Engine** (`adaptiveEngine`)  
+### Token Creation Mode card
+
+Two buttons: **Tonal Scale Based** (`tonalScalesBased`) / **Adaptive Engine** (`adaptiveEngine`)  
 `setPluginMode(idx)` → `appState.pluginMode` → `syncOutputToggles()`, `renderColorGroups()`, `renderRoles()`, `schedulePreview()`
 
-**Cascading effects of mode change (via `_syncModeControls`):**
-
-- `mode-btn-ramp` active when tonal; `mode-btn-direct` active when adaptive
-- `settings-scale-section` hidden when adaptive
-- `settings-tonal-collection-row` hidden when adaptive
-- `settings-embed-directly-row` hidden when adaptive
-- `base-selection-opt-byindex` hidden when adaptive; if `baseSelection === "By Index"`, forced to `"By Contrast"`
-- Preview tab label: "Tonal Scale" (tonal) or "Solved Colors" (adaptive)
-- Preview: Tonal Scale tab (`preview-tab-colors`) hidden when adaptive
-
-### Base Selection
-
-Three options: **By Contrast** / **By Index** / **Manual**  
-`setBaseSelection(idx)` → `appState.baseSelection` → `syncUiSettingsInputs()`, `renderRoles()`, `syncOutputToggles()`, `schedulePreview()`
-
-**By Index** option is hidden in adaptive engine mode.
-
-**Effect on Spread Unit row:** `settings-spread-unit-row` is hidden when `pluginMode === "adaptiveEngine"` OR `baseSelection === "Manual"`.
-
-**Effect on role card label:** When `perRoleControls` is on, global label reads "Default Base Selection"; when off, "Base Selection".
-
-### Spread Unit
-
-Two buttons: **Steps** / **Contrast**  
-`setSpreadUnit(idx)` → `appState.spreadUnit` → `syncOutputToggles()`, `renderRoles()`, `schedulePreview()`
-
-Spread Unit row is hidden when adaptive engine OR `baseSelection === "Manual"`.
-
-### Global Algorithm / Solver
-
-Toggle: `useGlobalAlgo` (true = single global algo for all; false = per-color or per-role)  
+**Global Algorithm / Solver toggle** (`useGlobalAlgo`):  
 `toggleBoolSetting("useGlobalAlgo")` → `appState.useGlobalAlgo` → `syncOutputToggles()`, `renderColorGroups()`, `renderRoles()`, `schedulePreview()`
 
 **Cascading effects (via `syncAlgoSection`):**
 
 - Title text: "Global Algorithm" (tonal) / "Global Solver" (adaptive)
-- Description: "Use a single algorithm for all colors" / "Use a single solver for all colors and roles"
-- `setting-global-algo-row` (the algorithm select): hidden when `useGlobalAlgo` is false
-- `setting-algo-scope-row` (Color vs Role scope): visible only when adaptive engine AND `useGlobalAlgo` is false
+- Description: "Use one algorithm for all colors" / "Use one solver mode for all colors and roles"
+- `setting-global-algo-row` (algorithm select): visible only when tonal mode AND `useGlobalAlgo` is true
+- `setting-global-solver-row` (solver select): visible only when adaptive mode AND `useGlobalAlgo` is true
+- `setting-algo-scope-row` (Color vs Role scope): visible only when adaptive mode AND `useGlobalAlgo` is false
 
-### Algo Scope (Color vs Role)
+**Global Algorithm select** (`setting-scaleAlgorithm`):  
+Options: Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear → read on Done
 
-Only visible in adaptive engine mode with `useGlobalAlgo` off.  
-Two buttons: **Color** / **Role**  
-`setAlgoScope(scope)` → `appState.perColorAlgoScope` → syncs scope buttons, `schedulePreview()`
+**Global Solver select** (`setting-solverMode`):  
+Options: Balanced (`natural`), Vivid (`saturated`), Muted (`luminance`), Hue Locked (`hue-locked`), Max Chroma (`chroma-maximized`) → read on Done
 
-**Effect on color cards (`_ColorSolverRow`):**  
-Shows per-color solver dropdown only when: `pluginMode === "adaptiveEngine"` AND `useGlobalAlgo === false` AND `perColorAlgoScope !== "role"`
+**Algo Scope (Color vs Role):**  
+Only visible in adaptive mode with `useGlobalAlgo` off.  
+Two buttons: **By Color** / **By Role**  
+`setAlgoScope(scope)` → `appState.perColorAlgoScope` → syncs scope buttons, `renderColorGroups()`, `renderRoles()`, `schedulePreview()`
 
-**Effect on color cards (`_ColorAlgoRow`):**  
-Shows per-color scale algorithm only when: `pluginMode !== "adaptiveEngine"` AND `useGlobalAlgo` is false
+**Cascading effects of mode change (via `_syncModeControls`):**
 
-**Effect on role cards (`_RoleAlgoRow`):**  
-Shows per-role solver algorithm only when: `pluginMode === "adaptiveEngine"` AND `useGlobalAlgo` is false AND `perColorAlgoScope === "role"`
-
-### Scale Length
-
-`setting-scaleLength` input → read on Done → `appState.scaleLength` (integer, clamped 1–100)
-
-### Scale Algorithm (Global)
-
-`setting-scaleAlgorithm` select → read on Done → `appState.scaleAlgorithm`  
-Options: Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear
-
-*(Step Labels section moved to bottom of Token Settings — see "Scale Step Labels" below)*
+- `mode-btn-ramp` active when tonal; `mode-btn-direct` active when adaptive
+- `settings-scale-section` (Palette card) hidden when adaptive
+- `settings-step-labels-section` (Scale Step Labels card) hidden when adaptive
+- `settings-palettes-collection-group` hidden when adaptive
+- `settings-embed-directly-row` hidden when adaptive
+- `base-selection-opt-byindex` hidden when adaptive; if `baseSelection === "By Index"`, forced to `"By Contrast"`
+- Preview: Tonal Scale tab hidden when adaptive
 
 ---
 
-## 5. Settings — Roles Tab (Variations)
+### Palette card
 
-### Per-Role Controls
+Only shown in tonal mode (`settings-scale-section`).
 
-Toggle: `perRoleControls`  
-`toggleBoolSetting("perRoleControls")` → re-renders color groups and roles, syncs toggles  
-Effect: label on global Base Selection / Spread Unit changes to "Default ..." to indicate it's a fallback.
+- **Scale Length** — `setting-scaleLength` number input → read on Done → `appState.scaleLength` (integer, clamped 1–100)
 
-### Allow Role Variations
+---
 
-Toggle: `allowRoleVariations`  
-`toggleBoolSetting("allowRoleVariations")` → re-renders color groups and roles  
-Effect: when off, the Global/Role scope badge on each role card is disabled (click has no effect).
+### Variations card
 
-### Shared Variations List
+- **Role-specific Variations** toggle (`allowRoleVariations`):  
+  `toggleBoolSetting("allowRoleVariations")` → re-renders color groups and roles, syncs toggles
 
-Rendered by `renderSettingsVariations()`. Each variation has:
-
-- Name input → `updateSharedVariation(idx, "name", value)` → `setVariation()`, `renderRoles()`, `schedulePreview()`
-- Shorthand input → `updateSharedVariation(idx, "shorthand", value)`
-- ▲/▼ buttons → `moveSharedVariation(idx, dir)` → swaps array positions, `ensureVariations()`, re-renders
-- Delete button (disabled if only 1 variation) → `removeSharedVariation(idx)` → splices array, `ensureVariations()`
-- `+ Add Variation` button → `addSharedVariation()` → pushes new `{_id, name, shorthand}`, `ensureVariations()`
+- **Shared Variations list** — rendered by `renderSettingsVariations()` into `#settings-variations-list`. Each variation has:
+  - Name input → `updateSharedVariation(idx, "name", value)` → `setVariation()`, `renderRoles()`, `schedulePreview()`
+  - Shorthand input → `updateSharedVariation(idx, "shorthand", value)`
+  - ▲/▼ buttons → `moveSharedVariation(idx, dir)` → swaps array positions, `ensureVariations()`, re-renders
+  - Delete button (disabled if only 1 variation) → `removeSharedVariation(idx)` → splices array, `ensureVariations()`
+  - `+ Add` button → `addSharedVariation()` → pushes new `{_id, name, shorthand}`, `ensureVariations()`
 
 `ensureVariations()` runs after every variation mutation: ensures all roles have `variationTargets` arrays matching the current variation count.
 
 ---
 
-## 6. Settings — Figma Tab (Output)
+### Token Naming card
 
-### Map Roles with Palettes (embed directly inverse)
+**Shorthand Toggles** (all: `toggleBoolSetting(key)` → `syncOutputToggles()`, `schedulePreview()`):
 
-Toggle: inverse of `embedDirectly`  
-`toggleMapRolesWithPalettes()` → `appState.embedDirectly = !appState.embedDirectly`, button reflects `!embedDirectly`  
-`schedulePreview()`
+- `useShorthandColors` — "Shorthand for Colors"
+- `useShorthandRoles` — "Shorthand for Roles"
+- `useShorthandVariations` — "Shorthand for Variations"
+- `useShorthandSteps` — "Shorthand for Scale Steps"
 
-**Conditional visibility:** entire row (`settings-map-roles-row`) is hidden when `pluginMode === "adaptiveEngine"` — in adaptive mode there is no tonal collection to reference.
-
-**Figma output effect:** when `embedDirectly` is true, contextual token variables contain raw hex values instead of Figma variable aliases.
-
-### Include Tonal Collection
-
-Toggle: `includeTonalCollection`  
-`toggleBoolSetting("includeTonalCollection")` → `syncOutputToggles()`, `schedulePreview()`
-
-**Conditional visibility:**  
-- Entire `settings-palettes-collection-group` (toggle + name input) is hidden when `pluginMode === "adaptiveEngine"` — not applicable in adaptive mode.  
-- `settings-tonal-collection-row` (name input only) is additionally hidden when `includeTonalCollection` is false.
-
-**Figma output effect:** when false, the `_scale` ramp collection is not written at all. Contextual tokens fall back to hex values (same as `embedDirectly`).
-
-### Tonal Scale Collection Name
-
-`setting-tonalScaleCollectionName` input → read on Done → `appState.tonalScaleCollectionName` (default `"_scale"`)  
-Visible only when `includeTonalCollection` is true AND `pluginMode !== "adaptiveEngine"`.
-
-### Token Collection Name
-
-`setting-tokenCollectionName` input → read on Done → `appState.tokenCollectionName` (default `"contextual"`)
-
-### Shorthand Toggles
-
-- `useShorthandColors` → color names in variable paths use `shorthand` instead of `name`
-- `useShorthandRoles` → role names in variable paths use `shorthand`
-- `useShorthandVariations` → variation names in variable paths use `shorthand`
-- `useShorthandSteps` → scale step labels in variable paths use `shorthand` instead of `name`
-
-All four: `toggleBoolSetting(key)` → `syncOutputToggles()`, `schedulePreview()`
-
-### Token Name Format (Pills)
-
-Rendered by `renderTokenOrderPills()`. Three coloured draggable pills: Color, Role, Variation.
+**Token Name Format** — rendered by `renderTokenOrderPills()`. Three coloured draggable pills: Color, Role, Variation.
 
 **Drag-to-reorder:**
 
 - `dragstart` → records source index, dims pill opacity to 0.4
 - `dragover` target → highlights pill with white glow (`0 0 0 2px #fff8`)
 - `dragleave` → restores shadow
-- `drop` → `setTokenNameOrder(newOrder)` → `appState.tokenNameOrder = order`, also sets `appState.variableStructure` (`"role"` if order starts with role, else `"color"`), `renderTokenOrderPills()`, `_syncNameFormatPreview()`, `schedulePreview()`
+- `drop` → `setTokenNameOrder(newOrder)` → `appState.tokenNameOrder = order`, `renderTokenOrderPills()`, `_syncNameFormatPreview()`, `schedulePreview()`
 - `dragend` → clears source index, restores opacity
 
+**Note:** `setTokenNameOrder` updates only `appState.tokenNameOrder`. The `variableStructure` field is managed separately via the Variable Structure selector in the Run Dialog.
+
 **Name Format Preview** (`name-format-preview`):  
-Shows a live example: `Color/Role/Variation` using the first color, first role, third variation as samples. Each segment is coloured to match its pill. Respects shorthand toggles.
+Shows a live example using the first color, first role, third variation as samples. Each segment is coloured to match its pill. Respects shorthand toggles.
 
-### Include Global Colors
-
-Toggle: `includeGlobalColors`  
-`toggleBoolSetting("includeGlobalColors")` → shows/hides `constants-options` sub-section  
-Sub-section contains: Global Collection Name input, Alpha Tints toggle, Alpha Values input.
-
-### Global Colors Collection Name
-
-`setting-globalColorsCollectionName` → read on Done → `appState.globalColorsCollectionName` (default `"_constants"`)
-
-### Include Alpha Tints
-
-Toggle: `includeAlphaTints`  
-`toggleBoolSetting("includeAlphaTints")` → shows/hides `opacity-values-row`  
-Only has Figma output effect when `includeGlobalColors` is also true.
-
-### Alpha Values (CSV)
-
-`setting-alphaValues` → read on Done → `appState.alphaValues` (e.g. `"5, 10, 25, 50, 75, 90"`)  
-Parsed as integers 0–100. Values outside range are clamped.
-
-### Include Descriptions
-
-Toggle: `includeDescriptions`  
+**Variable Descriptions** toggle (`includeDescriptions`):  
 `toggleBoolSetting("includeDescriptions")` → re-renders color groups and roles (shows/hides description inputs), `schedulePreview()`  
-**Figma output effect:** when true, contrast metadata is written into Figma variable descriptions.
-
-### Scale Step Labels
-
-Rendered by `renderSettingsStepLabels()` into `#settings-step-labels-list`. Each entry is `{_id, name, shorthand}` in `appState.scaleStepNames` (array).
-
-**Card is hidden** when `pluginMode === "adaptiveEngine"` (handled by `_syncModeControls` on `#settings-step-labels-section`).
-
-- Name input → `updateStepLabelRow(idx, "name", value)` → `updateStepLabel()`, `schedulePreview()`
-- Shorthand input → `updateStepLabelRow(idx, "shorthand", value)`
-- ▲/▼ buttons → `moveStepLabelRow(idx, dir)` → swaps array positions, re-renders
-- Delete button → `removeStepLabelRow(idx)` → splices array
-- `+ Add` button → `addStepLabelRow()` → pushes `{_id, name:"N00", shorthand:"N00"}`, re-renders
-
-**Data shape:** `appState.scaleStepNames` is `Array<{_id, name, shorthand}>`. Legacy CSV strings are migrated to this format on `loadConfig()`.
-
-**Engine use:** `_parseStepNames()` in config.js extracts `.name` values to produce the step name array. `_parseStepShorthands()` builds a `{name → shorthand}` map, passed to figmaVars as `config.scaleStepShorthands`.
-
-**Token naming:** when `useShorthandSteps` is true, `figmaVars.js` replaces each step label in Figma variable paths with its shorthand (e.g. `brand/100` → `brand/1` if shorthand is `"1"`).
-
-**If empty:** steps are numbered `1 … N` automatically by the engine.
+Figma output effect: when true, contrast metadata is written into Figma variable descriptions.
 
 ---
 
-## 7. Colors (Sidebar Tab)
+### Collections card
+
+**Palettes collection group** (hidden when adaptive mode):
+
+- Toggle (`includeTonalCollection`): `toggleBoolSetting("includeTonalCollection")` → `syncOutputToggles()`, `schedulePreview()`
+- Name input (`setting-tonalScaleCollectionName`): visible only when `includeTonalCollection` is true. Read on Done. Default `"_scale"`.
+
+**Color role collection name** (`setting-tokenCollectionName`): always visible. Read on Done. Default `"contextual"`.
+
+**Map Roles with Palettes row** (id: `settings-embed-directly-row`, hidden when adaptive mode):  
+Toggle (`toggle-mapRolesWithPalettes`): `toggleMapRolesWithPalettes()` → `appState.embedDirectly = !appState.embedDirectly`, reflects `!embedDirectly` on button, `schedulePreview()`  
+Figma output effect: when `embedDirectly` is true, contextual token variables contain raw hex values instead of Figma variable aliases.
+
+**Global Colors** toggle (`includeGlobalColors`):  
+`toggleBoolSetting("includeGlobalColors")` → shows/hides `constants-options` sub-section  
+Sub-section contains:
+- Global Collection Name input (`setting-globalColorsCollectionName`) → read on Done → default `"_constants"`
+- Alpha Tints toggle (`includeAlphaTints`): shows/hides `opacity-values-row`
+- Alpha Values CSV input (`setting-alphaValues`) → read on Done → e.g. `"10, 25, 50, 75, 90"`, integers 0–100
+
+---
+
+### Scale Step Labels card
+
+Only shown in tonal mode (id: `settings-step-labels-section`).  
+Rendered by `renderSettingsStepLabels()` into `#settings-step-labels-list`. Each entry is `{_id, name, shorthand}` in `appState.scaleStepNames`.
+
+- Name input → `updateStepLabel(idx, "name", value)` → `schedulePreview()`
+- Shorthand input → `updateStepLabel(idx, "shorthand", value)`
+- ▲/▼ buttons → `moveStepLabel(idx, dir)` → swaps array positions, re-renders
+- Delete button → `removeStepLabel(idx)` → splices array
+- `+ Add` button → `addStepLabel()` → pushes `{_id, name: "N00", shorthand: "N00"}` (where N is the new count), re-renders
+
+**Data shape:** `appState.scaleStepNames` is `Array<{_id, name, shorthand}>`. Legacy CSV strings are migrated to this format on `loadState()`.
+
+**If empty:** steps are numbered `1 … N` automatically by the engine.
+
+**Token naming:** when `useShorthandSteps` is true, `figmaVars.js` replaces each step label in Figma variable paths with its shorthand.
+
+---
+
+## 5. Settings — Plugin Tab
+
+Rendered by `renderSettingsPluginPanel()` into `#settings-panel-plugin`.
+
+### UI Scale
+
+`setting-ui-scale` select → `updateUiPref("scale", value)` → `uiPrefs.scale = value`, `applyUiPrefs()`, posts `save-ui-prefs-meta` to backend  
+Options: 100% (default), 70%, 80%, 90%, 110%, 125%, 150%  
+Applied as `document.body.style.zoom` and CSS var `--ui-scale`.
+
+### UI Theme
+
+`setting-ui-theme` select → `updateUiPref("theme", value)` → same flow as scale  
+Options: `"figma"` (follows Figma's own theme), `"dark"`, `"light"`  
+Applied as `data-ui-theme` attribute on `<body>`.
+
+**Auto-follow Figma theme:** A `MutationObserver` watches `html` and `body` class changes. When `uiPrefs.theme === "figma"`, any Figma theme class change re-calls `applyUiPrefs()`. Also listens to OS `prefers-color-scheme` changes as a fallback.
+
+---
+
+## 6. Colors (Sidebar Tab)
 
 ### Add Color
 
@@ -316,14 +266,13 @@ Rendered by `renderSettingsStepLabels()` into `#settings-step-labels-list`. Each
 
 ### Color Card — Main Row
 
-Each card always shows:
+Always shown. Grid layout: controls / name / shorthand / color picker / delete.
 
-- **▲ / ▼ buttons** → `moveGroup(idx, dir)` → splices and re-inserts in `appState.colors`, `renderColorGroups()` (no preview, name order doesn't change values)
-- **⠿ drag handle** → `bindDragDrop` → on drop: splices and re-inserts, `renderColorGroups()`, `schedulePreview()`
+- **▲ / ▼ buttons** → `moveGroup(idx, dir)` → splices and re-inserts in `appState.colors`, `renderColorGroups()` (no preview — name order doesn't change values)
+- **⠿ drag handle** (the whole card is draggable via `bindDragDrop`) → on drop: splices and re-inserts, `renderColorGroups()`, `schedulePreview()`
 - **Color Name input** → `updateGroup(idx, "name", value)` → `setColor()`, `schedulePreview()`
 - **Shorthand input** → `updateGroup(idx, "shorthand", value)` → `setColor()`, `schedulePreview()`
-- **Color picker** (native `<input type="color">`) → `updateGroup(idx, "value", value, el)` → `setColor()` (sanitizes hex), syncs sibling hex text input, `schedulePreview()`
-- **Hex text input** → same as picker; sanitizes on input, syncs picker
+- **Color picker** (native `<input type="color">` + hex text input) → `updateGroup(idx, "value", value, el)` → `setColor()` (sanitizes hex), syncs sibling hex text input, `schedulePreview()`
 - **Delete button** → `removeGroup(idx)` → `appState.colors.splice(idx, 1)`, `renderColorGroups()`, `schedulePreview()`
 
 ### Color Card — Solver Row
@@ -345,7 +294,7 @@ Shows a **Description** text input → `updateGroup(idx, "description", value)`,
 
 ---
 
-## 8. Roles (Sidebar Tab)
+## 7. Roles (Sidebar Tab)
 
 ### Add Role
 
@@ -353,11 +302,10 @@ Shows a **Description** text input → `updateGroup(idx, "description", value)`,
 
 ### Role Card — Name Row
 
-Always shown:
+Always shown. Grid layout: controls / name / shorthand / delete.
 
-- **▲ / ▼ buttons** → `moveRole(idx, dir)` → `renderRoles()`
-- **⠿ drag handle** → `bindDragDrop` → on drop: `renderRoles()`, `schedulePreview()`
-- **Role Name input** → `updateRole(idx, "name", value)` → `setRole()`, `schedulePreview()` (name/shorthand changes only preview, no re-render — prevents focus loss)
+- **▲ / ▼ buttons** + **⠿ drag handle** → `moveRole(idx, dir)` → `renderRoles()`; drag uses `bindDragDrop` on whole card → on drop: `renderRoles()`, `schedulePreview()`
+- **Role Name input** → `updateRole(idx, "name", value)` → `setRole()`, `schedulePreview()` (name/shorthand changes only trigger preview, no re-render — prevents focus loss)
 - **Shorthand input** → same
 - **Delete button** → `removeRole(idx)` → `appState.roles.splice(idx, 1)`, `renderRoles()`, `schedulePreview()`
 
@@ -375,7 +323,7 @@ Shows: "Variations (N)" + a **Global / Role** scope badge
 **`toggleRoleVariationOverride(idx)`:**
 
 - If turning ON: if `role.roleVariations` is empty, copies global variations (new `_id` on each). Sets `role.variationOverride = true`
-- If turning OFF: sets `role.variationManual = false`, `role.variationOverride = false`
+- If turning OFF: sets `role.variationOverride = false` (roleVariations array kept but ignored)
 - `renderRoles()`, `schedulePreview()`
 
 **Variation table when open:**
@@ -397,11 +345,12 @@ _Role-override mode_ (`variationOverride` true): columns = `#`, `Name`, `Short`,
 ### Role Card — Solver Algorithm Row
 
 **Condition:** `pluginMode === "adaptiveEngine"` AND `useGlobalAlgo` is false AND `perColorAlgoScope === "role"`  
-Shows a **Solver Algorithm** dropdown per role → `setRole(idx, "scaleAlgorithm", value)`
+Shows a **Solver** dropdown per role: Balanced / Vivid / Muted / Hue Locked / Max Chroma  
+→ `setRole(idx, "solverMode", value)`
 
 ---
 
-## 9. Run / Sync Flow
+## 8. Run / Sync Flow
 
 ### Initiate
 
@@ -416,24 +365,45 @@ Shows a **Solver Algorithm** dropdown per role → `setRole(idx, "scaleAlgorithm
 - No duplicate role names
 - No duplicate role shorthands
 
-If validation fails → `showOverlay("error-overlay")` with message. Stops.
+If validation fails → `renderErrorDialog(message)`, `showOverlay("error-overlay")`. Stops.
 
-If valid → posts `{ type: "check-collections", scope, collections: [...names] }` to Figma backend. Loading overlay shown.
+If valid → posts to Figma backend:
+```js
+{ type: "check-collections", colorName, contextualName, state: appState, savedState: getSavedState() }
+```
+(`pendingScope` stores the scope, `colorName` and `contextualName` are the collection name strings.)
 
 ### Run Dialog
 
 On `collection-check-result` message:
 
 - Stores `lastCollectionCheckResult` (existing collection names), `lastRenameData`
-- `setRunScope(pendingScope)` → populates run dialog with scope options and rename summary
+- `renderRunDialog()` → builds the full dialog DOM into `#run-dialog-overlay`
+- `setRunScope(pendingScope || "all")` → populates scope buttons and refreshes dialog content
 - `showOverlay("run-dialog-overlay")`
 
-**Scope buttons:** All / Groups Only / Roles Only → `setRunScope()` → updates `pendingScope`, refreshes dialog
+**Scope buttons:** Everything / Scale Only / Roles Only → `setRunScope()` → updates `pendingScope`, calls `refreshRunDialog()`
+
+**Output Options** (live-editable in the dialog, state changes immediately):
+- Embed Colors Directly toggle (`rd-toggle-embedDirectly`)
+- Variable Structure buttons: Color-first (`color`) / Role-first (`role`) → `setTokenGrouping()`; this updates both `appState.variableStructure` and the name preview
+- Use shorthand toggles for Colors, Roles, Variations
+
+**Name preview** (`rd-name-preview`): live example token name built from first color + first role + third variation.
+
+**Collections list** (`rd-collections`): shows which collections will be created or updated for the current scope.
+
+**Renames list** (`rd-renames`): shown if `lastRenameData` indicates variables will be renamed. Lists each rename by type (Color, Role, Scale Steps, etc.) with from→to.
+
+**Warning** (`rd-warnings`): shown if any target collection already exists.
 
 ### Confirm
 
-`btn-run-confirm` → `hideOverlay("run-dialog-overlay")` → `proceedWithSync()`  
-Posts `{ type: "run-creator", state: appState, scope: pendingScope, savedState: getSavedState() }` to Figma backend (50 ms delay to allow loading overlay to render).
+`btn-run-confirm` → `hideOverlay("run-dialog-overlay")` → `proceedWithSync()`
+
+`proceedWithSync()`:
+1. `renderLoadingOverlay()` + `showOverlay("loading-overlay")`
+2. After 50 ms delay: posts `{ type: "run-creator", state: appState, scope: pendingScope, savedState: getSavedState() }` to Figma backend
 
 ### Finish
 
@@ -441,100 +411,100 @@ On `finish` message:
 
 - `setSavedState(appState)` — new baseline for rename detection
 - `markClean()` — resets dirty hash
-- `hideOverlay("loading-overlay")`, `showOverlay("success-overlay")`
+- `hideOverlay("loading-overlay")`, `renderSuccessDialog(msg.tally)`, `showOverlay("success-overlay")`
 - Shows tally: Created / Updated / Renamed / Failed counts
-- `showSystemBanners()` — scans all theme token outputs for adjusted values (contrast fallbacks), posts warnings
+- `showSystemBanners(msg.errors, msg.result)` — scans all theme token outputs for contrast failures, posts warnings
 
 ---
 
-## 10. Preview Screen
+## 9. Preview Screen
 
 ### Opening
 
-Preview tab button OR `Alt+3/4/N` keyboard shortcut → `renderPreviewTabs()` + `renderPreviewPanel()` → hides main nav, shows preview screen
+Preview tab button → `renderPreviewTabs()` → builds the tab bar, then renders the panel.  
+Alt+3/4/N keyboard shortcut → `openPreview(panelId)` → same render, then activates the specific panel.  
+Both hide `#main-nav-area` and show `#preview-screen` as `display:flex`.
 
 ### renderPreviewTabs
 
-- Removes old dynamic theme tabs
-- Hides "Tonal Scale" tab when `pluginMode === "adaptiveEngine"`
+- Removes all `.preview-theme-tab` buttons
+- Hides/shows the Tonal Scale tab (`[data-target='preview-colors']`) based on `pluginMode`: hidden when `adaptiveEngine`
 - Creates one tab button per `appState.themes` entry → each targets `preview-theme-panel-{i}`
 
 ### renderPreviewPanel
 
 Sections:
 
-1. **Tonal Scales** — one color spectrum strip per `appState.colors` entry. Hover shows hex + weight + contrast ratios. Click copies hex. Inline color picker (click swatch) calls `updateGroup()` directly.
+1. **Tonal Scales / Solved Colors** (`#preview-colors`) — one color spectrum strip per `appState.colors` entry. At rest each swatch shows weight + hex. Hover expands the swatch and shows a label. Click copies hex. Inline color picker (click color swatch at the start of the row) calls `updateGroup()` directly.
+
 2. **Alpha Tints** — shown only when `includeAlphaTints` AND `includeGlobalColors` are both true. One row per color, one swatch per alpha value. Click copies `rgba()` string.
-3. **Theme panels** — one panel per theme. Each panel shows token swatches grouped by color → role → variation. Hover shows contrast ratio; click copies hex; `Alt+click` copies token name.
+
+3. **Theme panels** (`#preview-theme-panels`) — one panel per theme. Each panel shows token swatches grouped by color → role → variation.  
+   - **At rest:** shows contrast ratio over each swatch  
+   - **On hover:** shows hex value, hides contrast ratio  
+   - **Click:** copies hex  
+   - **Alt+click:** copies token name (if `token.tknName` is available)
 
 ### Live preview
 
-`schedulePreview()` is a debounced (500 ms) function that re-runs `variableMaker(translateConfig(appState))` and `renderPreviewPanel()`. Only fires when preview screen is visible.
+`schedulePreview()` is a debounced (500 ms) function. Only fires when preview screen is visible (checks `#preview-screen.hidden`). Re-runs `variableMaker(translateConfig(appState))` and `renderPreviewPanel()`.
 
 ### Tab switching inside Preview
 
 Click any preview tab button → deactivates all tabs + panels, activates clicked tab + its target panel.  
-When a theme is removed via settings while its panel is the active tab → falls back to first visible tab.
+When a theme is removed via settings while its panel is active → falls back to first visible tab.
 
 ### Closing
 
-`preview-back` button or `Escape` key → hides preview screen, restores main nav, restores active sidebar tab button state
+`preview-back` button or `Escape` key → hides preview screen, restores `#main-nav-area`, restores active sidebar tab button state, calls `BannerManager.clear()`
 
 ---
 
-## 11. Export (More Sheet)
+## 10. Export (More Sheet)
 
 `btn-more` → `showSheet("more-sheet")` → slides up bottom sheet, shows overlay
 
-Available actions (all call `hideSheets()` after):
+Available actions:
 
-- **Save Config (JSON)** → `exportConfig()` → `{ type: "export-config" }` to backend → `processed-data-response` → downloads `.json`
-- **Export CSS** → `exportToCSS()` → downloads `.css`
-- **Export CSV** → `exportToCSV()` → downloads `.csv`
-- **Export SCSS** → `exportToSCSS()` → downloads `.scss`
-- **Reset to Defaults** → `confirm()` dialog → if confirmed: resets `appState` to `demoConfig`, clears `savedState`, re-renders everything
+- **Save Config (JSON)** → `exportConfig()` → directly serialises `appState` to JSON and triggers download (no backend round-trip)
+- **Export CSS** → `exportToCSS()` → posts `{ type: "request-processed-data", exportType: "css" }` → `processed-data-response` → downloads `.css`
+- **Export CSV** → `exportToCSV()` → same flow, `.csv`
+- **Export SCSS** → `exportToSCSS()` → same flow, `.scss`
+- **Reset to Defaults** → `createDialogue("confirm-clear-overlay", {...})` → custom dialog with "Cancel" / "Clear All" buttons → if confirmed: `appState = demoConfig`, `ensureIds`, `ensureVariations`, `setSavedState(null)`, re-renders everything, `hideSheets()`
 
-Shortcut buttons on main view (`btn-export-css/csv/scss/json`) call the same export functions directly.
+All More sheet actions call `hideSheets()` after (export ones call it in the `opt-*` onclick handler).
 
-**Import:** `btn-import` → triggers `file-input` click (hidden `<input type="file" accept=".json">`)  
+Shortcut buttons on the main header (`btn-export-css/csv/scss/json`) call the same export functions directly.
+
+**Import:** `btn-import` → triggers `file-input` click (hidden `<input type="file" accept=".json,.js">`)  
 Or drag a `.json` file anywhere onto the plugin window → `drop-overlay` appears → on drop: `handleImportJSON()`
 
-`handleImportJSON` parses JSON, calls `loadState()` (merges, re-ids, re-variations), `setSavedState(null)`, `renderColorGroups()`, `renderRoles()`, `syncInputsFromState()`, `schedulePreview()`
+`handleImportJSON` parses JSON, validates that `colors` and `roles` exist. Then shows a **3-button confirmation dialog** (`confirm-import-overlay`):
+
+- **Save Current & Import** → `exportConfig()` then `finalizeImport()`
+- **Import & Replace** → `finalizeImport()`
+- **Cancel** → dismisses
+
+`finalizeImport()` → `loadState(importedData)` (merges, migrates, re-ids, re-variations, `markClean()`), `syncInputsFromState()`, `renderColorGroups()`, `renderRoles()`, `BannerManager.success(...)`
 
 ---
 
-## 12. Overlays & Sheets
+## 11. Overlays & Sheets
 
-| ID                   | Shown by                          | Hidden by                                               |
-| -------------------- | --------------------------------- | ------------------------------------------------------- |
-| `loading-overlay`    | `proceedWithSync()`               | `finish` or `error` message                             |
-| `success-overlay`    | `finish` message                  | `hideOverlay()` click on overlay                        |
-| `error-overlay`      | validation fail, `error` message  | `hideOverlay()` click                                   |
-| `run-dialog-overlay` | `collection-check-result` message | confirm or cancel button                                |
-| `drop-overlay`       | file drag enters window           | drag leave or drop                                      |
-| `more-sheet`         | `btn-more`                        | `overlay` click, `close-more` button, any export action |
-
----
-
-## 13. Theme & Scale Preferences (Plugin Tab)
-
-### UI Scale
-
-`setting-ui-scale` select → `updateUiPref("scale", value)` → `uiPrefs.scale = value`, `applyUiPrefs()`, posts `save-ui-prefs-meta` to backend  
-Options: 0.7 / 0.8 / 0.9 / 1.0 / 1.1 / 1.25 / 1.5  
-Applied as `document.body.style.zoom` and CSS var `--ui-scale`.
-
-### UI Theme
-
-`setting-ui-theme` select → `updateUiPref("theme", value)` → same flow as scale  
-Options: `"figma"` (follows Figma's own theme), `"dark"`, `"light"`  
-Applied as `data-ui-theme` attribute on `<body>`.
-
-**Auto-follow Figma theme:** A `MutationObserver` watches `html` and `body` class changes. When `uiPrefs.theme === "figma"`, any Figma theme class change re-calls `applyUiPrefs()`. Also listens to OS `prefers-color-scheme` changes as a fallback.
+| ID                     | Shown by                                          | Hidden by                                               |
+| ---------------------- | ------------------------------------------------- | ------------------------------------------------------- |
+| `loading-overlay`      | `proceedWithSync()`                               | `finish` or `error` message                             |
+| `success-overlay`      | `finish` message                                  | "Back to Editor" button (`hideOverlay()`)               |
+| `error-overlay`        | validation fail, `error` message                  | "Dismiss" button (`hideOverlay()`)                      |
+| `run-dialog-overlay`   | `collection-check-result` message                 | confirm or cancel button                                |
+| `confirm-import-overlay` | `handleImportJSON()` (after parse/validate)     | any button choice                                       |
+| `confirm-clear-overlay`| `opt-clear` button (Reset to Defaults)            | any button choice                                       |
+| `drop-overlay`         | file drag enters window                           | drag leave or drop                                      |
+| `more-sheet`           | `btn-more`                                        | overlay click, `close-more` button, any export action   |
 
 ---
 
-## 14. Resize
+## 12. Resize
 
 `resize-handle` mousedown → records `resizeOriginX/Y` and `resizeStartW/H` → `mousemove` posts `{ type: "resize", width, height }` to Figma backend on every move.  
 Clamped: width 400–1400, height 560–1400.  
@@ -542,30 +512,28 @@ Clamped: width 400–1400, height 560–1400.
 
 ---
 
-## 15. Tooltips
+## 13. Tooltips
 
 Any element with `data-tooltip` attribute → global `mouseenter` listener (capture phase) → shows `#tooltip` element near the target, clamped to viewport.  
 `mouseleave` → hides tooltip.
 
 ---
 
-## 16. Field Visibility Summary Table
+## 14. Field Visibility Summary Table
 
 | Field / Control                                     | Visible when                                                                                      |
 | --------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Tonal Scale section in Palettes settings            | `pluginMode !== "adaptiveEngine"`                                                                 |
-| Scale Step Labels section                           | `pluginMode !== "adaptiveEngine"`                                                                 |
+| Palette card in Token Settings                      | `pluginMode !== "adaptiveEngine"`                                                                 |
+| Scale Step Labels card in Token Settings            | `pluginMode !== "adaptiveEngine"`                                                                 |
 | Palettes collection toggle + name group             | `pluginMode !== "adaptiveEngine"`                                                                 |
 | Map Roles with Palettes row                         | `pluginMode !== "adaptiveEngine"`                                                                 |
-| Embed Directly row                                  | `pluginMode !== "adaptiveEngine"`                                                                 |
 | Tonal Collection name input                         | `pluginMode !== "adaptiveEngine"` AND `includeTonalCollection` is true                            |
-| By Index base selection option                      | `pluginMode !== "adaptiveEngine"`                                                                 |
-| Spread Unit row                                     | `pluginMode !== "adaptiveEngine"` AND `baseSelection !== "Manual"`                                |
-| Global Algo select row                              | `useGlobalAlgo` is true                                                                           |
+| Global Algorithm select row                         | `pluginMode !== "adaptiveEngine"` AND `useGlobalAlgo` is true                                     |
+| Global Solver select row                            | `pluginMode === "adaptiveEngine"` AND `useGlobalAlgo` is true                                     |
 | Algo Scope (Color/Role) row                         | `pluginMode === "adaptiveEngine"` AND `useGlobalAlgo` is false                                    |
 | Color card Solver dropdown                          | `pluginMode === "adaptiveEngine"` AND `useGlobalAlgo` is false AND `perColorAlgoScope !== "role"` |
 | Color card Scale Algorithm dropdown                 | `pluginMode !== "adaptiveEngine"` AND `useGlobalAlgo` is false                                    |
-| Role card Solver Algorithm dropdown                 | `pluginMode === "adaptiveEngine"` AND `useGlobalAlgo` is false AND `perColorAlgoScope === "role"` |
+| Role card Solver dropdown                           | `pluginMode === "adaptiveEngine"` AND `useGlobalAlgo` is false AND `perColorAlgoScope === "role"` |
 | Color card Description input                        | `includeDescriptions` is true                                                                     |
 | Constants sub-options (alpha tints etc.)            | `includeGlobalColors` is true                                                                     |
 | Alpha Values input row                              | `includeAlphaTints` is true                                                                       |
@@ -573,3 +541,5 @@ Any element with `data-tooltip` attribute → global `mouseenter` listener (capt
 | Preview: Tonal Scale tab                            | `pluginMode !== "adaptiveEngine"`                                                                 |
 | Preview: Alpha Tints section                        | `includeAlphaTints` AND `includeGlobalColors` both true                                           |
 | Role-override variation columns (Name/Short/Delete) | `role.variationOverride` is true                                                                  |
+| Run dialog Scope section                            | `pluginMode !== "adaptiveEngine"`                                                                 |
+| Run dialog Embed Colors Directly row                | `pluginMode !== "adaptiveEngine"`                                                                 |
