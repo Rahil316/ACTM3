@@ -12,7 +12,19 @@ function renderSidebarProject() {
 
   container.appendChild(
     el("div", { class: "space-y-4 p-1" }, [
-      panelUI.input({ value: appState.name || "", placeholder: "CTM316", label: "Project Name", width: "full", size: "lg", oninput: (e) => updateProjectName(e.target.value) }),
+      // Project name + presets button row
+      el("div", { class: "space-y-2" }, [
+        panelUI.input({ value: appState.name || "", placeholder: "CTM316", label: "Project Name", width: "full", size: "lg", oninput: (e) => updateProjectName(e.target.value) }),
+        el("button", {
+          onclick: () => {
+            const overlay = document.getElementById("theme-shop-overlay");
+            if (overlay) { overlay.classList.remove("hidden"); renderThemeShop(); }
+          },
+          class: "w-full h-[32px] flex items-center justify-center gap-1.5 rounded-[8px] text-[12px] font-medium border border-dashed border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors",
+        }, ["✦ Browse Design System Presets"]),
+      ]),
+
+      // Themes
       el("div", { class: "space-y-2" }, [
         el("div", { class: "flex items-center justify-between" }, [
           el("label", { class: "text-[11px] text-[var(--text-muted)] font-medium ml-1" }, ["Themes (modes)"]),
