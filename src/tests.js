@@ -251,15 +251,15 @@ const TESTS_ENABLED = false;
       name: "Test",
       scaleLength: 11,
       scaleAlgorithm: "Natural",
-      pluginMode: "tonalScalesBased",
+      pluginMode: "scale",
       colors: [{ name: "Blue", shorthand: "bl", value: "3B82F6", description: "" }],
-      roles: [{ name: "Text", shorthand: "tx", spread: 2, minContrast: 4.5, baseIndex: 5, variationTargets: [1.5, 3, 4.5, 7, 12] }],
+      roles: [{ name: "Text", shorthand: "tx", minContrast: 4.5, mappingMethod: "contrast", variationTargets: [1.5, 3, 4.5, 7, 12] }],
       themes: [{ name: "Light", bg: "FFFFFF" }, { name: "Dark", bg: "000000" }],
       variations: null,
     };
     const cfg = translateConfig(state);
     eq("scaleLength passed through",  cfg.scaleLength, 11);
-    eq("pluginMode passed through",   cfg.pluginMode, "tonalScalesBased");
+    eq("pluginMode passed through",   cfg.pluginMode, "scale");
     eq("color name preserved",        cfg.colors[0].name, "Blue");
     eq("role name preserved",         cfg.roles[0].name, "Text");
     eq("theme count correct",         cfg.themes.length, 2);
@@ -282,15 +282,15 @@ const TESTS_ENABLED = false;
   const _baseState = {
     scaleLength: 11,
     scaleAlgorithm: "Natural",
-    pluginMode: "tonalScalesBased",
+    pluginMode: "scale",
     useGlobalAlgo: true,
     colors: [
       { name: "Primary", shorthand: "pr", value: "3B82F6", description: "" },
       { name: "Gray",    shorthand: "gr", value: "808080", description: "" },
     ],
     roles: [
-      { name: "Text",       shorthand: "tx", spread: 2, minContrast: 4.5, baseIndex: 7, variationTargets: [1.5, 3, 4.5, 7, 12] },
-      { name: "Background", shorthand: "bg", spread: 1, minContrast: 1.2, baseIndex: 2, variationTargets: [1.5, 3, 4.5, 7, 12] },
+      { name: "Text",       shorthand: "tx", minContrast: 4.5, mappingMethod: "contrast", variationTargets: [1.5, 3, 4.5, 7, 12] },
+      { name: "Background", shorthand: "bg", minContrast: 1.2, mappingMethod: "contrast", variationTargets: [1.0, 1.1, 1.2, 1.35, 1.5] },
     ],
     themes: [
       { name: "Light", bg: "FFFFFF" },
@@ -303,54 +303,54 @@ const TESTS_ENABLED = false;
     ],
   };
 
-  group("variableMaker — tonal mode structure", () => {
+  group("variableMaker — scale mode structure", () => {
     const result = variableMaker(translateConfig(_baseState));
     assert("no critical errors",         result.errors.critical.length === 0);
-    assert("tonalScales not empty",      Object.keys(result.tonalScales).length === 2);
-    assert("Primary scale exists",       !!result.tonalScales["Primary"]);
-    assert("Gray scale exists",          !!result.tonalScales["Gray"]);
-    const primaryScale = result.tonalScales["Primary"];
-    eq("Primary scale has 11 steps",    Object.keys(primaryScale).length, 11);
+    assert("scales not empty",           Object.keys(result.scales).length === 2);
+    assert("Primary scale exists",       !!result.scales["Primary"]);
+    assert("Gray scale exists",          !!result.scales["Gray"]);
+    const primaryScale = result.scales["Primary"];
+    eq("Primary scale has 11 steps",     Object.keys(primaryScale).length, 11);
 
-    assert("colorTokens has Light key", !!result.colorTokens["light"]);
-    assert("colorTokens has Dark key",  !!result.colorTokens["dark"]);
-    const lightPrimary = result.colorTokens["light"]["Primary"];
-    assert("Light/Primary has roles",   lightPrimary && Object.keys(lightPrimary).length === 2);
+    assert("tokens has Light key", !!result.tokens["light"]);
+    assert("tokens has Dark key",  !!result.tokens["dark"]);
+    const lightPrimary = result.tokens["light"]["Primary"];
+    assert("Light/Primary has roles",    lightPrimary && Object.keys(lightPrimary).length === 2);
   });
 
-  group("variableMaker — tonal mode token values", () => {
+  group("variableMaker — scale mode token values", () => {
     const result = variableMaker(translateConfig(_baseState));
-    const lightTokens = result.colorTokens["light"]["Primary"];
+    const lightTokens = result.tokens["light"]["Primary"];
     Object.values(lightTokens).forEach((roleTokens) => {
       Object.values(roleTokens).forEach((token) => {
         assert(`token hex is valid: ${token.value}`, /^#[0-9A-Fa-f]{6}$/i.test(token.value));
         assert(`token has contrast ratio`,           typeof token.contrast.ratio === "number");
-        assert(`token has tknName`,                  typeof token.tknName === "string");
+        assert(`token has tokenName`,                typeof token.tokenName === "string");
       });
     });
   });
 
-  group("variableMaker — adaptive engine mode", () => {
-    const adaptiveState = Object.assign({}, _baseState, { pluginMode: "adaptiveEngine" });
-    const result = variableMaker(translateConfig(adaptiveState));
+  group("variableMaker — direct mode", () => {
+    const directState = Object.assign({}, _baseState, { pluginMode: "direct" });
+    const result = variableMaker(translateConfig(directState));
     assert("no critical errors",       result.errors.critical.length === 0);
-    eq("tonalScales is empty",         Object.keys(result.tonalScales).length, 0);
-    assert("colorTokens populated",    Object.keys(result.colorTokens).length === 2);
-    const lightPrimary = result.colorTokens["light"]["Primary"];
+    eq("scales is empty",              Object.keys(result.scales).length, 0);
+    assert("tokens populated",         Object.keys(result.tokens).length === 2);
+    const lightPrimary = result.tokens["light"]["Primary"];
     assert("tokens present",           lightPrimary && Object.keys(lightPrimary).length > 0);
     Object.values(lightPrimary).forEach((roleTokens) => {
       Object.values(roleTokens).forEach((token) => {
-        assert(`adaptive token hex valid: ${token.value}`, /^#[0-9A-Fa-f]{6}$/i.test(token.value));
+        assert(`direct token hex valid: ${token.value}`, /^#[0-9A-Fa-f]{6}$/i.test(token.value));
         const ratio = token.contrast.ratio;
-        assert(`adaptive contrast is a number`, typeof ratio === "number" && ratio >= 1);
+        assert(`direct contrast is a number`, typeof ratio === "number" && ratio >= 1);
       });
     });
   });
 
-  group("variableMaker — tonal scale hex validity", () => {
+  group("variableMaker — scale hex validity", () => {
     const result = variableMaker(translateConfig(_baseState));
-    Object.entries(result.tonalScales).forEach(([colorName, ramp]) => {
-      Object.entries(ramp).forEach(([step, data]) => {
+    Object.entries(result.scales).forEach(([colorName, scale]) => {
+      Object.entries(scale).forEach(([step, data]) => {
         assert(`${colorName}[${step}] is valid hex`, /^#[0-9A-Fa-f]{6}$/i.test(data.value));
         assert(`${colorName}[${step}] has contrast object`, typeof data.contrast === "object");
       });

@@ -24,14 +24,11 @@ function translateConfig(appState) {
       scaleAlgorithm: g.scaleAlgorithm || null, // null = fall back to global
       description: g.description || "",
     })),
-    roles: _mapRoles(appState, variations, count),
+    roles: _mapRoles(appState, variations),
     scaleLength: count,
     scaleAlgorithm: appState.scaleAlgorithm || "Natural",
-    pluginMode: appState.pluginMode || "tonalScalesBased",
+    pluginMode: appState.pluginMode || "scale",
     perRoleControls: !!appState.perRoleControls,
-    spreadUnit: appState.spreadUnit || "steps",
-    baseSelectionMode: appState.baseSelection || "By Contrast",
-    roleMapping: appState.pluginMode === "adaptiveEngine" ? (appState.baseSelection === "Manual" ? "Direct Manual" : "Direct Contrast") : appState.baseSelection || "By Contrast",
     scaleStepNames: stepNames,
     roleStepNames,
     variations: variations.map(function (v) {
@@ -47,7 +44,9 @@ function translateConfig(appState) {
     useShorthandSteps: appState.useShorthandSteps || false,
     scaleStepShorthands: stepShorthands,
     includeGlobalColors: appState.includeGlobalColors || false,
-    globalColorsCollectionName: appState.globalColorsCollectionName || "_constants",
+    sourceCollectionName: appState.sourceCollectionName || appState.globalColorsCollectionName || "_constants",
+    scaleCollectionName: appState.scaleCollectionName || appState.tonalScaleCollectionName || "_scale",
+    tokenCollectionName: appState.tokenCollectionName || "color tokens",
     includeAlphaTints: appState.includeAlphaTints || false,
     alphaValues: (appState.alphaValues || "10, 25, 50, 75, 90")
       .split(",")
@@ -101,20 +100,13 @@ function _parseVariations(appState) {
   return appState.variations && appState.variations.length > 0 ? appState.variations : [1, 2, 3, 4, 5].map((n) => ({ _id: String(n), name: String(n), shorthand: String(n), description: "" }));
 }
 
-function _mapRoles(appState, variations, count) {
+function _mapRoles(appState, variations) {
   return (appState.roles || []).map((role) => ({
     name: role.name,
     shorthand: role.shorthand || role.name.substring(0, 2).toLowerCase(),
     minContrast: parseFloat(role.minContrast !== undefined ? role.minContrast : 4.5),
-    spread: Math.max(1, parseInt(role.spread) || 1),
-    baseIndex: role.baseIndex !== undefined ? parseInt(role.baseIndex) : Math.floor(count / 2),
-    darkBaseIndex: role.darkBaseIndex !== undefined ? parseInt(role.darkBaseIndex) : undefined,
-    baseContrast: parseFloat(role.baseContrast) || 4.5,
-    contrastGap: parseFloat(role.contrastGap) || 1.5,
-    baseSelection: role.baseSelection || appState.baseSelection || "By Contrast",
-    spreadUnit: role.spreadUnit || appState.spreadUnit || "steps",
-    useContrastGap: !!role.useContrastGap,
-    variationTargets: role.variationTargets || (appState.pluginMode === "adaptiveEngine" ? variations.map((_, i) => _getVariationTargets()[i] || 4.5) : variations.map((_, i) => Math.floor(count / 2 + (i - Math.floor(variations.length / 2))))),
+    mappingMethod: role.mappingMethod === "index" ? "index" : "contrast",
+    variationTargets: role.variationTargets || variations.map((_, i) => _getVariationTargets()[i] || 4.5),
     scaleAlgorithm: role.scaleAlgorithm || null,
     solverMode: role.solverMode || null, // null = fall back to config.solverMode
     description: role.description || "",

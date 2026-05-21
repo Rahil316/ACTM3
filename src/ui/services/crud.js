@@ -171,20 +171,16 @@ function _nextPresetRole() {
 
 function addRole() {
   const preset = _nextPresetRole();
-  const mid = Math.floor(appState.scaleLength / 2);
   appState.roles.unshift({
     _id: generateId(),
     name: preset.name,
     shorthand: preset.shorthand,
-    spread: 2,
     minContrast: 4.5,
-    baseIndex: mid,
-    darkBaseIndex: mid,
-    variationTargets: defaultVariationTargets(appState.variations.length, appState.pluginMode, appState.scaleLength),
+    mappingMethod: "contrast",
+    variationTargets: defaultVariationTargets(appState.variations.length),
     description: "",
     variationOverride: false,
     roleVariations: [],
-    mappingMode: "auto",
   });
   renderRoles();
   schedulePreview();

@@ -14,8 +14,8 @@
 // ── CONSTANTS ──
 const DEFAULT_VARIATION_TARGETS = [1.5, 3.0, 4.5, 7.0, 12.0];
 
-function defaultVariationTargets(len, pluginMode, scaleLength) {
-  return Array.from({ length: len }, (_, i) => (pluginMode === "adaptiveEngine" ? DEFAULT_VARIATION_TARGETS[i] || 4.5 : Math.floor((scaleLength || 25) / 2)));
+function defaultVariationTargets(len) {
+  return Array.from({ length: len }, (_, i) => DEFAULT_VARIATION_TARGETS[i] || 4.5);
 }
 
 // ── IDENTITY ──
@@ -39,55 +39,54 @@ function ensureIds(state) {
   return state;
 }
 
-// ── DEFAULT CONFIGURATION ──
-const demoConfig = {
+// ── BOOTSTRAP CONFIG ──
+// Minimal safe state used before themeShop.js loads. On first launch
+// runtime.js replaces this with PRESETS[0].config (CTM Regular).
+const _bootstrapConfig = {
   name: "CTM316",
-  tonalScaleCollectionName: "_scale",
-  tokenCollectionName: "color tokens",
-  embedDirectly: false,
-  includeGlobalColors: false,
-  globalColorsCollectionName: "global",
-  includeAlphaTints: false,
-  alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
-  variableStructure: "color", // kept for backwards compat
+  pluginMode: "scale",
+  scaleAlgorithm: "Natural",
+  scaleLength: 25,
+  useGlobalAlgo: true,
+  perColorAlgoScope: "color",
+  solverMode: "natural",
   tokenNameOrder: ["color", "role", "variation"],
   useShorthandColors: false,
   useShorthandRoles: false,
   useShorthandVariations: false,
-  scaleLength: 25,
-  scaleAlgorithm: "Natural",
-  scaleStepNames: [],
-  pluginMode: "tonalScalesBased", // "tonalScalesBased" or "adaptiveEngine"
-  baseSelection: "By Contrast",
-  spreadUnit: "steps",
-  perRoleControls: false,
-  useGlobalAlgo: true,
-  perColorAlgoScope: "color",
-  solverMode: "natural",
+  useShorthandSteps: false,
+  embedDirectly: false,
+  includeGlobalColors: false,
+  sourceCollectionName: "global",
+  includeAlphaTints: false,
+  alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
+  variableStructure: "color",
   includeTonalCollection: true,
+  includeDescriptions: false,
+  scaleCollectionName: "_scale",
+  tokenCollectionName: "color tokens",
+  perRoleControls: false,
+  scaleStepNames: [],
   variations: null,
   colors: [
-    { name: "Primary", shorthand: "pr", value: "0067DD", description: "" },
-    { name: "Secondary", shorthand: "sc", value: "EFEFF2", description: "" },
-    { name: "Gray", shorthand: "gr", value: "808080", description: "" },
+    { name: "Primary", shorthand: "pr", value: "0066FF", description: "" },
+    { name: "Gray",    shorthand: "gr", value: "6B7280", description: "" },
   ],
   roles: [
-    { name: "Text", shorthand: "tx", spread: 2, minContrast: 4.5, baseIndex: 14, variationTargets: [1.5, 3.0, 4.5, 7.0, 12.0], description: "" },
-    { name: "Fill", shorthand: "fi", spread: 1, minContrast: 3.0, baseIndex: 9, variationTargets: [1.5, 3.0, 4.5, 7.0, 12.0], description: "" },
-    { name: "Background", shorthand: "bg", spread: 1, minContrast: 1.2, baseIndex: 4, variationTargets: [1.5, 3.0, 4.5, 7.0, 12.0], description: "" },
-    { name: "Border", shorthand: "br", spread: 1, minContrast: 2.0, baseIndex: 11, variationTargets: [1.5, 3.0, 4.5, 7.0, 12.0], description: "" },
+    { name: "Text",       shorthand: "tx", minContrast: 4.5, mappingMethod: "contrast", variationTargets: [3.0, 4.5, 7.0, 10.0, 14.0] },
+    { name: "Background", shorthand: "bg", minContrast: 1.1, mappingMethod: "contrast", variationTargets: [1.0, 1.05, 1.1, 1.2, 1.35] },
+    { name: "Border",     shorthand: "bd", minContrast: 2.0, mappingMethod: "contrast", variationTargets: [1.5, 2.0, 2.5, 3.0, 3.5] },
   ],
   themes: [
     { name: "Light", bg: "FFFFFF" },
-    { name: "Dark", bg: "000000" },
+    { name: "Dark",  bg: "0F0F0F" },
   ],
-  includeDescriptions: false,
 };
 
-ensureIds(demoConfig);
+ensureIds(_bootstrapConfig);
 
 // ── APP STATE ──
-let appState = JSON.parse(JSON.stringify(demoConfig));
+let appState = JSON.parse(JSON.stringify(_bootstrapConfig));
 ensureVariations();
 
 const UI_DIMS = {
@@ -121,7 +120,7 @@ function ensureVariations() {
     const vLen = roleVars.length;
     if (!role.variationTargets || role.variationTargets.length !== vLen) {
       const oldVals = role.variations ? Object.values(role.variations) : Array.isArray(role.variationTargets) ? role.variationTargets : [];
-      role.variationTargets = roleVars.map((_, i) => oldVals[i] || (appState.pluginMode === "adaptiveEngine" ? DEFAULT_VARIATION_TARGETS[i] || 4.5 : Math.floor(((appState.scaleLength || 25) / Math.max(1, vLen - 1)) * i)));
+      role.variationTargets = roleVars.map((_, i) => oldVals[i] || DEFAULT_VARIATION_TARGETS[i] || 4.5);
       delete role.variations;
     }
   }
@@ -165,6 +164,31 @@ function loadState(incoming) {
       ? csv.split(",").map((n) => { const s = n.trim(); return { _id: generateId(), name: s, shorthand: s }; })
       : [];
   }
+  // migrate legacy pluginMode and collection field names
+  if (incoming.pluginMode === "tonalScalesBased") incoming.pluginMode = "scale";
+  if (incoming.pluginMode === "adaptiveEngine")   incoming.pluginMode = "direct";
+  if (incoming.tonalScaleCollectionName && !incoming.scaleCollectionName) {
+    incoming.scaleCollectionName = incoming.tonalScaleCollectionName;
+    delete incoming.tonalScaleCollectionName;
+  }
+  if (incoming.globalColorsCollectionName && !incoming.sourceCollectionName) {
+    incoming.sourceCollectionName = incoming.globalColorsCollectionName;
+    delete incoming.globalColorsCollectionName;
+  }
+  delete incoming.baseSelection;
+  delete incoming.spreadUnit;
+  // strip legacy per-role fields and set mappingMethod default
+  (incoming.roles || []).forEach((r) => {
+    delete r.spread;
+    delete r.baseIndex;
+    delete r.darkBaseIndex;
+    delete r.contrastGap;
+    delete r.baseContrast;
+    delete r.useContrastGap;
+    delete r.baseSelection;
+    delete r.spreadUnit;
+    if (!r.mappingMethod) r.mappingMethod = "contrast";
+  });
   Object.assign(appState, incoming);
   ensureIds(appState);
   ensureVariations();
@@ -185,8 +209,7 @@ function _computeHash() {
     variations: s.variations,
     scaleLength: s.scaleLength,
     scaleAlgorithm: s.scaleAlgorithm,
-    baseSelection: s.baseSelection,
-    spreadUnit: s.spreadUnit,
+    pluginMode: s.pluginMode,
     scaleStepNames: s.scaleStepNames,
     useShorthandColors: s.useShorthandColors,
     useShorthandRoles: s.useShorthandRoles,
@@ -256,10 +279,17 @@ function setRole(idx, key, value) {
   if (!appState.roles[idx]) return;
   if (key.startsWith("variationTarget:")) {
     const vi = parseInt(key.slice("variationTarget:".length));
-    if (!appState.roles[idx].variationTargets) appState.roles[idx].variationTargets = defaultVariationTargets(appState.variations.length, "adaptiveEngine", appState.scaleLength);
-    let v = parseFloat(value);
-    if (isNaN(v) || v < 1) v = 1;
-    appState.roles[idx].variationTargets[vi] = Math.min(21, v);
+    if (!appState.roles[idx].variationTargets) appState.roles[idx].variationTargets = defaultVariationTargets(appState.variations.length);
+    const isIndex = appState.roles[idx].mappingMethod === "index";
+    if (isIndex) {
+      let v = parseInt(value);
+      if (isNaN(v) || v < 0) v = 0;
+      appState.roles[idx].variationTargets[vi] = Math.min(appState.scaleLength - 1, v);
+    } else {
+      let v = parseFloat(value);
+      if (isNaN(v) || v < 1) v = 1;
+      appState.roles[idx].variationTargets[vi] = Math.min(21, v);
+    }
     return;
   }
   if (key === "minContrast") {
@@ -268,16 +298,8 @@ function setRole(idx, key, value) {
     appState.roles[idx].minContrast = Math.max(1, Math.min(21, v));
     return;
   }
-  if (key === "spread") {
-    let v = parseInt(value);
-    if (isNaN(v)) v = 1;
-    appState.roles[idx].spread = Math.max(1, Math.min(21, v));
-    return;
-  }
-  if (key === "baseIndex" || key === "darkBaseIndex") {
-    let v = parseInt(value);
-    if (isNaN(v)) v = 0;
-    appState.roles[idx][key] = Math.max(0, Math.min(appState.scaleLength - 1, v));
+  if (key === "mappingMethod") {
+    appState.roles[idx].mappingMethod = value === "index" ? "index" : "contrast";
     return;
   }
   appState.roles[idx][key] = value;

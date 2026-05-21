@@ -8,7 +8,7 @@
 
 // ── TONAL SCALE COMPONENTS ────────────────────────────────────────────────────
 
-function _pvScaleStep(weight, data, onHover) {
+function _pvScaleStep(step, data, onHover) {
   const labelEl = el(
     "div",
     {
@@ -16,25 +16,25 @@ function _pvScaleStep(weight, data, onHover) {
       style: `color:${useWhiteLabel(data.value) ? "#fff" : "#000"}`,
     },
     [
-      el("span", { class: "text-[12px] font-bold leading-none" }, weight),
+      el("span", { class: "text-[12px] font-bold leading-none" }, step),
       el("span", { class: "text-[14px] font-mono leading-none opacity-80" }, data.value),
     ],
   );
-  const step = el(
+  const stepEl = el(
     "div",
     {
       class: "preview-swatch group relative flex-1 h-full hover:flex-[4] hover:z-10 hover:rounded-[8px] transition-all cursor-pointer",
       style: `background:${data.value}`,
-      title: `${weight} · ${data.value} — click to copy`,
+      title: `${step} · ${data.value} — click to copy`,
       onclick: () => { copyToClipboard(data.value); ToastManager.success(`Copied ${data.value}`); },
     },
     [labelEl],
   );
-  step.onmouseenter = () => onHover(data.value, weight, data.contrast || {});
-  return step;
+  stepEl.onmouseenter = () => onHover(data.value, step, data.contrast || {});
+  return stepEl;
 }
 
-function _pvColorScaleRow(colorName, colorIdx, srcHex, ramp, themeKeys) {
+function _pvColorScaleRow(colorName, colorIdx, srcHex, scale, themeKeys) {
   const hexDisplay  = el("span", { class: "text-[12px] font-bold font-mono" });
   const stepName    = el("span", { class: "text-[12px] font-bold" });
   const numDisplay  = el("span", { class: "text-[12px] text-[var(--text-muted)] font-mono" });
@@ -63,11 +63,11 @@ function _pvColorScaleRow(colorName, colorIdx, srcHex, ramp, themeKeys) {
     class: "col-span-3 flex w-full h-20 rounded-[10px] overflow-hidden cursor-crosshair",
     style: "box-shadow:0 10px 30px #0000001f;border:1px solid #8888881A",
   });
-  for (const [weight, data] of Object.entries(ramp)) {
-    spectrum.appendChild(_pvScaleStep(weight, data, (hex, w, contrast) => {
+  for (const [step, data] of Object.entries(scale)) {
+    spectrum.appendChild(_pvScaleStep(step, data, (hex, s, contrast) => {
       hexDisplay.textContent = hex;
       hexDisplay.style.color = hex;
-      numDisplay.textContent = w;
+      numDisplay.textContent = s;
       stepName.textContent = data.stepName;
       infoDisplay.textContent = themeKeys
         .map((k) => (contrast[k] ? `${k}: ${contrast[k].ratio}` : ""))
@@ -139,7 +139,7 @@ function _pvTokenSwatchCard(token, label) {
       class: "relative rounded-[6px] cursor-pointer transition-all duration-150",
       style: `background:${token.value};height:52px;box-shadow:inset 0 0 0 1px rgba(128,128,128,.18)`,
       onclick: (e) => {
-        const text = e.altKey && token.tknName ? token.tknName : token.value;
+        const text = e.altKey && token.tokenName ? token.tokenName : token.value;
         copyToClipboard(text);
         ToastManager.success(`Copied ${text}`);
       },
@@ -178,10 +178,10 @@ function _pvRoleGroup(roleIdx, variations) {
 }
 
 function _pvColorGroup(colorName, roles, result) {
-  const ramp = result.tonalScales[colorName];
+  const scale = result.scales[colorName];
   const srcColor = (appState.colors.find((c) => c.name === colorName) || {}).value || "888888";
-  const baseColor = ramp
-    ? ramp[Object.keys(ramp)[Math.floor(Object.keys(ramp).length / 2)]].value
+  const baseColor = scale
+    ? scale[Object.keys(scale)[Math.floor(Object.keys(scale).length / 2)]].value
     : `#${srcColor.replace(/^#/, "")}`;
 
   const content = el("div", { class: "space-y-3" });
@@ -217,15 +217,15 @@ function renderPreviewPanel(result) {
   // ── Tonal Scale / Solved Colors panel
   const colorEl = document.getElementById("preview-colors");
   colorEl.innerHTML = "";
-  if (Object.keys(result.tonalScales).length === 0) {
-    colorEl.innerHTML = `<p class="text-[12px] text-[var(--text-muted)] px-1 py-4 text-center">No tonal scale in Adaptive Engine mode. Colors are solved directly per variation target.</p>`;
+  if (Object.keys(result.scales).length === 0) {
+    colorEl.innerHTML = `<p class="text-[12px] text-[var(--text-muted)] px-1 py-4 text-center">No tonal scale in Direct mode. Colors are solved directly per variation target.</p>`;
   } else {
     const themeKeys = themes.map((t) => t.name.toLowerCase());
-    for (const [colorName, ramp] of Object.entries(result.tonalScales)) {
+    for (const [colorName, scale] of Object.entries(result.scales)) {
       const colorEntry = appState.colors.find((c) => c.name === colorName);
       const colorIdx   = appState.colors.findIndex((c) => c.name === colorName);
       const srcHex = "#" + (colorEntry ? colorEntry.value.replace(/^#/, "") : "888888");
-      colorEl.appendChild(_pvColorScaleRow(colorName, colorIdx, srcHex, ramp, themeKeys));
+      colorEl.appendChild(_pvColorScaleRow(colorName, colorIdx, srcHex, scale, themeKeys));
     }
   }
 
@@ -257,7 +257,7 @@ function renderPreviewPanel(result) {
       panelArea.appendChild(panel);
     }
     panel.id = panelId;
-    renderThemePanel(panel, result.colorTokens[theme.name.toLowerCase()] || {}, normalizeHex(theme.bg) || "#FFFFFF", result);
+    renderThemePanel(panel, result.tokens[theme.name.toLowerCase()] || {}, normalizeHex(theme.bg) || "#FFFFFF", result);
   });
 
   // Remove panels for themes that no longer exist; fall back active tab if needed.
@@ -302,9 +302,9 @@ function renderPreviewTabs() {
   if (!tabBar) return;
   tabBar.querySelectorAll(".preview-theme-tab").forEach((b) => b.remove());
 
-  const isAdaptive = appState.pluginMode === "adaptiveEngine";
+  const isDirect = appState.pluginMode === "direct";
   const paletteTab = tabBar.querySelector("[data-target='preview-colors']");
-  if (paletteTab) paletteTab.classList.toggle("hidden", isAdaptive);
+  if (paletteTab) paletteTab.classList.toggle("hidden", isDirect);
 
   const themes = appState.themes || [];
   themes.forEach((theme, i) => {

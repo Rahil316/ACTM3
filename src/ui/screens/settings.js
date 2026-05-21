@@ -18,8 +18,8 @@ function renderSettingsTokensPanel() {
   const modeCard = panelUI.card([
     panelUI.sectionLabel("Token Creation Mode"),
     panelUI.segmented([
-      { id: "mode-btn-ramp",   label: "Tonal Scale Based", onclick: () => setPluginMode(0) },
-      { id: "mode-btn-direct", label: "Adaptive Engine",   onclick: () => setPluginMode(1) },
+      { id: "mode-btn-scale",  label: "Scale",  onclick: () => setPluginMode(0) },
+      { id: "mode-btn-direct", label: "Direct", onclick: () => setPluginMode(1) },
     ]),
 
     // Global algo toggle
@@ -133,8 +133,8 @@ function renderSettingsTokensPanel() {
         null,
         panelUI.togglePill("toggle-includeTonalCollection", () => toggleBoolSetting("includeTonalCollection"))
       ),
-      el("div", { id: "settings-tonal-collection-row" }, [
-        panelUI.input({ id: "setting-tonalScaleCollectionName", placeholder: "_Palettes", size: "lg" }),
+      el("div", { id: "settings-scale-collection-row" }, [
+        panelUI.input({ id: "setting-scaleCollectionName", placeholder: "_Palettes", size: "lg" }),
       ]),
     ]),
 
@@ -157,7 +157,7 @@ function renderSettingsTokensPanel() {
       panelUI.togglePill("toggle-includeGlobalColors", () => toggleBoolSetting("includeGlobalColors"))
     ),
     el("div", { id: "constants-options", class: "hidden space-y-2 pl-2 border-l-2 border-[var(--border)]" }, [
-      panelUI.input({ id: "setting-globalColorsCollectionName", placeholder: "_constants", label: "Collection Name", size: "lg" }),
+      panelUI.input({ id: "setting-sourceCollectionName", placeholder: "_constants", label: "Collection Name", size: "lg" }),
 
       panelUI.row(
         "Alpha Tints",
@@ -251,21 +251,6 @@ function setPluginMode(idx) {
   schedulePreview();
 }
 
-function setSpreadUnit(idx) {
-  appState.spreadUnit = UI_MODES.spread[idx] || "steps";
-  syncOutputToggles();
-  renderRoles();
-  schedulePreview();
-}
-
-function setBaseSelection(idx) {
-  appState.baseSelection = UI_MODES.selection[idx] || "By Contrast";
-  syncUiSettingsInputs();
-  renderRoles();
-  syncOutputToggles();
-  schedulePreview();
-}
-
 function setTokenGrouping(idx) {
   appState.variableStructure = UI_MODES.grouping[idx] || "color";
   syncOutputToggles();
@@ -317,8 +302,8 @@ function _syncTogglePills() {
   if (constOpts) constOpts.classList.toggle("hidden", !appState.includeGlobalColors);
   const opacRow = document.getElementById("opacity-values-row");
   if (opacRow) opacRow.classList.toggle("hidden", !appState.includeAlphaTints);
-  const tonalNameRow = document.getElementById("settings-tonal-collection-row");
-  if (tonalNameRow) tonalNameRow.classList.toggle("hidden", !appState.includeTonalCollection);
+  const scaleNameRow = document.getElementById("settings-scale-collection-row");
+  if (scaleNameRow) scaleNameRow.classList.toggle("hidden", !appState.includeTonalCollection);
 }
 
 function _syncGroupingButtons() {
@@ -337,53 +322,26 @@ function _syncGroupingButtons() {
 }
 
 function _syncModeControls() {
-  const isDirect = appState.pluginMode === "adaptiveEngine";
+  const isDirect = appState.pluginMode === "direct";
 
-  const mbRamp   = document.getElementById("mode-btn-ramp");
+  const mbScale  = document.getElementById("mode-btn-scale");
   const mbDirect = document.getElementById("mode-btn-direct");
-  if (mbRamp)   mbRamp.classList.toggle("active", !isDirect);
+  if (mbScale)  mbScale.classList.toggle("active", !isDirect);
   if (mbDirect) mbDirect.classList.toggle("active",  isDirect);
 
-  const rampSection       = document.getElementById("settings-scale-section");
+  const scaleSection      = document.getElementById("settings-scale-section");
   const stepLabelsSection = document.getElementById("settings-step-labels-section");
   const palettesGroup     = document.getElementById("settings-palettes-collection-group");
   const mapRolesRow       = document.getElementById("settings-map-roles-row");
   const embedDirectlyRow  = document.getElementById("settings-embed-directly-row");
-  if (rampSection)       rampSection.classList.toggle("hidden", isDirect);
+  if (scaleSection)      scaleSection.classList.toggle("hidden", isDirect);
   if (stepLabelsSection) stepLabelsSection.classList.toggle("hidden", isDirect);
   if (palettesGroup)     palettesGroup.classList.toggle("hidden", isDirect);
   if (mapRolesRow)       mapRolesRow.classList.toggle("hidden", isDirect);
   if (embedDirectlyRow)  embedDirectlyRow.classList.toggle("hidden", isDirect);
 
-  if (isDirect && appState.baseSelection === "By Index") {
-    appState.baseSelection = "By Contrast";
-    const bsEl = document.getElementById("setting-baseSelection");
-    if (bsEl) bsEl.value = "By Contrast";
-  }
-  const byIndexOpt = document.getElementById("base-selection-opt-byindex");
-  if (byIndexOpt) byIndexOpt.hidden = isDirect;
-
   const previewTabColors = document.getElementById("preview-tab-colors");
   if (previewTabColors) previewTabColors.textContent = isDirect ? "Solved Colors" : "Tonal Scale";
-}
-
-function _syncSpreadUnit() {
-  const isDirect = appState.pluginMode === "adaptiveEngine";
-  const spreadUnitRow = document.getElementById("settings-spread-unit-row");
-  if (spreadUnitRow) spreadUnitRow.classList.toggle("hidden", isDirect || appState.baseSelection === "Manual");
-
-  const suSteps    = document.getElementById("su-btn-steps");
-  const suContrast = document.getElementById("su-btn-contrast");
-  if (suSteps)    suSteps.classList.toggle("active",    (appState.spreadUnit || "steps") === "steps");
-  if (suContrast) suContrast.classList.toggle("active", appState.spreadUnit === "contrast");
-}
-
-function _syncPerRoleControls() {
-  const isPerRole = !!appState.perRoleControls;
-  const bsLabel = document.getElementById("label-baseSelection");
-  const suLabel = document.getElementById("label-spreadUnit");
-  if (bsLabel) bsLabel.textContent = isPerRole ? "Default Base Selection" : "Base Selection";
-  if (suLabel) suLabel.textContent = isPerRole ? "Default Spread Unit" : "Spread Unit";
 }
 
 function _syncNameFormatPreview() {
@@ -405,7 +363,7 @@ function _syncNameFormatPreview() {
 }
 
 function syncAlgoSection() {
-  const isAdaptive = appState.pluginMode === "adaptiveEngine";
+  const isAdaptive = appState.pluginMode === "direct";
   const useGlobal  = appState.useGlobalAlgo !== false;
 
   const title = document.getElementById("setting-global-algo-title");
@@ -436,8 +394,6 @@ function syncOutputToggles() {
   _syncTogglePills();
   _syncGroupingButtons();
   _syncModeControls();
-  _syncSpreadUnit();
-  _syncPerRoleControls();
   syncAlgoSection();
   renderSettingsVariations();
   _syncNameFormatPreview();
@@ -454,19 +410,13 @@ function syncInputsFromState() {
   renderSettingsPanels();
   const _set = (id, val) => { const e = document.getElementById(id); if (e) e.value = val; };
   _set("setting-name",                      appState.name || "");
-  _set("setting-tonalScaleCollectionName",  appState.tonalScaleCollectionName || "_scale");
+  _set("setting-scaleCollectionName",       appState.scaleCollectionName || "_scale");
   _set("setting-tokenCollectionName",       appState.tokenCollectionName || "contextual");
   _set("setting-scaleLength",               appState.scaleLength);
   _set("setting-scaleAlgorithm",            appState.scaleAlgorithm || "Natural");
   _set("setting-solverMode",               appState.solverMode || "natural");
 
-  const bsEl = document.getElementById("setting-baseSelection");
-  if (bsEl) {
-    const idx = UI_MODES.selection.indexOf(appState.baseSelection || "By Contrast");
-    bsEl.selectedIndex = idx !== -1 ? idx : 0;
-  }
-
-  _set("setting-globalColorsCollectionName", appState.globalColorsCollectionName || "_constants");
+  _set("setting-sourceCollectionName",       appState.sourceCollectionName || "_constants");
   _set("setting-alphaValues",                appState.alphaValues || "10, 25, 50, 75, 90");
 
   syncOutputToggles();
@@ -480,8 +430,8 @@ function syncInputsFromState() {
 // ── DOM → STATE ───────────────────────────────────────────────────────────────
 
 function updateSettingsFromInputs() {
-  appState.tonalScaleCollectionName  = document.getElementById("setting-tonalScaleCollectionName").value.trim() || "_scale";
-  appState.tokenCollectionName       = document.getElementById("setting-tokenCollectionName").value.trim() || "contextual";
+  appState.scaleCollectionName  = document.getElementById("setting-scaleCollectionName").value.trim() || "_scale";
+  appState.tokenCollectionName  = document.getElementById("setting-tokenCollectionName").value.trim() || "contextual";
 
   const wCount = parseInt(document.getElementById("setting-scaleLength").value);
   appState.scaleLength    = isNaN(wCount) ? 25 : Math.max(1, Math.min(100, wCount));
@@ -489,8 +439,8 @@ function updateSettingsFromInputs() {
   const solverEl = document.getElementById("setting-solverMode");
   if (solverEl) appState.solverMode = solverEl.value;
 
-  appState.globalColorsCollectionName = document.getElementById("setting-globalColorsCollectionName").value.trim() || "_constants";
-  appState.alphaValues                = document.getElementById("setting-alphaValues").value;
+  appState.sourceCollectionName = document.getElementById("setting-sourceCollectionName").value.trim() || "_constants";
+  appState.alphaValues          = document.getElementById("setting-alphaValues").value;
 
   renderColorGroups();
   renderRoles();
@@ -662,13 +612,11 @@ function openSettings() {
     scaleAlgorithm:             appState.scaleAlgorithm,
     scaleStepNames:             appState.scaleStepNames,
     pluginMode:                 appState.pluginMode,
-    baseSelection:              appState.baseSelection,
-    spreadUnit:                 appState.spreadUnit,
-    tonalScaleCollectionName:   appState.tonalScaleCollectionName,
+    scaleCollectionName:        appState.scaleCollectionName,
     tokenCollectionName:        appState.tokenCollectionName,
     embedDirectly:              appState.embedDirectly,
     includeGlobalColors:        appState.includeGlobalColors,
-    globalColorsCollectionName: appState.globalColorsCollectionName,
+    sourceCollectionName:       appState.sourceCollectionName,
     includeAlphaTints:          appState.includeAlphaTints,
     alphaValues:                appState.alphaValues,
     variableStructure:          appState.variableStructure,

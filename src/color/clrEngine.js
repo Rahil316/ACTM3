@@ -12,8 +12,8 @@
  * │  oklchToHex(L, C, H)                           → "#rrggbb"               │
  * │  hexToHct(hex)                                 → { h, c, t }             │
  * │  hctToHex(hue, ch, tone)                       → "#rrggbb"               │
- * │  variableMaker(config)                         → { tonalScales,           │
- * │                                                    colorTokens, errors }  │
+ * │  variableMaker(config)                         → { scales,                │
+ * │                                                    tokens, errors }       │
  * └───────────────────────────────────────────────────────────────────────────┘
  * ============================================================================
  */
@@ -224,62 +224,59 @@ function tonalScaleMaker(hexIn, scaleLength, scaleAlgo) {
  * @param {object[]} config.themes           - [lightTheme, darkTheme], each { name, bg }
  * @param {number}   config.scaleLength      - Tonal scale step count
  * @param {string[]} [config.scaleStepNames] - custom step labels; defaults to [1…N]
- * @param {string}   config.scaleAlgorithm  - tonal algorithm name
- * @param {string}   config.pluginMode       - "tonal" | "adaptiveEngine"
+ * @param {string}   config.scaleAlgorithm   - tonal algorithm name
+ * @param {string}   config.pluginMode       - "scale" | "direct"
  * @param {object[]} config.roles            - semantic role definitions
- * @param {string}   config.roleMapping      - "By Contrast" | "By Index"
  * @param {any[]}    config.variations       - variation slot definitions
- * @param {string}   config.spreadUnit       - "contrast" | "step"
- * @param {string}   config.baseSelectionMode - "Manual" | "Auto"
- * @returns {{ tonalScales: object, colorTokens: object, errors: object }}
+ * @returns {{ scales: object, tokens: object, errors: object }}
  */
 function variableMaker(config) {
   const { colors, themes, scaleLength } = config;
   const errors = { critical: [], warnings: [], notices: [] };
 
-  const tonalScales = config.pluginMode !== "adaptiveEngine" ? _generateTonalScales(colors, scaleLength, config.scaleAlgorithm, config.scaleStepNames, themes, config.useGlobalAlgo) : Object.create(null);
+  const scales = config.pluginMode !== "direct" ? _generateScales(colors, scaleLength, config.scaleAlgorithm, config.scaleStepNames, themes, config.useGlobalAlgo) : Object.create(null);
 
-  const tokensCollection = {};
-  for (const mode of themes) tokensCollection[mode.name.toLowerCase()] = {};
+  const tokens = {};
+  for (const mode of themes) tokens[mode.name.toLowerCase()] = {};
   for (const mode of themes) {
     const modeName = mode.name.toLowerCase();
-    const themeTokens = tokensCollection[modeName];
+    const themeTokens = tokens[modeName];
     for (const color of colors) {
       themeTokens[color.name] = {};
-      if (config.pluginMode === "adaptiveEngine") {
+      if (config.pluginMode === "direct") {
         _solveDirectMode(color, mode, config, themeTokens[color.name], errors);
       } else {
-        _processTonalMode(color, mode, config, tonalScales, themeTokens[color.name], errors);
+        _processScaleMode(color, mode, config, scales, themeTokens[color.name], errors);
       }
     }
   }
-  return { tonalScales: tonalScales, colorTokens: tokensCollection, errors };
+  return { scales, tokens, errors };
 }
 
 /**
  * Build tonal scales for all colors. Each step stores value, naming, and contrast ratios against both light and dark backgrounds.
  * @returns {object} { [colorName]: { [stepName]: { value, stepName, shorthand, description, contrast } } }
  */
-function _generateTonalScales(colors, scaleLength, scaleAlgo, stepNames, themes, useGlobalAlgo) {
+function _generateScales(colors, scaleLength, scaleAlgo, stepNames, themes, useGlobalAlgo) {
   const collection = Object.create(null);
   const names = stepNames || seriesMaker(scaleLength);
   const themeBgs = themes.map((t) => ({ key: t.name.toLowerCase(), bg: normalizeHex(t.bg) || "#FFFFFF" }));
   for (const color of colors) {
     const colorAlgo = (!useGlobalAlgo && color.scaleAlgorithm) ? color.scaleAlgorithm : scaleAlgo;
-    const rampData = tonalScaleMaker(color.value, scaleLength, colorAlgo);
-    const ramp = Object.create(null);
-    collection[color.name] = ramp;
+    const scaleData = tonalScaleMaker(color.value, scaleLength, colorAlgo);
+    const scale = Object.create(null);
+    collection[color.name] = scale;
     for (let i = 0; i < scaleLength; i++) {
-      const value = normalizeHex(rampData[i]);
-      const weight = names[i];
+      const value = normalizeHex(scaleData[i]);
+      const step = names[i];
       const contrast = {};
       for (const { key, bg } of themeBgs) {
         contrast[key] = { ratio: contrastRatio(value, bg), rating: contrastRating(value, bg) };
       }
-      ramp[weight] = {
+      scale[step] = {
         value,
-        stepName: `${color.name}-${weight}`,
-        shorthand: `${color.shorthand}-${weight}`,
+        stepName: `${color.name}-${step}`,
+        shorthand: `${color.shorthand}-${step}`,
         description: color.description || "",
         contrast,
       };
@@ -296,7 +293,7 @@ function _getSolverMode(config, color, role) {
 
 /**
  * Direct mode: solve a hex color per role × variation using the contrast solver.
- * Contrast targets come from role.variationTargets (Manual) or baseContrast ± contrastGap (Auto).
+ * Contrast targets come from role.variationTargets (always WCAG ratios in direct mode).
  */
 function _solveDirectMode(color, mode, config, groupOutput, errors) {
   const modeName = mode.name.toLowerCase();
@@ -307,20 +304,7 @@ function _solveDirectMode(color, mode, config, groupOutput, errors) {
     const roleOutput = (groupOutput[ri] = {});
     const solverMode = _getSolverMode(config, color, role);
     const variations = role.variationOverride && role.roleVariations && role.roleVariations.length ? role.roleVariations : config.variations;
-
-    let targets;
-    if (config.baseSelectionMode === "Manual") {
-      targets = role.variationTargets || variations.map((_, i) => [1.5, 3, 4.5, 7, 12][i] || 1.5 + i * 1.5);
-      const check = validateVariationContrasts(targets);
-      if (!check.valid) {
-        check.errors.forEach((err) => errors.critical.push({ color: color.name, role: role.name, theme: modeName, error: err }));
-        continue;
-      }
-    } else {
-      // Auto: spread contrast targets symmetrically around baseContrast
-      const baseVarIdx = Math.floor(variations.length / 2);
-      targets = variations.map((_, vi) => Math.max(1.01, role.baseContrast + (vi - baseVarIdx) * role.contrastGap));
-    }
+    const targets = role.variationTargets || variations.map((_, i) => [1.5, 3, 4.5, 7, 12][i] || 1.5 + i * 1.5);
 
     targets.forEach((targetContrast, vi) => {
       const variation = String(vi);
@@ -328,11 +312,12 @@ function _solveDirectMode(color, mode, config, groupOutput, errors) {
       if (solved.warning) errors.warnings.push({ color: color.name, role: role.name, variation, theme: modeName, warning: solved.warning });
       if (solved.chromaReduced) errors.notices.push({ color: color.name, role: role.name, variation, theme: modeName, notice: "Chroma reduced to fit gamut." });
       roleOutput[variation] = {
-        tknName: `${color.name}-${role.name}-${variation}`,
+        tokenName: `${color.name}-${role.name}-${variation}`,
         color: color.name,
         role: role.name,
         variation,
         roleDescription: role.description || "",
+        tokenRef: null,
         value: solved.hex,
         contrast: { ratio: solved.achievedContrast, rating: contrastRating(solved.hex, bgHex) },
         contrastTarget: targetContrast,
@@ -343,13 +328,15 @@ function _solveDirectMode(color, mode, config, groupOutput, errors) {
 }
 
 /**
- * Tonal mode: map ramp steps to role × variation tokens.
- * Delegates to one of three mapping strategies based on config.
+ * Scale mode: map ramp steps to role × variation tokens.
+ * Two mapping methods:
+ *   - "contrast" (default): walk the scale for the first step meeting variationTargets[i] WCAG ratio
+ *   - "index": pin each variation to an explicit step index from variationTargets[i]
  */
-function _processTonalMode(color, mode, config, tonalScales, groupOutput, errors) {
+function _processScaleMode(color, mode, config, scales, groupOutput, errors) {
   const modeName = mode.name.toLowerCase();
   const isDark = relLum(normalizeHex(mode.bg) || "#FFFFFF") < 0.4;
-  const tonalScale = tonalScales[color.name];
+  const scale = scales[color.name];
   const stepNames = config.scaleStepNames || seriesMaker(config.scaleLength);
 
   for (let ri = 0; ri < config.roles.length; ri++) {
@@ -357,153 +344,75 @@ function _processTonalMode(color, mode, config, tonalScales, groupOutput, errors
     const roleOutput = (groupOutput[ri] = {});
     const variations = role.variationOverride && role.roleVariations && role.roleVariations.length ? role.roleVariations : config.variations;
 
-    if (config.baseSelectionMode === "Manual") {
-      _mapManualSteps(color, role, variations, tonalScale, stepNames, modeName, roleOutput);
-    } else if (config.spreadUnit === "contrast") {
-      _mapByContrastTarget(color, role, variations, tonalScale, stepNames, modeName, isDark, roleOutput, errors);
+    if (role.mappingMethod === "index") {
+      _mapByIndex(color, role, variations, scale, stepNames, modeName, roleOutput);
     } else {
-      _mapByStepOffset(color, role, variations, tonalScale, stepNames, modeName, isDark, roleOutput, config.roleMapping, errors);
+      _mapByScaleContrast(color, role, variations, scale, stepNames, modeName, isDark, roleOutput, errors);
     }
   }
 }
 
-/** Manual: each variation is pinned to an explicit step index from role.variationTargets */
-function _mapManualSteps(color, role, variations, ramp, stepNames, modeName, output) {
+/** Index method: each variation is pinned to an explicit step index from role.variationTargets */
+function _mapByIndex(color, role, variations, scale, stepNames, modeName, output) {
   const targets = role.variationTargets || variations.map((_, i) => Math.floor((stepNames.length * i) / Math.max(1, variations.length - 1)));
   variations.forEach((_, vi) => {
     const idx = Math.max(0, Math.min(stepNames.length - 1, parseInt(targets[vi]) || 0));
-    const data = ramp[stepNames[idx]];
-    output[vi] = { tknName: `${color.name}-${role.name}-${vi}`, color: color.name, role: role.name, variation: String(vi), roleDescription: role.description || "", tknRef: data.stepName, value: data.value, contrast: { ratio: data.contrast[modeName].ratio, rating: data.contrast[modeName].rating } };
-  });
-}
-
-/**
- * Contrast-target: find the ramp step whose contrast ratio is closest to
- * baseContrast ± (contrastGap × variation offset).
- */
-function _mapByContrastTarget(color, role, variations, ramp, stepNames, modeName, isDark, output, errors) {
-  const baseC = _findBaseContrast(role, ramp, stepNames, modeName, isDark);
-  const baseVarIdx = Math.floor(variations.length / 2);
-  variations.forEach((_, vi) => {
-    const targetC = baseC + (vi - baseVarIdx) * role.contrastGap;
-    let bestIdx = 0,
-      bestDiff = Infinity;
-    stepNames.forEach((name, si) => {
-      const diff = Math.abs(ramp[name].contrast[modeName].ratio - targetC);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        bestIdx = si;
-      }
-    });
-    const data = ramp[stepNames[bestIdx]];
+    const data = scale[stepNames[idx]];
     output[vi] = {
-      tknName: `${color.name}-${role.name}-${vi}`,
+      tokenName: `${color.name}-${role.name}-${vi}`,
       color: color.name,
       role: role.name,
       variation: String(vi),
       roleDescription: role.description || "",
-      tknRef: data.stepName,
+      tokenRef: data.stepName,
       value: data.value,
       contrast: { ratio: data.contrast[modeName].ratio, rating: data.contrast[modeName].rating },
-      contrastTarget: targetC,
-      isAdjusted: bestDiff > 0.5,
     };
-    if (bestDiff > 0.5) errors.warnings.push({ color: color.name, role: role.name, variation: String(vi), theme: modeName, warning: `Target contrast ${targetC.toFixed(2)} not available.` });
   });
 }
 
 /**
- * Step-offset: walk `spread` steps around baseIdx per variation.
- * growthDir (+1 or -1) accounts for ramps that increase contrast toward either end.
- * baseIdx is clamped so no variation falls off the ramp.
+ * Contrast method (default in scale mode): walk the scale and pick the first step whose
+ * contrast against the theme background is ≥ variationTargets[vi].
+ * Light themes walk light→dark; dark themes walk dark→light. When no step meets the
+ * target, falls back to the closest available step and emits a warning.
  */
-function _mapByStepOffset(color, role, variations, ramp, stepNames, modeName, isDark, output, mappingType, errors) {
-  let baseIdx = mappingType === "By Contrast" ? _findBaseIndexByContrast(role, ramp, stepNames, modeName, isDark, color.name, role.name, errors) : _findBaseIndexExplicit(role, stepNames, isDark);
-
-  const baseVarIdx = Math.floor(variations.length / 2);
-  const spread = role.spread;
-  const minAllowed = baseVarIdx * spread;
-  const maxAllowed = stepNames.length - 1 - minAllowed;
-  if (baseIdx < minAllowed || baseIdx > maxAllowed) {
-    baseIdx = Math.max(minAllowed, Math.min(maxAllowed, baseIdx));
-    errors.warnings.push({ color: color.name, role: role.name, theme: modeName, warning: "Base index clamped for spread." });
-  }
-
-  // +1 if contrast grows toward the end of the ramp (typical for light mode), -1 if reversed
-  const growthDir = ramp[stepNames[stepNames.length - 1]].contrast[modeName].ratio > ramp[stepNames[0]].contrast[modeName].ratio ? 1 : -1;
+function _mapByScaleContrast(color, role, variations, scale, stepNames, modeName, isDark, output, errors) {
   variations.forEach((_, vi) => {
-    let idx = baseIdx + (vi - baseVarIdx) * spread * growthDir;
-    const adjusted = idx < 0 || idx >= stepNames.length;
-    idx = Math.max(0, Math.min(stepNames.length - 1, idx));
-    const data = ramp[stepNames[idx]];
+    const target = parseFloat(role.variationTargets?.[vi]) || 4.5;
+    let bestIdx = isDark ? stepNames.length - 1 : 0;
+    let found = false;
+    if (isDark) {
+      for (let i = stepNames.length - 1; i >= 0; i--) {
+        if (scale[stepNames[i]].contrast[modeName].ratio >= target) { bestIdx = i; found = true; break; }
+      }
+    } else {
+      for (let i = 0; i < stepNames.length; i++) {
+        if (scale[stepNames[i]].contrast[modeName].ratio >= target) { bestIdx = i; found = true; break; }
+      }
+    }
+    if (!found) {
+      let maxC = -1;
+      stepNames.forEach((n, i) => {
+        const c = scale[n].contrast[modeName].ratio;
+        if (c > maxC) { maxC = c; bestIdx = i; }
+      });
+      errors.warnings.push({ color: color.name, role: role.name, variation: String(vi), theme: modeName, warning: `Target contrast ${target} not achievable. Using closest (${maxC.toFixed(2)}).` });
+    }
+    const data = scale[stepNames[bestIdx]];
     output[vi] = {
-      tknName: `${color.name}-${role.name}-${vi}`,
+      tokenName: `${color.name}-${role.name}-${vi}`,
       color: color.name,
       role: role.name,
       variation: String(vi),
       roleDescription: role.description || "",
-      tknRef: data.stepName,
+      tokenRef: data.stepName,
       value: data.value,
       contrast: { ratio: data.contrast[modeName].ratio, rating: data.contrast[modeName].rating },
-      isAdjusted: adjusted,
+      contrastTarget: target,
+      isAdjusted: !found,
     };
   });
-}
-
-/** Returns the contrast ratio of the base ramp step for a role (used by contrast-target mapping) */
-function _findBaseContrast(role, ramp, stepNames, modeName, isDark) {
-  if (role.baseIndex !== undefined) {
-    const idxSource = isDark && role.darkBaseIndex !== undefined ? role.darkBaseIndex : role.baseIndex;
-    return ramp[stepNames[Math.max(0, Math.min(stepNames.length - 1, parseInt(idxSource) || 0))]].contrast[modeName].ratio;
-  }
-  const minC = parseFloat(role.minContrast) || 4.5;
-  const step = stepNames.find((n) => ramp[n].contrast[modeName].ratio >= minC) || stepNames[stepNames.length >> 1];
-  return ramp[step].contrast[modeName].ratio;
-}
-
-/**
- * Find the ramp index of the first step meeting role.minContrast.
- * Dark mode searches from the end (darkest = highest contrast on dark bg).
- * Falls back to best available and logs a critical error if minContrast is unachievable.
- */
-function _findBaseIndexByContrast(role, ramp, stepNames, modeName, isDark, colorName, roleName, errors) {
-  const minC = parseFloat(role.minContrast) || 4.5;
-  let baseIdx = -1;
-  if (isDark) {
-    for (let i = stepNames.length - 1; i >= 0; i--) {
-      if (ramp[stepNames[i]].contrast[modeName].ratio >= minC) {
-        baseIdx = i;
-        break;
-      }
-    }
-  } else {
-    for (let i = 0; i < stepNames.length; i++) {
-      if (ramp[stepNames[i]].contrast[modeName].ratio >= minC) {
-        baseIdx = i;
-        break;
-      }
-    }
-  }
-  if (baseIdx === -1) {
-    let bestIdx = 0,
-      maxC = -1;
-    stepNames.forEach((name, i) => {
-      const c = ramp[name].contrast[modeName].ratio;
-      if (c > maxC) {
-        maxC = c;
-        bestIdx = i;
-      }
-    });
-    baseIdx = bestIdx;
-    errors.critical.push({ color: colorName, role: roleName, theme: modeName, error: `Cannot meet minimum contrast ${minC}. using closest available (${maxC.toFixed(2)}).` });
-  }
-  return baseIdx;
-}
-
-/** Use explicit baseIndex (or darkBaseIndex for dark mode) as the base ramp position */
-function _findBaseIndexExplicit(role, stepNames, isDark) {
-  const source = isDark && role.darkBaseIndex !== undefined ? role.darkBaseIndex : role.baseIndex;
-  return Math.max(0, Math.min(stepNames.length - 1, parseInt(source) || 0));
 }
 
 // ── COLOR SPACES ──────────────────────────────────────────────────────────────

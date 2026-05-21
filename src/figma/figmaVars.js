@@ -2,7 +2,7 @@
 const VariableManager = {
   tally: { created: 0, updated: 0, renamed: 0, failed: 0 },
   cache: { variables: [], collections: [] },
-  rampVarNameMap: {}, // entry.stepName (e.g. "Primary-18") → Figma variable path (e.g. "Primary/18")
+  scaleVarNameMap: {}, // entry.stepName (e.g. "Primary-18") → Figma variable path (e.g. "Primary/18")
 
   // Renames variables in a collection according to a { oldName: newName } map.
   // Two-pass strategy handles chain renames (A→B when B is being renamed to C).
@@ -34,16 +34,16 @@ const VariableManager = {
 
   async sync(result, config, scope = "all", appState = null, savedAppState = null) {
     this.tally = { created: 0, updated: 0, renamed: 0, failed: 0 };
-    this.rampVarNameMap = {};
+    this.scaleVarNameMap = {};
     await this.refreshCache();
 
     // Build rename maps: position-matched items that only changed names get renamed
     // silently instead of being deleted and recreated.
     const renameMap = savedAppState && appState ? buildVariableRenameMap(savedAppState, appState) : { ramps: {}, contextual: {} };
 
-    const rampCollectionName = (appState && appState.tonalScaleCollectionName) || "_scale";
+    const scaleCollectionName = (appState && appState.scaleCollectionName) || "_scale";
     const contextualName = (appState && appState.tokenCollectionName) || "contextual";
-    const skipRamps = config.embedDirectly || config.pluginMode === "adaptiveEngine" || config.includeTonalCollection === false;
+    const skipScales = config.embedDirectly || config.pluginMode === "direct" || config.includeTonalCollection === false;
     const tokenNameOrder = config.tokenNameOrder || (config.variableStructure === "role" ? ["role", "color", "variation"] : ["color", "role", "variation"]);
     const useShortColor = config.useShorthandColors || false;
     const useShortRole = config.useShorthandRoles || false;
@@ -63,40 +63,40 @@ const VariableManager = {
     };
     const stepLabel = (name) => (useShortStep && stepShorthands[name]) ? stepShorthands[name] : name;
 
-    // Build tknRef → Figma variable name map using the same naming as stage 1
-    for (const [colorName, ramp] of Object.entries(result.tonalScales)) {
-      for (const [weightName, entry] of Object.entries(ramp)) {
-        this.rampVarNameMap[entry.stepName] = `${colorLabel(colorName)}/${stepLabel(weightName)}`;
+    // Build tokenRef → Figma variable name map using the same naming as stage 1
+    for (const [colorName, scale] of Object.entries(result.scales)) {
+      for (const [step, entry] of Object.entries(scale)) {
+        this.scaleVarNameMap[entry.stepName] = `${colorLabel(colorName)}/${stepLabel(step)}`;
       }
     }
 
-    // Fetch ramps collection once — used by both stages when applicable.
-    // scope="roles" skips Stage 1 but Stage 2 still needs rampsCol to resolve variable aliases
+    // Fetch scale collection once — used by both stages when applicable.
+    // scope="roles" skips Stage 1 but Stage 2 still needs scaleCol to resolve variable aliases
     // (unless embedDirectly is true, in which case raw hex values are used directly).
-    const needsRampsCol = !skipRamps && (scope === "all" || scope === "groups" || scope === "roles");
-    const rampsCol = needsRampsCol ? await this.getOrCreateCollection(rampCollectionName) : null;
+    const needsScaleCol = !skipScales && (scope === "all" || scope === "groups" || scope === "roles");
+    const scaleCol = needsScaleCol ? await this.getOrCreateCollection(scaleCollectionName) : null;
 
-    // Apply ramp renames before upserting so the cache reflects new names immediately
-    if (rampsCol && renameMap.ramps && Object.keys(renameMap.ramps).length > 0) {
-      await this.applyRenames(rampsCol, renameMap.ramps);
+    // Apply scale renames before upserting so the cache reflects new names immediately
+    if (scaleCol && renameMap.ramps && Object.keys(renameMap.ramps).length > 0) {
+      await this.applyRenames(scaleCol, renameMap.ramps);
     }
 
     // STAGE 1: Tonal Scale → scale collection (skipped when embedDirectly is true)
-    if (rampsCol && (scope === "all" || scope === "groups")) {
-      const modeId = rampsCol.modes[0].modeId;
+    if (scaleCol && (scope === "all" || scope === "groups")) {
+      const modeId = scaleCol.modes[0].modeId;
       const include = config.includeDescriptions !== false;
-      const allRampVars = [];
+      const allScaleVars = [];
 
-      for (const [colorName, ramp] of Object.entries(result.tonalScales)) {
+      for (const [colorName, scale] of Object.entries(result.scales)) {
         const cLabel = colorLabel(colorName);
-        for (const [weightName, entry] of Object.entries(ramp)) {
+        for (const [step, entry] of Object.entries(scale)) {
           const contrastNote = include ? `L:${entry.contrast.light.ratio}(${entry.contrast.light.rating}) D:${entry.contrast.dark.ratio}(${entry.contrast.dark.rating})` : "";
           const groupDesc = include ? entry.description : "";
           const fullDesc = groupDesc && contrastNote ? `${groupDesc} | ${contrastNote}` : groupDesc || contrastNote;
-          allRampVars.push([`${cLabel}/${stepLabel(weightName)}`, "COLOR", entry.value, fullDesc]);
+          allScaleVars.push([`${cLabel}/${stepLabel(step)}`, "COLOR", entry.value, fullDesc]);
         }
       }
-      await this.upsertVariables(rampsCol, modeId, allRampVars);
+      await this.upsertVariables(scaleCol, modeId, allScaleVars);
     }
 
     // STAGE 2: Semantic Role Tokens → contextual collection
@@ -109,13 +109,13 @@ const VariableManager = {
       }
 
       const skippedModes = [];
-      for (const theme of Object.keys(result.colorTokens || {})) {
+      for (const theme of Object.keys(result.tokens || {})) {
         const modeId = this.ensureMode(contextualCol, theme);
         if (modeId === null) {
           skippedModes.push(theme);
           continue;
         }
-        for (const [colorName, roles] of Object.entries(result.colorTokens[theme])) {
+        for (const [colorName, roles] of Object.entries(result.tokens[theme])) {
           for (const [roleId, variations] of Object.entries(roles)) {
             const roleObj = config.roles[roleId] || {};
             const rName = roleObj.name || roleId;
@@ -129,11 +129,11 @@ const VariableManager = {
                 const segParts = { color: cLabel, role: rLabel, variation: dispName };
                 const figmaName = tokenNameOrder.map((s) => segParts[s] || s).join("/");
                 let value;
-                if (skipRamps) {
+                if (skipScales) {
                   value = token.value;
                 } else {
-                  const rampFigmaName = this.rampVarNameMap[token.tknRef];
-                  const targetVar = rampFigmaName && rampsCol ? this.cache.variables.find((cv) => cv.name === rampFigmaName && cv.variableCollectionId === rampsCol.id) : null;
+                  const scaleFigmaName = this.scaleVarNameMap[token.tokenRef];
+                  const targetVar = scaleFigmaName && scaleCol ? this.cache.variables.find((cv) => cv.name === scaleFigmaName && cv.variableCollectionId === scaleCol.id) : null;
                   value = targetVar ? { type: "VARIABLE_ALIAS", id: targetVar.id } : token.value;
                 }
                 const include = config.includeDescriptions !== false;
@@ -202,7 +202,7 @@ const VariableManager = {
   },
 
   async syncGlobalColors(config) {
-    const colName = config.globalColorsCollectionName || "_constants";
+    const colName = config.sourceCollectionName || "_constants";
     const col = await this.getOrCreateCollection(colName);
     const modeId = col.modes[0].modeId;
 

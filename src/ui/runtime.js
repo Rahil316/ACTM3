@@ -22,10 +22,9 @@
 
 // Plugin mode / selection constants — consumed by screens/settings.js setters.
 const UI_MODES = {
-  plugin: ["tonalScalesBased", "adaptiveEngine"],
+  plugin:   ["scale", "direct"],
   grouping: ["color", "role"],
-  spread: ["steps", "contrast"],
-  selection: ["By Contrast", "By Index", "Manual"],
+  mapping:  ["contrast", "index"],
 };
 
 // Sync dialog state — scoped to the run-confirm flow.
@@ -79,7 +78,7 @@ window.onmessage = (event) => {
       const config = translateConfig(msg.state);
       const result = variableMaker(config);
       let content = "";
-      if (msg.exportType === "json") content = JSON.stringify({ config, tonalScales: result.tonalScales, colorTokens: result.colorTokens, errors: result.errors }, null, 2);
+      if (msg.exportType === "json") content = JSON.stringify({ config, scales: result.scales, tokens: result.tokens, errors: result.errors }, null, 2);
       else if (msg.exportType === "csv") content = ExportFormatter.toCSV(result, config);
       else if (msg.exportType === "css") content = ExportFormatter.toCSS(result, config);
       else if (msg.exportType === "scss") content = generateScss(result, config);
@@ -114,20 +113,21 @@ window.onmessage = (event) => {
   }
 
   if (msg.type === "load-config") {
-    ensureIds(msg.state);
-    setSavedState(msg.state);
-    appState = Object.assign({}, JSON.parse(JSON.stringify(demoConfig)), msg.state);
+    const isFirstLaunch = !msg.state || Object.keys(msg.state).length === 0;
 
-    if (appState.pluginMode === 0) appState.pluginMode = "tonalScalesBased";
-    else if (appState.pluginMode === 1) appState.pluginMode = "adaptiveEngine";
-    if (appState.perColorAlgo !== undefined && appState.useGlobalAlgo === undefined) {
-      appState.useGlobalAlgo = !appState.perColorAlgo;
-      delete appState.perColorAlgo;
+    if (isFirstLaunch && typeof PRESETS !== "undefined" && PRESETS.length > 0) {
+      // First-time user: load CTM Regular (PRESETS[0]) as the starting state
+      loadState(JSON.parse(JSON.stringify(PRESETS[0].config)));
+    } else {
+      // Migration: old numeric pluginMode → canonical string. loadState handles
+      // the rest (legacy collection names, role fields, perColorAlgo flag).
+      const incoming = msg.state;
+      if (incoming.pluginMode === 0) incoming.pluginMode = "scale";
+      else if (incoming.pluginMode === 1) incoming.pluginMode = "direct";
+      setSavedState(incoming);
+      loadState(Object.assign({}, JSON.parse(JSON.stringify(_bootstrapConfig)), incoming));
     }
 
-    ensureIds(appState);
-    ensureVariations();
-    markClean();
     renderColorGroups();
     renderRoles();
     syncInputsFromState();
@@ -344,9 +344,10 @@ document.getElementById("opt-clear").onclick = () => {
         label: "Clear All",
         variant: "danger-solid",
         action: () => {
-          appState = JSON.parse(JSON.stringify(demoConfig));
-          ensureIds(appState);
-          ensureVariations();
+          const resetConfig = (typeof PRESETS !== "undefined" && PRESETS.length > 0)
+            ? JSON.parse(JSON.stringify(PRESETS[0].config))
+            : JSON.parse(JSON.stringify(_bootstrapConfig));
+          loadState(resetConfig);
           setSavedState(null);
           renderColorGroups();
           renderRoles();
@@ -424,7 +425,7 @@ document.getElementById("drop-overlay").ondrop = (e) => {
 
 (function () {
   function getPreviewPanelForCode(code) {
-    if (code === "Digit3") return appState.pluginMode === "adaptiveEngine" ? null : "preview-colors";
+    if (code === "Digit3") return appState.pluginMode === "direct" ? null : "preview-colors";
     const digit = parseInt(code.replace("Digit", ""));
     if (!isNaN(digit) && digit >= 4) {
       const themeIdx = digit - 4;
@@ -529,10 +530,12 @@ try {
         const parsed = JSON.parse(savedConfig);
         ensureIds(parsed);
         setSavedState(parsed);
-        appState = Object.assign({}, JSON.parse(JSON.stringify(demoConfig)), parsed);
+        appState = Object.assign({}, JSON.parse(JSON.stringify(_bootstrapConfig)), parsed);
       } catch (err) {
         console.warn("Browser boot: failed to parse saved config", err);
       }
+    } else if (typeof PRESETS !== "undefined" && PRESETS.length > 0) {
+      loadState(JSON.parse(JSON.stringify(PRESETS[0].config)));
     }
     const savedUiPrefs = localStorage.getItem("uiPrefsMeta");
     if (savedUiPrefs) {

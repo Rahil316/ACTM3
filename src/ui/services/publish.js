@@ -172,7 +172,7 @@ function handleSubmit(scope = "all") {
     {
       pluginMessage: {
         type: "check-collections",
-        colorName: appState.tonalScaleCollectionName || "_scale",
+        colorName: appState.scaleCollectionName || "_scale",
         contextualName: appState.tokenCollectionName || "contextual",
         state: appState,
         savedState: getSavedState(),
@@ -201,10 +201,10 @@ function setRunScope(scope) {
 
 function refreshRunDialog() {
   const existing = lastCollectionCheckResult;
-  const colorName = appState.tonalScaleCollectionName || "_scale";
+  const colorName = appState.scaleCollectionName || "_scale";
   const ctxName = appState.tokenCollectionName || "contextual";
-  const isDirect = appState.pluginMode === "adaptiveEngine";
-  const skipRamps = appState.embedDirectly || isDirect;
+  const isDirect = appState.pluginMode === "direct";
+  const skipScales = appState.embedDirectly || isDirect;
   const tg = appState.variableStructure || "color";
   const shortC = appState.useShorthandColors;
   const shortR = appState.useShorthandRoles;
@@ -214,14 +214,14 @@ function refreshRunDialog() {
 
   const scopeSection = document.getElementById("rd-scope-section");
   if (scopeSection) scopeSection.classList.toggle("hidden", isDirect);
-  const skipRampsRow = document.getElementById("embed-colors-directly");
-  if (skipRampsRow) skipRampsRow.classList.toggle("hidden", isDirect);
+  const skipScalesRow = document.getElementById("embed-colors-directly");
+  if (skipScalesRow) skipScalesRow.classList.toggle("hidden", isDirect);
 
   const colsEl = document.getElementById("rd-collections");
   if (colsEl) {
     colsEl.innerHTML = "";
     const entries = [];
-    if (!skipRamps && scope !== "roles") {
+    if (!skipScales && scope !== "roles") {
       const exists = existing.includes(colorName);
       entries.push([colorName, exists ? "UPDATE" : "CREATE", exists]);
     }
@@ -230,7 +230,7 @@ function refreshRunDialog() {
       entries.push([ctxName, exists ? "UPDATE" : "CREATE", exists]);
     }
     if (appState.includeGlobalColors) {
-      const constName = appState.globalColorsCollectionName || "_constants";
+      const constName = appState.sourceCollectionName || "_constants";
       const exists = existing.includes(constName);
       entries.push([constName, exists ? "UPDATE" : "CREATE", exists]);
     }
@@ -295,12 +295,10 @@ function refreshRunDialog() {
       ["Project Name", appState.name || "—"],
       [`Colors x${appState.colors.length}`, colorList],
       [`Roles x${appState.roles.length}`, roleList],
-      ["Mode", isDirect ? "Adaptive Engine" : "Tonal Scale Based"],
+      ["Mode", isDirect ? "Direct" : "Scale"],
       ...(isDirect
         ? []
         : [
-            ["Base Selection", appState.baseSelection || "By Contrast"],
-            ...(appState.baseSelection !== "Manual" ? [["Spread Unit", (appState.spreadUnit || "steps") === "contrast" ? "Contrast Gap" : "Steps"]] : []),
             ["Color Steps", String(appState.scaleLength || 25)],
             ["Scale Algorithm", appState.scaleAlgorithm || "Natural"],
           ]),
@@ -314,7 +312,7 @@ function refreshRunDialog() {
 
   const warnEl = document.getElementById("rd-warnings");
   if (warnEl) {
-    const relevant = existing.filter((n) => (n === colorName && !skipRamps && scope !== "roles") || (n === ctxName && scope !== "groups"));
+    const relevant = existing.filter((n) => (n === colorName && !skipScales && scope !== "roles") || (n === ctxName && scope !== "groups"));
     if (relevant.length > 0) {
       warnEl.classList.remove("hidden");
       document.getElementById("rd-warning-text").textContent = `${relevant.map((n) => `"${n}"`).join(" and ")} already exist. Variables will be added or updated — nothing deleted.`;
