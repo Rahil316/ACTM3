@@ -38,8 +38,6 @@ const CARBON_PRESETS = [
       pluginMode: "scale",
       scaleAlgorithm: "Uniform",
       scaleLength: 10,
-      baseSelection: "By Contrast",
-      spreadUnit: "steps",
       useGlobalAlgo: true,
       perColorAlgoScope: "color",
       solverMode: "natural",
@@ -50,13 +48,13 @@ const CARBON_PRESETS = [
       useShorthandSteps: false,
       embedDirectly: false,
       includeGlobalColors: false,
-      globalColorsCollectionName: "global",
+      sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
       variableStructure: "color",
       includeTonalCollection: true,
       includeDescriptions: true,
-      tonalScaleCollectionName: "_scale",
+      scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
       perRoleControls: false,
       scaleStepNames: [],
@@ -84,10 +82,8 @@ const CARBON_PRESETS = [
         {
           name: "Interactive",
           shorthand: "in",
-          spread: 1,
           minContrast: 3.0,
-          baseIndex: 5,
-          variationTargets: [5, 6, 7, 3],
+          variationTargets: [4.0, 5.5, 7.5, 2.0],
           description: "Primary interactive element fills — button, link, focus ring",
         },
 
@@ -97,16 +93,14 @@ const CARBON_PRESETS = [
         {
           name: "Layer",
           shorthand: "la",
-          spread: 1,
           minContrast: 1.0,
-          baseIndex: 2,
           variationOverride: true,
           roleVariations: [
             { name: "01", shorthand: "l1" }, // step 1 — base page surface (Gray-10)
             { name: "02", shorthand: "l2" }, // step 2 — card / panel (Gray-20)
             { name: "03", shorthand: "l3" }, // step 3 — nested content area (Gray-30)
           ],
-          variationTargets: [1, 2, 3],
+          variationTargets: [1.1, 1.3, 1.6],
           description: "Background layer stack — page surface, card, nested panel",
         },
 
@@ -115,16 +109,14 @@ const CARBON_PRESETS = [
         {
           name: "Layer/Hover",
           shorthand: "lah",
-          spread: 1,
           minContrast: 1.0,
-          baseIndex: 2,
           variationOverride: true,
           roleVariations: [
             { name: "01", shorthand: "l1" }, // step 2 — hover on layer-01
             { name: "02", shorthand: "l2" }, // step 3 — hover on layer-02
             { name: "03", shorthand: "l3" }, // step 4 — hover on layer-03
           ],
-          variationTargets: [2, 3, 4],
+          variationTargets: [1.3, 1.6, 2.0],
           description: "Hover overlay tints for each background layer",
         },
 
@@ -133,9 +125,7 @@ const CARBON_PRESETS = [
         {
           name: "Text",
           shorthand: "tx",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 8,
           variationOverride: true,
           roleVariations: [
             { name: "Primary",     shorthand: "p"  }, // step 8 — textPrimary (high contrast body)
@@ -143,7 +133,7 @@ const CARBON_PRESETS = [
             { name: "Placeholder", shorthand: "ph" }, // step 5 — textPlaceholder (input hints)
             { name: "On-Color",    shorthand: "oc" }, // step 0 — white text on dark fills
           ],
-          variationTargets: [8, 6, 5, 0],
+          variationTargets: [11.0, 5.5, 4.0, 1.0],
           description: "Text token hierarchy — primary, secondary, placeholder, on-color",
         },
 
@@ -152,16 +142,14 @@ const CARBON_PRESETS = [
         {
           name: "Border",
           shorthand: "bo",
-          spread: 1,
           minContrast: 1.5,
-          baseIndex: 5,
           variationOverride: true,
           roleVariations: [
             { name: "Subtle",      shorthand: "su" }, // step 3 — borderSubtle (hairline divider)
             { name: "Strong",      shorthand: "st" }, // step 5 — borderStrong (form fields)
             { name: "Interactive", shorthand: "in" }, // step 6 — borderInteractive (focus, selection)
           ],
-          variationTargets: [3, 5, 6],
+          variationTargets: [1.8, 4.0, 5.5],
           description: "Border and divider hierarchy",
         },
 
@@ -170,15 +158,13 @@ const CARBON_PRESETS = [
         {
           name: "Field",
           shorthand: "fi",
-          spread: 1,
           minContrast: 1.0,
-          baseIndex: 1,
           variationOverride: true,
           roleVariations: [
             { name: "01", shorthand: "f1" }, // step 1 — field on White theme
             { name: "02", shorthand: "f2" }, // step 2 — field on Gray-10 theme
           ],
-          variationTargets: [1, 2],
+          variationTargets: [1.1, 1.3],
           description: "Input / form field background fills",
         },
 
@@ -188,9 +174,7 @@ const CARBON_PRESETS = [
         {
           name: "Support/Error",
           shorthand: "ser",
-          spread: 1,
           minContrast: 3.0,
-          baseIndex: 5,
           variationOverride: true,
           roleVariations: [
             { name: "BG",     shorthand: "bg" }, // step 2 — error background tint
@@ -198,15 +182,13 @@ const CARBON_PRESETS = [
             { name: "Border", shorthand: "bo" }, // step 4 — error field border
             { name: "Icon",   shorthand: "ic" }, // step 5 — error icon (interactive)
           ],
-          variationTargets: [2, 6, 4, 5],
+          variationTargets: [1.3, 5.5, 2.5, 4.0],
           description: "Error semantic token stack",
         },
         {
           name: "Support/Warning",
           shorthand: "swa",
-          spread: 1,
           minContrast: 3.0,
-          baseIndex: 5,
           variationOverride: true,
           roleVariations: [
             { name: "BG",     shorthand: "bg" },
@@ -214,15 +196,13 @@ const CARBON_PRESETS = [
             { name: "Border", shorthand: "bo" },
             { name: "Icon",   shorthand: "ic" },
           ],
-          variationTargets: [2, 6, 4, 5],
+          variationTargets: [1.3, 5.5, 2.5, 4.0],
           description: "Warning semantic token stack",
         },
         {
           name: "Support/Success",
           shorthand: "ssu",
-          spread: 1,
           minContrast: 3.0,
-          baseIndex: 5,
           variationOverride: true,
           roleVariations: [
             { name: "BG",     shorthand: "bg" },
@@ -230,7 +210,7 @@ const CARBON_PRESETS = [
             { name: "Border", shorthand: "bo" },
             { name: "Icon",   shorthand: "ic" },
           ],
-          variationTargets: [2, 6, 4, 5],
+          variationTargets: [1.3, 5.5, 2.5, 4.0],
           description: "Success semantic token stack",
         },
       ],

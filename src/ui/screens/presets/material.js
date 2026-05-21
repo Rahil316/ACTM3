@@ -29,8 +29,6 @@ const MATERIAL_PRESETS = [
       pluginMode: "scale",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      baseSelection: "By Contrast",
-      spreadUnit: "steps",
       useGlobalAlgo: true,
       perColorAlgoScope: "color",
       solverMode: "natural",
@@ -41,13 +39,13 @@ const MATERIAL_PRESETS = [
       useShorthandSteps: false,
       embedDirectly: false,
       includeGlobalColors: false,
-      globalColorsCollectionName: "global",
+      sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
       variableStructure: "color",
       includeTonalCollection: true,
       includeDescriptions: true,
-      tonalScaleCollectionName: "_scale",
+      scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
       perRoleControls: false,
       scaleStepNames: [],
@@ -77,9 +75,7 @@ const MATERIAL_PRESETS = [
         {
           name: "Surface",
           shorthand: "sf",
-          spread: 1,
           minContrast: 1.0,
-          baseIndex: 2,
           variationOverride: true,
           roleVariations: [
             { name: "Surface/Dim",           shorthand: "sdm" }, // step 1 — dimmest background (≈page tint)
@@ -91,7 +87,7 @@ const MATERIAL_PRESETS = [
             { name: "Container/High",         shorthand: "ch"  }, // step 6 — high container (pressed state)
             { name: "Container/Highest",      shorthand: "chh" }, // step 7 — highest container (selected)
           ],
-          variationTargets: [1, 2, 3, 3, 4, 5, 6, 7],
+          variationTargets: [1.0, 1.05, 1.1, 1.1, 1.2, 1.3, 1.5, 1.7],
           description: "M3 surface and container tone stack",
         },
 
@@ -102,15 +98,13 @@ const MATERIAL_PRESETS = [
         {
           name: "On/Surface",
           shorthand: "osf",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 17,
           variationOverride: true,
           roleVariations: [
             { name: "Default", shorthand: "d" }, // step 17 — primary on-surface text
             { name: "Variant", shorthand: "v" }, // step 14 — variant / secondary on-surface
           ],
-          variationTargets: [17, 14],
+          variationTargets: [7.0, 4.5],
           description: "Text rendered on surface and container backgrounds",
         },
 
@@ -119,43 +113,29 @@ const MATERIAL_PRESETS = [
         {
           name: "Scheme/Primary",
           shorthand: "sp",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 14,
-          variationTargets: [14, 6, 21],
+          variationTargets: [4.5, 1.5, 14.0],
           description: "Primary color roles: fill, container background, and on-primary text",
         },
-
-        // ── Secondary scheme roles ───────────────────────────────────────────
         {
           name: "Scheme/Secondary",
           shorthand: "ss",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 14,
-          variationTargets: [14, 6, 21],
+          variationTargets: [4.5, 1.5, 14.0],
           description: "Secondary color roles: fill, container background, and on-secondary text",
         },
-
-        // ── Tertiary scheme roles ────────────────────────────────────────────
         {
           name: "Scheme/Tertiary",
           shorthand: "st",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 14,
-          variationTargets: [14, 6, 21],
+          variationTargets: [4.5, 1.5, 14.0],
           description: "Tertiary accent roles: fill, container background, and on-tertiary text",
         },
-
-        // ── Error scheme roles ───────────────────────────────────────────────
         {
           name: "Scheme/Error",
           shorthand: "se",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 14,
-          variationTargets: [14, 6, 21],
+          variationTargets: [4.5, 1.5, 14.0],
           description: "Error state roles: fill, container background, and on-error text",
         },
 
@@ -165,15 +145,13 @@ const MATERIAL_PRESETS = [
         {
           name: "Outline",
           shorthand: "ol",
-          spread: 1,
           minContrast: 2.0,
-          baseIndex: 12,
           variationOverride: true,
           roleVariations: [
             { name: "Default", shorthand: "d" }, // step 12 — M3 outline (interactive border)
             { name: "Variant", shorthand: "v" }, // step 9  — M3 outlineVariant (dividers)
           ],
-          variationTargets: [12, 9],
+          variationTargets: [2.5, 1.8],
           description: "Border and divider strokes",
         },
 
@@ -182,14 +160,12 @@ const MATERIAL_PRESETS = [
         {
           name: "Scrim",
           shorthand: "sc",
-          spread: 1,
           minContrast: 1.0,
-          baseIndex: 22,
           variationOverride: true,
           roleVariations: [
             { name: "Default", shorthand: "d" },
           ],
-          variationTargets: [22],
+          variationTargets: [14.0],
           description: "Modal scrim / backdrop overlay",
         },
 
@@ -198,16 +174,14 @@ const MATERIAL_PRESETS = [
         {
           name: "Inverse/Surface",
           shorthand: "isf",
-          spread: 1,
           minContrast: 7.0,
-          baseIndex: 21,
           variationOverride: true,
           roleVariations: [
             { name: "Surface",    shorthand: "sf" }, // step 21 — inverse (dark) surface
             { name: "On/Surface", shorthand: "os" }, // step 3  — text on inverse surface
             { name: "Primary",    shorthand: "pr" }, // step 8  — tinted inverse action button
           ],
-          variationTargets: [21, 3, 8],
+          variationTargets: [14.0, 1.1, 2.5],
           description: "Inverse surface stack for snackbars and reverse-mode panels",
         },
       ],

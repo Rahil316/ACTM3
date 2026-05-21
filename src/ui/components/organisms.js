@@ -187,7 +187,7 @@ const Components = {
     ]),
 
   _ColorSolverRow: (group, idx, config) => {
-    if (config.pluginMode !== "adaptiveEngine") return null;
+    if (config.pluginMode !== "direct") return null;
     if (config.useGlobalAlgo !== false) return null;
     if (config.perColorAlgoScope === "role") return null;
     const mode = group.solverMode || "natural";
@@ -204,7 +204,7 @@ const Components = {
   },
 
   _ColorAlgoRow: (group, idx, config) => {
-    if (config.pluginMode === "adaptiveEngine") return null;
+    if (config.pluginMode === "direct") return null;
     if (config.useGlobalAlgo) return null;
     const algo = group.scaleAlgorithm || config.scaleAlgorithm || "Natural";
     const opts = ["Natural", "Uniform", "Expressive", "Symmetric", "OKLCH", "Material", "Linear"];
@@ -222,7 +222,7 @@ const Components = {
   ColorGroupCard: (group, idx, config) => [Components._ColorMainRow(group, idx, config), Components._ColorSolverRow(group, idx, config), Components._ColorAlgoRow(group, idx, config), Components._ColorDescriptionRow(group, idx, config)].filter(Boolean),
 
   _RoleAlgoRow: (role, idx, config) => {
-    if (config.useGlobalAlgo || config.pluginMode !== "adaptiveEngine" || config.perColorAlgoScope !== "role") return null;
+    if (config.useGlobalAlgo || config.pluginMode !== "direct" || config.perColorAlgoScope !== "role") return null;
     const mode = role.solverMode || config.solverMode || "natural";
     return el("div", { class: "space-y-1 mt-2 pt-2 border-t border-[var(--border)]" }, [
       el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium" }, "Solver"),

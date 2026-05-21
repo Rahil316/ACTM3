@@ -8,7 +8,7 @@
  * ============================================================================
  */
 
-const TESTS_ENABLED = false;
+const TESTS_ENABLED = true;
 
 (function () {
   if (!TESTS_ENABLED) return;

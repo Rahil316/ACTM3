@@ -122,7 +122,7 @@ figma.ui.onmessage = async (msg) => {
         const config = translateConfig(msg.state);
         const result = variableMaker(config);
         let content = "";
-        if (msg.exportType === "json") content = JSON.stringify({ config, tonalScales: result.tonalScales, colorTokens: result.colorTokens, errors: result.errors }, null, 2);
+        if (msg.exportType === "json") content = JSON.stringify({ config, scales: result.scales, tokens: result.tokens, errors: result.errors }, null, 2);
         else if (msg.exportType === "csv") content = ExportFormatter.toCSV(result, config);
         else if (msg.exportType === "css") content = ExportFormatter.toCSS(result, config);
         else if (msg.exportType === "scss") content = generateScss(result, config);

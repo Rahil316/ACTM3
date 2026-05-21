@@ -400,9 +400,9 @@ function showSystemBanners(errors, result = null) {
   if (!errors) return;
 
   const accessFails = [];
-  if (result && result.colorTokens) {
-    for (const mode of Object.keys(result.colorTokens)) {
-      const modeTokens = result.colorTokens[mode];
+  if (result && result.tokens) {
+    for (const mode of Object.keys(result.tokens)) {
+      const modeTokens = result.tokens[mode];
       if (!modeTokens) continue;
       for (const clrName in modeTokens) {
         for (const roleId in modeTokens[clrName]) {

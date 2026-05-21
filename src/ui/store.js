@@ -175,10 +175,12 @@ function loadState(incoming) {
     incoming.sourceCollectionName = incoming.globalColorsCollectionName;
     delete incoming.globalColorsCollectionName;
   }
+  const isLegacyIndex = incoming.baseSelection === "By Index" || incoming.baseSelection === "Manual";
   delete incoming.baseSelection;
   delete incoming.spreadUnit;
   // strip legacy per-role fields and set mappingMethod default
   (incoming.roles || []).forEach((r) => {
+    const roleIsIndex = isLegacyIndex || r.baseSelection === "By Index" || r.baseSelection === "Manual";
     delete r.spread;
     delete r.baseIndex;
     delete r.darkBaseIndex;
@@ -187,7 +189,7 @@ function loadState(incoming) {
     delete r.useContrastGap;
     delete r.baseSelection;
     delete r.spreadUnit;
-    if (!r.mappingMethod) r.mappingMethod = "contrast";
+    if (!r.mappingMethod) r.mappingMethod = roleIsIndex ? "index" : "contrast";
   });
   Object.assign(appState, incoming);
   ensureIds(appState);

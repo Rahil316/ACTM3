@@ -32,11 +32,9 @@ const APPLE_PRESETS = [
     swatches: ["007AFF", "FF3B30", "34C759", "FF9500", "8E8E93"],
     config: {
       name: "Apple HIG",
-      pluginMode: "adaptiveEngine",
+      pluginMode: "direct",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      baseSelection: "By Contrast",
-      spreadUnit: "steps",
       useGlobalAlgo: true,
       perColorAlgoScope: "color",
       solverMode: "natural",
@@ -47,13 +45,13 @@ const APPLE_PRESETS = [
       useShorthandSteps: false,
       embedDirectly: false,
       includeGlobalColors: true,
-      globalColorsCollectionName: "_system-colors",
+      sourceCollectionName: "_system-colors",
       includeAlphaTints: true,
       alphaValues: "8, 16, 32, 50, 70, 85",
       variableStructure: "color",
       includeTonalCollection: false,
       includeDescriptions: true,
-      tonalScaleCollectionName: "_scale",
+      scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
       perRoleControls: false,
       scaleStepNames: [],
@@ -82,9 +80,7 @@ const APPLE_PRESETS = [
         {
           name: "Label",
           shorthand: "lb",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 17,
           variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Text label hierarchy — label / secondaryLabel / tertiaryLabel / quaternaryLabel",
         },
@@ -95,9 +91,7 @@ const APPLE_PRESETS = [
         {
           name: "Fill",
           shorthand: "fi",
-          spread: 1,
           minContrast: 1.5,
-          baseIndex: 12,
           variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "System fill hierarchy for interactive control surfaces",
         },
@@ -108,9 +102,7 @@ const APPLE_PRESETS = [
         {
           name: "Background",
           shorthand: "bg",
-          spread: 1,
           minContrast: 1.0,
-          baseIndex: 2,
           variationOverride: true,
           roleVariations: [
             { name: "Default",   shorthand: "d" }, // 1.0:1 — systemBackground (pure white / pure black)
@@ -126,9 +118,7 @@ const APPLE_PRESETS = [
         {
           name: "Background/Grouped",
           shorthand: "bgg",
-          spread: 1,
           minContrast: 1.0,
-          baseIndex: 2,
           variationOverride: true,
           roleVariations: [
             { name: "Default",   shorthand: "d" }, // 1.0:1 — grouped page background
@@ -145,9 +135,7 @@ const APPLE_PRESETS = [
         {
           name: "Separator",
           shorthand: "sp",
-          spread: 1,
           minContrast: 1.5,
-          baseIndex: 8,
           variationOverride: true,
           roleVariations: [
             { name: "Translucent", shorthand: "tr" }, // 1.5:1 — alpha-blended hairline divider
@@ -162,9 +150,7 @@ const APPLE_PRESETS = [
         {
           name: "Tint",
           shorthand: "ti",
-          spread: 1,
           minContrast: 3.0,
-          baseIndex: 14,
           variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Interactive tint — primary accent in all four opacity tiers",
         },
@@ -173,27 +159,21 @@ const APPLE_PRESETS = [
         {
           name: "Status/Error",
           shorthand: "er",
-          spread: 1,
           minContrast: 3.0,
-          baseIndex: 14,
           variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Error / destructive semantic hierarchy",
         },
         {
           name: "Status/Success",
           shorthand: "su",
-          spread: 1,
           minContrast: 3.0,
-          baseIndex: 14,
           variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Success / confirmation semantic hierarchy",
         },
         {
           name: "Status/Warning",
           shorthand: "wa",
-          spread: 1,
           minContrast: 3.0,
-          baseIndex: 14,
           variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Warning / attention semantic hierarchy",
         },

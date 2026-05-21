@@ -20,8 +20,6 @@ const CTM_PRESETS = [
       pluginMode: "scale",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      baseSelection: "By Contrast",
-      spreadUnit: "steps",
       useGlobalAlgo: true,
       solverMode: "natural",
       tokenNameOrder: ["color", "role", "variation"],
@@ -31,12 +29,12 @@ const CTM_PRESETS = [
       useShorthandSteps: false,
       embedDirectly: false,
       includeGlobalColors: false,
-      globalColorsCollectionName: "global",
+      sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "10, 25, 50, 75, 90",
       includeTonalCollection: true,
       includeDescriptions: false,
-      tonalScaleCollectionName: "_scale",
+      scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
       // Global variations — 5 semantic intensity levels used by all 12 roles.
       // Flat names work universally across backgrounds, borders, fills, and text.
@@ -61,23 +59,23 @@ const CTM_PRESETS = [
       //  20–24  ≈ near-black (13–21:1)
       roles: [
         // Backgrounds — lightest wash of the scale. Page and off-white variants.
-        { name: "Background",         shorthand: "bg",  spread: 1, minContrast: 1.05, baseIndex: 2,  variationTargets: [0, 1, 2, 3, 4 ] },
-        { name: "Background/Subtle",  shorthand: "bgs", spread: 1, minContrast: 1.1,  baseIndex: 4,  variationTargets: [2, 3, 4, 5, 6 ] },
+        { name: "Background",         shorthand: "bg",  minContrast: 1.05, variationTargets: [1.0, 1.05, 1.1, 1.2, 1.35] },
+        { name: "Background/Subtle",  shorthand: "bgs", minContrast: 1.1,  variationTargets: [1.1, 1.2, 1.35, 1.5, 1.8] },
         // Surfaces — card and raised element backgrounds.
-        { name: "Surface",            shorthand: "sf",  spread: 1, minContrast: 1.15, baseIndex: 6,  variationTargets: [4, 5, 6, 7, 8 ] },
-        { name: "Surface/Raised",     shorthand: "sfr", spread: 1, minContrast: 1.25, baseIndex: 8,  variationTargets: [6, 7, 8, 9, 10] },
+        { name: "Surface",            shorthand: "sf",  minContrast: 1.15, variationTargets: [1.35, 1.5, 1.8, 2.2, 2.7] },
+        { name: "Surface/Raised",     shorthand: "sfr", minContrast: 1.25, variationTargets: [1.8, 2.2, 2.7, 3.2, 4.0] },
         // Borders — subtle to strong outlines.
-        { name: "Border",             shorthand: "bd",  spread: 1, minContrast: 1.6,  baseIndex: 10, variationTargets: [8, 9, 10,11,12] },
-        { name: "Border/Strong",      shorthand: "bds", spread: 1, minContrast: 2.5,  baseIndex: 12, variationTargets: [10,11,12,13,14] },
+        { name: "Border",             shorthand: "bd",  minContrast: 1.6,  variationTargets: [2.7, 3.2, 4.0, 4.8, 5.8] },
+        { name: "Border/Strong",      shorthand: "bds", minContrast: 2.5,  variationTargets: [4.0, 4.8, 5.8, 7.0, 8.5] },
         // Fills — interactive component fills and solid CTAs.
-        { name: "Fill",               shorthand: "fi",  spread: 2, minContrast: 3.0,  baseIndex: 12, variationTargets: [8, 10,12,14,16] },
-        { name: "Fill/Strong",        shorthand: "fis", spread: 2, minContrast: 4.5,  baseIndex: 14, variationTargets: [10,12,14,16,18] },
+        { name: "Fill",               shorthand: "fi",  minContrast: 3.0,  variationTargets: [2.7, 4.0, 5.8, 8.5, 11.5] },
+        { name: "Fill/Strong",        shorthand: "fis", minContrast: 4.5,  variationTargets: [4.0, 5.8, 8.5, 11.5, 14.5] },
         // Text — from placeholder/muted through to AAA headings.
-        { name: "Text/Muted",         shorthand: "txm", spread: 1, minContrast: 3.0,  baseIndex: 15, variationTargets: [13,14,15,16,17] },
-        { name: "Text",               shorthand: "tx",  spread: 1, minContrast: 4.5,  baseIndex: 17, variationTargets: [15,16,17,18,19] },
-        { name: "Text/Strong",        shorthand: "txs", spread: 1, minContrast: 7.0,  baseIndex: 19, variationTargets: [17,18,19,20,21] },
+        { name: "Text/Muted",         shorthand: "txm", minContrast: 3.0,  variationTargets: [7.0, 8.5, 10.0, 11.5, 13.0] },
+        { name: "Text",               shorthand: "tx",  minContrast: 4.5,  variationTargets: [10.0, 11.5, 13.0, 14.5, 16.0] },
+        { name: "Text/Strong",        shorthand: "txs", minContrast: 7.0,  variationTargets: [13.0, 14.5, 16.0, 17.5, 19.0] },
         // Inverse — text or fill used against a dark/colored background.
-        { name: "Text/Inverse",       shorthand: "txi", spread: 1, minContrast: 4.5,  baseIndex: 4,  variationTargets: [2, 3, 4, 5, 6 ] },
+        { name: "Text/Inverse",       shorthand: "txi", minContrast: 4.5,  variationTargets: [1.1, 1.2, 1.35, 1.5, 1.8] },
       ],
       themes: [
         { name: "Light", bg: "FFFFFF" },
@@ -98,11 +96,9 @@ const CTM_PRESETS = [
     tags: ["Comprehensive", "Adaptive", "Multi-theme"],
     config: {
       name: "CTM Pro",
-      pluginMode: "adaptiveEngine",
+      pluginMode: "direct",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      baseSelection: "By Contrast",
-      spreadUnit: "steps",
       useGlobalAlgo: true,
       solverMode: "natural",
       tokenNameOrder: ["color", "role", "variation"],
@@ -112,12 +108,12 @@ const CTM_PRESETS = [
       useShorthandSteps: false,
       embedDirectly: false,
       includeGlobalColors: true,
-      globalColorsCollectionName: "brand",
+      sourceCollectionName: "brand",
       includeAlphaTints: true,
       alphaValues: "10, 20, 40, 60, 80, 90",
       includeTonalCollection: false,
       includeDescriptions: true,
-      tonalScaleCollectionName: "_scale",
+      scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
       // Global variations — interaction states. Used by Primary, Secondary, and Action roles.
       // variationTargets (adaptive) = WCAG contrast ratios.
@@ -136,8 +132,8 @@ const CTM_PRESETS = [
       ],
       roles: [
         // Primary / Secondary — interactive accent colors, 4-state global variations.
-        { name: "Primary",              shorthand: "pr",  spread: 1, minContrast: 4.5, baseContrast: 4.5, baseIndex: 14, variationTargets: [4.5, 6.0, 7.0, 2.0] },
-        { name: "Primary/Container",    shorthand: "prc", spread: 1, minContrast: 1.5, baseContrast: 1.8, baseIndex: 6,
+        { name: "Primary",              shorthand: "pr",  minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        { name: "Primary/Container",    shorthand: "prc", minContrast: 1.5,
           variationOverride: true,
           roleVariations: [
             { name: "Layer/01", shorthand: "l1" },
@@ -148,13 +144,13 @@ const CTM_PRESETS = [
           ],
           variationTargets: [1.05, 1.2, 1.4, 1.7, 2.5],
         },
-        { name: "On/Primary",           shorthand: "op",  spread: 1, minContrast: 7.0, baseContrast: 7.0, baseIndex: 20, variationTargets: [4.5, 6.0, 7.0, 2.0] },
-        { name: "Secondary",            shorthand: "sc",  spread: 1, minContrast: 4.5, baseContrast: 4.5, baseIndex: 14, variationTargets: [4.5, 6.0, 7.0, 2.0] },
-        { name: "On/Secondary",         shorthand: "os",  spread: 1, minContrast: 7.0, baseContrast: 7.0, baseIndex: 20, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        { name: "On/Primary",           shorthand: "op",  minContrast: 7.0, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        { name: "Secondary",            shorthand: "sc",  minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        { name: "On/Secondary",         shorthand: "os",  minContrast: 7.0, variationTargets: [4.5, 6.0, 7.0, 2.0] },
 
         // Surface family — 5-layer depth model with "/" naming → nested Figma folders.
         // Layer/01 = page bg (barely-there), Layer/Scrim = modal overlay.
-        { name: "Surface",              shorthand: "sf",  spread: 1, minContrast: 1.05, baseContrast: 1.05, baseIndex: 1,
+        { name: "Surface",              shorthand: "sf",  minContrast: 1.05,
           variationOverride: true,
           roleVariations: [
             { name: "Layer/01",    shorthand: "l1" },
@@ -167,7 +163,7 @@ const CTM_PRESETS = [
         },
 
         // Text family — Emphasis hierarchy from accessible body copy to disabled.
-        { name: "On/Surface",           shorthand: "ons", spread: 1, minContrast: 4.5, baseContrast: 4.5, baseIndex: 16,
+        { name: "On/Surface",           shorthand: "ons", minContrast: 4.5,
           variationOverride: true,
           roleVariations: [
             { name: "Emphasis/High",     shorthand: "eh" },
@@ -179,7 +175,7 @@ const CTM_PRESETS = [
         },
 
         // Outline — three weights of border/separator.
-        { name: "Outline",              shorthand: "ol",  spread: 1, minContrast: 2.5, baseContrast: 2.5, baseIndex: 12,
+        { name: "Outline",              shorthand: "ol",  minContrast: 2.5,
           variationOverride: true,
           roleVariations: [
             { name: "Weight/Subtle",  shorthand: "ws" },
@@ -190,13 +186,13 @@ const CTM_PRESETS = [
         },
 
         // Action roles — 4 interaction states via global variations.
-        { name: "Action/Primary",       shorthand: "ap",  spread: 1, minContrast: 4.5, baseContrast: 4.5, baseIndex: 14, variationTargets: [4.5, 6.0, 7.0, 2.0] },
-        { name: "Action/Secondary",     shorthand: "as",  spread: 1, minContrast: 3.0, baseContrast: 3.0, baseIndex: 12, variationTargets: [3.0, 4.5, 6.0, 2.0] },
-        { name: "Action/Destructive",   shorthand: "ade", spread: 1, minContrast: 4.5, baseContrast: 4.5, baseIndex: 14, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        { name: "Action/Primary",       shorthand: "ap",  minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        { name: "Action/Secondary",     shorthand: "as",  minContrast: 3.0, variationTargets: [3.0, 4.5, 6.0, 2.0] },
+        { name: "Action/Destructive",   shorthand: "ade", minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
 
         // Status / Error — 4 semantic token slots per status color.
         // BG/Subtle = tinted bg, BG/Default = stronger bg, FG/Default = foreground text, Border = outline.
-        { name: "Status/Error",         shorthand: "se",  spread: 1, minContrast: 4.5, baseContrast: 4.5, baseIndex: 14,
+        { name: "Status/Error",         shorthand: "se",  minContrast: 4.5,
           variationOverride: true,
           roleVariations: [
             { name: "BG/Subtle",  shorthand: "bgs" },
@@ -208,7 +204,7 @@ const CTM_PRESETS = [
         },
 
         // Inverse — near-max contrast pair for high-contrast surfaces or dark tooltips.
-        { name: "Inverse/Surface",      shorthand: "is",  spread: 1, minContrast: 12.0, baseContrast: 12.0, baseIndex: 22,
+        { name: "Inverse/Surface",      shorthand: "is",  minContrast: 12.0,
           variationOverride: true,
           roleVariations: [
             { name: "Default", shorthand: "df" },
@@ -216,7 +212,7 @@ const CTM_PRESETS = [
           ],
           variationTargets: [12.0, 4.5],
         },
-        { name: "Inverse/On/Surface",   shorthand: "ios", spread: 1, minContrast: 4.5, baseContrast: 4.5, baseIndex: 4, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        { name: "Inverse/On/Surface",   shorthand: "ios", minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
       ],
       themes: [
         { name: "Light", bg: "FFFFFF" },
@@ -238,11 +234,9 @@ const CTM_PRESETS = [
     tags: ["Bold", "Vivid", "Adaptive"],
     config: {
       name: "CTM Funk",
-      pluginMode: "adaptiveEngine",
+      pluginMode: "direct",
       scaleAlgorithm: "Expressive",
       scaleLength: 25,
-      baseSelection: "By Contrast",
-      spreadUnit: "steps",
       useGlobalAlgo: true,
       solverMode: "chroma-maximized",
       tokenNameOrder: ["color", "role", "variation"],
@@ -252,12 +246,12 @@ const CTM_PRESETS = [
       useShorthandSteps: false,
       embedDirectly: false,
       includeGlobalColors: true,
-      globalColorsCollectionName: "electric",
+      sourceCollectionName: "electric",
       includeAlphaTints: false,
       alphaValues: "10, 25, 50, 75, 90",
       includeTonalCollection: false,
       includeDescriptions: false,
-      tonalScaleCollectionName: "_scale",
+      scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
       // Ghost=barely visible tint, Whisper=hover, Core=primary, Loud=bold, Max=near-black.
       // Contrast targets: 1.5 / 2.5 / 4.5 / 7.0 / 12.0
@@ -275,25 +269,25 @@ const CTM_PRESETS = [
       ],
       roles: [
         // Canvas — the base surface. Ghost=invisible, Max=heavy scrim.
-        { name: "Canvas",           shorthand: "ca",  spread: 1, minContrast: 1.05, baseContrast: 1.1,  baseIndex: 1,  variationTargets: [1.05, 1.2, 1.5, 2.0, 3.0 ] },
-        { name: "Canvas/Raised",    shorthand: "cr",  spread: 1, minContrast: 1.2,  baseContrast: 1.4,  baseIndex: 4,  variationTargets: [1.1,  1.3, 1.6, 2.5, 4.0 ] },
+        { name: "Canvas",           shorthand: "ca",  minContrast: 1.05, variationTargets: [1.05, 1.2, 1.5, 2.0, 3.0 ] },
+        { name: "Canvas/Raised",    shorthand: "cr",  minContrast: 1.2,  variationTargets: [1.1,  1.3, 1.6, 2.5, 4.0 ] },
         // Glow — color-tinted fills, from subtle aura to heavy overlay.
-        { name: "Glow",             shorthand: "gl",  spread: 1, minContrast: 1.5,  baseContrast: 2.0,  baseIndex: 8,  variationTargets: [1.5,  2.0, 3.0, 4.5, 7.0 ] },
-        { name: "Glow/Strong",      shorthand: "gls", spread: 1, minContrast: 3.0,  baseContrast: 3.5,  baseIndex: 12, variationTargets: [2.0,  2.5, 3.5, 5.5, 9.0 ] },
+        { name: "Glow",             shorthand: "gl",  minContrast: 1.5,  variationTargets: [1.5,  2.0, 3.0, 4.5, 7.0 ] },
+        { name: "Glow/Strong",      shorthand: "gls", minContrast: 3.0,  variationTargets: [2.0,  2.5, 3.5, 5.5, 9.0 ] },
         // Edge — borders and outlines.
-        { name: "Edge",             shorthand: "eg",  spread: 1, minContrast: 2.0,  baseContrast: 2.5,  baseIndex: 10, variationTargets: [1.5,  2.0, 2.5, 3.5, 5.0 ] },
+        { name: "Edge",             shorthand: "eg",  minContrast: 2.0,  variationTargets: [1.5,  2.0, 2.5, 3.5, 5.0 ] },
         // Fill — interactive component fills.
-        { name: "Fill/Soft",        shorthand: "fs",  spread: 1, minContrast: 2.5,  baseContrast: 3.0,  baseIndex: 11, variationTargets: [1.8,  2.2, 3.0, 4.5, 6.0 ] },
-        { name: "Fill/Core",        shorthand: "fc",  spread: 1, minContrast: 4.0,  baseContrast: 4.5,  baseIndex: 14, variationTargets: [2.5,  3.5, 4.5, 6.5, 9.0 ] },
-        { name: "Fill/Pop",         shorthand: "fp",  spread: 1, minContrast: 6.5,  baseContrast: 7.0,  baseIndex: 18, variationTargets: [4.5,  5.5, 7.0, 10.0, 14.0] },
+        { name: "Fill/Soft",        shorthand: "fs",  minContrast: 2.5,  variationTargets: [1.8,  2.2, 3.0, 4.5, 6.0 ] },
+        { name: "Fill/Core",        shorthand: "fc",  minContrast: 4.0,  variationTargets: [2.5,  3.5, 4.5, 6.5, 9.0 ] },
+        { name: "Fill/Pop",         shorthand: "fp",  minContrast: 6.5,  variationTargets: [4.5,  5.5, 7.0, 10.0, 14.0] },
         // Ink — text from dim to maximum.
-        { name: "Ink/Dim",          shorthand: "id",  spread: 1, minContrast: 2.5,  baseContrast: 3.0,  baseIndex: 12, variationTargets: [1.5,  2.5, 3.0, 4.5, 6.0 ] },
-        { name: "Ink",              shorthand: "ik",  spread: 1, minContrast: 4.0,  baseContrast: 4.5,  baseIndex: 16, variationTargets: [2.5,  3.5, 4.5, 7.0, 10.0] },
-        { name: "Ink/Loud",         shorthand: "il",  spread: 1, minContrast: 6.5,  baseContrast: 7.0,  baseIndex: 19, variationTargets: [4.5,  5.5, 7.0, 10.0, 14.0] },
-        { name: "Ink/Max",          shorthand: "im",  spread: 1, minContrast: 12.0, baseContrast: 14.0, baseIndex: 22, variationTargets: [7.0,  10.0, 14.0, 18.0, 21.0] },
+        { name: "Ink/Dim",          shorthand: "id",  minContrast: 2.5,  variationTargets: [1.5,  2.5, 3.0, 4.5, 6.0 ] },
+        { name: "Ink",              shorthand: "ik",  minContrast: 4.0,  variationTargets: [2.5,  3.5, 4.5, 7.0, 10.0] },
+        { name: "Ink/Loud",         shorthand: "il",  minContrast: 6.5,  variationTargets: [4.5,  5.5, 7.0, 10.0, 14.0] },
+        { name: "Ink/Max",          shorthand: "im",  minContrast: 12.0, variationTargets: [7.0,  10.0, 14.0, 18.0, 21.0] },
         // Highlight — decorative accent washes and pops.
-        { name: "Highlight",        shorthand: "hl",  spread: 1, minContrast: 2.5,  baseContrast: 3.0,  baseIndex: 11, variationTargets: [1.5,  2.0, 3.0, 4.5, 7.0 ] },
-        { name: "Highlight/Strong", shorthand: "hls", spread: 1, minContrast: 4.5,  baseContrast: 5.0,  baseIndex: 15, variationTargets: [3.0,  4.0, 5.0, 7.0, 10.0] },
+        { name: "Highlight",        shorthand: "hl",  minContrast: 2.5,  variationTargets: [1.5,  2.0, 3.0, 4.5, 7.0 ] },
+        { name: "Highlight/Strong", shorthand: "hls", minContrast: 4.5,  variationTargets: [3.0,  4.0, 5.0, 7.0, 10.0] },
       ],
       themes: [
         { name: "Light", bg: "FAFAFA" },

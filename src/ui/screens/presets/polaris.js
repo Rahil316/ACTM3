@@ -32,11 +32,9 @@ const POLARIS_PRESETS = [
     swatches: ["303ADE", "8C9196", "007B5E", "916A00", "CC1515", "7B2EA8"],
     config: {
       name: "Shopify Polaris",
-      pluginMode: "adaptiveEngine",
+      pluginMode: "direct",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      baseSelection: "By Contrast",
-      spreadUnit: "steps",
       useGlobalAlgo: true,
       perColorAlgoScope: "color",
       solverMode: "natural",
@@ -47,13 +45,13 @@ const POLARIS_PRESETS = [
       useShorthandSteps: false,
       embedDirectly: false,
       includeGlobalColors: false,
-      globalColorsCollectionName: "global",
+      sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
       variableStructure: "color",
       includeTonalCollection: false,
       includeDescriptions: true,
-      tonalScaleCollectionName: "_scale",
+      scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
       perRoleControls: false,
       scaleStepNames: [],
@@ -81,18 +79,14 @@ const POLARIS_PRESETS = [
         {
           name: "Action/Primary",
           shorthand: "ap",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 14,
           variationTargets: [4.5, 5.5, 6.5, 7.0, 2.0],
           description: "Primary action fills (CTA buttons, primary links)",
         },
         {
           name: "Action/Secondary",
           shorthand: "as",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 12,
           variationTargets: [4.5, 5.5, 6.5, 7.0, 2.0],
           description: "Secondary action fills (outline buttons, secondary CTAs)",
         },
@@ -102,9 +96,7 @@ const POLARIS_PRESETS = [
         {
           name: "Background",
           shorthand: "bg",
-          spread: 1,
           minContrast: 1.0,
-          baseIndex: 2,
           variationOverride: true,
           roleVariations: [
             { name: "Default",  shorthand: "d" }, // 1.0:1 — page background (near-white)
@@ -120,9 +112,7 @@ const POLARIS_PRESETS = [
         {
           name: "Surface",
           shorthand: "sf",
-          spread: 1,
           minContrast: 1.0,
-          baseIndex: 3,
           variationOverride: true,
           roleVariations: [
             { name: "Default",  shorthand: "d" }, // 1.0:1 — card / popover
@@ -138,9 +128,7 @@ const POLARIS_PRESETS = [
         {
           name: "Text",
           shorthand: "tx",
-          spread: 1,
           minContrast: 4.5,
-          baseIndex: 17,
           variationOverride: true,
           roleVariations: [
             { name: "Default",  shorthand: "d"  }, // 7.0:1 — body text
@@ -156,9 +144,7 @@ const POLARIS_PRESETS = [
         {
           name: "Border",
           shorthand: "bo",
-          spread: 1,
           minContrast: 2.0,
-          baseIndex: 10,
           variationOverride: true,
           roleVariations: [
             { name: "Default",     shorthand: "d" }, // 2.0:1 — standard UI border
@@ -173,42 +159,32 @@ const POLARIS_PRESETS = [
         {
           name: "Icon",
           shorthand: "ic",
-          spread: 1,
           minContrast: 3.0,
-          baseIndex: 14,
           variationTargets: [4.5, 5.5, 6.5, 7.0, 2.0],
           description: "Iconography fills — same 5-state interaction model as actions",
         },
 
         // ── Feedback channels — Status/Success ───────────────────────────────
-        // BG/Subtle = very light tinted surface for banners/toasts
-        // BG/Default = slightly more visible surface for notification badges
-        // FG = the actionable / icon / text fill on light background (must meet AA)
-        // Border = the border stroke around a feedback container
         {
           name: "Status/Success",
           shorthand: "ssu",
-          spread: 1,
           minContrast: 1.3,
-          baseIndex: 6,
           variationOverride: true,
           roleVariations: [
-            { name: "BG/Subtle",  shorthand: "bgs" }, // 1.3:1 — light tinted banner bg
-            { name: "BG/Default", shorthand: "bgd" }, // 1.8:1 — badge / chip background
-            { name: "FG",         shorthand: "fg"  }, // 4.5:1 — text / icon on light bg (AA)
-            { name: "Border",     shorthand: "bo"  }, // 2.5:1 — banner / toast border
+            { name: "BG/Subtle",  shorthand: "bgs" },
+            { name: "BG/Default", shorthand: "bgd" },
+            { name: "FG",         shorthand: "fg"  },
+            { name: "Border",     shorthand: "bo"  },
           ],
           variationTargets: [1.3, 1.8, 4.5, 2.5],
-          description: "Success feedback channel — banner, badge, text, border",
+          description: "Success feedback channel",
         },
 
         // ── Status/Caution ───────────────────────────────────────────────────
         {
           name: "Status/Caution",
           shorthand: "sca",
-          spread: 1,
           minContrast: 1.3,
-          baseIndex: 6,
           variationOverride: true,
           roleVariations: [
             { name: "BG/Subtle",  shorthand: "bgs" },
@@ -224,9 +200,7 @@ const POLARIS_PRESETS = [
         {
           name: "Status/Critical",
           shorthand: "scr",
-          spread: 1,
           minContrast: 1.3,
-          baseIndex: 6,
           variationOverride: true,
           roleVariations: [
             { name: "BG/Subtle",  shorthand: "bgs" },
@@ -244,9 +218,7 @@ const POLARIS_PRESETS = [
         {
           name: "Status/Magic",
           shorthand: "sma",
-          spread: 1,
           minContrast: 1.3,
-          baseIndex: 6,
           variationOverride: true,
           roleVariations: [
             { name: "BG/Subtle",  shorthand: "bgs" },
