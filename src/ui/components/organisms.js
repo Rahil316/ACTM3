@@ -45,7 +45,7 @@ const panelUI = {
 
   // Universal text/number input.
   //
-  // size:  "table"(26px) | "sm"(32px) | "md"(36px) | "lg"(40px)
+  // size:  "table"(26px) | "sm"(28px) | "md"(32px) | "lg"(36px, default) | "xl"(40px)
   // width: "full" | "flex" | null (no width class — use class for fixed widths)
   // class: extra classes on <input> (e.g. "w-[52px]" for fixed-width shorthand fields)
   // mono:  true → font-mono + uppercase (hex codes)
@@ -54,7 +54,7 @@ const panelUI = {
   // Returns <div class="space-y-1"> wrapper when any decoration is present.
   input: ({
     id = null, value = "", placeholder = "", type = "text",
-    size = "md", width = "full", class: extraCls = "",
+    size = "lg", width = "full", class: extraCls = "",
     leadingIcon = null, trailingIcon = null,
     label = null, infoIcon = null,
     hint = null, error = null,
@@ -64,9 +64,10 @@ const panelUI = {
   } = {}) => {
     const sizes = {
       table: { h: "h-[26px]", text: "text-[11px]", px: "px-1.5", r: "rounded-[4px]" },
-      sm:    { h: "h-[32px]", text: "text-[12px]", px: "px-2",   r: "rounded-[8px]" },
-      md:    { h: "h-[36px]", text: "text-[13px]", px: "px-3",   r: "rounded-[8px]" },
-      lg:    { h: "h-[40px]", text: "text-[13px]", px: "p-2",    r: "rounded-[8px]" },
+      sm:    { h: "h-[28px]", text: "text-[11px]", px: "px-2",   r: "rounded-[6px]" },
+      md:    { h: "h-[32px]", text: "text-[12px]", px: "px-2",   r: "rounded-[7px]" },
+      lg:    { h: "h-[36px]", text: "text-[13px]", px: "px-3",   r: "rounded-[8px]" },
+      xl:    { h: "h-[40px]", text: "text-[13px]", px: "px-3",   r: "rounded-[8px]" },
     };
     const s = sizes[size] || sizes.md;
     const widthCls = width === "full" ? "w-full" : width === "flex" ? "flex-1" : "";
@@ -173,15 +174,15 @@ function _getRoleUI(id) {
 const Components = {
   // --- COLOR COMPONENTS ---
   _ColorMainRow: (group, idx, config) =>
-    el("div", { class: "grid gap-2 items-center grid grid-cols-[20px_1fr_72px_108px_36px]" }, [
-      el("div", { class: "flex flex-col gap-0.5 self-center flex-shrink-0" }, [
-        inputsUI.btn("ghost", { size: "xs", square: true, icon: "▲", onclick: () => moveGroup(idx, -1), disabled: idx === 0 }),
-        el("span", { class: "drag-handle text-[var(--text-muted)] cursor-grab text-[14px] leading-none text-center" }, "⠿"),
-        inputsUI.btn("ghost", { size: "xs", square: true, icon: "▼", onclick: () => moveGroup(idx, 1), disabled: idx === config.colors.length - 1 }),
-      ]),
+    el("div", { class: "grid gap-2 items-center grid grid-cols-[1fr_72px_108px_36px]" }, [
+      // el("div", { class: "flex flex-col gap-0.5 self-center flex-shrink-0"},[
+      //   inputsUI.btn("ghost", { size: "xs", square: true, icon: "▲", onclick: () => moveGroup(idx, -1), disabled: idx === 0 }),
+      //   el("span", { class: "drag-handle text-[var(--text-muted)] cursor-grab text-[14px] leading-none text-center" }, "⠿"),
+      //   inputsUI.btn("ghost", { size: "xs", square: true, icon: "▼", onclick: () => moveGroup(idx, 1), disabled: idx === config.colors.length - 1 }),
+      // ]),
       inputsUI.input({ id: `clr-${idx}-name`, value: group.name || "", oninput: (e) => updateGroup(idx, "name", e.target.value) }, "Color Name"),
       inputsUI.input({ id: `clr-${idx}-short`, value: group.shorthand || "", oninput: (e) => updateGroup(idx, "shorthand", e.target.value) }, "Shorthand"),
-      el("div", { class: "space-y-1" }, [el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium block ml-1" }, "Value"), inputsUI.colorInput(group.value, (val, elRef) => updateGroup(idx, "value", val, elRef), `clr-${idx}`)]),
+      el("div", { class: "space-y-1" }, [el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium block ml-1" }, "Value"), inputsUI.colorInput(group.value, (clean) => updateGroup(idx, "value", clean), `clr-${idx}`)]),
       el("div", { class: "self-end" }, [inputsUI.iconButton(Icons.Trash, () => removeGroup(idx), "danger", { "aria-label": "Delete color" })]),
     ]),
 
@@ -321,12 +322,12 @@ const Components = {
     }
 
     // ── CARD ASSEMBLY ──
-    const nameRow = el("div", { class: "grid gap-2 items-end grid grid-cols-[20px_1fr_96px_36px]" }, [
-      el("div", { class: "flex flex-col gap-0.5 self-center shrink-0" }, [
-        inputsUI.btn("ghost", { size: "xs", square: true, icon: "▲", onclick: () => moveRole(idx, -1), disabled: idx === 0 }),
-        el("span", { class: "drag-handle text-[var(--text-muted)] cursor-grab text-[14px] leading-none text-center" }, "⠿"),
-        inputsUI.btn("ghost", { size: "xs", square: true, icon: "▼", onclick: () => moveRole(idx, 1), disabled: idx === config.roles.length - 1 }),
-      ]),
+    const nameRow = el("div", { class: "grid gap-2 items-end grid grid-cols-[1fr_96px_36px]" }, [
+      // el("div", { class: "flex flex-col gap-0.5 self-center shrink-0" }, [
+      //   inputsUI.btn("ghost", { size: "xs", square: true, icon: "▲", onclick: () => moveRole(idx, -1), disabled: idx === 0 }),
+      //   el("span", { class: "drag-handle text-[var(--text-muted)] cursor-grab text-[14px] leading-none text-center" }, "⠿"),
+      //   inputsUI.btn("ghost", { size: "xs", square: true, icon: "▼", onclick: () => moveRole(idx, 1), disabled: idx === config.roles.length - 1 }),
+      // ]),
       inputsUI.input({ id: `role-${idx}-name`, value: role.name || "", oninput: (e) => updateRole(idx, "name", e.target.value) }, "Role Name"),
       inputsUI.input({ id: `role-${idx}-short`, value: role.shorthand || "", oninput: (e) => updateRole(idx, "shorthand", e.target.value) }, "Shorthand"),
       inputsUI.iconButton(Icons.Trash, () => removeRole(idx), "danger", { "aria-label": "Delete role" }),

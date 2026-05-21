@@ -62,7 +62,7 @@ function renderSettingsTokensPanel() {
   const paletteCard = el("div", { id: "settings-scale-section", class: "settings-card space-y-3" }, [
     panelUI.sectionLabel("Palette"),
     el("div", { class: "grid grid-cols-2 gap-3" }, [
-      panelUI.input({ id: "setting-scaleLength", type: "number", size: "lg", label: "Steps" }),
+      panelUI.input({ id: "setting-scaleLength", type: "number", size: "xl", label: "Steps" }),
     ]),
   ]);
   mount.appendChild(paletteCard);
@@ -134,13 +134,13 @@ function renderSettingsTokensPanel() {
         panelUI.togglePill("toggle-includeTonalCollection", () => toggleBoolSetting("includeTonalCollection"))
       ),
       el("div", { id: "settings-tonal-collection-row" }, [
-        panelUI.input({ id: "setting-tonalScaleCollectionName", placeholder: "_Palettes", size: "md" }),
+        panelUI.input({ id: "setting-tonalScaleCollectionName", placeholder: "_Palettes", size: "lg" }),
       ]),
     ]),
 
     el("div", { class: "space-y-2" }, [
       el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, ["Color role collection"]),
-      panelUI.input({ id: "setting-tokenCollectionName", placeholder: "Color Tokens", size: "md" }),
+      panelUI.input({ id: "setting-tokenCollectionName", placeholder: "Color Tokens", size: "lg" }),
     ]),
 
     el("div", { id: "settings-map-roles-row" }, [
@@ -157,7 +157,7 @@ function renderSettingsTokensPanel() {
       panelUI.togglePill("toggle-includeGlobalColors", () => toggleBoolSetting("includeGlobalColors"))
     ),
     el("div", { id: "constants-options", class: "hidden space-y-2 pl-2 border-l-2 border-[var(--border)]" }, [
-      panelUI.input({ id: "setting-globalColorsCollectionName", placeholder: "_constants", label: "Collection Name", size: "md" }),
+      panelUI.input({ id: "setting-globalColorsCollectionName", placeholder: "_constants", label: "Collection Name", size: "lg" }),
 
       panelUI.row(
         "Alpha Tints",
@@ -166,7 +166,7 @@ function renderSettingsTokensPanel() {
       ),
 
       el("div", { id: "opacity-values-row", class: "hidden space-y-1" }, [
-        panelUI.input({ id: "setting-alphaValues", placeholder: "10, 25, 50, 75, 90", label: "Alpha Values (CSV, 0–100)", size: "md" }),
+        panelUI.input({ id: "setting-alphaValues", placeholder: "10, 25, 50, 75, 90", label: "Alpha Values (CSV, 0–100)", size: "lg" }),
       ]),
     ]),
   ]);
@@ -573,6 +573,8 @@ function renderSettingsStepLabels() {
   });
 }
 
+let _varDragSrcIdx = null;
+
 function renderSettingsVariations() {
   const container = document.getElementById("settings-variations-list");
   if (!container) return;
@@ -580,69 +582,73 @@ function renderSettingsVariations() {
   const canDelete = vars.length > 1;
   container.innerHTML = "";
   vars.forEach((v, idx) => {
-    container.appendChild(
-      el("div", { class: "flex items-center gap-1.5" }, [
-        el("div", { class: "flex flex-col gap-0.5 shrink-0" }, [
-          inputsUI.btn("ghost", { size: "xs", square: true, icon: "▲", onclick: () => moveSharedVariation(idx, -1), disabled: idx === 0 }),
-          inputsUI.btn("ghost", { size: "xs", square: true, icon: "▼", onclick: () => moveSharedVariation(idx, 1),  disabled: idx === vars.length - 1 }),
-        ]),
-        panelUI.input({ value: v.name || "", placeholder: "Name", size: "sm", width: "flex", oninput: (e) => updateSharedVariation(idx, "name", e.target.value) }),
-        panelUI.input({ value: v.shorthand || "", placeholder: "Short", size: "sm", width: null, class: "w-[52px]", oninput: (e) => updateSharedVariation(idx, "shorthand", e.target.value) }),
-        inputsUI.btn("danger", { size: "md", square: true, icon: Icons.Close, onclick: () => removeSharedVariation(idx), disabled: !canDelete }),
-      ]),
-    );
+    const row = el("div", { class: "flex items-center gap-1.5 variation-settings-row" }, [
+      el("span", { class: "text-[var(--text-muted)] cursor-grab active:cursor-grabbing px-0.5 shrink-0 select-none", title: "Drag to reorder" }, "⠿"),
+      panelUI.input({ value: v.name || "", placeholder: "Name", size: "sm", width: "flex", oninput: (e) => updateSharedVariation(idx, "name", e.target.value) }),
+      panelUI.input({ value: v.shorthand || "", placeholder: "Short", size: "sm", width: null, class: "w-[52px]", oninput: (e) => updateSharedVariation(idx, "shorthand", e.target.value) }),
+      inputsUI.btn("danger", { size: "md", square: true, icon: Icons.Close, onclick: () => removeSharedVariation(idx), disabled: !canDelete }),
+    ]);
+    bindDragDrop(row, idx, {
+      cardSelector: ".variation-settings-row",
+      getIdx: () => _varDragSrcIdx,
+      setIdx: (v) => { _varDragSrcIdx = v; },
+      onDrop: (src, dst) => {
+        const [moved] = appState.variations.splice(src, 1);
+        appState.variations.splice(dst, 0, moved);
+        renderSettingsVariations();
+      },
+    });
+    row.querySelectorAll("input, button").forEach((el) => el.setAttribute("draggable", "false"));
+    container.appendChild(row);
   });
 }
+
+let _themeDragSrcIdx = null;
 
 function renderSettingsThemes(containerId = "settings-themes-list") {
   const container = document.getElementById(containerId);
   if (!container) return;
   const themes = appState.themes || [];
   const canDelete = themes.length > 1;
+  const rowClass = `theme-settings-row-${containerId}`;
   container.innerHTML = "";
+
+  container.appendChild(
+    el("div", { class: "flex items-center gap-1.5 px-0.5 mb-1" }, [
+      el("span", { class: "w-4 shrink-0" }),
+      el("span", { class: "flex-1 text-[11px] font-medium text-[var(--text-muted)] tracking-wide" }, "Name"),
+      el("span", { class: "w-28 shrink-0 text-[11px] font-medium text-[var(--text-muted)] tracking-wide" }, "Background"),
+      el("span", { class: "w-8 shrink-0" }),
+    ]),
+  );
+
   themes.forEach((theme, idx) => {
-    const hexVal = theme.bg || "FFFFFF";
-    container.appendChild(
-      el("div", { class: "flex items-center gap-1.5" }, [
-        panelUI.input({ value: theme.name || "", placeholder: "Mode name", size: "sm", width: "flex", oninput: (e) => { updateTheme(idx, "name", e.target.value); renderPreviewTabs(); } }),
-        el("div", { class: "relative flex items-center" }, [
-          el("input", {
-            type: "color", value: "#" + hexVal, id: `theme-picker-${idx}`,
-            oninput: (e) => {
-              const clean  = e.target.value.replace("#", "").toUpperCase();
-              const textEl = document.getElementById(`theme-hex-${idx}`);
-              const swatch = document.getElementById(`theme-swatch-${idx}`);
-              if (textEl) textEl.value = clean;
-              if (swatch) swatch.style.background = "#" + clean;
-              updateTheme(idx, "bg", clean);
-              schedulePreview();
-            },
-            class: "absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10",
-          }),
-          el("div", {
-            class: "size-[32px] rounded-[8px] border border-[var(--border)] cursor-pointer shrink-0",
-            style: `background:#${hexVal}`, id: `theme-swatch-${idx}`,
-          }),
-        ]),
-        panelUI.input({
-          id: `theme-hex-${idx}`, value: hexVal, placeholder: "RRGGBB",
-          size: "sm", width: null, class: "w-[80px]", maxlength: 6, mono: true,
-          oninput: (e) => {
-            const clean  = sanitizeHex(e.target.value);
-            const swatch = document.getElementById(`theme-swatch-${idx}`);
-            const picker = document.getElementById(`theme-picker-${idx}`);
-            updateTheme(idx, "bg", clean);
-            if (swatch) swatch.style.background = "#" + clean;
-            if (picker && clean.length === 6) picker.value = "#" + clean;
-            schedulePreview();
-          },
-        }),
-        inputsUI.btn("danger", {
-          size: "md", square: true, icon: Icons.Close, disabled: !canDelete,
-          onclick: () => removeTheme(idx),
-        }),
-      ]),
-    );
+    const row = el("div", { class: `flex items-center gap-1.5 ${rowClass}` }, [
+      el("span", { class: "text-[var(--text-muted)] cursor-grab active:cursor-grabbing px-0.5 shrink-0 select-none", title: "Drag to reorder" }, "⠿"),
+      panelUI.input({ value: theme.name || "", placeholder: "Mode name", size: "md", class: "w-24", oninput: (e) => { updateTheme(idx, "name", e.target.value); renderPreviewTabs(); } }),
+      inputsUI.colorInput(theme.bg || "FFFFFF", (clean) => {
+        updateTheme(idx, "bg", clean);
+        schedulePreview();
+      }, `theme-${containerId}-${idx}`, { class: "max-w-28" }, "md"),
+      inputsUI.btn("danger", {
+        size: "md", square: true, icon: Icons.Close, disabled: !canDelete,
+        onclick: () => removeTheme(idx),
+      }),
+    ]);
+    bindDragDrop(row, idx, {
+      cardSelector: `.${rowClass}`,
+      getIdx: () => _themeDragSrcIdx,
+      setIdx: (v) => { _themeDragSrcIdx = v; },
+      onDrop: (src, dst) => {
+        const [moved] = appState.themes.splice(src, 1);
+        appState.themes.splice(dst, 0, moved);
+        renderSettingsThemes(containerId);
+        renderPreviewTabs();
+        schedulePreview();
+      },
+    });
+    row.querySelectorAll("input, button").forEach((el) => el.setAttribute("draggable", "false"));
+    container.appendChild(row);
   });
 }
 

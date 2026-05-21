@@ -12,7 +12,7 @@ function renderSidebarProject() {
 
   container.appendChild(
     el("div", { class: "space-y-4 p-1" }, [
-      panelUI.input({ value: appState.name || "", placeholder: "CTM316", label: "Project Name", size: "md", oninput: (e) => updateProjectName(e.target.value) }),
+      panelUI.input({ value: appState.name || "", placeholder: "CTM316", label: "Project Name", size: "lg", oninput: (e) => updateProjectName(e.target.value) }),
       el("div", { class: "space-y-2" }, [
         el("div", { class: "flex items-center justify-between" }, [
           el("label", { class: "text-[11px] text-[var(--text-muted)] font-medium ml-1" }, ["Themes (modes)"]),

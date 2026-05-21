@@ -4,6 +4,8 @@
   "description": "Your Figma Plugin",
   "main": "code.js",
   "scripts": {
+    "prebuild": "node -e \"if (!require('fs').existsSync('./node_modules') || !require('fs').existsSync('./node_modules/tailwindcss')) { console.log('Missing dependencies. Running npm install...'); require('child_process').execSync('npm install', {stdio: 'inherit'}); }\"",
+    "prewatch": "npm run prebuild",
     "build": "node build.js",
     "watch": "node watch.js",
     "lint": "eslint .",

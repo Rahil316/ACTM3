@@ -2,6 +2,18 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
+// Failsafe: Ensure dependencies are installed
+const nodeModulesPath = path.join(__dirname, "node_modules");
+if (!fs.existsSync(nodeModulesPath) || !fs.existsSync(path.join(nodeModulesPath, "tailwindcss"))) {
+  console.log("Missing dependencies. Running 'npm install'...");
+  try {
+    execSync("npm install", { stdio: "inherit" });
+  } catch (err) {
+    console.error("Failed to run 'npm install'. Please run it manually.", err);
+    process.exit(1);
+  }
+}
+
 const SRC_DIR = path.join(__dirname, "src");
 
 function build() {

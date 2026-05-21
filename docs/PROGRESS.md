@@ -18,8 +18,11 @@
 
 **UI architecture**
 
-- [x] `el()` helper + `inputsUI` primitive set: `input`, `colorInput`, `toggle`, `row`, `sectionLabel`, `iconButton`, `actionButton`
-- [x] `panelUI` layout system: `card`, `row`, `smallRow`, `segmented`, `togglePill`, `selectInput`, `sectionLabel`
+- [x] `el()` helper + `inputsUI` primitive set: `input`, `colorInput`, `toggle`, `row`, `sectionLabel`, `iconButton`, `actionButton`, `btn`
+- [x] `panelUI` layout system: `card`, `row`, `smallRow`, `segmented`, `togglePill`, `selectInput`, `sectionLabel`, `input`
+- [x] Unified size scale across `panelUI.input`, `inputsUI.colorInput`, and `inputsUI.btn`: `sm`=28px, `md`=32px, `lg`=36px, `xl`=40px
+- [x] `inputsUI.colorInput` — self-contained hex↔picker sync; calls `onUpdate(cleanHex)`; accepts optional `size` param
+- [x] `inputsUI.btn` square tokens all include `shrink-0` to preserve 1:1 ratio in flex containers
 - [x] `Components` card architecture: `ColorGroupCard` and `RoleGroupCard` composed from named sub-rows
 - [x] `bindDragDrop()` helper — drag-to-reorder on both color and role cards
 - [x] `debounce` + `withPreservedFocus` — glitch-free typing, no focus loss on re-render
@@ -33,8 +36,9 @@
 - [x] `syncOutputToggles` split into focused helpers: `_syncTogglePills`, `_syncModeControls`, `_syncSpreadUnit`, `_syncPerRoleControls`, `_syncGroupingButtons`, `syncAlgoSection`
 - [x] Token Name Format pill drag-to-reorder
 - [x] Scale Step Labels list with add/remove/reorder
-- [x] Shared Variations list with add/remove/reorder
+- [x] Shared Variations list with add/remove/reorder — ▲/▼ buttons replaced with `⠿` drag handle via `bindDragDrop`
 - [x] Global solver row for adaptive engine + global mode
+- [x] Themes list — ▲/▼ buttons replaced with `⠿` drag handle via `bindDragDrop`; column header row added; color swatches use `inputsUI.colorInput`
 
 **State & settings**
 

@@ -141,25 +141,46 @@ const inputsUI = {
     return el("div", { class: "space-y-1 flex-1" }, [el("label", { for: id, class: "text-[var(--text-muted)] text-[12px] font-medium block ml-1" }, label), input]);
   },
 
-  // Native color picker + hex text input, both wired to the same update handler.
-  // onUpdate(value, inputEl?) — inputEl is passed so callers can do in-place correction.
-  colorInput: (value, onUpdate, idPrefix = null) =>
-    el("div", { class: "flex items-center gap-2 w-full bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] overflow-hidden h-[40px]" }, [
-      el("input", {
-        type: "color",
-        value: normalizeHex(value) || "#000000",
-        id: idPrefix ? `${idPrefix}-picker` : null,
-        class: "cursor-pointer h-full w-10 shrink-0 bg-transparent border-none rounded-none p-0.5",
-        onchange: (e) => onUpdate(e.target.value, null),
-      }),
-      el("input", {
-        type: "text",
-        value: value,
-        id: idPrefix ? `${idPrefix}-hex` : null,
-        class: "w-full bg-transparent text-[13px] uppercase outline-none text-[var(--text-primary)] pr-2",
-        oninput: (e) => onUpdate(e.target.value, e.target),
-      }),
-    ]),
+  // Picker + hex text input. Handles all internal sync automatically.
+  // onUpdate(cleanHex) — called with a sanitized 6-char uppercase hex string on any change.
+  // size: "sm"(28) | "md"(32) | "lg"(36) | "xl"(40, default) — matches the input size scale.
+  colorInput: (value, onUpdate, idPrefix = null, extra = {}, size = "xl") => {
+    const sizes = {
+      sm: { wrap: "h-[28px] rounded-[6px]", swatch: "w-7",  text: "text-[11px]" },
+      md: { wrap: "h-[32px] rounded-[7px]", swatch: "w-8",  text: "text-[12px]" },
+      lg: { wrap: "h-[36px] rounded-[8px]", swatch: "w-9",  text: "text-[12px]" },
+      xl: { wrap: "h-[40px] rounded-[8px]", swatch: "w-10", text: "text-[13px]" },
+    };
+    const s = sizes[size] || sizes.xl;
+    const initial = sanitizeHex(value);
+    const picker = el("input", {
+      type: "color",
+      value: normalizeHex(initial) || "#000000",
+      id: idPrefix ? `${idPrefix}-picker` : null,
+      class: `cursor-pointer h-full ${s.swatch} shrink-0 bg-transparent border-none rounded-none p-0.5`,
+      oninput: (e) => {
+        const clean = e.target.value.replace("#", "").toUpperCase();
+        hexInput.value = clean;
+        onUpdate(clean);
+      },
+    });
+    const hexInput = el("input", {
+      type: "text",
+      value: initial,
+      id: idPrefix ? `${idPrefix}-hex` : null,
+      maxlength: 6,
+      class: `w-full bg-transparent ${s.text} uppercase outline-none text-[var(--text-primary)] pr-2`,
+      oninput: (e) => {
+        const clean = sanitizeHex(e.target.value);
+        if (clean.length === 6) picker.value = "#" + clean;
+        onUpdate(clean);
+      },
+    });
+    return el("div", { class: `flex items-center w-full bg-[var(--bg-input)] border border-[var(--border)] overflow-hidden ${s.wrap} ${extra.class || ""}` }, [
+      picker,
+      hexInput,
+    ]);
+  },
 
   // ── BUTTON ──
   // Universal button primitive. All interactive buttons in the UI go through here.
@@ -187,11 +208,11 @@ const inputsUI = {
       xl: "h-[40px] px-4   text-[13px] rounded-[8px]",
     };
     const squareSizes = {
-      xs: "size-5      text-[10px] rounded-[4px]",
-      sm: "size-[28px] text-[11px] rounded-[6px]",
-      md: "size-[32px] text-[12px] rounded-[7px]",
-      lg: "size-[36px] text-[12px] rounded-[8px]",
-      xl: "size-[40px] text-[13px] rounded-[8px]",
+      xs: "size-5      shrink-0 text-[10px] rounded-[4px]",
+      sm: "size-[28px] shrink-0 text-[11px] rounded-[6px]",
+      md: "size-[32px] shrink-0 text-[12px] rounded-[7px]",
+      lg: "size-[36px] shrink-0 text-[12px] rounded-[8px]",
+      xl: "size-[40px] shrink-0 text-[13px] rounded-[8px]",
     };
     const variants = {
       primary: "bg-[var(--accent)] border-[var(--accent)] text-white hover:opacity-90 cursor-pointer",

@@ -36,8 +36,9 @@ function _pvScaleStep(weight, data, onHover) {
 
 function _pvColorScaleRow(colorName, colorIdx, srcHex, ramp, themeKeys) {
   const hexDisplay  = el("span", { class: "text-[12px] font-bold font-mono" });
-  const numDisplay  = el("span", { class: "text-[11px] text-[var(--text-muted)] font-mono" });
-  const infoDisplay = el("span", { class: "ml-auto text-[10px] text-[var(--text-muted)]" });
+  const stepName    = el("span", { class: "text-[12px] font-bold" });
+  const numDisplay  = el("span", { class: "text-[12px] text-[var(--text-muted)] font-mono" });
+  const infoDisplay = el("span", { class: "ml-auto text-[12px] text-[var(--text-muted)]" });
 
   const swatchDiv = el("div", {
     class: "size-8 rounded-md shrink-0",
@@ -56,7 +57,7 @@ function _pvColorScaleRow(colorName, colorIdx, srcHex, ramp, themeKeys) {
       }
     },
   });
-  const swatchWrap = el("div", { class: "relative size-6 shrink-0 cursor-pointer", title: "Click to edit color" }, [pickerInput, swatchDiv]);
+  const swatchWrap = el("div", { class: "relative size-8 shrink-0 cursor-pointer", title: "Click to edit color" }, [pickerInput, swatchDiv]);
 
   const spectrum = el("div", {
     class: "col-span-3 flex w-full h-20 rounded-[10px] overflow-hidden cursor-crosshair",
@@ -67,6 +68,7 @@ function _pvColorScaleRow(colorName, colorIdx, srcHex, ramp, themeKeys) {
       hexDisplay.textContent = hex;
       hexDisplay.style.color = hex;
       numDisplay.textContent = w;
+      stepName.textContent = data.stepName;
       infoDisplay.textContent = themeKeys
         .map((k) => (contrast[k] ? `${k}: ${contrast[k].ratio}` : ""))
         .filter(Boolean)
@@ -74,10 +76,10 @@ function _pvColorScaleRow(colorName, colorIdx, srcHex, ramp, themeKeys) {
     }));
   }
 
-  return el("div", { class: "grid items-center gap-2 mb-3", style: "grid-template-columns:28px 1fr auto;grid-template-rows:28px auto" }, [
+  return el("div", { class: "grid items-center gap-2 mb-3", style: "grid-template-columns:32px 1fr auto;grid-template-rows:32px auto" }, [
     swatchWrap,
     el("div", { class: "text-[12px] font-bold text-[var(--text-primary)]" }, colorName),
-    el("div", { class: "flex items-center gap-2" }, [numDisplay, hexDisplay, infoDisplay]),
+    el("div", { class: "flex items-center gap-2" }, [stepName, infoDisplay]),
     spectrum,
   ]);
 }
