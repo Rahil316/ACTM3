@@ -71,6 +71,13 @@
 - [x] Build strips comments from dist output
 - [x] `/* filename */` markers per section in both `scripts.js` and `ui.html`
 
+**Release system**
+
+- [x] `npm run release -- <version>` — builds from source, packages `release/<version>/` (manifest + scripts.js + ui.html), prompts for overwrite if version exists, appends multiline note to `release/changelog.md`
+- [x] `npm run release:patch -- <version>` — silently re-packages an existing version (no overwrite prompt), appends patch note to changelog
+- [x] `npm run release:flag -- <version>` — full release + creates git annotated tag for permanent code-state reference; prints `git push origin <version>` reminder
+- [x] Changelog format: `## <version>` section → `### <timestamp> UTC` subheader per entry; same version appends a new subheader rather than replacing the section
+
 ---
 
 ## Next up (priority order)

@@ -158,7 +158,7 @@ const inputsUI = {
       value: normalizeHex(initial) || "#000000",
       id: idPrefix ? `${idPrefix}-picker` : null,
       class: `cursor-pointer h-full ${s.swatch} shrink-0 bg-transparent border-none rounded-none p-0.5`,
-      oninput: (e) => {
+      onchange: (e) => {
         const clean = e.target.value.replace("#", "").toUpperCase();
         hexInput.value = clean;
         onUpdate(clean);
@@ -170,10 +170,10 @@ const inputsUI = {
       id: idPrefix ? `${idPrefix}-hex` : null,
       maxlength: 6,
       class: `w-full bg-transparent ${s.text} uppercase outline-none text-[var(--text-primary)] pr-2`,
-      oninput: (e) => {
+      onchange: (e) => {
         const clean = sanitizeHex(e.target.value);
         if (clean.length === 6) picker.value = "#" + clean;
-        onUpdate(clean);
+        if (clean.length === 6) onUpdate(clean);
       },
     });
     return el("div", { class: `flex items-center w-full bg-[var(--bg-input)] border border-[var(--border)] overflow-hidden ${s.wrap} ${extra.class || ""}` }, [

@@ -28,6 +28,24 @@ Load in Figma Desktop → Plugins → Development → Import plugin from manifes
 
 ---
 
+## Releasing
+
+```bash
+npm run release -- v3.1          # build → package → prompt for release note
+npm run release:patch -- v3.1    # re-package existing version → prompt for patch note
+npm run release:flag -- v3.1     # build → package → note → git annotated tag
+```
+
+Each command produces `release/<version>/` with `manifest.json`, `scripts.js`, and `ui.html` — everything needed to submit to Figma. A running changelog is maintained at `release/changelog.md`.
+
+- **release** — builds fresh from source, asks before overwriting an existing version slot.
+- **release:patch** — requires the version slot to already exist; silently overwrites it, prompts for a patch note.
+- **release:flag** — same as `release`, then creates a git annotated tag so the exact code state is permanently reachable. Run `git push origin <version>` afterwards to publish the tag.
+
+> `release/` is gitignored — only the tag and changelog entry survive in version control.
+
+---
+
 ## Testing
 
 `src/tests.js` runs automatically on plugin load when `TESTS_ENABLED = true`. Output appears in Figma's DevTools console (Plugins → Development → Open Console).

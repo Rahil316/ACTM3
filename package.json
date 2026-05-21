@@ -9,7 +9,10 @@
     "build": "node build.js",
     "watch": "node watch.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "release": "node package.js",
+    "release:patch": "node package.js patch",
+    "release:flag": "node package.js flag"
   },
   "author": "",
   "license": "",

@@ -625,7 +625,7 @@ function renderSettingsThemes(containerId = "settings-themes-list") {
   themes.forEach((theme, idx) => {
     const row = el("div", { class: `flex items-center gap-1.5 ${rowClass}` }, [
       el("span", { class: "text-[var(--text-muted)] cursor-grab active:cursor-grabbing px-0.5 shrink-0 select-none", title: "Drag to reorder" }, "⠿"),
-      panelUI.input({ value: theme.name || "", placeholder: "Mode name", size: "md", class: "w-24", oninput: (e) => { updateTheme(idx, "name", e.target.value); renderPreviewTabs(); } }),
+      panelUI.input({ value: theme.name || "", placeholder: "Mode name", size: "md", width: "full", class: "w-24", oninput: (e) => { updateTheme(idx, "name", e.target.value); renderPreviewTabs(); } }),
       inputsUI.colorInput(theme.bg || "FFFFFF", (clean) => {
         updateTheme(idx, "bg", clean);
         schedulePreview();

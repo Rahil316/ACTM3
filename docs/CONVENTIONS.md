@@ -93,3 +93,28 @@ One file per screen or sidebar tab. Each owns its renderer and any screen-local 
 - **No state logic in `router.js`** — visibility only
 - **No cross-screen imports** — screens are loaded in order; later screens can call earlier ones but not vice versa
 - **No speculative abstractions** — don't move code into organisms until it's reused by a second screen
+
+---
+
+## Release workflow
+
+Source lives in `src/`. The build pipeline produces `dist/`. Releases are packaged into `release/<version>/`. Neither `dist/` nor `release/` are committed.
+
+```
+src/   →   npm run build   →   dist/   →   npm run release -- <version>   →   release/<version>/
+```
+
+| Command | When to use |
+| ------- | ----------- |
+| `npm run release -- <version>` | Normal release — builds from source, prompts before overwriting |
+| `npm run release:patch -- <version>` | Hot-patch an existing version slot — no overwrite prompt |
+| `npm run release:flag -- <version>` | Release + git annotated tag — use when you want the code state permanently findable |
+
+The release script (`package.js`) always re-runs the full build before packaging to guarantee `dist/` is fresh. It verifies the `dist/` mtimes are newer than the build start time before copying.
+
+Changelog entries live in `release/changelog.md` under `## <version>` sections with `### <timestamp> UTC` subheadings. Multiple patch notes accumulate under the same version section.
+
+After `release:flag`, publish the tag with:
+```bash
+git push origin <version>
+```
