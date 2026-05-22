@@ -2,8 +2,8 @@
 name: Feedback rules
 description: How this user wants collaboration to work — corrections and confirmed approaches
 type: feedback
-originSessionId: 8d8bcbc1-572d-4c9f-b8bd-4a9ae7f56916
 ---
+
 **No trailing summaries.** Don't recap what was just done at the end of a response.
 **Why:** User can read the diff/code directly. Summaries are noise.
 **How to apply:** End responses with the key change in one sentence max, or nothing.

@@ -2,6 +2,18 @@ const fs = require("fs");
 const { execSync } = require("child_process");
 const path = require("path");
 
+// Failsafe: Ensure dependencies are installed
+const nodeModulesPath = path.join(__dirname, "node_modules");
+if (!fs.existsSync(nodeModulesPath) || !fs.existsSync(path.join(nodeModulesPath, "tailwindcss"))) {
+  console.log("Missing dependencies. Running 'npm install'...");
+  try {
+    execSync("npm install", { stdio: "inherit" });
+  } catch (err) {
+    console.error("Failed to run 'npm install'. Please run it manually.", err);
+    process.exit(1);
+  }
+}
+
 const outDir = "dist/";
 const srcDir = "src/";
 
@@ -17,7 +29,7 @@ try {
 }
 
 console.log("Building scripts.js...");
-const jsFiles = ["code/color/clrUtils.js", "code/color/clrEngine.js", "code/figma/docGen.js", "code/figma/config.js", "code/figma/figmaVars.js", "code/figma/main.js"];
+const jsFiles = ["color/clrUtils.js", "color/clrEngine.js", "shared/docGen.js", "shared/config.js", "figma/figmaVars.js", "figma/main.js"];
 const jsContent = jsFiles
   .map((f) => {
     const content = fs

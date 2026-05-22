@@ -3,33 +3,40 @@ name: Feature registry
 description: Full inventory of plugin features — implemented, needs work, and not yet started
 type: project
 ---
-Last updated: 2026-05-20
+
+Last updated: 2026-05-22
 
 ---
 
 ## ✅ Implemented — fully working
 
 ### Core engine
+
 - Tonal scale generation — 7 algorithms (Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear)
-- Adaptive Engine mode — solves role colors directly to target contrast ratios, no tonal scale intermediate
-- WCAG contrast calculation (APCA-adjacent, hex↔RGB↔HSL↔OKLCH↔HCT)
+- Direct mode — solves role colors directly to target WCAG contrast ratios via OKLCH binary-search solver (5 modes: natural, saturated, luminance, hue-locked, chroma-maximized)
+- WCAG contrast calculation (hex↔RGB↔HSL↔OKLCH↔HCT)
 - Multi-theme output — light and dark modes with configurable background colors
-- Semantic role mapping — Text, Fill, Background, Border etc. mapped to tonal steps by contrast or index
-- Variation levels — shared variation system with alias + shorthand
-- `scaleStepNames` CSV — wired end-to-end: config.js parses, clrEngine.js uses for variable naming ✅ verified
-- `alphaValues` CSV — wired end-to-end: config.js parses, figmaVars.js reads for alpha tint generation ✅ verified
+- Semantic role mapping — roles mapped to tonal steps by contrast or by index
+- Variation levels — shared global variation list (name + shorthand) per slot
+- Per-role variation override — `customVariationList: true` on a role substitutes `customVariations[]` for the global list
+- `scaleStepNames` — list of `{name, shorthand}` entries; config.js parses and passes to engine for step naming
+- `alphaValues` CSV — parsed to int array; figmaVars.js uses for alpha tint generation
+- Algorithm scoping — `useUniformAlgorithm` (one algo for all colors) + `algorithmScopeLevel` (`"color"` / `"role"`) — both are wired through config.js and read by clrEngine.js
 
 ### Figma variable output
+
 - Palette collection (`_scale`) — full tonal ramp per color as Figma variables
-- Token collection — contextual role variables referencing palette steps
-- Embed directly mode — writes hex values instead of Figma aliases
-- Global colors collection — raw brand hex values, no theme processing
-- Alpha tint variables under `colorName/Opacities/`
-- Variable descriptions — contrast metadata written into Figma variable descriptions
+- `includeColorScalesCollection` toggle — gates whether `_scale` collection is written; wired in config.js and checked in figmaVars.js ✅ verified
+- Token collection — contextual role variables referencing palette steps (aliases) or embedded hex
+- `resolveTokensDirectly` — writes hex values instead of Figma aliases; suppresses `_scale` creation
+- Source colors collection (`_constants`) — raw brand hex values, no theme processing; enabled by `includeSourceColors`
+- Alpha tint variables under `colorName/Opacities/` — enabled by `includeAlphaTints`
+- Variable descriptions — contrast metadata written into Figma variable descriptions; enabled by `includeDescriptions`
 - Stable `_id` rename detection — reorder/rename colors or roles without duplicate variable creation
-- savedState snapshot — detects renames correctly within a session
+- `savedState` snapshot — detects renames correctly within a session
 
 ### Exports
+
 - CSS custom properties export
 - SCSS variable maps + mixin export
 - CSV audit sheet
@@ -37,69 +44,67 @@ Last updated: 2026-05-20
 - JSON import — restores full plugin state from exported file
 
 ### UI
+
 - `el()` DOM factory — all UI built without innerHTML
-- `inputsUI` primitives: `input`, `colorInput`, `toggle`, `row`, `sectionLabel`, `iconButton`, `actionButton`, `caption`, `btn()` (all variants)
+- `inputsUI` primitives: `input`, `colorInput`, `toggle`, `row`, `sectionLabel`, `iconButton`, `actionButton`, `btn()` (all variants)
 - `Components` card system: `ColorGroupCard`, `RoleGroupCard`
 - Drag-to-reorder on color and role cards
 - `debounce` + `withPreservedFocus` — no focus loss on re-render
 - In-place color sync on hex/picker input — no re-render on color value change
-- BannerManager — toast + expandable detail banners (defined in `output.js`)
-- ToastManager — lightweight stacking toast system (defined in `output.js`)
-- Preview panel — live token preview before syncing to Figma
+- `BannerManager` — toast + expandable detail banners (defined in `notifications.js`)
+- `ToastManager` — lightweight stacking toast system (defined in `notifications.js`)
+- Preview panel (`preview.js`) — live token preview before syncing to Figma; "Solved Colors" label in Direct mode
 - Run dialog — shows existing collections, rename summary before sync
-- Full-screen settings panel with 5 tabs (Project, Palettes, Roles, Figma, Plugin)
+- Full-screen settings panel with 2 tabs: **Token Settings** and **Plugin**
 - Settings Cancel/Done — Cancel snapshots and reverts, Done applies
 - UI Scale + Theme preference (persisted in Figma clientStorage)
 - Figma theme detection (MutationObserver on html/body + matchMedia)
-- Config persistence in `figma.root.setPluginData("ctm316_state")`
+- Config persistence in `figma.root.setPluginData("tw_state")`
 - One-time migration from old STRING variable storage to setPluginData
 
 ### Role card controls
+
 - Role name + shorthand (always visible)
-- Find base by: Min Contrast or By Index
-- Spread unit: Steps or Contrast delta
-- Mapping mode: Auto (computed read-only table) or Manual (fully editable table)
-- Per-role variation override — each role can define its own variation set independently
-- Per-role controls toggle — global default or per-card base/spread controls
-- Collapsed header summary — shows active settings at a glance
-- `solverMode` per color — "natural" | "saturated" | "luminance" | "hue-locked" | "chroma-maximized"
-- `darkBaseIndex` per role — separate base index for dark mode (By Index mode only)
+- Mapping method: Contrast (walk scale for first step meeting WCAG target) or Index (pin to explicit step)
+- Per-role variation override — `customVariationList: true` substitutes `customVariations[]` for the global list
+- `solverMode` per color — "natural" | "saturated" | "luminance" | "hue-locked" | "chroma-maximized" (shown when `useUniformAlgorithm: false`)
+- Per-color `scaleAlgorithm` — shown when `useUniformAlgorithm: false` and `pluginMode === "scale"`
 
 ### Build
+
 - `npm run build` — concatenates JS, strips comments, inlines CSS, produces `dist/scripts.js` + `dist/ui.html`
 - Tailwind CSS inlined at build — no CDN dependency at runtime
-- `/* filename */` section markers in built output for debugging
+- `npm run release -- v3.x` — packages for marketplace
 
 ---
 
 ## 🔧 Implemented but needs verification / polish
 
-- **Alpha tints in preview** — `includeAlphaTints` flag works in engine; preview panel does not show alpha tokens visually
-- **Role variation override end-to-end** — per-role custom variations exist in state and UI; full manual test across both plugin modes not completed
-- **Rename detection for per-role variations** — `buildVariableRenameMap` handles shared variations only; per-role variation renames are silently skipped (may create duplicates on re-run)
-- **`output.js` preview rendering** — some innerHTML string concatenation remains; inconsistent with el()-based codebase
+- **Alpha tints in preview** — `includeAlphaTints` flag works in Figma output; `preview.js` does not show alpha tokens visually
+- **Role variation override end-to-end** — `customVariationList` + `customVariations` exist in state and UI; full manual test across both plugin modes not completed
+- **Rename detection for per-role variations** — `buildVariableRenameMap` handles shared variations only; per-role custom variation renames silently create new variables instead of renaming (documented as a known limitation)
+- **`preview.js` rendering** — some innerHTML string concatenation remains; inconsistent with `el()`-based codebase
 - **Input validation feedback** — errors shown in full overlay; no inline feedback per field
 
 ---
 
-## ⚠️ UI state with no engine effect (wired in state + UI but not passed to engine)
+## ⚠️ UI state with no engine effect
 
-These toggles appear in settings and are persisted in appState, but `translateConfig()` in `config.js` does **not** pass them to the engine. They currently do nothing to the Figma output.
-
-- **`addSeedValues`** — toggle in Figma tab (`toggle-addSeedValues`), persisted in `appState`, in settings snapshot. Not in `translateConfig`. Purpose: unknown/unimplemented.
-- **`includeTonalCollection`** — toggle in Figma tab (`toggle-includeTonalCollection`), persisted in `appState`. Not in `translateConfig`. Intended purpose: gate whether the `_scale` ramp collection is written at all.
-- **`useGlobalAlgo` / `perColorAlgoScope`** — in `appState` and settings snapshot; `config.js` used to forward them but now only leaves a comment. `clrEngine.js` does not read either. Reserved for future per-color algorithm scoping.
+| Field | Notes |
+|---|---|
+| (none confirmed) | All previously suspected dead keys are now verified wired. No confirmed dead toggles as of 2026-05-22. |
 
 ---
 
-## 🚧 Designed but not yet implemented (seen in Settings PDF mockup)
+## 🚧 Designed but not yet implemented
 
-- **Project Name field** — `appState.name` exists; verify it drives export filenames and success messages
-- **Saved States** — versioned snapshots with timestamp, View / Restore / Delete. Placeholder in Project tab, non-functional
-- **Role Labels CSV** — bulk-rename variations globally via comma-separated string
+- **Project Name field** — `appState.name` is read in `translateConfig`; verify it drives export filenames and success messages end-to-end
+- **Saved States** — versioned snapshots with timestamp, View / Restore / Delete. Placeholder visible in UI, non-functional
+- **Role Labels CSV** — bulk-rename all variation levels via comma-separated string (seen in settings PDF mockup; not in current UI)
 - **Language selector** — UI placeholder only, no i18n infrastructure
 - **Beta Features section** — enrollment toggle + placeholder feature flags
-- **About CTM section** — feedback link + learn more link
+- **About Token Wand section** — feedback link + learn more link
+- **`tokenGrouping` UI control** — `appState.tokenGrouping` (`"color"` / `"role"`) is wired in engine but no settings UI control renders it
 
 ---
 
@@ -110,5 +115,4 @@ These toggles appear in settings and are persisted in appState, but `translateCo
 - **Undo/redo** — noted gap, no plans
 - **Inline validation feedback** — per-field error display instead of full overlay
 - **Token preview for alpha tints** — preview panel alpha section
-- **Design Lab** — button exists in more-sheet via `temp.js`, shows alert placeholder only
-- **`includeTonalCollection` wiring** — gate that suppresses `_scale` ramp collection write; requires `translateConfig` → `figmaVars.js` plumbing
+- **Design Lab** — `betaLab.js` exists with `LAB_ENABLED = false`; button in more-sheet shows alert placeholder
