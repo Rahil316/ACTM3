@@ -18,10 +18,12 @@ const VariableManager = {
         if (!newName || newName === variable.name) continue;
         if (occupiedNames.has(newName)) continue; // target name still in use; retry next pass
         try {
-          occupiedNames.delete(variable.name);
+          const oldName = variable.name;
+          occupiedNames.delete(oldName);
           variable.name = newName;
-          occupiedNames.add(newName);
-          renamed++;
+          const confirmed = variable.name;
+          occupiedNames.add(confirmed);
+          if (confirmed === newName) renamed++;
         } catch (e) {
           console.warn("Rename failed for variable:", variable.name, e);
         }
@@ -39,7 +41,7 @@ const VariableManager = {
 
     // Build rename maps: position-matched items that only changed names get renamed
     // silently instead of being deleted and recreated.
-    const renameMap = savedAppState && appState ? buildVariableRenameMap(savedAppState, appState) : { scale: {}, tokens: {} };
+    const renameMap = savedAppState && appState ? buildVariableRenameMap(savedAppState, appState) : { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } };
 
     const scaleCollectionName = (appState && appState.scaleCollectionName) || "_scale";
     const tokenColName = (appState && appState.tokenCollectionName) || "color tokens";
@@ -117,11 +119,14 @@ const VariableManager = {
         }
         for (const [colorName, roles] of Object.entries(result.tokens[theme])) {
           for (const [roleId, variations] of Object.entries(roles)) {
-            const roleObj = config.roles[roleId] || {};
+            const roleObj = (config.roles && config.roles[roleId]) || {};
             const rName = roleObj.name || roleId;
             const cLabel = colorLabel(colorName);
-            const rLabel = roleLabel(rName, parseInt(roleId));
-            const vars = config.variations
+            const rLabel = roleLabel(rName, parseInt(roleId, 10));
+            const variationDefs = roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0
+              ? roleObj.customVariations
+              : config.variations;
+            const vars = variationDefs
               .map((varDef, i) => {
                 const token = variations[String(i)];
                 if (!token) return null;

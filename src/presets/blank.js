@@ -52,7 +52,7 @@ const BLANK_PRESETS = [
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
       
-      scaleStepNames: [],
+      scaleStepNames: null,
 
       // 5 named variations covering the full perceptual range.
       // These names work for any role — background, border, text, or fill.

@@ -20,14 +20,12 @@ const LAB_ENABLED = false;
 
     const btn = document.createElement("button");
     btn.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-left hover:bg-[var(--bg-hover)] transition-all group";
-    btn.innerHTML = `<span class="text-[18px]">⚗</span><div><div class="text-[13px] font-medium text-[var(--text-primary)]">Design Lab</div><div class="text-[11px] text-[var(--text-muted)]">Test role card variations</div></div>`;
+    btn.innerHTML = `<span class="text-[18px]">⚗</span><div><div class="text-[13px] font-medium text-[var(--text-primary)]">Design Lab</div><div class="text-[11px] text-[var(--text-muted)]">Preview panel — variant B</div></div>`;
     btn.onclick = () => {
-      // Close the more sheet
       const closeBtn = document.getElementById("close-more");
       if (closeBtn) closeBtn.click();
-      // TODO: open lab overlay if needed in the future
-      // TODO (#design-lab): replace alert with actual overlay when Design Lab is implemented
-      alert("Design Lab — not yet implemented.");
+      renderLabPreview();
+      showOverlay("design-lab-overlay");
     };
 
     if (anchor && anchor.parentNode) {

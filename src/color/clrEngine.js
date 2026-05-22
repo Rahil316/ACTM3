@@ -175,6 +175,10 @@ function scaleMaker(hexIn, scaleLength, scaleAlgo) {
   scaleAlgo = scaleAlgo || "Natural";
   const hue = hexToHue(hexIn);
   const satu = hexToSat(hexIn);
+  if (hue === null || satu === null) {
+    console.warn("scaleMaker: invalid hex input", hexIn, "— returning black scale");
+    return Array(scaleLength).fill("#000000");
+  }
   const N = scaleLength;
 
   // Geometric luminance range — C_max is the contrast ratio of the lightest vs darkest step.
@@ -267,7 +271,7 @@ function _generateScales(colors, scaleLength, scaleAlgo, stepNames, themes, useU
     const scale = Object.create(null);
     collection[color.name] = scale;
     for (let i = 0; i < scaleLength; i++) {
-      const value = normalizeHex(scaleData[i]);
+      const value = normalizeHex(scaleData[i]) || "#000000";
       const step = names[i];
       const contrast = {};
       for (const { key, bg } of themeBgs) {
@@ -356,7 +360,7 @@ function _processScaleMode(color, mode, config, scales, groupOutput, errors) {
 function _mapByIndex(color, role, variations, scale, stepNames, modeName, output) {
   const targets = role.variationTargets || variations.map((_, i) => Math.floor((stepNames.length * i) / Math.max(1, variations.length - 1)));
   variations.forEach((_, vi) => {
-    const idx = Math.max(0, Math.min(stepNames.length - 1, parseInt(targets[vi]) || 0));
+    const idx = Math.max(0, Math.min(stepNames.length - 1, parseInt(targets[vi], 10) || 0));
     const data = scale[stepNames[idx]];
     output[vi] = {
       tokenName: `${color.name}-${role.name}-${vi}`,
@@ -425,7 +429,7 @@ function _mapByScaleContrast(color, role, variations, scale, stepNames, modeName
 
 /** hex → [R_lin, G_lin, B_lin] via srgbLinearize */
 function _h2lr(hex) {
-  const n = parseInt(hex.replace("#", ""), 16);
+  const n = parseInt((normalizeHex(hex) || "#000000").replace("#", ""), 16);
   return [srgbLinearize((n >> 16) & 255), srgbLinearize((n >> 8) & 255), srgbLinearize(n & 255)];
 }
 
@@ -765,11 +769,13 @@ function _targetChroma(L, srcL, srcC, _srcH, mode) {
  */
 function _searchL(bgLum, targetContrast, lo, hi, getHexAtL) {
   let bestL = null;
+  let failedConversions = 0;
   for (let i = 0; i < MAX_ITER; i++) {
     if (hi - lo < L_EPS) break;
     const mid = (lo + hi) / 2;
     const hex = getHexAtL(mid);
     if (!hex) {
+      if (++failedConversions > 8) { console.warn("_searchL: too many failed hex conversions, aborting search"); break; }
       lo = mid;
       continue;
     }
@@ -801,7 +807,7 @@ function solveColorForContrast(sourceHex, targetContrast, bgHex, solverMode) {
   solverMode = SOLVER_MODES.includes(solverMode) ? solverMode : "natural";
   const src = hexToOklch(sourceHex);
   const bgLum = _lumOfHex(bgHex);
-  const bgIsLight = bgLum > 0.18; // perceptual threshold — not 0.5, dark bg needs much less L shift
+  const bgIsLight = bgLum > 0.18; // equal-contrast point: sqrt(0.05 * 1.05) - 0.05 ≈ 0.179 — luminance where contrast to black equals contrast to white
 
   // Pre-check: black/white is the theoretical max contrast against any bg
   const maxTheoreticalContrast = _wcagContrast(bgLum, bgIsLight ? 0 : 1);

@@ -42,6 +42,27 @@ function renderSuccessDialog(tally) {
   slot.appendChild(inner);
 }
 
+function renderValidationWarningDialog(issues, onContinue) {
+  const slot = document.getElementById("error-overlay");
+  if (!slot) return;
+  slot.innerHTML = "";
+
+  slot.appendChild(el("div", { class: "w-16 h-16 bg-[var(--warning)]/10 rounded-full flex items-center justify-center text-[var(--warning)]" }, [Icons.AlertTriangle]));
+  slot.appendChild(el("h2", { class: "text-xl font-bold text-[var(--text-primary)]" }, `${issues.length} issue${issues.length > 1 ? "s" : ""} found`));
+  slot.appendChild(el("p", { class: "text-[var(--text-muted)] text-[12px] text-center" }, "These may corrupt variables in Figma. Review before continuing."));
+
+  const list = el("ul", { class: "w-full text-left space-y-2 max-h-48 overflow-y-auto" });
+  issues.forEach((msg) => {
+    list.appendChild(el("li", { class: "text-[12px] text-[var(--text-secondary)] bg-[var(--warning)]/5 border border-[var(--warning)]/20 rounded-[6px] px-3 py-2" }, msg));
+  });
+  slot.appendChild(list);
+
+  slot.appendChild(el("div", { class: "flex gap-2 w-full" }, [
+    el("button", { onclick: () => hideOverlay("error-overlay"), class: "flex-1 h-[36px] px-4 text-[12px] font-medium rounded-[8px] bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-all" }, "Go back"),
+    el("button", { onclick: () => { hideOverlay("error-overlay"); onContinue(); }, class: "flex-1 h-[36px] px-4 text-[12px] font-medium rounded-[8px] bg-[var(--warning)] text-white hover:opacity-90 cursor-pointer transition-all border-0" }, "Continue Anyway"),
+  ]));
+}
+
 function renderErrorDialog(message) {
   const slot = document.getElementById("error-overlay");
   if (!slot) return;
@@ -80,7 +101,7 @@ function renderRunDialog() {
     // Output options
     el("div", { class: "space-y-2" }, [
       panelUI.sectionLabel("OUTPUT OPTIONS"),
-      el("div", { id: "embed-colors-directly", class: "items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
+      el("div", { id: "embed-colors-directly", class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
         el("div", {}, [
           el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Embed Colors Directly"),
           el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "Write hex values into tokens instead of referencing the color scales"),
@@ -105,6 +126,10 @@ function renderRunDialog() {
       el("div", { class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
         el("div", {}, [el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Variations"), el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. Darker → dk")]),
         panelUI.togglePill("rd-toggle-useShorthandVariations", () => { toggleBoolSetting("useShorthandVariations"); refreshRunDialog(); }),
+      ]),
+      el("div", { class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
+        el("div", {}, [el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Steps"), el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. 500 → 5")]),
+        panelUI.togglePill("rd-toggle-useShorthandSteps", () => { toggleBoolSetting("useShorthandSteps"); refreshRunDialog(); }),
       ]),
       el("div", { class: "bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-3 py-2" }, [
         el("p", { class: "text-[11px] text-[var(--text-muted)]" }, "Example variable name:"),
@@ -148,25 +173,12 @@ function renderRunDialog() {
 }
 
 function _buildImportWarningIcon() {
-  const warnSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  warnSvg.setAttribute("width", "40"); warnSvg.setAttribute("height", "40");
-  warnSvg.setAttribute("viewBox", "0 0 24 24"); warnSvg.setAttribute("fill", "none");
-  warnSvg.setAttribute("stroke", "currentColor"); warnSvg.setAttribute("stroke-width", "2.5");
-  warnSvg.innerHTML = `<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>`;
-  const wrap = el("div", { class: "w-20 h-20 bg-[var(--warning)]/10 rounded-full flex items-center justify-center text-[var(--warning)]" });
-  wrap.appendChild(warnSvg);
-  return wrap;
+  return el("div", { class: "w-20 h-20 bg-[var(--warning)]/10 rounded-full flex items-center justify-center text-[var(--warning)]" }, [Icons.AlertTriangle]);
 }
 
 // ── FIGMA SYNC ────────────────────────────────────────────────────────────────
 
-function handleSubmit(scope = "all") {
-  const dupError = validateState();
-  if (dupError) {
-    renderErrorDialog(dupError);
-    showOverlay("error-overlay");
-    return;
-  }
+function _proceedToCollectionCheck(scope) {
   pendingScope = scope;
   parent.postMessage(
     {
@@ -180,6 +192,16 @@ function handleSubmit(scope = "all") {
     },
     "*",
   );
+}
+
+function handleSubmit(scope = "all") {
+  const issues = validateState();
+  if (issues) {
+    renderValidationWarningDialog(issues, () => _proceedToCollectionCheck(scope));
+    showOverlay("error-overlay");
+    return;
+  }
+  _proceedToCollectionCheck(scope);
 }
 
 function proceedWithSync() {
@@ -203,14 +225,28 @@ function refreshRunDialog() {
   const existing = lastCollectionCheckResult;
   const colorName = appState.scaleCollectionName || "_scale";
   const tokenColName = appState.tokenCollectionName || "color tokens";
-  const isDirect = appState.pluginMode === "direct";
-  const skipScales = appState.resolveTokensDirectly || isDirect;
+  const isDirect = isDirectMode();
+  const skipScales = appState.resolveTokensDirectly || isDirect || appState.includeColorScalesCollection === false;
   const tg = appState.tokenGrouping || "color";
   const shortC = appState.useShorthandColors;
   const shortR = appState.useShorthandRoles;
   const scope = pendingScope || "all";
 
-  syncOutputToggles();
+  const rdToggleKeys = [
+    ["rd-toggle-resolveTokensDirectly", "resolveTokensDirectly"],
+    ["rd-toggle-useShorthandColors",    "useShorthandColors"],
+    ["rd-toggle-useShorthandRoles",     "useShorthandRoles"],
+    ["rd-toggle-useShorthandVariations","useShorthandVariations"],
+    ["rd-toggle-useShorthandSteps",     "useShorthandSteps"],
+  ];
+  rdToggleKeys.forEach(function(pair) {
+    var btn = document.getElementById(pair[0]);
+    if (btn) btn.classList.toggle("on", !!appState[pair[1]]);
+  });
+  var tgColorBtn = document.getElementById("rd-seg-group-color");
+  var tgRoleBtn  = document.getElementById("rd-seg-group-role");
+  if (tgColorBtn) tgColorBtn.classList.toggle("active", tg !== "role");
+  if (tgRoleBtn)  tgRoleBtn.classList.toggle("active",  tg === "role");
 
   const scopeSection = document.getElementById("rd-scope-section");
   if (scopeSection) scopeSection.classList.toggle("hidden", isDirect);
@@ -252,7 +288,8 @@ function refreshRunDialog() {
   const sampleRole = appState.roles[0] || { name: "Text", shorthand: "tx" };
   const cLabel = shortC ? sampleColor.shorthand || sampleColor.name : sampleColor.name;
   const rLabel = shortR ? sampleRole.shorthand || sampleRole.name : sampleRole.name;
-  const stepLabel = appState.variations && appState.variations[2] ? (appState.useShorthandVariations && appState.variations[2].shorthand ? appState.variations[2].shorthand : appState.variations[2].name) : "3";
+  const sampleVar = (appState.variations && appState.variations[2]) || (appState.variations && appState.variations[0]);
+  const stepLabel = sampleVar ? (appState.useShorthandVariations && sampleVar.shorthand ? sampleVar.shorthand : sampleVar.name) : "default";
   const exName = tg === "role" ? `${rLabel}/${cLabel}/${stepLabel}` : `${cLabel}/${rLabel}/${stepLabel}`;
   const previewEl = document.getElementById("rd-name-preview");
   if (previewEl) previewEl.textContent = exName;
@@ -296,6 +333,7 @@ function refreshRunDialog() {
       ["Project Name", appState.name || "—"],
       [`Colors x${appState.colors.length}`, colorList],
       [`Roles x${appState.roles.length}`, roleList],
+      ["Themes", appState.themes ? appState.themes.map(function(t) { return t.name; }).join(", ") : "—"],
       ["Mode", isDirect ? "Direct" : "Scale"],
       ...(isDirect
         ? []

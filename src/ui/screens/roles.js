@@ -14,7 +14,7 @@ const renderRoles = debounce(() => {
 
     appState.roles.forEach((role, idx) => {
       const card = document.createElement("div");
-      card.className = "bg-[var(--bg-card)] rounded-[12px] border border-[var(--border)] p-3 space-y-2 mb-3 role-card-plugin";
+      card.className = "bg-[var(--bg-card)] rounded-[12px] border border-[var(--border)] p-3 space-y-2 role-card-plugin";
 
       bindDragDrop(card, idx, {
         cardSelector: ".role-card-plugin",

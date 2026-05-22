@@ -100,7 +100,6 @@
         padding: 0;
       }
       .settings-card {
-        margin: 12px;
         padding: 14px;
         background: var(--bg-panel);
         border-radius: 12px;
@@ -341,6 +340,7 @@
         <div class="flex gap-1 items-center">
           <button id="btn-more" title="More Options" class="bg-[var(--bg-input)] hover:bg-[var(--bg-hover)] w-10 h-10 flex items-center justify-center rounded-full transition-colors text-[var(--text-primary)]"></button>
           <button id="btn-import" title="Import JSON" class="bg-[var(--bg-input)] hover:bg-[var(--bg-hover)] w-10 h-10 flex items-center justify-center rounded-full transition-colors text-[var(--text-primary)]"></button>
+          <button id="btn-version" title="Save Version" class="bg-[var(--bg-input)] hover:bg-[var(--bg-hover)] w-10 h-10 flex items-center justify-center rounded-full transition-colors text-[var(--text-primary)]"></button>
           <button id="btn-settings" title="Settings" class="bg-[var(--bg-input)] hover:bg-[var(--bg-hover)] w-10 h-10 flex items-center justify-center rounded-full transition-colors text-[var(--text-primary)]"></button>
           <button id="btn-run" class="bg-[var(--accent)] hover:opacity-90 flex items-center gap-2 px-5 h-10 rounded-full transition-all font-semibold text-[13px] text-white shadow-[0_4px_12px_var(--accent-glow)]"></button>
         </div>
@@ -354,8 +354,8 @@
           <button class="sidebar-tab-btn" data-tab="roles-config">Roles</button>
           <button class="sidebar-tab-btn" data-tab="preview">Preview</button>
         </div>
-        <main class="flex-1 overflow-y-auto p-3 space-y-2">
-          <div id="sidebar-content-container" class="gap-2"></div>
+        <main class="flex-1 overflow-y-auto">
+          <div id="sidebar-content-container" class="p-3 space-y-3"></div>
         </main>
       </div>
 
@@ -366,7 +366,7 @@
           <button class="preview-tab-btn active" data-target="preview-colors">Palette</button>
           <!-- theme tabs injected here by renderPreviewTabs() -->
         </div>
-        <div id="preview-content" class="flex-1 overflow-y-auto">
+        <div id="preview-content" class="flex-1 overflow-y-auto p-3">
           <div class="p-2">
             <div id="preview-colors" class="preview-panel active"></div>
             <div id="preview-theme-panels"></div>
@@ -401,12 +401,12 @@
         <div class="flex-1 overflow-y-auto">
           <!-- ── TOKEN SETTINGS ── -->
           <div class="settings-panel" data-panel="tokens">
-            <div id="settings-panel-tokens"></div>
+            <div id="settings-panel-tokens" class="p-3 space-y-3"></div>
           </div>
 
           <!-- ── PLUGIN ── -->
           <div class="settings-panel hidden" data-panel="plugin">
-            <div id="settings-panel-plugin"></div>
+            <div id="settings-panel-plugin" class="p-3 space-y-3"></div>
           </div>
         </div>
       </div>
@@ -486,6 +486,7 @@
             "btn-import": Icons.Import,
             "btn-preview": Icons.Preview,
             "btn-run": Icons.Run + '<span class="text-[14px] font-bold">Run</span>',
+            "btn-version": Icons.Bookmark,
             "btn-settings": Icons.Settings,
             "opt-save-config-icon": Icons.Save,
             "opt-export-css-icon": Icons.Code,
@@ -511,7 +512,13 @@
       <div id="confirm-clear-overlay"  class="hidden absolute inset-0 bg-[var(--bg-app)]/95 backdrop-blur-sm z-[60] flex items-center justify-center p-6 text-center flex-col gap-6"></div>
 
       <!-- Theme Shop overlay — rendered by screens/themeShop.js -->
-      <div id="theme-shop-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)] z-[70] flex flex-col"></div>
+      <div id="theme-shop-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)] z-[90] flex flex-col"></div>
+
+      <!-- Quick Start overlay — shown on first launch and after reset -->
+      <div id="quickstart-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)] z-[80] flex flex-col items-center justify-center gap-6 p-8 text-center"></div>
+
+      <!-- Design Lab overlay — betaLab experimental preview redesign -->
+      <div id="design-lab-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)] z-[95] flex flex-col"></div>
     </div>
 
     <!-- Hidden File Input for Import -->
@@ -537,18 +544,20 @@
     <script src="src/ui/screens/colors.js"></script>
     <script src="src/ui/screens/roles.js"></script>
     <script src="src/ui/screens/project.js"></script>
-    <script src="src/ui/screens/presets/tw.js"></script>
-    <script src="src/ui/screens/presets/material.js"></script>
-    <script src="src/ui/screens/presets/radix.js"></script>
-    <script src="src/ui/screens/presets/apple.js"></script>
-    <script src="src/ui/screens/presets/tailwind.js"></script>
-    <script src="src/ui/screens/presets/carbon.js"></script>
-    <script src="src/ui/screens/presets/polaris.js"></script>
-    <script src="src/ui/screens/presets/blank.js"></script>
-    <script src="src/ui/screens/presets/index.js"></script>
+    <script src="src/presets/tw.js"></script>
+    <script src="src/presets/material.js"></script>
+    <script src="src/presets/atlassian.js"></script>
+    <script src="src/presets/radix.js"></script>
+    <script src="src/presets/apple.js"></script>
+    <script src="src/presets/tailwind.js"></script>
+    <script src="src/presets/carbon.js"></script>
+    <script src="src/presets/polaris.js"></script>
+    <script src="src/presets/blank.js"></script>
+    <script src="src/presets/index.js"></script>
     <script src="src/ui/screens/themeShop.js"></script>
     <script src="src/ui/screens/settings.js"></script>
     <script src="src/ui/screens/preview.js"></script>
+    <script src="src/ui/screens/labPreview.js"></script>
     <script src="src/ui/services/publish.js"></script>
     <script src="src/ui/runtime.js"></script>
     <script src="src/ui/betaLab.js"></script>

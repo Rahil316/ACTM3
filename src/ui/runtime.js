@@ -94,11 +94,13 @@ window.onmessage = (event) => {
       }, 50);
       return;
     }
-    if (msg.type === "save-ui-prefs-meta" || msg.type === "resize") {
+    if (msg.type === "save-ui-prefs-meta" || msg.type === "resize" || msg.type === "save-config") {
       if (msg.type === "save-ui-prefs-meta") {
         localStorage.setItem("uiPrefsMeta", JSON.stringify(msg.prefs));
       } else if (msg.type === "resize") {
         localStorage.setItem("uiPrefs", JSON.stringify({ width: msg.width, height: msg.height }));
+      } else if (msg.type === "save-config") {
+        localStorage.setItem("tw_state", JSON.stringify(msg.state));
       }
       return;
     }
@@ -122,18 +124,20 @@ window.onmessage = (event) => {
   if (msg.type === "load-config") {
     const isFirstLaunch = !msg.state || Object.keys(msg.state).length === 0;
 
-    if (isFirstLaunch && typeof PRESETS !== "undefined" && PRESETS.length > 0) {
-      // First-time user: load TW Regular (PRESETS[0]) as the starting state
-      loadState(JSON.parse(JSON.stringify(PRESETS[0].config)));
+    if (isFirstLaunch) {
+      renderColorGroups();
+      renderRoles();
+      syncInputsFromState();
+      renderQuickStart();
+      showOverlay("quickstart-overlay");
     } else {
       const incoming = msg.state;
       setSavedState(incoming);
       loadState(Object.assign({}, JSON.parse(JSON.stringify(_bootstrapConfig)), incoming));
+      renderColorGroups();
+      renderRoles();
+      syncInputsFromState();
     }
-
-    renderColorGroups();
-    renderRoles();
-    syncInputsFromState();
     return;
   }
 
@@ -164,6 +168,7 @@ window.onmessage = (event) => {
   if (msg.type === "finish") {
     setSavedState(appState);
     markClean();
+    pendingScope = "all"; // reset so Alt+Enter always triggers a full sync next time
     hideOverlay("loading-overlay");
     renderSuccessDialog(msg.tally);
     showOverlay("success-overlay");
@@ -266,6 +271,23 @@ document.addEventListener(
 // ── 5. EVENT WIRING ────────────────────────────────────────────────────────
 
 // Navigation & sheets
+function syncVersionButton() {
+  const btn = document.getElementById("btn-version");
+  if (!btn) return;
+  const blockedReason = versionSaveBlockedReason();
+  btn.setAttribute("data-tooltip", blockedReason || "Save version");
+  if (blockedReason) {
+    btn.disabled = true;
+    btn.style.opacity = "0.4";
+    btn.style.cursor = "not-allowed";
+    btn.onclick = null;
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = "";
+    btn.style.cursor = "";
+    btn.onclick = _openSaveVersionSheet;
+  }
+}
 document.getElementById("btn-settings").onclick = openSettings;
 document.getElementById("settings-cancel").onclick = () => closeSettings(true);
 document.getElementById("settings-done").onclick = () => closeSettings(false);
@@ -313,6 +335,8 @@ document.querySelectorAll(".sidebar-tab-btn").forEach((btn) => {
         firstTab.classList.add("active");
         const firstPanel = document.getElementById(firstTab.dataset.target);
         if (firstPanel) firstPanel.classList.add("active");
+        const toolbar = document.getElementById("preview-theme-toolbar");
+        if (toolbar) toolbar.style.display = firstTab.dataset.target === "preview-colors" ? "none" : "flex";
       }
       document.getElementById("main-nav-area").classList.add("hidden");
       const ps = document.getElementById("preview-screen");
@@ -336,27 +360,26 @@ if (document.getElementById("btn-export-csv")) document.getElementById("btn-expo
 if (document.getElementById("btn-export-scss")) document.getElementById("btn-export-scss").onclick = exportToSCSS;
 if (document.getElementById("btn-export-json")) document.getElementById("btn-export-json").onclick = exportConfig;
 
-// Reset to defaults
+// Reset to defaults → show Quick Start
 document.getElementById("opt-clear").onclick = () => {
   createDialogue("confirm-clear-overlay", {
     title: "Reset to defaults",
-    body:  "This will reset the system to defaults. This cannot be undone.",
+    body:  "This will clear all colors, roles, themes and settings. This cannot be undone.",
     buttons: [
       { label: "Cancel" },
       {
         label: "Clear All",
         variant: "danger-solid",
         action: () => {
-          const resetConfig = (typeof PRESETS !== "undefined" && PRESETS.length > 0)
-            ? JSON.parse(JSON.stringify(PRESETS[0].config))
-            : JSON.parse(JSON.stringify(_bootstrapConfig));
-          loadState(resetConfig);
+          loadState(JSON.parse(JSON.stringify(_bootstrapConfig)));
           setSavedState(null);
           renderColorGroups();
           renderRoles();
           syncInputsFromState();
           schedulePreview();
           hideSheets();
+          renderQuickStart();
+          showOverlay("quickstart-overlay");
         },
       },
     ],
@@ -374,6 +397,8 @@ document.getElementById("preview-screen").addEventListener("click", (e) => {
   btn.classList.add("active");
   const panelEl = document.getElementById(target);
   if (panelEl) panelEl.classList.add("active");
+  const toolbar = document.getElementById("preview-theme-toolbar");
+  if (toolbar) toolbar.style.display = target === "preview-colors" ? "none" : "flex";
 });
 
 // Resize handle
@@ -429,8 +454,8 @@ _dropOverlay.ondrop = (e) => {
 
 (function () {
   function getPreviewPanelForCode(code) {
-    if (code === "Digit3") return appState.pluginMode === "direct" ? null : "preview-colors";
-    const digit = parseInt(code.replace("Digit", ""));
+    if (code === "Digit3") return isDirectMode() ? null : "preview-colors";
+    const digit = parseInt(code.replace("Digit", ""), 10);
     if (!isNaN(digit) && digit >= 4) {
       const themeIdx = digit - 4;
       const panel = document.querySelector(`#preview-theme-panels [data-theme-idx="${themeIdx}"]`);
@@ -535,11 +560,13 @@ try {
         ensureIds(parsed);
         setSavedState(parsed);
         appState = Object.assign({}, JSON.parse(JSON.stringify(_bootstrapConfig)), parsed);
+        ensureVariations();
       } catch (err) {
         console.warn("Browser boot: failed to parse saved config", err);
       }
-    } else if (typeof PRESETS !== "undefined" && PRESETS.length > 0) {
-      loadState(JSON.parse(JSON.stringify(PRESETS[0].config)));
+    } else {
+      // No saved state — show quick start on next render tick
+      setTimeout(() => { renderQuickStart(); showOverlay("quickstart-overlay"); }, 0);
     }
     const savedUiPrefs = localStorage.getItem("uiPrefsMeta");
     if (savedUiPrefs) {
@@ -558,6 +585,7 @@ try {
   syncInputsFromState();
   syncUiSettingsInputs();
   applyUiPrefs();
+  syncVersionButton();
 } catch (e) {
   console.error("Boot render failed:", e);
 }

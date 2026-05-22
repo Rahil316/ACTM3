@@ -140,7 +140,7 @@ function contrastRating(hex1, hex2) {
   const ratio = contrastRatio(hex1, hex2);
   if (ratio === null) return null;
   if (ratio < 3) return "Fail";
-  if (ratio < 4.5) return "AA Large";
+  if (ratio < 4.5) return "AA Large Text";
   if (ratio < 7) return "AA";
   return "AAA";
 }

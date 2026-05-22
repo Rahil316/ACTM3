@@ -14,8 +14,20 @@
 // ── CONSTANTS ──
 const DEFAULT_VARIATION_TARGETS = [1.5, 3.0, 4.5, 7.0, 12.0];
 
+const SOLVER_MODE_OPTIONS = [
+  ["natural",          "Balanced"],
+  ["saturated",        "Vivid"],
+  ["luminance",        "Muted"],
+  ["hue-locked",       "Hue Locked"],
+  ["chroma-maximized", "Max Chroma"],
+];
+
 function defaultVariationTargets(len) {
   return Array.from({ length: len }, (_, i) => DEFAULT_VARIATION_TARGETS[i] || 4.5);
+}
+
+function isDirectMode() {
+  return appState.pluginMode === "direct";
 }
 
 // ── IDENTITY ──
@@ -44,6 +56,8 @@ function ensureIds(state) {
 // runtime.js replaces this with PRESETS[0].config (TW Regular).
 const _bootstrapConfig = {
   name: "Token Wand",
+  description: "",
+  versions: [],
   pluginMode: "scale",
   scaleAlgorithm: "Natural",
   scaleLength: 25,
@@ -65,7 +79,7 @@ const _bootstrapConfig = {
   includeDescriptions: false,
   scaleCollectionName: "_scale",
   tokenCollectionName: "color tokens",
-  scaleStepNames: [],
+  scaleStepNames: null,
   variations: null,
   colors: [
     { name: "Primary", shorthand: "pr", value: "0066FF", description: "" },
@@ -87,6 +101,19 @@ ensureIds(_bootstrapConfig);
 // ── APP STATE ──
 let appState = JSON.parse(JSON.stringify(_bootstrapConfig));
 ensureVariations();
+
+// Snapshot of blank state for isDefaultState() — _id fields stripped since they're random per session.
+const _blankStateSnap = (() => { const s = JSON.parse(JSON.stringify(appState)); delete s.versions; return JSON.stringify(_stripIds(s)); })();
+
+function _stripIds(obj) {
+  if (Array.isArray(obj)) return obj.map(_stripIds);
+  if (obj && typeof obj === "object") {
+    const out = {};
+    for (const k of Object.keys(obj)) { if (k !== "_id") out[k] = _stripIds(obj[k]); }
+    return out;
+  }
+  return obj;
+}
 
 const UI_DIMS = {
   defaultWidth: 400,
@@ -198,26 +225,205 @@ function markClean() {
   _stateHash = _computeHash();
 }
 
+// ── SEGMENT NORMALIZATION ──
+/**
+ * Normalizes a slash-delimited Figma variable path segment string.
+ * Trims whitespace from each part, collapses consecutive slashes, and
+ * strips any leading or trailing slash. Intentional nesting ("Brand/Primary")
+ * is preserved — only malformed structure is cleaned.
+ * @param {string} str
+ * @returns {string}
+ */
+function normalizeSegment(str) {
+  if (!str || typeof str !== "string") return str;
+  return str
+    .split("/")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join("/");
+}
+
+/**
+ * Returns the number of slash-separated segments in a name.
+ * "Brand/Primary" → 2, "Text" → 1.
+ * @param {string} str
+ * @returns {number}
+ */
+function segmentDepth(str) {
+  if (!str || typeof str !== "string") return 1;
+  return str.split("/").filter(Boolean).length;
+}
+
+// ── PROJECT DESCRIPTION ──
+function updateProjectDescription(value) {
+  appState.description = value;
+}
+
+// ── VERSIONS ──
+function _relativeTime(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return "just now";
+  if (diff < 3600000) return Math.floor(diff / 60000) + "m ago";
+  if (diff < 86400000) return Math.floor(diff / 3600000) + "h ago";
+  return Math.floor(diff / 86400000) + "d ago";
+}
+
+// Returns a stable JSON snapshot of appState without versions, used for all
+// "has anything changed?" comparisons. Single source of truth — BUG-9/BUG-12.
+function _snapWithoutVersions() {
+  const snap = JSON.parse(JSON.stringify(appState));
+  delete snap.versions;
+  return snap;
+}
+
+function lastSavedVersion() {
+  const versions = appState.versions || [];
+  if (versions.length === 0) return null;
+  const snap = _snapWithoutVersions();
+  const lastSnap = JSON.parse(JSON.stringify(versions[0].state));
+  return JSON.stringify(snap) === JSON.stringify(lastSnap) ? versions[0] : null;
+}
+
+function isDefaultState() {
+  return JSON.stringify(_stripIds(_snapWithoutVersions())) === _blankStateSnap;
+}
+
+/** Returns why saving a version is blocked, or null if saving is allowed. */
+function versionSaveBlockedReason() {
+  const versions = appState.versions || [];
+  const snap = _snapWithoutVersions();
+  const snapStr = JSON.stringify(snap);
+  if (JSON.stringify(_stripIds(snap)) === _blankStateSnap) {
+    return "Nothing to save! Still at square one.";
+  }
+  if (versions.length > 0 && snapStr === JSON.stringify(versions[0].state)) {
+    return `No changes since "${versions[0].name}" (${_relativeTime(versions[0].createdAt)})`;
+  }
+  return null;
+}
+
+function _persistState() {
+  parent.postMessage({ pluginMessage: { type: "save-config", state: appState } }, "*");
+}
+
+function saveVersion(name, description) {
+  if (!name || !name.trim()) {
+    BannerManager.warn("Please give this version a name.", { autoClose: 3000 });
+    return false;
+  }
+  const reason = versionSaveBlockedReason();
+  if (reason) {
+    BannerManager.warn(reason, { autoClose: 3000 });
+    return false;
+  }
+  const snap = JSON.parse(JSON.stringify(appState));
+  delete snap.versions;
+  appState.versions = appState.versions || [];
+  appState.versions.unshift({ _id: generateId(), name: name.trim(), description, createdAt: Date.now(), state: snap });
+  _persistState();
+  return true;
+}
+
+function restoreVersion(id) {
+  const v = (appState.versions || []).find((v) => v._id === id);
+  if (!v) return;
+  const savedVersions = appState.versions;
+  try {
+    loadState(JSON.parse(JSON.stringify(v.state)));
+  } catch (e) {
+    BannerManager.warn("Failed to restore version.", { autoClose: 3000 });
+    return;
+  }
+  appState.versions = savedVersions;
+  _persistState();
+}
+
+function deleteVersion(id) {
+  appState.versions = (appState.versions || []).filter((v) => v._id !== id);
+  _persistState();
+}
+
 // ── VALIDATION ──
 /**
  * Checks appState for problems that would prevent a successful Figma sync.
  * @returns {string|null} Human-readable error message, or null if valid
  */
+/**
+ * Validates appState for problems that would corrupt a Figma sync.
+ * Returns null when clean, or an array of issue strings when problems exist.
+ * Hard blockers (no colors / no roles) return a single-item array and stop
+ * early — the rest of the checks assume at least one of each exists.
+ */
 function validateState() {
-  if (!appState.colors || appState.colors.length === 0) return "Add at least one color before running.";
-  if (!appState.roles || appState.roles.length === 0) return "Add at least one color role before running.";
+  if (!appState.colors || appState.colors.length === 0) return ["Add at least one color before running."];
+  if (!appState.roles  || appState.roles.length  === 0) return ["Add at least one role before running."];
 
+  const issues = [];
   const hasDup = (arr) => new Set(arr).size !== arr.length;
-  const colorNames = appState.colors.map((c) => c.name.trim().toLowerCase()).filter(Boolean);
-  const colorShorts = appState.colors.map((c) => (c.shorthand || "").trim().toLowerCase()).filter(Boolean);
-  const roleNames = appState.roles.map((r) => r.name.trim().toLowerCase()).filter(Boolean);
-  const roleShorts = appState.roles.map((r) => (r.shorthand || "").trim().toLowerCase()).filter(Boolean);
+  const activeVariations = appState.variations && appState.variations.length > 0 ? appState.variations : [];
 
-  if (hasDup(colorNames)) return "Two or more colors share the same name. Each color name must be unique.";
-  if (colorShorts.length && hasDup(colorShorts)) return "Two or more colors share the same shorthand. Each shorthand must be unique.";
-  if (hasDup(roleNames)) return "Two or more roles share the same name. Each role name must be unique.";
-  if (roleShorts.length && hasDup(roleShorts)) return "Two or more roles share the same shorthand. Each shorthand must be unique.";
-  return null;
+  // ── Empty names ──
+  if (appState.colors.some((c) => !c.name || !c.name.trim()))
+    issues.push("One or more colors has an empty name.");
+  if (appState.roles.some((r) => !r.name || !r.name.trim()))
+    issues.push("One or more roles has an empty name.");
+  if (activeVariations.some((v) => !v.name || !v.name.trim()))
+    issues.push("One or more variations has an empty name.");
+
+  // ── Shorthand depth must match name depth ──
+  for (const c of appState.colors) {
+    if (c.shorthand && segmentDepth(c.shorthand) !== segmentDepth(c.name))
+      issues.push(`Color "${c.name}": shorthand "${c.shorthand}" has ${segmentDepth(c.shorthand)} segment(s) but the name has ${segmentDepth(c.name)}. They must match to keep the Figma folder structure consistent (e.g. "Brand/Primary" → "br/pr").`);
+  }
+  for (const r of appState.roles) {
+    if (r.shorthand && segmentDepth(r.shorthand) !== segmentDepth(r.name))
+      issues.push(`Role "${r.name}": shorthand "${r.shorthand}" has ${segmentDepth(r.shorthand)} segment(s) but the name has ${segmentDepth(r.name)}. They must match to keep the Figma folder structure consistent.`);
+  }
+  for (const v of activeVariations) {
+    if (v.shorthand && segmentDepth(v.shorthand) !== segmentDepth(v.name))
+      issues.push(`Variation "${v.name}": shorthand "${v.shorthand}" has ${segmentDepth(v.shorthand)} segment(s) but the name has ${segmentDepth(v.name)}. They must match to keep the Figma folder structure consistent.`);
+  }
+  for (const r of appState.roles) {
+    if (!r.customVariationList || !r.customVariations) continue;
+    for (const v of r.customVariations) {
+      if (v.shorthand && segmentDepth(v.shorthand) !== segmentDepth(v.name))
+        issues.push(`Variation "${v.name}" (role "${r.name}"): shorthand "${v.shorthand}" has ${segmentDepth(v.shorthand)} segment(s) but the name has ${segmentDepth(v.name)}. They must match to keep the Figma folder structure consistent.`);
+    }
+  }
+
+  // ── Resolved label collisions ──
+  // Build the label each entity will actually produce in Figma (name or shorthand
+  // depending on the current toggle) and flag any that clash within their type.
+  const resolvedColorLabels = appState.colors.map((c) =>
+    (appState.useShorthandColors && c.shorthand ? c.shorthand : c.name).toLowerCase()
+  );
+  if (hasDup(resolvedColorLabels))
+    issues.push("Two or more colors resolve to the same Figma path with the current shorthand setting. Variables will be silently merged in Figma.");
+
+  const resolvedRoleLabels = appState.roles.map((r) =>
+    (appState.useShorthandRoles && r.shorthand ? r.shorthand : r.name).toLowerCase()
+  );
+  if (hasDup(resolvedRoleLabels))
+    issues.push("Two or more roles resolve to the same Figma path with the current shorthand setting. Variables will be silently merged in Figma.");
+
+  const resolvedVariationLabels = activeVariations.map((v) =>
+    (appState.useShorthandVariations && v.shorthand ? v.shorthand : v.name).toLowerCase()
+  );
+  if (hasDup(resolvedVariationLabels))
+    issues.push("Two or more variations resolve to the same Figma path with the current shorthand setting. Variables will be silently merged in Figma.");
+
+  // ── Raw name / shorthand uniqueness ──
+  const colorNames  = appState.colors.map((c) => c.name.trim().toLowerCase());
+  const colorShorts = appState.colors.map((c) => (c.shorthand || "").trim().toLowerCase()).filter(Boolean);
+  const roleNames   = appState.roles.map((r) => r.name.trim().toLowerCase());
+  const roleShorts  = appState.roles.map((r) => (r.shorthand || "").trim().toLowerCase()).filter(Boolean);
+
+  if (hasDup(colorNames))  issues.push("Two or more colors share the same name.");
+  if (colorShorts.length && hasDup(colorShorts)) issues.push("Two or more colors share the same shorthand.");
+  if (hasDup(roleNames))   issues.push("Two or more roles share the same name.");
+  if (roleShorts.length && hasDup(roleShorts))   issues.push("Two or more roles share the same shorthand.");
+
+  return issues.length > 0 ? issues : null;
 }
 
 // ── MUTATIONS: COLORS ──
@@ -228,7 +434,9 @@ function validateState() {
  * @param {string} value
  */
 function setColor(idx, key, value) {
+  if (!appState.colors[idx]) return;
   if (key === "value") value = sanitizeHex(value);
+  if (key === "name" || key === "shorthand") value = normalizeSegment(value);
   appState.colors[idx][key] = value;
 }
 
@@ -243,7 +451,7 @@ function setColor(idx, key, value) {
 function setRole(idx, key, value) {
   if (!appState.roles[idx]) return;
   if (key.startsWith("variationTarget:")) {
-    const vi = parseInt(key.slice("variationTarget:".length));
+    const vi = parseInt(key.slice("variationTarget:".length), 10);
     if (!appState.roles[idx].variationTargets) appState.roles[idx].variationTargets = defaultVariationTargets(appState.variations.length);
     const isIndex = appState.roles[idx].mappingMethod === "index";
     if (isIndex) {
@@ -267,6 +475,7 @@ function setRole(idx, key, value) {
     appState.roles[idx].mappingMethod = value === "index" ? "index" : "contrast";
     return;
   }
+  if (key === "name" || key === "shorthand") value = normalizeSegment(value);
   appState.roles[idx][key] = value;
 }
 
@@ -281,6 +490,7 @@ function setRoleVariation(roleIdx, varIdx, field, value) {
   const role = appState.roles[roleIdx];
   if (!role || !role.customVariations) return;
   if (varIdx < 0 || varIdx >= role.customVariations.length) return;
+  if (field === "name" || field === "shorthand") value = normalizeSegment(value);
   role.customVariations[varIdx][field] = value;
 }
 
@@ -293,6 +503,7 @@ function setRoleVariation(roleIdx, varIdx, field, value) {
  */
 function setVariation(idx, field, value) {
   if (!appState.variations[idx]) return;
+  if (field === "name" || field === "shorthand") value = normalizeSegment(value);
   appState.variations[idx][field] = value;
 }
 

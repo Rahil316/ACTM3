@@ -109,12 +109,16 @@ figma.ui.onmessage = async (msg) => {
         break;
       }
 
+      case "save-config":
+        savePluginConfig(msg.state);
+        break;
+
       case "cancel":
         figma.closePlugin();
         break;
     }
   } catch (err) {
     console.error("Plugin Error:", err);
-    figma.ui.postMessage({ type: "error", message: err.message || "Unknown error" });
+    figma.ui.postMessage({ type: "error", message: (err && err.message) || String(err) || "Unknown error" });
   }
 };

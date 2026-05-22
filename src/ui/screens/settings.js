@@ -41,10 +41,7 @@ function renderSettingsTokensPanel() {
 
     // Global solver mode selector (adaptive mode + global)
     el("div", { id: "setting-global-solver-row", class: "hidden space-y-1" }, [
-      panelUI.selectInput("setting-solverMode", [
-        ["natural","Balanced"], ["saturated","Vivid"], ["luminance","Muted"],
-        ["hue-locked","Hue Locked"], ["chroma-maximized","Max Chroma"],
-      ], "Solver"),
+      panelUI.selectInput("setting-solverMode", SOLVER_MODE_OPTIONS, "Solver"),
     ]),
 
     // Scope row (adaptive + not global)
@@ -106,6 +103,14 @@ function renderSettingsTokensPanel() {
     panelUI.smallRow("Shorthand for Roles",      panelUI.togglePill("toggle-useShorthandRoles",      () => toggleBoolSetting("useShorthandRoles"))),
     panelUI.smallRow("Shorthand for Variations", panelUI.togglePill("toggle-useShorthandVariations", () => toggleBoolSetting("useShorthandVariations"))),
     panelUI.smallRow("Shorthand for Scale Steps", panelUI.togglePill("toggle-useShorthandSteps",     () => toggleBoolSetting("useShorthandSteps"))),
+
+    el("div", { class: "pt-1 border-t border-[var(--border)] space-y-2" }, [
+      el("p", { class: "text-[12px] text-[var(--text-muted)] font-medium" }, ["Variable Structure"]),
+      panelUI.segmented([
+        { id: "seg-group-color", label: "Color / Role / Variation", onclick: () => setTokenGrouping(0) },
+        { id: "seg-group-role",  label: "Role / Color / Variation", onclick: () => setTokenGrouping(1) },
+      ]),
+    ]),
 
     el("div", { class: "pt-1 border-t border-[var(--border)] space-y-2" }, [
       el("p", { class: "text-[12px] text-[var(--text-muted)] font-medium" }, ["Token Name Format"]),
@@ -260,7 +265,7 @@ function setTokenGrouping(idx) {
 function toggleResolveTokensDirectly() {
   appState.resolveTokensDirectly = !appState.resolveTokensDirectly;
   const btn = document.getElementById("toggle-resolveTokensDirectly");
-  if (btn) btn.classList.toggle("on", !appState.resolveTokensDirectly);
+  if (btn) btn.classList.toggle("on", appState.resolveTokensDirectly);
   schedulePreview();
 }
 
@@ -295,8 +300,6 @@ function _syncTogglePills() {
       if (btn) btn.classList.toggle("on", !!appState[key]);
     });
   });
-  const mapBtn = document.getElementById("toggle-resolveTokensDirectly");
-  if (mapBtn) mapBtn.classList.toggle("on", !appState.resolveTokensDirectly);
 
   const constOpts = document.getElementById("constants-options");
   if (constOpts) constOpts.classList.toggle("hidden", !appState.includeSourceColors);
@@ -322,7 +325,7 @@ function _syncGroupingButtons() {
 }
 
 function _syncModeControls() {
-  const isDirect = appState.pluginMode === "direct";
+  const isDirect = isDirectMode();
 
   const mbScale  = document.getElementById("mode-btn-scale");
   const mbDirect = document.getElementById("mode-btn-direct");
@@ -363,25 +366,25 @@ function _syncNameFormatPreview() {
 }
 
 function syncAlgoSection() {
-  const isAdaptive = appState.pluginMode === "direct";
-  const useGlobal  = appState.useUniformAlgorithm !== false;
+  const isDirect = isDirectMode();
+  const useUniformAlgorithm  = appState.useUniformAlgorithm;
 
   const title = document.getElementById("setting-global-algo-title");
   const desc  = document.getElementById("setting-global-algo-desc");
-  if (title) title.textContent = isAdaptive ? "Global Solver" : "Global Algorithm";
-  if (desc)  desc.textContent  = isAdaptive ? "Use one solver mode for all colors and roles" : "Use one algorithm for all colors";
+  if (title) title.textContent = isDirect ? "Global Solver" : "Global Algorithm";
+  if (desc)  desc.textContent  = isDirect ? "Use one solver mode for all colors and roles" : "Use one algorithm for all colors";
 
-  // Scale algo selector: scale mode + global
+  // Scale algo selector: scale mode + not global
   const algoRow = document.getElementById("setting-global-algo-row");
-  if (algoRow) algoRow.classList.toggle("hidden", isAdaptive || !useGlobal);
+  if (algoRow) algoRow.classList.toggle("hidden", isDirect || !useUniformAlgorithm);
 
-  // Solver selector: adaptive mode + global
+  // Solver selector: direct mode + global
   const solvRow = document.getElementById("setting-global-solver-row");
-  if (solvRow) solvRow.classList.toggle("hidden", !isAdaptive || !useGlobal);
+  if (solvRow) solvRow.classList.toggle("hidden", !isDirect || !useUniformAlgorithm);
 
-  // Scope row: adaptive + not global
+  // Scope row: direct mode + not global (per-color/role solver)
   const scopeRow = document.getElementById("setting-algo-scope-row");
-  if (scopeRow) scopeRow.classList.toggle("hidden", !(isAdaptive && !useGlobal));
+  if (scopeRow) scopeRow.classList.toggle("hidden", !(isDirect && !useUniformAlgorithm));
 
   const scope    = appState.algorithmScopeLevel || "color";
   const colorBtn = document.getElementById("algo-scope-btn-color");

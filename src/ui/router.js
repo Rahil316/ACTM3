@@ -11,6 +11,7 @@
 function toggleSection(id, event) {
   if (event && event.target.closest("button")) return;
   const section = document.getElementById(id);
+  if (!section) return;
   const isCollapsed = section.classList.toggle("collapsed");
   const trigger = section.querySelector('[role="button"]');
   if (trigger) trigger.setAttribute("aria-expanded", !isCollapsed);
@@ -20,6 +21,7 @@ function toggleSection(id, event) {
 
 function showSheet(id) {
   const sheet = document.getElementById(id);
+  if (!sheet) return;
   sheet.removeAttribute("inert");
   sheet.classList.add("open");
   document.getElementById("overlay").classList.add("active");
@@ -36,11 +38,15 @@ function hideSheets() {
 }
 
 function showOverlay(id) {
-  document.getElementById(id).classList.remove("hidden");
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove("hidden");
 }
 
 function hideOverlay(id) {
-  document.getElementById(id).classList.add("hidden");
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add("hidden");
   if (id === "success-overlay" || id === "error-overlay") hideSheets();
 }
 
@@ -104,7 +110,10 @@ function createDialogue(targetID, {
       ])
     );
 
-    hideSheets();
+    // Close other open sheets without closing the target, then open it directly.
+    document.querySelectorAll(".bottom-sheet").forEach((s) => {
+      if (s.id !== targetID) { s.classList.remove("open"); s.setAttribute("inert", ""); }
+    });
     showSheet(targetID);
     return;
   }

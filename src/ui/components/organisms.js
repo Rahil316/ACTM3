@@ -187,24 +187,20 @@ const Components = {
     ]),
 
   _ColorSolverRow: (group, idx, config) => {
-    if (config.pluginMode !== "direct") return null;
+    if (!isDirectMode()) return null;
     if (config.useUniformAlgorithm !== false) return null;
     if (config.algorithmScopeLevel === "role") return null;
     const mode = group.solverMode || "natural";
     return el("div", { class: "space-y-1" }, [
       el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium" }, "Color Solver"),
-      el("select", { onchange: (e) => updateGroup(idx, "solverMode", e.target.value), class: "w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px] outline-none" }, [
-        el("option", { value: "natural",          selected: mode === "natural"          ? "selected" : null }, "Balanced"),
-        el("option", { value: "saturated",        selected: mode === "saturated"        ? "selected" : null }, "Vivid"),
-        el("option", { value: "luminance",        selected: mode === "luminance"        ? "selected" : null }, "Muted"),
-        el("option", { value: "hue-locked",       selected: mode === "hue-locked"       ? "selected" : null }, "Hue Locked"),
-        el("option", { value: "chroma-maximized", selected: mode === "chroma-maximized" ? "selected" : null }, "Max Chroma"),
-      ]),
+      el("select", { onchange: (e) => updateGroup(idx, "solverMode", e.target.value), class: "w-full h-[40px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] p-2 text-[13px] outline-none" },
+        SOLVER_MODE_OPTIONS.map(([val, label]) => el("option", { value: val, selected: mode === val ? "selected" : null }, label))
+      ),
     ]);
   },
 
   _ColorAlgoRow: (group, idx, config) => {
-    if (config.pluginMode === "direct") return null;
+    if (isDirectMode()) return null;
     if (config.useUniformAlgorithm) return null;
     const algo = group.scaleAlgorithm || config.scaleAlgorithm || "Natural";
     const opts = ["Natural", "Uniform", "Expressive", "Symmetric", "OKLCH", "Material", "Linear"];
@@ -222,46 +218,42 @@ const Components = {
   ColorGroupCard: (group, idx, config) => [Components._ColorMainRow(group, idx, config), Components._ColorSolverRow(group, idx, config), Components._ColorAlgoRow(group, idx, config), Components._ColorDescriptionRow(group, idx, config)].filter(Boolean),
 
   _RoleAlgoRow: (role, idx, config) => {
-    if (config.useUniformAlgorithm || config.pluginMode !== "direct" || config.algorithmScopeLevel !== "role") return null;
+    if (config.useUniformAlgorithm || !isDirectMode() || config.algorithmScopeLevel !== "role") return null;
     const mode = role.solverMode || config.solverMode || "natural";
     return el("div", { class: "space-y-1 mt-2 pt-2 border-t border-[var(--border)]" }, [
       el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium" }, "Solver"),
       el("select", {
         onchange: (e) => setRole(idx, "solverMode", e.target.value),
         class: "w-full h-[36px] bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-2 text-[12px] outline-none appearance-none cursor-pointer text-[var(--text-primary)]",
-      }, [
-        el("option", { value: "natural",          selected: mode === "natural"          ? "selected" : null }, "Balanced"),
-        el("option", { value: "saturated",        selected: mode === "saturated"        ? "selected" : null }, "Vivid"),
-        el("option", { value: "luminance",        selected: mode === "luminance"        ? "selected" : null }, "Muted"),
-        el("option", { value: "hue-locked",       selected: mode === "hue-locked"       ? "selected" : null }, "Hue Locked"),
-        el("option", { value: "chroma-maximized", selected: mode === "chroma-maximized" ? "selected" : null }, "Max Chroma"),
-      ]),
+      },
+        SOLVER_MODE_OPTIONS.map(([val, label]) => el("option", { value: val, selected: mode === val ? "selected" : null }, label))
+      ),
     ]);
   },
 
   // --- ROLE COMPONENTS ---
   RoleGroupCard: (role, idx, config) => {
     const ui = _getRoleUI(role._id);
-    const useGlobal = !role.customVariationList;
-    const vars = useGlobal ? config.variations || [] : role.customVariations || [];
+    const useCommonVariations =! role.customVariationList;
+    const vars = useCommonVariations ? config.variations || [] : role.customVariations || [];
 
     // ── TABLE ──
     function buildTable() {
       const roLabelCls = "text-[11px] px-1.5 text-[var(--text-muted)] truncate";
-      const cols = useGlobal ? "16px 1fr 88px" : `16px 1fr 56px 88px 24px`;
-      const hdrCols = useGlobal ? ["#", "Variation", "Min Contrast"] : ["#", "Name", "Short", "Min Contrast", ""];
+      const cols = useCommonVariations ? "16px 1fr 88px" : `16px 1fr 56px 88px 24px`;
+      const hdrCols = useCommonVariations ? ["#", "Variation", "Min Contrast"] : ["#", "Name", "Short", "Min Contrast", ""];
 
       const rows = vars.map((v, vi) => {
         const tgtVal = (role.variationTargets || [])[vi] !== undefined ? role.variationTargets[vi] : 4.5;
 
-        const nameCell = useGlobal
+        const nameCell = useCommonVariations
           ? el("span", { class: roLabelCls }, `${v.name || "—"}${v.shorthand ? ` (${v.shorthand})` : ""}`)
           : panelUI.input({
               value: v.name || "", size: "table",
               oninput: (e) => (role.customVariationList ? updateRoleVariation(idx, vi, "name", e.target.value) : updateSharedVariation(vi, "name", e.target.value)),
             });
 
-        const shortCell = useGlobal
+        const shortCell = useCommonVariations
           ? null
           : panelUI.input({
               value: v.shorthand || "", size: "table",
@@ -274,7 +266,7 @@ const Components = {
           onchange: (e) => updateRoleVariationTarget(idx, vi, e.target.value),
         });
 
-        const rmBtn = !useGlobal
+        const rmBtn = !useCommonVariations
           ? inputsUI.btn("ghost", {
               size: "xs",
               square: true,
@@ -295,7 +287,7 @@ const Components = {
         );
       });
 
-      const addRow = !useGlobal
+      const addRow = !useCommonVariations
         ? el("div", { class: "flex px-2 py-1.5 border-t border-[var(--border)]/40" }, [
             inputsUI.btn("ghost", {
               size: "sm",
@@ -337,14 +329,14 @@ const Components = {
     const scopeBadge = el(
       "span",
       {
-        class: `text-[10px] px-1.5 py-0.5 rounded-full font-medium select-none ${!canOverride ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${useGlobal ? "bg-[var(--bg-hover)] text-[var(--text-muted)]" : "bg-[var(--accent)]/15 text-[var(--accent)]"}`,
-        title: !canOverride ? "Enable Role-specific Variations in Settings → Roles to override per role" : useGlobal ? "Click to use role-specific variations" : "Click to use global variations",
+        class: `text-[10px] px-1.5 py-0.5 rounded-full font-medium select-none ${!canOverride ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${useCommonVariations ? "bg-[var(--bg-hover)] text-[var(--text-muted)]" : "bg-[var(--accent)]/15 text-[var(--accent)]"}`,
+        title: !canOverride ? "Enable Role-specific Variations in Settings → Roles to override per role" : useCommonVariations ? "Click to use role-specific variations" : "Click to use global variations",
         onclick: (e) => {
           e.stopPropagation();
           if (canOverride) toggleRoleVariationOverride(idx);
         },
       },
-      useGlobal ? "Global" : "Role",
+      useCommonVariations ? "Global" : "Role",
     );
 
     const header = el(

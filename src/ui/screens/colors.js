@@ -60,7 +60,7 @@ const renderColorGroups = debounce(() => {
 
     appState.colors.forEach((group, idx) => {
       const card = document.createElement("div");
-      card.className = "bg-[var(--bg-card)] rounded-[12px] border border-[var(--border)] p-3 space-y-2 mb-3 color-group-card-plugin shadow-sm hover:shadow-md transition-all group relative overflow-hidden";
+      card.className = "bg-[var(--bg-card)] rounded-[12px] border border-[var(--border)] p-3 space-y-2 color-group-card-plugin shadow-sm hover:shadow-md transition-all group relative overflow-hidden";
 
       bindDragDrop(card, idx, {
         cardSelector: ".color-group-card-plugin",

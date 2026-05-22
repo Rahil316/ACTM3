@@ -80,15 +80,18 @@ const _PRESET_COLORS = [
   { name: "Tangerine",  shorthand: "tg", value: "F28500" },
 ];
 
-function _nextPresetColor() {
-  const usedNames = new Set(appState.colors.map((c) => c.name.toLowerCase()));
-  const usedShorthands = new Set(appState.colors.map((c) => (c.shorthand || "").toLowerCase()));
-  const available = _PRESET_COLORS.filter(
+function _nextFromPreset(pool, existing, fallback) {
+  const usedNames = new Set(existing.map((x) => x.name.toLowerCase()));
+  const usedShorthands = new Set(existing.map((x) => (x.shorthand || "").toLowerCase()));
+  const available = pool.filter(
     (p) => !usedNames.has(p.name.toLowerCase()) && !usedShorthands.has(p.shorthand.toLowerCase())
   );
   if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
-  const n = appState.colors.length + 1;
-  return { name: `Color ${n}`, shorthand: `c${n}`, value: "888888" };
+  return fallback(existing.length + 1);
+}
+
+function _nextPresetColor() {
+  return _nextFromPreset(_PRESET_COLORS, appState.colors, (n) => ({ name: `Color ${n}`, shorthand: `c${n}`, value: "888888" }));
 }
 
 function addGroup() {
@@ -159,14 +162,7 @@ const _PRESET_ROLES = [
 ];
 
 function _nextPresetRole() {
-  const usedNames = new Set(appState.roles.map((r) => r.name.toLowerCase()));
-  const usedShorthands = new Set(appState.roles.map((r) => (r.shorthand || "").toLowerCase()));
-  const available = _PRESET_ROLES.filter(
-    (p) => !usedNames.has(p.name.toLowerCase()) && !usedShorthands.has(p.shorthand.toLowerCase())
-  );
-  if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
-  const n = appState.roles.length + 1;
-  return { name: `Role ${n}`, shorthand: `r${n}` };
+  return _nextFromPreset(_PRESET_ROLES, appState.roles, (n) => ({ name: `Role ${n}`, shorthand: `r${n}` }));
 }
 
 function addRole() {
@@ -290,7 +286,8 @@ function toggleRoleVariationOverride(roleIdx) {
   const role = appState.roles[roleIdx];
   role.customVariationList = !role.customVariationList;
   if (role.customVariationList && (!role.customVariations || role.customVariations.length === 0)) {
-    role.customVariations = appState.variations.map((v) => Object.assign({}, v, { _id: generateId() }));
+    // Preserve _id from global variations so the rename tracker can match them across syncs.
+    role.customVariations = appState.variations.map((v) => Object.assign({}, v));
   }
   renderRoles();
   schedulePreview();

@@ -12,21 +12,21 @@ function renderThemeShop() {
 
   // Header
   overlay.appendChild(
-    el("div", { class: "flex items-center justify-between px-4 py-3 border-b border-[var(--border)] shrink-0" }, [
+    el("div", { class: "flex items-center gap-3 px-3 py-3 border-b border-[var(--border)] shrink-0" }, [
+      el("button", {
+        onclick: () => overlay.classList.add("hidden"),
+        class: "w-8 h-8 flex items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors shrink-0",
+        title: "Back",
+      }, [Icons.ChevronLeft]),
       el("div", {}, [
         el("h2", { class: "text-[15px] font-semibold text-[var(--text-primary)]" }, ["Design System Presets"]),
         el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, ["Load a preset and start using it — everything is editable after loading."]),
       ]),
-      el("button", {
-        onclick: () => overlay.classList.add("hidden"),
-        class: "w-8 h-8 flex items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors text-[18px] leading-none",
-        title: "Close",
-      }, ["×"]),
     ])
   );
 
   // shopList
-  const shopList = el("div", { class: "p-2 space-y-2 overflow-y-auto flex-1" });
+  const shopList = el("div", { class: "p-2 grid grid-cols-1 min-[520px]:grid-cols-2 gap-2 overflow-y-auto flex-1 content-start" });
   PRESETS.forEach((preset) => shopList.appendChild(_presetCard(preset)));
   overlay.appendChild(shopList);
 
@@ -39,9 +39,10 @@ function renderThemeShop() {
 // ── Theme Shop Card ─────────────────────────────────────────────────────────
 function _presetCard(preset) {
   const isTW = preset.badge === "TW";
-  return el("div", { class: "bg-[var(--bg-panel)] rounded-xl border-[var(--border)] flex flex-col gap-1.5 p-2" }, [
-    // Badge + name row
-    el("div", { class: "flex items-start justify-between gap-1" }, [
+  const isLoaded = appState._presetId && appState._presetId === preset.id;
+  return el("div", { class: `bg-[var(--bg-panel)] rounded-xl border flex flex-col gap-1.5 p-3 ${isLoaded ? "border-[var(--accent)]" : "border-[var(--border)]"}` }, [
+    // Badge + name row with load button on the right
+    el("div", { class: "flex items-start justify-between gap-2" }, [
       el("div", {}, [
         el("div", { class: "flex items-center gap-1.5 mb-1" }, [
           isTW
@@ -50,6 +51,16 @@ function _presetCard(preset) {
         ]),
         el("p", { class: "text-[13px] font-semibold text-[var(--text-primary)] leading-tight" }, [preset.name]),
       ]),
+      isLoaded
+        ? el("div", { class: "shrink-0 h-[28px] px-3 rounded-[7px] text-[11px] font-semibold flex items-center gap-1 bg-[var(--accent)]/10 border border-[var(--accent)] text-[var(--accent)]" }, ["✓ Loaded"])
+        : el("button", {
+            onclick: () => _loadPreset(preset),
+            class: `shrink-0 h-[28px] px-3 rounded-[7px] text-[11px] font-semibold transition-colors ${
+              isTW
+                ? "bg-[var(--accent)] hover:opacity-90 text-white"
+                : "bg-[var(--bg-input)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border)]"
+            }`,
+          }, ["Load"]),
     ]),
 
     // Swatch strip
@@ -71,16 +82,6 @@ function _presetCard(preset) {
       el("span", {}, [`${preset.config.roles.length} roles`]),
       el("span", {}, [`${preset.config.themes.length} themes`]),
     ]),
-
-    // Load button
-    el("button", {
-      onclick: () => _loadPreset(preset),
-      class: `w-full h-[30px] rounded-[7px] text-[12px] font-semibold transition-colors ${
-        isTW
-          ? "bg-[var(--accent)] hover:opacity-90 text-white"
-          : "bg-[var(--bg-input)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border)]"
-      }`,
-    }, [`Load ${preset.name}`]),
   ]);
 }
 // ── Theme Shop Swatch Strip ─────────────────────────────────────────────────
@@ -98,7 +99,9 @@ function _swatchStrip(colors) {
 // ── Theme Shop Load Preset ──────────────────────────────────────────────────
 function _loadPreset(preset) {
   loadState(preset.config);
+  appState._presetId = preset.id;
   document.getElementById("theme-shop-overlay").classList.add("hidden");
+  hideOverlay("quickstart-overlay");
 
   // Re-render all active screens
   if (typeof renderColorGroups === "function")    renderColorGroups();
@@ -106,6 +109,8 @@ function _loadPreset(preset) {
   if (typeof renderSidebarProject === "function") renderSidebarProject();
   if (typeof syncInputsFromState === "function")  syncInputsFromState();
 
-  // Switch to project tab so the user sees the loaded preset name and themes
-  if (typeof switchSidebarTab === "function") switchSidebarTab("project");
+  // Switch to palettes tab so the user can start working immediately
+  if (typeof switchSidebarTab === "function") switchSidebarTab("color-groups");
+
+  BannerManager.show({ type: "success", message: `"${preset.name}" loaded — everything is editable.`, autoClose: 3000 });
 }

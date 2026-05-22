@@ -34,11 +34,15 @@ const ExportFormatter = {
       if (!result.tokens[theme]) continue;
       for (const [colorName, roles] of Object.entries(result.tokens[theme])) {
         for (const [roleId, variations] of Object.entries(roles)) {
-          const roleName = (config.roles[roleId] && config.roles[roleId].name) || roleId;
-          for (let i = 0; i < config.variations.length; i++) {
+          const roleObj = config.roles[roleId] || {};
+          const roleName = roleObj.name || roleId;
+          const variationDefs = roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0
+            ? roleObj.customVariations
+            : config.variations;
+          for (let i = 0; i < variationDefs.length; i++) {
             const token = variations[String(i)];
             if (!token) continue;
-            const dispName = config.variations[i].shorthand || config.variations[i].name;
+            const dispName = variationDefs[i].shorthand || variationDefs[i].name;
             lines.push([csvField(colorName), csvField(roleName), csvField(dispName), csvField(theme), csvField(token.value), csvField(token.contrast ? token.contrast.ratio : ""), csvField(token.contrast ? token.contrast.rating : ""), csvField(token.isAdjusted ? "yes" : "")].join(","));
           }
         }
@@ -74,11 +78,15 @@ const ExportFormatter = {
       for (const [colorName, roles] of Object.entries(result.tokens[theme])) {
         css += `\n  /* ${colorName} */\n`;
         for (const [roleId, variations] of Object.entries(roles)) {
-          const roleName = (config.roles[roleId] && config.roles[roleId].name) || roleId;
-          for (let i = 0; i < config.variations.length; i++) {
+          const roleObj = config.roles[roleId] || {};
+          const roleName = roleObj.name || roleId;
+          const variationDefs = roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0
+            ? roleObj.customVariations
+            : config.variations;
+          for (let i = 0; i < variationDefs.length; i++) {
             const token = variations[String(i)];
             if (!token) continue;
-            const dispName = config.variations[i].shorthand || config.variations[i].name;
+            const dispName = variationDefs[i].shorthand || variationDefs[i].name;
             css += `  --${cssSlug(colorName)}-${cssSlug(roleName)}-${cssSlug(dispName)}: ${token.value};\n`;
           }
         }
@@ -92,11 +100,15 @@ const ExportFormatter = {
       css += `\n/* ── OS Dark Mode Fallback ── */\n@media (prefers-color-scheme: dark) {\n  :root:not([data-theme]) {\n`;
       for (const [colorName, roles] of Object.entries(result.tokens[darkThemeKey])) {
         for (const [roleId, variations] of Object.entries(roles)) {
-          const roleName = (config.roles[roleId] && config.roles[roleId].name) || roleId;
-          for (let i = 0; i < config.variations.length; i++) {
+          const roleObj = config.roles[roleId] || {};
+          const roleName = roleObj.name || roleId;
+          const variationDefs = roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0
+            ? roleObj.customVariations
+            : config.variations;
+          for (let i = 0; i < variationDefs.length; i++) {
             const token = variations[String(i)];
             if (!token) continue;
-            const dispName = config.variations[i].shorthand || config.variations[i].name;
+            const dispName = variationDefs[i].shorthand || variationDefs[i].name;
             css += `    --${cssSlug(colorName)}-${cssSlug(roleName)}-${cssSlug(dispName)}: ${token.value};\n`;
           }
         }
@@ -157,11 +169,15 @@ function generateScss(result, config) {
     for (const [colorName, roles] of Object.entries(result.tokens[theme])) {
       scss += `  // ${colorName}\n`;
       for (const [roleId, variations] of Object.entries(roles)) {
-        const roleName = (config && config.roles[roleId] && config.roles[roleId].name) || roleId;
-        for (let i = 0; i < configVariations.length; i++) {
+        const roleObj = (config && config.roles[roleId]) || {};
+        const roleName = roleObj.name || roleId;
+        const variationDefs = roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0
+          ? roleObj.customVariations
+          : configVariations;
+        for (let i = 0; i < variationDefs.length; i++) {
           const token = variations[String(i)];
           if (!token) continue;
-          const dispName = configVariations[i].shorthand || configVariations[i].name;
+          const dispName = variationDefs[i].shorthand || variationDefs[i].name;
           const tokenKey = `${scssSlug(colorName)}-${scssSlug(roleName)}-${scssSlug(dispName)}`;
           let scaleRef;
           if (token.tokenRef) {

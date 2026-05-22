@@ -4,7 +4,7 @@
  * consumed by themeShop.js.
  *
  * To add a new design system:
- *   1. Create src/ui/screens/presets/<system>.js  (exports a const <SYSTEM>_PRESETS array)
+ *   1. Create src/presets/<system>.js  (exports a const <SYSTEM>_PRESETS array)
  *   2. Add a <script src="..."> for it in ui.html before this file
  *   3. Spread it into PRESETS below
  *
@@ -14,6 +14,7 @@
 const PRESETS = [
   ...TW_PRESETS,
   ...MATERIAL_PRESETS,
+  ...ATLASSIAN_PRESETS,
   ...RADIX_PRESETS,
   ...APPLE_PRESETS,
   ...TAILWIND_PRESETS,
