@@ -78,19 +78,28 @@ window.onmessage = (event) => {
       const config = translateConfig(msg.state);
       const result = variableMaker(config);
       let content = "";
-      if (msg.exportType === "json") content = JSON.stringify({ config, scales: result.scales, tokens: result.tokens, errors: result.errors }, null, 2);
-      else if (msg.exportType === "csv") content = ExportFormatter.toCSV(result, config);
-      else if (msg.exportType === "css") content = ExportFormatter.toCSS(result, config);
-      else if (msg.exportType === "scss") content = generateScss(result, config);
-      
+      const et = msg.exportType;
+      if (et === "json") content = JSON.stringify({ config, scales: result.scales, tokens: result.tokens, errors: result.errors }, null, 2);
+      else if (et === "csv") content = ExportFormatter.toCSV(result, config);
+      else if (et === "css") content = ExportFormatter.toCSS(result, config);
+      else if (et === "scss") content = generateScss(result, config);
+      else if (et === "tailwind") content = fmtTailwind.config(result, config);
+      else if (et === "dtcg") content = fmtDTCG.scale(result, config);
+      else if (et === "style-dictionary") content = fmtStyleDictionary.global(result, config);
+      else if (et === "ios-swift") content = Object.keys(result.tokens || {}).map(t => fmtSwift.file(result, config, t)).join("\n\n");
+      else if (et === "android") content = Object.keys(result.tokens || {}).map(t => fmtAndroid.file(result, config, t)).join("\n\n");
+      else if (et === "rn-ts") content = fmtReactNative.index(result, config);
       setTimeout(() => {
-        window.postMessage({
-          pluginMessage: {
-            type: "processed-data-response",
-            content,
-            exportType: msg.exportType
-          }
-        }, "*");
+        window.postMessage({ pluginMessage: { type: "processed-data-response", content, exportType: msg.exportType } }, "*");
+      }, 50);
+      return;
+    }
+    if (msg.type === "request-export-bundle") {
+      const bConfig = translateConfig(msg.state);
+      const bResult = variableMaker(bConfig);
+      const bFiles = buildExportBundle(bResult, bConfig, msg.formats || [], msg.state);
+      setTimeout(() => {
+        window.postMessage({ pluginMessage: { type: "export-bundle-response", files: bFiles } }, "*");
       }, 50);
       return;
     }
@@ -178,10 +187,15 @@ window.onmessage = (event) => {
 
   if (msg.type === "processed-data-response") {
     const { content, exportType } = msg;
-    const mimeMap = { json: "application/json", css: "text/css", csv: "text/csv", scss: "text/plain" };
-    const extMap = { json: "json", css: "css", csv: "csv", scss: "scss" };
-    const typeLabel = { json: "tokens", css: "variables", csv: "token_list", scss: "tokens" };
+    const mimeMap = { json: "application/json", css: "text/css", csv: "text/csv", scss: "text/plain", tailwind: "text/javascript", dtcg: "application/json", "style-dictionary": "application/json", "ios-swift": "text/plain", android: "application/xml", "rn-ts": "text/plain" };
+    const extMap = { json: "json", css: "css", csv: "csv", scss: "scss", tailwind: "js", dtcg: "json", "style-dictionary": "json", "ios-swift": "swift", android: "xml", "rn-ts": "ts" };
+    const typeLabel = { json: "tokens", css: "variables", csv: "token_list", scss: "tokens", tailwind: "tailwind.config", dtcg: "dtcg-tokens", "style-dictionary": "sd-tokens", "ios-swift": "Colors", android: "colors", "rn-ts": "tokens" };
     triggerDownload(content, exportFileName(typeLabel[exportType] || exportType, extMap[exportType] || exportType), mimeMap[exportType] || "text/plain");
+    return;
+  }
+
+  if (msg.type === "export-bundle-response") {
+    buildAndDownloadZip(appState.name, msg.files || []);
     return;
   }
 
@@ -292,7 +306,7 @@ document.getElementById("btn-settings").onclick = openSettings;
 document.getElementById("settings-cancel").onclick = () => closeSettings(true);
 document.getElementById("settings-done").onclick = () => closeSettings(false);
 document.querySelectorAll(".settings-tab").forEach((btn) => btn.addEventListener("click", () => switchSettingsTab(btn.dataset.tab)));
-document.getElementById("btn-more").onclick = () => showSheet("more-sheet");
+document.getElementById("btn-more").onclick = () => { renderExportSheet(); showSheet("more-sheet"); };
 document.getElementById("overlay").onclick = hideSheets;
 document.getElementById("close-more").onclick = hideSheets;
 
@@ -348,13 +362,15 @@ document.querySelectorAll(".sidebar-tab-btn").forEach((btn) => {
   };
 });
 
-// Export (More sheet)
-document.getElementById("opt-save-config").onclick = () => { exportConfig(); hideSheets(); };
-document.getElementById("opt-export-css").onclick = () => { exportToCSS(); hideSheets(); };
-document.getElementById("opt-export-csv").onclick = () => { exportToCSV(); hideSheets(); };
-document.getElementById("opt-export-scss").onclick = () => { exportToSCSS(); hideSheets(); };
+// Export (More sheet) — ZIP button
+document.getElementById("btn-export-zip").onclick = () => {
+  const formats = Array.from(selectedFormats);
+  if (formats.length === 0) { BannerManager.show({ type: "warning", message: "Select at least one format.", autoClose: 2500 }); return; }
+  BannerManager.show({ type: "info", message: "Building export package…", autoClose: 3000 });
+  parent.postMessage({ pluginMessage: { type: "request-export-bundle", state: appState, formats } }, "*");
+};
 
-// Export (main tab shortcuts)
+// Export (main tab shortcuts — legacy)
 if (document.getElementById("btn-export-css")) document.getElementById("btn-export-css").onclick = exportToCSS;
 if (document.getElementById("btn-export-csv")) document.getElementById("btn-export-csv").onclick = exportToCSV;
 if (document.getElementById("btn-export-scss")) document.getElementById("btn-export-scss").onclick = exportToSCSS;

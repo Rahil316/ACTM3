@@ -101,11 +101,32 @@ figma.ui.onmessage = async (msg) => {
         const config = translateConfig(msg.state);
         const result = variableMaker(config);
         let content = "";
-        if (msg.exportType === "json") content = JSON.stringify({ config, scales: result.scales, tokens: result.tokens, errors: result.errors }, null, 2);
-        else if (msg.exportType === "csv") content = ExportFormatter.toCSV(result, config);
-        else if (msg.exportType === "css") content = ExportFormatter.toCSS(result, config);
-        else if (msg.exportType === "scss") content = generateScss(result, config);
+        const et = msg.exportType;
+        if (et === "json") content = JSON.stringify({ config, scales: result.scales, tokens: result.tokens, errors: result.errors }, null, 2);
+        else if (et === "csv") content = ExportFormatter.toCSV(result, config);
+        else if (et === "css") content = ExportFormatter.toCSS(result, config);
+        else if (et === "scss") content = generateScss(result, config);
+        else if (et === "tailwind") content = fmtTailwind.config(result, config);
+        else if (et === "dtcg") content = fmtDTCG.scale(result, config);
+        else if (et === "style-dictionary") content = fmtStyleDictionary.global(result, config);
+        else if (et === "ios-swift") {
+          const themeKeys = Object.keys(result.tokens || {});
+          content = themeKeys.map(function(t) { return fmtSwift.file(result, config, t); }).join("\n\n");
+        }
+        else if (et === "android") {
+          const themeKeys2 = Object.keys(result.tokens || {});
+          content = themeKeys2.map(function(t) { return fmtAndroid.file(result, config, t); }).join("\n\n");
+        }
+        else if (et === "rn-ts") content = fmtReactNative.index(result, config);
         figma.ui.postMessage({ type: "processed-data-response", content, exportType: msg.exportType });
+        break;
+      }
+
+      case "request-export-bundle": {
+        const bConfig = translateConfig(msg.state);
+        const bResult = variableMaker(bConfig);
+        const bFiles = buildExportBundle(bResult, bConfig, msg.formats || [], msg.state);
+        figma.ui.postMessage({ type: "export-bundle-response", files: bFiles });
         break;
       }
 

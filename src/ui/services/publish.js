@@ -403,16 +403,135 @@ function exportConfig() {
   triggerDownload(data, exportFileName("config", "wand"), "application/octet-stream");
 }
 
-function exportToCSS() {
-  parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "css" } }, "*");
+function exportToCSS()  { parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "css" } }, "*"); }
+function exportToCSV()  { parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "csv" } }, "*"); }
+function exportToSCSS() { parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "scss" } }, "*"); }
+
+function _exportSingle(formatId) {
+  if (formatId === "wand") { exportConfig(); return; }
+  parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: formatId } }, "*");
 }
 
-function exportToCSV() {
-  parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "csv" } }, "*");
+// ── EXPORT SHEET ──────────────────────────────────────────────────────────────
+
+let selectedFormats = new Set(["css", "scss", "wand"]);
+
+const FORMAT_DEFS = [
+  {
+    id: "css",         label: "CSS Variables",               subtitle: "Per-theme custom properties + :root scale",
+    color: "var(--creative)",    iconKey: "Code",
+    files: (themes) => ["css/scale.css", ...themes.map(t => "css/themes/" + t + ".css")],
+  },
+  {
+    id: "scss",        label: "SCSS",                        subtitle: "Scale vars, token maps, apply-theme mixin",
+    color: "var(--secondary)",   iconKey: "Layers",
+    files: () => ["scss/scale.scss", "scss/tokens.scss", "scss/index.scss"],
+  },
+  {
+    id: "tailwind",    label: "Tailwind Config",             subtitle: "theme.extend.colors with CSS var references",
+    color: "#0ea5e9",            iconKey: "Code",
+    files: () => ["tailwind/tailwind.config.js"],
+  },
+  {
+    id: "dtcg",        label: "W3C Design Tokens (DTCG)",    subtitle: "W3C DTCG spec — works with Tokens Studio",
+    color: "#7c3aed",            iconKey: "File",
+    files: (themes) => ["dtcg/scale.json", ...themes.map(t => "dtcg/themes/" + t + ".json")],
+  },
+  {
+    id: "style-dictionary", label: "Style Dictionary",      subtitle: "SD v3 input format — transform to any platform",
+    color: "#f59e0b",            iconKey: "File",
+    files: (themes) => ["style-dictionary/global.json", ...themes.map(t => "style-dictionary/" + t + ".json")],
+  },
+  {
+    id: "ios-swift",   label: "iOS / Swift",                 subtitle: "UIColor + SwiftUI Color static extensions",
+    color: "#64748b",            iconKey: "Code",
+    files: (themes) => themes.map(t => "ios/" + t.charAt(0).toUpperCase() + t.slice(1) + "Colors.swift"),
+  },
+  {
+    id: "android",     label: "Android XML",                 subtitle: "values/ + values-night/ color resources",
+    color: "#22c55e",            iconKey: "Code",
+    files: (themes) => ["android/res/values/colors.xml", ...themes.slice(1).map(t => "android/res/values-" + t + "/colors.xml")],
+  },
+  {
+    id: "rn-ts",       label: "React Native TypeScript",     subtitle: "Typed token objects with useTokens() helper",
+    color: "#38bdf8",            iconKey: "Code",
+    files: (themes) => ["rn/tokens/index.ts", ...themes.map(t => "rn/tokens/" + t + ".ts")],
+  },
+  {
+    id: "csv",         label: "CSV Spreadsheet",             subtitle: "Scale + role token table with contrast data",
+    color: "var(--discovery)",   iconKey: "File",
+    files: () => ["tokens.csv"],
+  },
+  {
+    id: "wand",        label: "Token Wand Config (.wand)",   subtitle: "Full plugin config — reimportable",
+    color: "var(--success)",     iconKey: "Save",
+    files: () => ["config.wand"],
+  },
+];
+
+function _themeNames() {
+  return (appState.themes || []).map(t => t.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
 }
 
-function exportToSCSS() {
-  parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "scss" } }, "*");
+function renderFormatCard(def) {
+  const themes = _themeNames();
+  const files = def.files(themes);
+  const isSelected = selectedFormats.has(def.id);
+
+  const fileTree = el("div", { class: "mt-1.5 bg-[var(--bg-app)] rounded-[6px] px-2.5 py-2 font-mono text-[10px] text-[var(--text-muted)] leading-[1.7]" },
+    files.map(f => el("div", {}, f))
+  );
+
+  const iconEl = el("div", { class: "w-7 h-7 rounded-[6px] flex items-center justify-center shrink-0", style: `background:${def.color}22; color:${def.color}` });
+  iconEl.innerHTML = Icons[def.iconKey] || "";
+
+  const checkbox = el("div", {
+    class: `w-4 h-4 rounded-[4px] border-2 shrink-0 flex items-center justify-center transition-colors ${isSelected ? "border-[var(--accent)] bg-[var(--accent)]" : "border-[var(--border)]"}`,
+  });
+  if (isSelected) checkbox.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  const exportBtn = el("button", {
+    onclick: (e) => { e.stopPropagation(); _exportSingle(def.id); BannerManager.show({ type: "info", message: "Exporting " + def.label + "…", autoClose: 2000 }); },
+    class: "shrink-0 h-[26px] px-2.5 rounded-[6px] text-[11px] font-medium border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors",
+  }, "↓ Export");
+
+  const card = el("div", {
+    "data-format-id": def.id,
+    class: `p-3 rounded-[10px] border cursor-pointer transition-all ${isSelected ? "border-[var(--accent)] bg-[var(--accent)]/5" : "border-[var(--border)] bg-[var(--bg-card)]"}`,
+    onclick: () => {
+      if (selectedFormats.has(def.id)) selectedFormats.delete(def.id);
+      else selectedFormats.add(def.id);
+      renderExportSheet();
+    },
+  }, [
+    el("div", { class: "flex items-center gap-2.5" }, [
+      checkbox,
+      iconEl,
+      el("div", { class: "flex-1 min-w-0" }, [
+        el("p", { class: "text-[13px] font-semibold text-[var(--text-primary)] leading-tight" }, def.label),
+        el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5 leading-relaxed" }, def.subtitle),
+      ]),
+      exportBtn,
+    ]),
+    fileTree,
+  ]);
+
+  return card;
+}
+
+function renderExportSheet() {
+  const list = document.getElementById("export-format-list");
+  if (!list) return;
+  list.innerHTML = "";
+  FORMAT_DEFS.forEach(def => list.appendChild(renderFormatCard(def)));
+
+  const zipBtn = document.getElementById("btn-export-zip");
+  if (zipBtn) {
+    const count = selectedFormats.size;
+    zipBtn.textContent = count > 0 ? "Export " + count + " Format" + (count > 1 ? "s" : "") + " as ZIP" : "Select formats above";
+    zipBtn.disabled = count === 0;
+    zipBtn.style.opacity = count === 0 ? "0.4" : "";
+  }
 }
 
 function triggerDownload(content, filename, mimeType) {

@@ -29,7 +29,26 @@ try {
 }
 
 console.log("Building scripts.js...");
-const jsFiles = ["color/clrUtils.js", "color/clrEngine.js", "shared/docGen.js", "shared/config.js", "figma/figmaVars.js", "figma/main.js"];
+// exportEng files are included in scripts.js (Figma sandbox) — all are ES2019-safe.
+// zipBuilder.js is UI-only and excluded from the sandbox bundle.
+const jsFiles = [
+  "color/clrUtils.js",
+  "color/clrEngine.js",
+  "shared/docGen.js",
+  "shared/config.js",
+  "shared/exportEng/helpers.js",
+  "shared/exportEng/fmtCSS.js",
+  "shared/exportEng/fmtSCSS.js",
+  "shared/exportEng/fmtTailwind.js",
+  "shared/exportEng/fmtDTCG.js",
+  "shared/exportEng/fmtStyleDictionary.js",
+  "shared/exportEng/fmtSwift.js",
+  "shared/exportEng/fmtAndroid.js",
+  "shared/exportEng/fmtReactNative.js",
+  "shared/exportEng/bundler.js",
+  "figma/figmaVars.js",
+  "figma/main.js",
+];
 const jsContent = jsFiles
   .map((f) => {
     const content = fs
@@ -57,7 +76,13 @@ html = html.replace(/<script src="src\/([^"]+)"><\/script>/g, (_, f) => {
     .trim();
   return `<script>/* ${f} */\n${content}\n</script>`;
 });
-// 2. Replace Tailwind CSS link with inlined output.css
+// 2. Inline JSZip verbatim (no comment stripping — minified code must stay intact)
+const jszipContent = fs.readFileSync(path.join(srcDir, "shared/exportEng/jszip.min.js"), "utf8");
+html = html.replace(/<script data-vendor="jszip"><\/script>/, () => {
+  return "<script>" + jszipContent + "</script>";
+});
+
+// 3. Replace Tailwind CSS link with inlined output.css
 const cssContent = fs.readFileSync(path.join(srcDir, "output.css"), "utf8");
 html = html.replace(/<link href="output.css" rel="stylesheet" \/>/g, () => {
   return "<style>\n" + cssContent + "\n</style>";

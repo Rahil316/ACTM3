@@ -412,50 +412,23 @@
       </div>
 
       <div id="more-sheet" class="bottom-sheet absolute bottom-0 left-0 right-0 bg-[var(--bg-panel)] rounded-t-[16px] border-t border-[var(--border)] z-30 max-h-[90%] flex flex-col" inert>
-        <div class="px-4 py-3 flex flex-row items-center justify-between gap-2 border-b border-[var(--border)]">
-          <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">More Options</h2>
+        <!-- Header -->
+        <div class="px-4 py-3 flex flex-row items-center justify-between gap-2 border-b border-[var(--border)] shrink-0">
+          <div>
+            <h2 class="text-[18px] font-semibold text-[var(--text-primary)]">Export</h2>
+            <p class="text-[11px] text-[var(--text-muted)]">Select formats and export as a ZIP package</p>
+          </div>
           <button id="close-more" class="h-[36px] px-3 text-[12px] font-medium rounded-[8px] bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-all">Done</button>
         </div>
-        <div class="p-2 overflow-y-auto space-y-4">
-          <!-- Export Options -->
-          <div class="space-y-1">
-            <h3 class="text-[var(--text-muted)] text-[11px] font-bold tracking-[1.2px] px-3 mb-2">Export</h3>
-            <button id="opt-save-config" class="w-full flex items-center gap-3 p-3 hover:bg-[var(--bg-hover)] rounded-[8px] transition-colors text-[var(--text-primary)]">
-              <div id="opt-save-config-icon" class="w-8 h-8 rounded-lg bg-[var(--success)]/10 flex items-center justify-center text-[var(--success)]"></div>
-              <div class="text-left">
-                <p class="text-[14px] font-medium">Export .Wand</p>
-                <p class="text-[11px] text-[var(--text-muted)]">Full plugin config — reimportable</p>
-              </div>
-            </button>
-            <button id="opt-export-css" class="w-full flex items-center gap-3 p-3 hover:bg-[var(--bg-hover)] rounded-[8px] transition-colors text-[var(--text-primary)]">
-              <div id="opt-export-css-icon" class="w-8 h-8 rounded-lg bg-[var(--creative)]/10 flex items-center justify-center text-[var(--creative)]"></div>
-              <div class="text-left">
-                <p class="text-[14px] font-medium">Export CSS Variables</p>
-                <p class="text-[11px] text-[var(--text-muted)]">CSS custom properties</p>
-              </div>
-            </button>
-            <button id="opt-export-csv" class="w-full flex items-center gap-3 p-3 hover:bg-[var(--bg-hover)] rounded-[8px] transition-colors text-[var(--text-primary)]">
-              <div id="opt-export-csv-icon" class="w-8 h-8 rounded-lg bg-[var(--discovery)]/10 flex items-center justify-center text-[var(--discovery)]"></div>
-              <div class="text-left">
-                <p class="text-[14px] font-medium">Export CSV</p>
-                <p class="text-[11px] text-[var(--text-muted)]">Color token spreadsheet</p>
-              </div>
-            </button>
-            <button id="opt-export-scss" class="w-full flex items-center gap-3 p-3 hover:bg-[var(--bg-hover)] rounded-[8px] transition-colors text-[var(--text-primary)]">
-              <div id="opt-export-scss-icon" class="w-8 h-8 rounded-lg bg-[var(--secondary)]/10 flex items-center justify-center text-[var(--secondary)]"></div>
-              <div class="text-left">
-                <p class="text-[14px] font-medium">Export SCSS</p>
-                <p class="text-[11px] text-[var(--text-muted)]">SCSS variable maps</p>
-              </div>
-            </button>
-          </div>
-
-          <div class="pt-2 border-t border-[var(--border)]">
-            <button id="opt-clear" class="w-full flex items-center gap-3 p-3 hover:bg-[var(--danger)]/10 text-[var(--danger)] rounded-[8px] transition-colors">
-              <div id="opt-clear-icon" class="w-8 h-8 rounded-lg bg-[var(--danger)]/10 flex items-center justify-center"></div>
-              <span class="text-[14px] font-bold">Clear All</span>
-            </button>
-          </div>
+        <!-- Format cards — rendered by renderExportSheet() -->
+        <div id="export-format-list" class="flex-1 overflow-y-auto p-2 space-y-1.5"></div>
+        <!-- Sticky footer -->
+        <div class="shrink-0 p-3 space-y-2 border-t border-[var(--border)]">
+          <button id="btn-export-zip" class="w-full h-[40px] px-4 text-[13px] font-semibold rounded-[8px] bg-[var(--accent)] border border-[var(--accent)] text-white hover:opacity-90 cursor-pointer transition-all">Export Selected as ZIP</button>
+          <button id="opt-clear" class="w-full flex items-center justify-center gap-2 h-[34px] px-4 text-[12px] font-medium rounded-[8px] text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors">
+            <div id="opt-clear-icon" class="w-4 h-4 flex items-center justify-center"></div>
+            Clear All Data
+          </button>
         </div>
       </div>
 
@@ -488,10 +461,6 @@
             "btn-run": Icons.Run + '<span class="text-[14px] font-bold">Run</span>',
             "btn-version": Icons.Bookmark,
             "btn-settings": Icons.Settings,
-            "opt-save-config-icon": Icons.Save,
-            "opt-export-css-icon": Icons.Code,
-            "opt-export-csv-icon": Icons.File,
-            "opt-export-scss-icon": Icons.Layers,
             "opt-clear-icon": Icons.TrashLarge,
             "drop-overlay-icon": Icons.Upload,
           };
@@ -558,9 +527,22 @@
     <script src="src/ui/screens/settings.js"></script>
     <script src="src/ui/screens/preview.js"></script>
     <script src="src/ui/screens/labPreview.js"></script>
+    <script src="src/shared/exportEng/helpers.js"></script>
+    <script src="src/shared/exportEng/fmtCSS.js"></script>
+    <script src="src/shared/exportEng/fmtSCSS.js"></script>
+    <script src="src/shared/exportEng/fmtTailwind.js"></script>
+    <script src="src/shared/exportEng/fmtDTCG.js"></script>
+    <script src="src/shared/exportEng/fmtStyleDictionary.js"></script>
+    <script src="src/shared/exportEng/fmtSwift.js"></script>
+    <script src="src/shared/exportEng/fmtAndroid.js"></script>
+    <script src="src/shared/exportEng/fmtReactNative.js"></script>
+    <script src="src/shared/exportEng/bundler.js"></script>
+    <script data-vendor="jszip"></script>
+    <script src="src/shared/exportEng/zipBuilder.js"></script>
     <script src="src/ui/services/publish.js"></script>
     <script src="src/ui/runtime.js"></script>
     <script src="src/ui/betaLab.js"></script>
     <script src="src/tests.js"></script>
+    <script src="src/tests-exports.js"></script>
   </body>
 </html>

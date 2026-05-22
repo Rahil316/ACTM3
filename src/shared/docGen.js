@@ -19,10 +19,18 @@ const ExportFormatter = {
 
     // Section 1: color scales
     lines.push("COLOR SCALES");
-    lines.push("Group,Step,Hex,Light Contrast,Light Rating,Dark Contrast,Dark Rating");
-    for (const [colorName, scale] of Object.entries(result.scales)) {
+    const scaleEntries = Object.values(result.scales || {});
+    const firstStep = scaleEntries.length ? Object.values(scaleEntries[0])[0] : null;
+    const contrastKeys = firstStep ? Object.keys(firstStep.contrast || {}) : [];
+    const scaleHeader = ["Group", "Step", "Hex", ...contrastKeys.flatMap(k => [k + " Contrast", k + " Rating"])].join(",");
+    lines.push(scaleHeader);
+    for (const [colorName, scale] of Object.entries(result.scales || {})) {
       for (const [step, entry] of Object.entries(scale)) {
-        lines.push([csvField(colorName), csvField(step), csvField(entry.value), csvField(entry.contrast.light.ratio), csvField(entry.contrast.light.rating), csvField(entry.contrast.dark.ratio), csvField(entry.contrast.dark.rating)].join(","));
+        const contrastCols = contrastKeys.flatMap(k => [
+          csvField(entry.contrast && entry.contrast[k] ? entry.contrast[k].ratio : ""),
+          csvField(entry.contrast && entry.contrast[k] ? entry.contrast[k].rating : ""),
+        ]);
+        lines.push([csvField(colorName), csvField(step), csvField(entry.value), ...contrastCols].join(","));
       }
     }
 
