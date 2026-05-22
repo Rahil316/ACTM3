@@ -1,6 +1,6 @@
 /**
  * Apple HIG preset.
- * Adaptive mode, natural solver.
+ * Direct mode, natural solver.
  * variationTargets = WCAG contrast ratios (1.0–21.0).
  *
  * Apple's semantic color system uses a 4-tier hierarchy for both labels and fills,

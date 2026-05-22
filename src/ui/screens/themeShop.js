@@ -3,8 +3,6 @@
 // To add a design system: create presets/<system>.js, add a script tag in
 // ui.html before presets/index.js, and spread it in index.js.
 
-
-
 // ── RENDERER ─────────────────────────────────────────────────────────────────
 
 function renderThemeShop() {
@@ -27,10 +25,10 @@ function renderThemeShop() {
     ])
   );
 
-  // Grid
-  const grid = el("div", { class: "p-4 grid grid-cols-2 gap-3 overflow-y-auto flex-1" });
-  PRESETS.forEach((preset) => grid.appendChild(_presetCard(preset)));
-  overlay.appendChild(grid);
+  // shopList
+  const shopList = el("div", { class: "p-2 space-y-2 overflow-y-auto flex-1" });
+  PRESETS.forEach((preset) => shopList.appendChild(_presetCard(preset)));
+  overlay.appendChild(shopList);
 
   // Keyboard close
   const onKey = (e) => {
@@ -38,10 +36,10 @@ function renderThemeShop() {
   };
   document.addEventListener("keydown", onKey);
 }
-
+// ── Theme Shop Card ─────────────────────────────────────────────────────────
 function _presetCard(preset) {
   const isCTM = preset.badge === "CTM";
-  return el("div", { class: "settings-card flex flex-col gap-2.5 p-3" }, [
+  return el("div", { class: "bg-[var(--bg-panel)] rounded-xl border-[var(--border)] flex flex-col gap-1.5 p-2" }, [
     // Badge + name row
     el("div", { class: "flex items-start justify-between gap-1" }, [
       el("div", {}, [
@@ -85,7 +83,7 @@ function _presetCard(preset) {
     }, [`Load ${preset.name}`]),
   ]);
 }
-
+// ── Theme Shop Swatch Strip ─────────────────────────────────────────────────
 function _swatchStrip(colors) {
   return el("div", { class: "flex gap-1 h-[18px]" },
     colors.map((c) =>
@@ -97,7 +95,7 @@ function _swatchStrip(colors) {
     )
   );
 }
-
+// ── Theme Shop Load Preset ──────────────────────────────────────────────────
 function _loadPreset(preset) {
   loadState(preset.config);
   document.getElementById("theme-shop-overlay").classList.add("hidden");

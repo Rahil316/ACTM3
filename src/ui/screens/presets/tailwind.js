@@ -1,27 +1,11 @@
 /**
  * Tailwind CSS preset.
- * Tonal mode, Natural algorithm, scaleLength=11.
- * variationTargets = ramp step indices 0–10 (one-to-one with Tailwind's 11 scale stops).
+ * Scale mode, Natural algorithm, scaleLength=11.
+ * variationTargets = WCAG contrast ratios matching Tailwind's 11 stop intents.
  *
  * Tailwind's color scale uses 11 named stops: 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950.
- * Each maps directly to a step index (50→0, 100→1, …, 950→10).
+ * Each variation's contrast target lines up with the contrast intent of that stop.
  * The '/' in variation names groups them under a "Scale" folder in Figma variables.
- *
- * scaleLength=11 means the engine generates exactly 11 steps per color, so variationTargets
- * are the identity mapping [0,1,2,3,4,5,6,7,8,9,10].
- *
- * Step intent reference (Natural, 11 steps):
- *   0  (50)  = 1.0–1.2:1 → near-white tint / page wash
- *   1  (100) = 1.2–1.5:1 → subtle background
- *   2  (200) = 1.5–2.0:1 → light surface
- *   3  (300) = 2.0–3.0:1 → border / placeholder
- *   4  (400) = 3.0–4.0:1 → muted icon / disabled
- *   5  (500) = 4.0–5.5:1 → primary brand fill (AA large text)
- *   6  (600) = 5.5–7.0:1 → hover state / strong fill
- *   7  (700) = 7.0–9.0:1 → pressed / AA text
- *   8  (800) = 9.0–12:1  → strong text / AAA
- *   9  (900) = 12–16:1   → near-black text
- *  10  (950) = 16–21:1   → darkest text / inverse surface
  */
 
 const TAILWIND_PRESETS = [

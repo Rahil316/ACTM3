@@ -1,19 +1,12 @@
 /**
  * Material Design 3 preset.
- * Tonal mode, Material algorithm, scaleLength=25.
- * variationTargets = ramp step indices (0–24).
+ * Scale mode, Natural algorithm, scaleLength=25.
+ * variationTargets = WCAG contrast ratios (1.0 – 21.0).
  *
  * Architecture mirrors M3's HCT tonal palette:
  *   Primary / Secondary / Tertiary / Error / Neutral
  * Role naming follows M3 token hierarchy. The '/' creates Figma folder groups
  * matching M3's published variable structure exactly.
- *
- * Step reference (Natural algo, 25-step, chromatic seed):
- *   0–4   = 1.0–1.5:1  →  surface/dim
- *   5–9   = 1.5–2.5:1  →  container tones
- *   10–14 = 2.5–5.5:1  →  variant/border tones
- *   15–19 = 5.5–13:1   →  on-container text
- *   20–24 = 13–21:1    →  on-primary / inverse text
  */
 
 const MATERIAL_PRESETS = [

@@ -1,6 +1,6 @@
 /**
  * Shopify Polaris preset.
- * Adaptive mode, natural solver.
+ * Direct mode, natural solver.
  * variationTargets = WCAG contrast ratios (1.0–21.0).
  *
  * Polaris token architecture: Background / Surface / Text / Border / Icon / Interactive.

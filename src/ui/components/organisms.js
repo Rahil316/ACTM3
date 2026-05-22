@@ -18,7 +18,7 @@ const panelUI = {
 
   // Rounded card wrapper with consistent inner spacing.
   card: (children) =>
-    el("div", { class: "settings-card space-y-3" }, children),
+    el("div", { class: "bg-[var(--bg-panel)] rounded-xl border-[var(--border)] space-y-3" }, children),
 
   // Two-column row: label+description on left, control on right.
   // descText is optional — pass null to omit the subtitle line.

@@ -1,25 +1,11 @@
 /**
  * IBM Carbon Design System preset.
- * Tonal mode, Uniform algorithm, scaleLength=10.
- * variationTargets = ramp step indices 0–9.
+ * Scale mode, Uniform algorithm, scaleLength=10.
+ * variationTargets = WCAG contrast ratios matching Carbon's 10-tone intents.
  *
  * Carbon's token architecture: Interactive > Layer > Text > Field > Border > Support.
  * The Uniform algorithm distributes lightness steps evenly — matching Carbon's
  * hand-tuned palette philosophy where step intervals are perceptually equal.
- *
- * scaleLength=10 gives Carbon's 10 tones (10→100 in Carbon's own 10-stop format).
- *
- * Step intent reference (Uniform algo, 10 steps, neutral seed):
- *   0 = 1.0:1  → White (#FFFFFF equivalent) — pure surface
- *   1 = 1.2:1  → Gray-10 subtle layer
- *   2 = 1.5:1  → Gray-20 card / field
- *   3 = 2.0:1  → Gray-30 border / muted fill
- *   4 = 2.8:1  → Gray-40 disabled / placeholder
- *   5 = 4.0:1  → Gray-50 mid (AA large text)
- *   6 = 5.5:1  → Gray-60 interactive fill
- *   7 = 7.5:1  → Gray-70 AA normal text
- *   8 = 11:1   → Gray-80 strong text / AAA
- *   9 = 18:1   → Gray-100 near-black / inverse surface
  *
  * Four Carbon themes: White, Gray-10, Gray-90, Gray-100.
  * Carbon supports all four as background contexts in a single design system.

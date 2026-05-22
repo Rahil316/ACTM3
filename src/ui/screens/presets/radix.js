@@ -1,27 +1,20 @@
 /**
  * Radix UI preset.
- * Tonal mode, OKLCH (Natural) algorithm, scaleLength=12.
- * variationTargets = ramp step indices 0–11 (one-to-one with Radix's 12 documented steps).
+ * Scale mode, Natural algorithm, scaleLength=12.
+ * variationTargets = WCAG contrast ratios matching Radix's documented step intents.
  *
- * Radix's 12-step scale has fixed semantic meanings per step index.
- * We map each variation to its step directly and name them exactly as Radix documents them.
- * The '/' in variation names creates Figma folder groups that mirror Radix's token namespace.
+ * Radix's 12-step scale has fixed semantic meanings per step.
+ * Each variation's contrast target lines up with the contrast intent Radix
+ * documents for that step. The '/' in variation names creates Figma folder
+ * groups that mirror Radix's token namespace.
  *
  * Radix step semantics (official docs):
- *   1  = App background
- *   2  = Subtle background
- *   3  = UI element background
- *   4  = Hovered UI element background
- *   5  = Active / Selected UI element background
- *   6  = Subtle borders and separators
- *   7  = UI element border and focus rings
- *   8  = Hovered UI element border
- *   9  = Solid backgrounds
- *  10  = Hovered solid backgrounds
- *  11  = Low-contrast text
- *  12  = High-contrast text
- *
- * Steps are 1-indexed in Radix docs but 0-indexed in our engine (step 1 → index 0).
+ *   1  = App background           7  = UI element border and focus rings
+ *   2  = Subtle background        8  = Hovered UI element border
+ *   3  = UI element background    9  = Solid backgrounds
+ *   4  = Hovered UI element bg   10  = Hovered solid backgrounds
+ *   5  = Active / selected bg    11  = Low-contrast text
+ *   6  = Subtle borders          12  = High-contrast text
  */
 
 const RADIX_PRESETS = [
