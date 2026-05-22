@@ -1,14 +1,14 @@
 {
-  "name": "ctm316 v1.0",
+  "name": "Token Wand",
   "id": "1634129071803950106",
   "api": "1.0.0",
-  "main": "Output_DoNotEdit/scripts.js",
+  "main": "dist/scripts.js",
   "capabilities": [],
   "enableProposedApi": false,
   "documentAccess": "dynamic-page",
   "editorType": ["figma"],
-  "ui": "Output_DoNotEdit/ui.html",
+  "ui": "dist/ui.html",
   "networkAccess": {
-    "allowedDomains": ["https://cdn.tailwindcss.com", "https://fonts.googleapis.com", "https://fonts.gstatic.com"]
+    "allowedDomains": ["https://fonts.googleapis.com", "https://fonts.gstatic.com"]
   }
 }

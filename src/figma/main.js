@@ -5,15 +5,15 @@
  * 2. Message Router
  * 3. Config Translator  (appState → reference engine format)
  * 4. Export Formatters  (CSV / CSS / JSON / SCSS)
- * 5. Figma Variable API (CRUD – _color_Ramps + tokens collections)
- * 6. Color Ramp Maker   (Linear / Uniform / Natural / Expressive / Symmetric)
- * 7. Color System Generator (variableMaker – ramps + semantic tokens)
+ * 5. Figma Variable API (CRUD – scale + token collections)
+ * 6. Color Scale Maker  (Linear / Uniform / Natural / Expressive / Symmetric)
+ * 7. Color System Generator (variableMaker – scales + semantic tokens)
  * 8. Color Math Utilities  (WCAG-correct conversions from Utils.js)
  */
 
 // 1. UI INITIALIZATION — load saved size before showing UI to avoid resize flicker.
 (async () => {
-  const UI_DEFAULT_WIDTH  = 424;
+  const UI_DEFAULT_WIDTH = 400;
   const UI_DEFAULT_HEIGHT = 720;
 
   // Restore saved window size (falls back to defaults if none saved yet).
@@ -21,7 +21,9 @@
   try {
     const saved = await figma.clientStorage.getAsync("uiPrefs");
     if (saved && saved.width && saved.height) savedUiSize = saved;
-  } catch (_) {}
+  } catch (e) {
+    console.warn("Failed to load uiPrefs:", e);
+  }
   figma.showUI(__html__, { width: savedUiSize.width, height: savedUiSize.height, themeColors: true });
 
   // Capability probe: try adding a second mode to a temp collection.
@@ -30,12 +32,18 @@
   const capabilities = { multiMode: true };
   let probeCol = null;
   try {
-    probeCol = figma.variables.createVariableCollection("__ctm316_probe__");
+    probeCol = figma.variables.createVariableCollection("__tw_probe__");
     probeCol.addMode("probe2");
-  } catch (_) {
+  } catch (e) {
+    console.warn("Probe failed:", e);
     capabilities.multiMode = false;
   } finally {
-    if (probeCol) try { probeCol.remove(); } catch (_) {}
+    if (probeCol)
+      try {
+        probeCol.remove();
+      } catch (e) {
+        console.warn("Failed to remove probe collection:", e);
+      }
   }
   figma.ui.postMessage({ type: "capabilities", capabilities });
 
@@ -43,27 +51,26 @@
   try {
     const meta = await figma.clientStorage.getAsync("uiPrefsMeta");
     if (meta) figma.ui.postMessage({ type: "load-ui-prefs-meta", prefs: meta });
-  } catch (_) {}
+  } catch (e) {
+    console.warn("Failed to load uiPrefsMeta:", e);
+  }
 
   // Load saved config
   try {
-    const vars = await figma.variables.getLocalVariablesAsync("STRING");
-    const cfgVar = vars.find((v) => v.name === "__ctm316_config__");
-    if (cfgVar) {
-      const modeId = Object.keys(cfgVar.valuesByMode)[0];
-      const savedConfigStr = cfgVar.valuesByMode[modeId];
-      if (typeof savedConfigStr === "string") {
-        figma.ui.postMessage({ type: "load-config", state: JSON.parse(savedConfigStr) });
-      }
+    const savedConfigStr = figma.root.getPluginData("tw_state");
+    if (savedConfigStr) {
+      figma.ui.postMessage({ type: "load-config", state: JSON.parse(savedConfigStr) });
     }
-  } catch (_) {}
+  } catch (e) {
+    console.warn("Failed to load saved config:", e);
+  }
 })();
 
 // 2. MESSAGE ROUTER
 figma.ui.onmessage = async (msg) => {
   try {
     switch (msg.type) {
-      case "run-creater": {
+      case "run-creator": {
         const config = translateConfig(msg.state);
         const result = variableMaker(config);
         await VariableManager.sync(result, config, msg.scope || "all", msg.state, msg.savedState || null);
@@ -72,19 +79,20 @@ figma.ui.onmessage = async (msg) => {
 
       case "check-collections": {
         const cols = await figma.variables.getLocalVariableCollectionsAsync();
-        const names = [msg.colorName, msg.contextualName].filter(Boolean);
+        const names = [msg.colorName, msg.tokenColName].filter(Boolean);
         const existing = names.filter((n) => cols.some((c) => c.name === n));
-        const renames = (msg.savedState && msg.state)
-          ? buildVariableRenameMap(msg.savedState, msg.state)
-          : { ramps: {}, contextual: {}, summary: { rampCount: 0, contextualCount: 0, changes: [] } };
+        const renames = msg.savedState && msg.state ? buildVariableRenameMap(msg.savedState, msg.state) : { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } };
         figma.ui.postMessage({ type: "collection-check-result", existing, renames });
         break;
       }
 
-      case "resize":
-        figma.ui.resize(msg.width, msg.height);
-        figma.clientStorage.setAsync("uiPrefs", { width: msg.width, height: msg.height }).catch(() => {});
+      case "resize": {
+        const w = Math.max(400, msg.width);
+        const h = msg.height;
+        figma.ui.resize(w, h);
+        figma.clientStorage.setAsync("uiPrefs", { width: w, height: h }).catch(() => {});
         break;
+      }
 
       case "save-ui-prefs-meta":
         figma.clientStorage.setAsync("uiPrefsMeta", msg.prefs).catch(() => {});
@@ -94,7 +102,7 @@ figma.ui.onmessage = async (msg) => {
         const config = translateConfig(msg.state);
         const result = variableMaker(config);
         let content = "";
-        if (msg.exportType === "json") content = JSON.stringify({ config, colorRamps: result.colorRamps, colorTokens: result.colorTokens, errors: result.errors }, null, 2);
+        if (msg.exportType === "json") content = JSON.stringify({ config, scales: result.scales, tokens: result.tokens, errors: result.errors }, null, 2);
         else if (msg.exportType === "csv") content = ExportFormatter.toCSV(result, config);
         else if (msg.exportType === "css") content = ExportFormatter.toCSS(result, config);
         else if (msg.exportType === "scss") content = generateScss(result, config);

@@ -1,13 +1,18 @@
 {
-  "name": "ctm316Fig",
+  "name": "token-wand",
   "version": "1.0.0",
-  "description": "Your Figma Plugin",
+  "description": "Token Wand — Color Token System for Figma",
   "main": "code.js",
   "scripts": {
-    "build": "node -e \"const fs=require('fs');const out='Output_DoNotEdit/';const hdr='/* AUTO-GENERATED — do not edit. Source: src/*.js  Run: npm run build */\\n';const src=['clrUtils','clrSpaces','clrGen','docGen','figmaVars','config','main'].map(f=>fs.readFileSync('src/'+f+'.js','utf8')).join('\\n');fs.writeFileSync(out+'scripts.js',hdr+src);let html=fs.readFileSync('src/ui.html','utf8');html='<!-- AUTO-GENERATED — do not edit. Source: src/ui.html + src/*.js  Run: npm run build -->\\n'+html;html=html.replace(/<script src=\\\"src\\\\/([^\\\"]+)\\\"><\\\\/script>/g,(_,f)=>'<script>\\\\n'+fs.readFileSync('src/'+f,'utf8')+'\\\\n</script>');fs.writeFileSync(out+'ui.html',html);\"",
+    "prebuild": "node -e \"if (!require('fs').existsSync('./node_modules') || !require('fs').existsSync('./node_modules/tailwindcss')) { console.log('Missing dependencies. Running npm install...'); require('child_process').execSync('npm install', {stdio: 'inherit'}); }\"",
+    "prewatch": "npm run prebuild",
+    "build": "node build.js",
     "watch": "node watch.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "release": "node package.js",
+    "release:patch": "node package.js patch",
+    "release:flag": "node package.js flag"
   },
   "author": "",
   "license": "",
@@ -15,6 +20,7 @@
     "@eslint/js": "^9.39.4",
     "@figma/eslint-plugin-figma-plugins": "*",
     "@figma/plugin-typings": "^1.124.0",
-    "eslint": "^9.39.4"
+    "eslint": "^9.39.4",
+    "tailwindcss": "^3.4.19"
   }
 }

@@ -1,10 +1,18 @@
-// 8. COLOR MATH UTILITIES: Pure, stateless functions — WCAG 2.1 compliant. (Ported from Utils.js reference.)
+/**
+ * ============================================================================
+ * Token Wand COLOR MATH & UTILITIES
+ * Ported verbatim from Web_App/JS/Utils.js — single source of truth for color math.
+ * Keep in sync with Utils.js; never add DOM-aware logic here.
+ * ============================================================================
+ */
 
+/** @param {string} hex */
 function validHex(hex) {
   if (typeof hex !== "string") return false;
   return /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex.trim());
 }
 
+/** @param {string} hex */
 function normalizeHex(hex) {
   if (!validHex(hex)) return null;
   hex = hex.trim().replace(/^#/, "");
@@ -16,6 +24,7 @@ function normalizeHex(hex) {
   return "#" + hex.toUpperCase();
 }
 
+/** @param {string} hex */
 function hexToRgb(hex) {
   const nhex = normalizeHex(hex);
   if (!nhex) return null;
@@ -54,6 +63,19 @@ function rgbToHsl(r, g, b) {
   return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
 }
 
+function hexToHsl(hex) {
+  const rgb = hexToRgb(hex);
+  return rgb ? rgbToHsl(rgb[0], rgb[1], rgb[2]) : null;
+}
+
+function hexToHue(hex) {
+  const hsl = hexToHsl(hex);
+  return hsl ? hsl[0] : null;
+}
+function hexToSat(hex) {
+  const hsl = hexToHsl(hex);
+  return hsl ? hsl[1] : null;
+}
 function hslToRgb(h, s, l) {
   if (typeof h !== "number" || typeof s !== "number" || typeof l !== "number" || h < 0 || h > 360 || s < 0 || s > 100 || l < 0 || l > 100) return null;
   s /= 100;
@@ -73,39 +95,30 @@ function hslToRgb(h, s, l) {
   return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
 }
 
+function rgbToHex(r, g, b) {
+  if ([r, g, b].some((v) => typeof v !== "number" || v < 0 || v > 255)) return null;
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+}
+
 function hslToHex(h, s, l) {
   const rgb = hslToRgb(h, s, l);
-  if (!rgb) return null;
-  return "#" + rgb.map((v) => v.toString(16).padStart(2, "0").toUpperCase()).join("");
+  return rgb ? rgbToHex(rgb[0], rgb[1], rgb[2]) : null;
 }
 
-function hexToHsl(hex) {
-  const rgb = hexToRgb(hex);
-  if (!rgb) return null;
-  return rgbToHsl(rgb[0], rgb[1], rgb[2]);
+function srgbLinearize(v) {
+  const x = v / 255;
+  return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
 }
 
-function hexToHue(hex) {
-  const hsl = hexToHsl(hex);
-  return hsl ? hsl[0] : null;
-}
-function hexToSat(hex) {
-  const hsl = hexToHsl(hex);
-  return hsl ? hsl[1] : null;
-}
-function hexToLum(hex) {
-  const hsl = hexToHsl(hex);
-  return hsl ? hsl[2] : null;
+function srgbDelinearize(v) {
+  const c = v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+  return Math.max(0, Math.min(255, Math.round(c * 255)));
 }
 
-// WCAG 2.1 relative luminance
 function relLum(hex) {
   const rgb = hexToRgb(hex);
   if (!rgb) return null;
-  const [r, g, b] = rgb.map((v) => {
-    const x = v / 255;
-    return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
-  });
+  const [r, g, b] = rgb.map(srgbLinearize);
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
@@ -119,7 +132,10 @@ function contrastRatio(hex1, hex2) {
   return Number(((Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)).toFixed(2));
 }
 
-// WCAG 2.1 thresholds: <3 Fail, 3–4.5 AA Large, 4.5–7 AA, ≥7 AAA
+function shortestHueDiff(current, target) {
+  return ((((target - current + 180) % 360) + 360) % 360) - 180;
+}
+
 function contrastRating(hex1, hex2) {
   const ratio = contrastRatio(hex1, hex2);
   if (ratio === null) return null;
@@ -135,6 +151,10 @@ function seriesMaker(x) {
   return out;
 }
 
-function shortestHueDiff(current, target) {
-  return (((target - current + 180) % 360) + 360) % 360 - 180;
+// Strip non-hex chars, uppercase, clamp to 6 chars. Returns raw hex without '#'.
+function sanitizeHex(val) {
+  return (val || "")
+    .replace(/[^0-9A-Fa-f]/g, "")
+    .toUpperCase()
+    .substring(0, 6);
 }

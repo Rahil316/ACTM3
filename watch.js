@@ -2,6 +2,18 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
+// Failsafe: Ensure dependencies are installed
+const nodeModulesPath = path.join(__dirname, "node_modules");
+if (!fs.existsSync(nodeModulesPath) || !fs.existsSync(path.join(nodeModulesPath, "tailwindcss"))) {
+  console.log("Missing dependencies. Running 'npm install'...");
+  try {
+    execSync("npm install", { stdio: "inherit" });
+  } catch (err) {
+    console.error("Failed to run 'npm install'. Please run it manually.", err);
+    process.exit(1);
+  }
+}
+
 const SRC_DIR = path.join(__dirname, "src");
 
 function build() {
@@ -19,13 +31,18 @@ build();
 
 let debounceTimer = null;
 
-fs.watch(SRC_DIR, { recursive: false }, (_, filename) => {
-  if (!filename || !filename.endsWith(".js") && !filename.endsWith(".html")) return;
+fs.watch(SRC_DIR, { recursive: true }, (_, filename) => {
+  // Only watch .js, .html, and .css files
+  if (!filename || (!filename.endsWith(".js") && !filename.endsWith(".html") && !filename.endsWith(".css"))) return;
 
-  // Debounce: if multiple files are saved within 100ms, only build once
+  // Ignore changes to output.css to prevent infinite loops (since build.js writes to it)
+  if (filename === "output.css") return;
+
+  // Debounce: if multiple files are saved within 400ms, only build once.
+  // This helps when you hit Cmd+S rapidly or when the IDE saves multiple files at once.
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     console.log(`[${new Date().toLocaleTimeString()}] Change detected in src/${filename} — rebuilding...`);
     build();
-  }, 100);
+  }, 400);
 });
