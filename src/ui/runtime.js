@@ -108,6 +108,13 @@ window.onmessage = (event) => {
     if (!msg.capabilities.multiMode) {
       const multiModeEls = document.querySelectorAll("[data-requires-multimode]");
       multiModeEls.forEach((el) => el.classList.add("hidden"));
+      BannerManager.show({
+        id: "cap-multimode",
+        type: "warning",
+        title: "Figma Starter Plan Limit",
+        message: "Figma Starter plans are limited to 1 variable mode per collection. Upgrade your plan to create and publish multiple modes.",
+        dismissable: true,
+      });
     }
     return;
   }
@@ -392,17 +399,18 @@ document.getElementById("file-input").onchange = (e) => {
 };
 
 // Drag-and-drop config import
+const _dropOverlay = document.getElementById("drop-overlay");
 window.addEventListener("dragenter", (e) => {
   if (e.dataTransfer && e.dataTransfer.types.includes("Files")) {
     e.preventDefault();
-    showOverlay("drop-overlay");
+    _dropOverlay.classList.add("active");
   }
 });
-document.getElementById("drop-overlay").ondragover = (e) => e.preventDefault();
-document.getElementById("drop-overlay").ondragleave = () => hideOverlay("drop-overlay");
-document.getElementById("drop-overlay").ondrop = (e) => {
+_dropOverlay.ondragover = (e) => e.preventDefault();
+_dropOverlay.ondragleave = () => _dropOverlay.classList.remove("active");
+_dropOverlay.ondrop = (e) => {
   e.preventDefault();
-  hideOverlay("drop-overlay");
+  _dropOverlay.classList.remove("active");
   const file = e.dataTransfer.files[0];
   if (file) {
     const reader = new FileReader();

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="output.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       html,
@@ -13,14 +13,8 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        /* user-select: none; */
+        user-select: none;
       }
-      /* body {
-        transform: scale(0.75);
-        transform-origin: top left;
-        width: 133.333% !important;
-        height: 133.333% !important;
-      } */
       :root {
         --bg-app: #0d0d0d;
         --bg-panel: #1e1e1e;
@@ -351,8 +345,6 @@
           <button id="btn-run" class="bg-[var(--accent)] hover:opacity-90 flex items-center gap-2 px-5 h-10 rounded-full transition-all font-semibold text-[13px] text-white shadow-[0_4px_12px_var(--accent-glow)]"></button>
         </div>
       </header>
-      <!-- Banner slot: runtime notifications rendered here via BannerManager -->
-      <div id="banner-slot" class="banner-slot"></div>
 
       <!-- Main navigation area — hidden when preview is open -->
       <div id="main-nav-area" class="flex flex-col flex-1 min-h-0">
@@ -431,7 +423,7 @@
             <button id="opt-save-config" class="w-full flex items-center gap-3 p-3 hover:bg-[var(--bg-hover)] rounded-[8px] transition-colors text-[var(--text-primary)]">
               <div id="opt-save-config-icon" class="w-8 h-8 rounded-lg bg-[var(--success)]/10 flex items-center justify-center text-[var(--success)]"></div>
               <div class="text-left">
-                <p class="text-[14px] font-medium">Save Config JSON</p>
+                <p class="text-[14px] font-medium">Export .Wand</p>
                 <p class="text-[11px] text-[var(--text-muted)]">Full plugin config — reimportable</p>
               </div>
             </button>
@@ -466,6 +458,9 @@
           </div>
         </div>
       </div>
+
+      <!-- Dialogue bottom sheet — content rendered by createDialogue("dialogue-sheet", { layout: "bottom-sheet" }) -->
+      <div id="dialogue-sheet" class="bottom-sheet absolute bottom-0 left-0 right-0 bg-[var(--bg-panel)] rounded-t-[20px] border-t border-[var(--border)] z-[65] flex flex-col" inert></div>
 
       <!-- Status Overlays — content rendered by services/publish.js -->
       <div id="loading-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)] z-50 flex items-center justify-center p-8 text-center flex-col gap-4"></div>
@@ -506,11 +501,14 @@
         }
         window.addEventListener("load", injectIcons);
       </script>
+      
+      <!-- Banner slot: runtime notifications rendered here via BannerManager -->
+      <div id="banner-slot" class="banner-slot"></div>
 
       <!-- Dialog slots — content rendered by services/publish.js / runtime.js -->
       <div id="run-dialog-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)] z-[60] flex flex-col"></div>
       <div id="confirm-import-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)]/95 backdrop-blur-sm z-[60] flex items-center justify-center p-6 text-center flex-col gap-6"></div>
-      <div id="confirm-clear-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)]/95 backdrop-blur-sm z-[60] flex items-center justify-center text-center flex-col gap-6"></div>
+      <div id="confirm-clear-overlay"  class="hidden absolute inset-0 bg-[var(--bg-app)]/95 backdrop-blur-sm z-[60] flex items-center justify-center p-6 text-center flex-col gap-6"></div>
 
       <!-- Theme Shop overlay — rendered by screens/themeShop.js -->
       <div id="theme-shop-overlay" class="hidden absolute inset-0 bg-[var(--bg-app)] z-[70] flex flex-col"></div>

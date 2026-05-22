@@ -333,7 +333,7 @@ function handleImportJSON(json) {
     if (!imported.colors || !imported.roles) throw new Error("Invalid Token Wand file — missing colors or roles.");
     _pendingImportData = imported;
     createDialogue("confirm-import-overlay", {
-      layout:  "sheet",
+      layout:  "stacked",
       icon:    _buildImportWarningIcon(),
       title:   "Replace Configuration?",
       body:    "Loading this file will replace all current palettes, roles, and settings.",

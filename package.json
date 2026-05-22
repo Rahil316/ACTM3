@@ -12,7 +12,8 @@
     "lint:fix": "eslint . --fix",
     "release": "node package.js",
     "release:patch": "node package.js patch",
-    "release:flag": "node package.js flag"
+    "release:flag": "node package.js flag",
+    "release:watch": "node watch-release.js"
   },
   "author": "",
   "license": "",

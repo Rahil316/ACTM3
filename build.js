@@ -57,12 +57,10 @@ html = html.replace(/<script src="src\/([^"]+)"><\/script>/g, (_, f) => {
     .trim();
   return `<script>/* ${f} */\n${content}\n</script>`;
 });
-
-// 2. Replace Tailwind CDN with inlined output.css
+// 2. Replace Tailwind CSS link with inlined output.css
 const cssContent = fs.readFileSync(path.join(srcDir, "output.css"), "utf8");
-html = html.replace(/<script src="https:\/\/cdn.tailwindcss.com"><\/script>/g, () => {
+html = html.replace(/<link href="output.css" rel="stylesheet" \/>/g, () => {
   return "<style>\n" + cssContent + "\n</style>";
 });
-
 fs.writeFileSync(path.join(outDir, "ui.html"), htmlHdr + html);
 console.log("Build complete!");

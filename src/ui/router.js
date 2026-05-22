@@ -56,50 +56,98 @@ function switchSettingsTab(tab) {
 }
 
 // ── DIALOGUE FACTORY ──
-// Builds a confirm dialog into a named overlay slot and shows it.
+// Builds a confirm dialog and shows it.
 //
-// layout: "card"  — compact, card-wrapped, row of buttons (default)
-//         "sheet" — centered, no wrapper, optional icon node, stacked buttons
+// layout: "row"          — floating card, side-by-side buttons (default)
+//                          targetID must be a centered overlay slot
+//         "stacked"      — floating card, icon + stacked buttons
+//                          targetID must be a centered overlay slot
+//         "bottom-sheet" — slides up from the bottom edge
+//                          targetID should be "dialogue-sheet"
 
 function createDialogue(targetID, {
   title   = "Are you sure?",
   body    = "",
   icon    = null,
   buttons = [{ label: "Cancel" }],
-  layout  = "card",
+  layout  = "row",
 } = {}) {
   const slot = document.getElementById(targetID);
   if (!slot) return;
   slot.innerHTML = "";
 
+  // ── Bottom-sheet layout ──────────────────────────────────────────────────
+  if (layout === "bottom-sheet") {
+    const mkBtn = ({ label, variant = "secondary", id = null, action }) =>
+      inputsUI.btn(variant, {
+        id,
+        label,
+        size:  "xl",
+        class: "w-full",
+        onclick: () => { hideSheets(); action?.(); },
+      });
+
+    slot.appendChild(
+      el("div", { class: "flex flex-col" }, [
+        // drag handle
+        el("div", { class: "flex justify-center pt-3 pb-1" }, [
+          el("div", { class: "w-9 h-1 rounded-full bg-[var(--border)]" }),
+        ]),
+        // header
+        el("div", { class: "px-5 pt-3 pb-4 border-b border-[var(--border)]" }, [
+          icon ? el("div", { class: "mb-3" }, [icon]) : null,
+          el("h2", { class: "text-[17px] font-bold text-[var(--text-primary)]" }, title),
+          body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed mt-1" }, body) : null,
+        ].filter(Boolean)),
+        // buttons
+        el("div", { class: "p-4 space-y-2" }, buttons.map(mkBtn)),
+      ])
+    );
+
+    hideSheets();
+    showSheet(targetID);
+    return;
+  }
+
+  // ── Floating card layouts (row / stacked) ────────────────────────────────
+  const stacked = layout === "stacked";
+
   const mkBtn = ({ label, variant = "secondary", id = null, action }) =>
     inputsUI.btn(variant, {
       id,
       label,
-      size:  layout === "sheet" ? "xl" : "lg",
-      class: layout === "sheet" ? "w-full" : "flex-1",
+      size:  stacked ? "xl" : "lg",
+      class: stacked ? "w-full" : "flex-1",
       onclick: () => { hideOverlay(targetID); action?.(); },
     });
 
   const btnContainer = el(
     "div",
-    { class: layout === "sheet" ? "w-full space-y-3" : "flex gap-2 w-full" },
+    { class: stacked ? "w-full space-y-3" : "flex gap-2 w-full" },
     buttons.map(mkBtn),
   );
 
-  if (layout === "sheet") {
-    if (icon) slot.appendChild(icon);
-    slot.appendChild(el("div", {}, [
-      el("h2", { class: "text-2xl font-bold mb-2" }, title),
-      body ? el("p", { class: "text-[var(--text-muted)] text-sm leading-relaxed" }, body) : null,
-    ].filter(Boolean)));
-    slot.appendChild(btnContainer);
+  const cardCls = "bg-[var(--bg-card)] rounded-[14px] border border-[var(--border)] shadow-xl w-full max-w-[320px]";
+
+  if (stacked) {
+    slot.appendChild(
+      el("div", { class: cardCls }, [
+        el("div", { class: "flex flex-col items-center gap-5 p-6 text-center" }, [
+          icon || null,
+          el("div", { class: "space-y-2 w-full" }, [
+            el("h2", { class: "text-[17px] font-bold text-[var(--text-primary)]" }, title),
+            body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed" }, body) : null,
+          ].filter(Boolean)),
+          btnContainer,
+        ].filter(Boolean)),
+      ])
+    );
   } else {
     slot.appendChild(
-      el("div", { class: "bg-[var(--bg-card)] rounded-[12px] border border-[var(--border)] max-w-[calc(100vw-40px)] min-w-[280px] m-auto" }, [
-        el("div", { class: "space-y-4 p-4 w-full" }, [
-          el("p", { class: "text-[15px] font-semibold text-[var(--text-primary)]" }, title),
-          body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed" }, body) : null,
+      el("div", { class: cardCls }, [
+        el("div", { class: "space-y-4 p-5" }, [
+          el("p", { class: "text-[15px] font-semibold text-[var(--text-primary)] text-left" }, title),
+          body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed text-left" }, body) : null,
           btnContainer,
         ].filter(Boolean)),
       ])

@@ -12,12 +12,11 @@
  */
 
 // 1. UI INITIALIZATION — load saved size before showing UI to avoid resize flicker.
-(async () => {
-  const UI_DEFAULT_WIDTH = 400;
-  const UI_DEFAULT_HEIGHT = 720;
+const UI = { WIDTH: 620, HEIGHT: 720, MIN_WIDTH: 440, MIN_HEIGHT: 480 };
 
-  // Restore saved window size (falls back to defaults if none saved yet).
-  let savedUiSize = { width: UI_DEFAULT_WIDTH, height: UI_DEFAULT_HEIGHT };
+(async () => {
+
+  let savedUiSize = { width: UI.WIDTH, height: UI.HEIGHT };
   try {
     const saved = await figma.clientStorage.getAsync("uiPrefs");
     if (saved && saved.width && saved.height) savedUiSize = saved;
@@ -87,8 +86,8 @@ figma.ui.onmessage = async (msg) => {
       }
 
       case "resize": {
-        const w = Math.max(400, msg.width);
-        const h = msg.height;
+        const w = Math.max(UI.MIN_WIDTH, msg.width);
+        const h = Math.max(UI.MIN_HEIGHT, msg.height);
         figma.ui.resize(w, h);
         figma.clientStorage.setAsync("uiPrefs", { width: w, height: h }).catch(() => {});
         break;
