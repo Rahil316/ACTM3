@@ -379,7 +379,7 @@ function _mapByIndex(color, role, variations, scale, stepNames, modeName, output
  */
 function _mapByScaleContrast(color, role, variations, scale, stepNames, modeName, isDark, output, errors) {
   variations.forEach((_, vi) => {
-    const target = parseFloat(role.variationTargets?.[vi]) || 4.5;
+    const target = parseFloat(role.variationTargets && role.variationTargets[vi]) || 4.5;
     let bestIdx = isDark ? stepNames.length - 1 : 0;
     let found = false;
     if (isDark) {
