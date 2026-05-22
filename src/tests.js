@@ -1,8 +1,8 @@
 /**
  * ============================================================================
- * CTM316 — Automated Test Suite
+ * Token Wand — Automated Test Suite
  * Set TESTS_ENABLED = true to run on plugin load (output goes to DevTools console).
- * Covers: color math, tonal scale generator, contrast solver, token pipeline,
+ * Covers: color math, scale generator, contrast solver, token pipeline,
  *         config translator.
  * All tested functions are pure — no Figma API or DOM required.
  * ============================================================================
@@ -162,29 +162,29 @@ const TESTS_ENABLED = true;
     assert("gray has low chroma", gray.c < 5);
   });
 
-  // ── SECTION 3: tonalScaleMaker ────────────────────────────────────────────
+  // ── SECTION 3: scaleMaker ────────────────────────────────────────────
 
-  group("tonalScaleMaker — length and validity", () => {
+  group("scaleMaker — length and validity", () => {
     const algos = ["Natural", "Uniform", "Expressive", "Symmetric", "OKLCH", "Material", "Linear"];
     algos.forEach((algo) => {
-      const scale = tonalScaleMaker("#3B82F6", 11, algo);
+      const scale = scaleMaker("#3B82F6", 11, algo);
       eq(`${algo}: returns 11 steps`, scale.length, 11);
       assert(`${algo}: all valid hex`, scale.every((h) => /^#[0-9A-Fa-f]{6}$/i.test(h)));
     });
   });
 
-  group("tonalScaleMaker — light-to-dark ordering", () => {
+  group("scaleMaker — light-to-dark ordering", () => {
     ["Natural", "Uniform", "OKLCH", "Material", "Linear"].forEach((algo) => {
-      const scale = tonalScaleMaker("#3B82F6", 11, algo);
+      const scale = scaleMaker("#3B82F6", 11, algo);
       const lums = scale.map((h) => relLum(h));
       const ordered = lums.every((v, i) => i === 0 || v <= lums[i - 1] + 0.05);
       assert(`${algo}: roughly light→dark`, ordered);
     });
   });
 
-  group("tonalScaleMaker — scale length variants", () => {
+  group("scaleMaker — scale length variants", () => {
     [5, 11, 23, 25].forEach((len) => {
-      const scale = tonalScaleMaker("#0067DD", len, "Natural");
+      const scale = scaleMaker("#0067DD", len, "Natural");
       eq(`length ${len}: correct count`, scale.length, len);
     });
   });
@@ -274,7 +274,7 @@ const TESTS_ENABLED = true;
     assert("colors defaults to array",      Array.isArray(cfg.colors));
     assert("roles defaults to array",       Array.isArray(cfg.roles));
     assert("themes defaults to array",      Array.isArray(cfg.themes) && cfg.themes.length > 0);
-    assert("tokenNameOrder is array",       Array.isArray(cfg.tokenNameOrder));
+    assert("tokenNameSegments is array",     Array.isArray(cfg.tokenNameSegments));
   });
 
   // ── SECTION 7: variableMaker pipeline ────────────────────────────────────
@@ -283,7 +283,7 @@ const TESTS_ENABLED = true;
     scaleLength: 11,
     scaleAlgorithm: "Natural",
     pluginMode: "scale",
-    useGlobalAlgo: true,
+    useUniformAlgorithm: true,
     colors: [
       { name: "Primary", shorthand: "pr", value: "3B82F6", description: "" },
       { name: "Gray",    shorthand: "gr", value: "808080", description: "" },
@@ -366,7 +366,7 @@ const TESTS_ENABLED = true;
 
   // ── SUMMARY ──────────────────────────────────────────────────────────────
 
-  console.group("CTM316 — Test Results");
+  console.group("Token Wand — Test Results");
   _groups.forEach(({ name, p, f }) => {
     const icon = f === 0 ? "✓" : "✗";
     const log = f === 0 ? console.log : console.error;

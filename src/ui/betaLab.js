@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 BETA LAB
+ * Token Wand BETA LAB
  * Experimental UI entry point for in-progress features not yet in main flow.
  * Set LAB_ENABLED = true to expose the Beta Lab entry point in More Options.
  * ============================================================================

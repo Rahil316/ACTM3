@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 UI PRIMITIVES
+ * Token Wand UI PRIMITIVES
  * Atoms and molecules — reusable DOM building blocks.
  * No appState dependency, no side effects.
  * ============================================================================

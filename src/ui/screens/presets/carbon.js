@@ -24,25 +24,25 @@ const CARBON_PRESETS = [
       pluginMode: "scale",
       scaleAlgorithm: "Uniform",
       scaleLength: 10,
-      useGlobalAlgo: true,
-      perColorAlgoScope: "color",
+      useUniformAlgorithm: true,
+      algorithmScopeLevel: "color",
       solverMode: "natural",
-      tokenNameOrder: ["color", "role", "variation"],
+      tokenNameSegments: ["color", "role", "variation"],
       useShorthandColors: false,
       useShorthandRoles: false,
       useShorthandVariations: true,
       useShorthandSteps: false,
-      embedDirectly: false,
-      includeGlobalColors: false,
+      resolveTokensDirectly: false,
+      includeSourceColors: false,
       sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
-      variableStructure: "color",
-      includeTonalCollection: true,
+      tokenGrouping: "color",
+      includeColorScalesCollection: true,
       includeDescriptions: true,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
-      perRoleControls: false,
+      
       scaleStepNames: [],
 
       // Global 4-state interaction variations.
@@ -80,8 +80,8 @@ const CARBON_PRESETS = [
           name: "Layer",
           shorthand: "la",
           minContrast: 1.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "01", shorthand: "l1" }, // step 1 — base page surface (Gray-10)
             { name: "02", shorthand: "l2" }, // step 2 — card / panel (Gray-20)
             { name: "03", shorthand: "l3" }, // step 3 — nested content area (Gray-30)
@@ -96,8 +96,8 @@ const CARBON_PRESETS = [
           name: "Layer/Hover",
           shorthand: "lah",
           minContrast: 1.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "01", shorthand: "l1" }, // step 2 — hover on layer-01
             { name: "02", shorthand: "l2" }, // step 3 — hover on layer-02
             { name: "03", shorthand: "l3" }, // step 4 — hover on layer-03
@@ -112,8 +112,8 @@ const CARBON_PRESETS = [
           name: "Text",
           shorthand: "tx",
           minContrast: 4.5,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Primary",     shorthand: "p"  }, // step 8 — textPrimary (high contrast body)
             { name: "Secondary",   shorthand: "s"  }, // step 6 — textSecondary (supporting labels)
             { name: "Placeholder", shorthand: "ph" }, // step 5 — textPlaceholder (input hints)
@@ -129,8 +129,8 @@ const CARBON_PRESETS = [
           name: "Border",
           shorthand: "bo",
           minContrast: 1.5,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Subtle",      shorthand: "su" }, // step 3 — borderSubtle (hairline divider)
             { name: "Strong",      shorthand: "st" }, // step 5 — borderStrong (form fields)
             { name: "Interactive", shorthand: "in" }, // step 6 — borderInteractive (focus, selection)
@@ -145,8 +145,8 @@ const CARBON_PRESETS = [
           name: "Field",
           shorthand: "fi",
           minContrast: 1.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "01", shorthand: "f1" }, // step 1 — field on White theme
             { name: "02", shorthand: "f2" }, // step 2 — field on Gray-10 theme
           ],
@@ -161,8 +161,8 @@ const CARBON_PRESETS = [
           name: "Support/Error",
           shorthand: "ser",
           minContrast: 3.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "BG",     shorthand: "bg" }, // step 2 — error background tint
             { name: "FG",     shorthand: "fg" }, // step 6 — error icon / text fill
             { name: "Border", shorthand: "bo" }, // step 4 — error field border
@@ -175,8 +175,8 @@ const CARBON_PRESETS = [
           name: "Support/Warning",
           shorthand: "swa",
           minContrast: 3.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "BG",     shorthand: "bg" },
             { name: "FG",     shorthand: "fg" },
             { name: "Border", shorthand: "bo" },
@@ -189,8 +189,8 @@ const CARBON_PRESETS = [
           name: "Support/Success",
           shorthand: "ssu",
           minContrast: 3.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "BG",     shorthand: "bg" },
             { name: "FG",     shorthand: "fg" },
             { name: "Border", shorthand: "bo" },

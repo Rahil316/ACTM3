@@ -5,7 +5,7 @@
  * Requires clrUtils.js to be loaded first (provides color math primitives).
  *
  * ┌─ CALLABLE INDEPENDENTLY ──────────────────────────────────────────────────┐
- * │  tonalScaleMaker(hex, length, algo)            → hex[]                    │
+ * │  scaleMaker(hex, length, algo)            → hex[]                    │
  * │  solveColorForContrast(src, target, bg, mode)  → result object            │
  * │  validateVariationContrasts(targets)           → { valid, errors }        │
  * │  hexToOklch(hex)                               → { L, C, H }             │
@@ -26,8 +26,8 @@ const OVERSHOOT_WARN = 0.3; // attach warning when achieved contrast overshoots 
 const MAX_ITER = 60; // binary search iterations when solving for L
 const L_EPS = 1e-5; // convergence threshold for L binary search
 
-// ── TONAL SCALE ALGORITHMS ────────────────────────────────────────────────────
-// Each strategy receives (hue, satu, N, stepLum, findL, extras) from tonalScaleMaker.
+// ── COLOR SCALE ALGORITHMS ────────────────────────────────────────────────────
+// Each strategy receives (hue, satu, N, stepLum, findL, extras) from scaleMaker.
 // Strategies that operate in their own color space (OKLCH, Material) ignore
 // hue/satu/findL and use their own internal binary search instead.
 
@@ -171,7 +171,7 @@ const TONAL_SCALE_ALGO = {
  * @param {string} [scaleAlgo]  - algorithm: "Linear"|"Uniform"|"Natural"|"Expressive"|"Symmetric"|"OKLCH"|"Material" (default "Natural")
  * @returns {string[]} hex colors from light to dark
  */
-function tonalScaleMaker(hexIn, scaleLength, scaleAlgo) {
+function scaleMaker(hexIn, scaleLength, scaleAlgo) {
   scaleAlgo = scaleAlgo || "Natural";
   const hue = hexToHue(hexIn);
   const satu = hexToSat(hexIn);
@@ -222,9 +222,9 @@ function tonalScaleMaker(hexIn, scaleLength, scaleAlgo) {
  * @param {object}   config
  * @param {object[]} config.colors           - [{ name, value, shorthand, description, solverMode }]
  * @param {object[]} config.themes           - [lightTheme, darkTheme], each { name, bg }
- * @param {number}   config.scaleLength      - Tonal scale step count
+ * @param {number}   config.scaleLength      - Color scale step count
  * @param {string[]} [config.scaleStepNames] - custom step labels; defaults to [1…N]
- * @param {string}   config.scaleAlgorithm   - tonal algorithm name
+ * @param {string}   config.scaleAlgorithm   - scale algorithm name
  * @param {string}   config.pluginMode       - "scale" | "direct"
  * @param {object[]} config.roles            - semantic role definitions
  * @param {any[]}    config.variations       - variation slot definitions
@@ -234,7 +234,7 @@ function variableMaker(config) {
   const { colors, themes, scaleLength } = config;
   const errors = { critical: [], warnings: [], notices: [] };
 
-  const scales = config.pluginMode !== "direct" ? _generateScales(colors, scaleLength, config.scaleAlgorithm, config.scaleStepNames, themes, config.useGlobalAlgo) : Object.create(null);
+  const scales = config.pluginMode !== "direct" ? _generateScales(colors, scaleLength, config.scaleAlgorithm, config.scaleStepNames, themes, config.useUniformAlgorithm) : Object.create(null);
 
   const tokens = {};
   for (const mode of themes) tokens[mode.name.toLowerCase()] = {};
@@ -254,16 +254,16 @@ function variableMaker(config) {
 }
 
 /**
- * Build tonal scales for all colors. Each step stores value, naming, and contrast ratios against both light and dark backgrounds.
+ * Build color scales for all colors. Each step stores value, naming, and contrast ratios against both light and dark backgrounds.
  * @returns {object} { [colorName]: { [stepName]: { value, stepName, shorthand, description, contrast } } }
  */
-function _generateScales(colors, scaleLength, scaleAlgo, stepNames, themes, useGlobalAlgo) {
+function _generateScales(colors, scaleLength, scaleAlgo, stepNames, themes, useUniformAlgorithm) {
   const collection = Object.create(null);
   const names = stepNames || seriesMaker(scaleLength);
   const themeBgs = themes.map((t) => ({ key: t.name.toLowerCase(), bg: normalizeHex(t.bg) || "#FFFFFF" }));
   for (const color of colors) {
-    const colorAlgo = (!useGlobalAlgo && color.scaleAlgorithm) ? color.scaleAlgorithm : scaleAlgo;
-    const scaleData = tonalScaleMaker(color.value, scaleLength, colorAlgo);
+    const colorAlgo = (!useUniformAlgorithm && color.scaleAlgorithm) ? color.scaleAlgorithm : scaleAlgo;
+    const scaleData = scaleMaker(color.value, scaleLength, colorAlgo);
     const scale = Object.create(null);
     collection[color.name] = scale;
     for (let i = 0; i < scaleLength; i++) {
@@ -286,8 +286,8 @@ function _generateScales(colors, scaleLength, scaleAlgo, stepNames, themes, useG
 }
 
 function _getSolverMode(config, color, role) {
-  if (config.useGlobalAlgo !== false) return config.solverMode || "natural";
-  if (config.perColorAlgoScope === "role") return (role && role.solverMode) || config.solverMode || "natural";
+  if (config.useUniformAlgorithm !== false) return config.solverMode || "natural";
+  if (config.algorithmScopeLevel === "role") return (role && role.solverMode) || config.solverMode || "natural";
   return color.solverMode || config.solverMode || "natural";
 }
 
@@ -303,7 +303,7 @@ function _solveDirectMode(color, mode, config, groupOutput, errors) {
     const role = config.roles[ri];
     const roleOutput = (groupOutput[ri] = {});
     const solverMode = _getSolverMode(config, color, role);
-    const variations = role.variationOverride && role.roleVariations && role.roleVariations.length ? role.roleVariations : config.variations;
+    const variations = role.customVariationList && role.customVariations && role.customVariations.length ? role.customVariations : config.variations;
     const targets = role.variationTargets || variations.map((_, i) => [1.5, 3, 4.5, 7, 12][i] || 1.5 + i * 1.5);
 
     targets.forEach((targetContrast, vi) => {
@@ -328,7 +328,7 @@ function _solveDirectMode(color, mode, config, groupOutput, errors) {
 }
 
 /**
- * Scale mode: map ramp steps to role × variation tokens.
+ * Scale mode: map scale steps to role × variation tokens.
  * Two mapping methods:
  *   - "contrast" (default): walk the scale for the first step meeting variationTargets[i] WCAG ratio
  *   - "index": pin each variation to an explicit step index from variationTargets[i]
@@ -342,7 +342,7 @@ function _processScaleMode(color, mode, config, scales, groupOutput, errors) {
   for (let ri = 0; ri < config.roles.length; ri++) {
     const role = config.roles[ri];
     const roleOutput = (groupOutput[ri] = {});
-    const variations = role.variationOverride && role.roleVariations && role.roleVariations.length ? role.roleVariations : config.variations;
+    const variations = role.customVariationList && role.customVariations && role.customVariations.length ? role.customVariations : config.variations;
 
     if (role.mappingMethod === "index") {
       _mapByIndex(color, role, variations, scale, stepNames, modeName, roleOutput);

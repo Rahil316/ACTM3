@@ -1,38 +1,37 @@
-// ── CTM PRESETS ───────────────────────────────────────────────────────────────
-// Three house presets: Regular (professional tonal), Pro (adaptive, all channels),
+// ── TOKEN WAND PRESETS ────────────────────────────────────────────────────────
+// Three house presets: Regular (professional scale), Pro (direct, all channels),
 // Funk (chroma-maximized, bold creative).
-// variationTargets in tonal mode = ramp step indices (0 to scaleLength-1).
-// variationTargets in adaptive mode = WCAG contrast ratios (1.0 – 21.0).
+// variationTargets = WCAG contrast ratios (1.0 – 21.0).
 
-const CTM_PRESETS = [
+const TW_PRESETS = [
 
-  // ── CTM Regular ─────────────────────────────────────────────────────────────
+  // ── TW Regular ──────────────────────────────────────────────────────────────
   // Tonal, Natural algo, 25-step scale. Semantic layer stack.
   // Swap the 3 seed colors and ship. Default preset on first launch.
   {
-    id: "ctm-regular",
-    name: "CTM Regular",
-    badge: "CTM",
+    id: "tw-regular",
+    name: "TW Regular",
+    badge: "TW",
     description: "Clean professional system. Full semantic layer stack — backgrounds, surfaces, borders, fills, text. Swap the seed colors and ship.",
     tags: ["Professional", "Tonal", "Light+Dark"],
     config: {
-      name: "CTM Regular",
+      name: "TW Regular",
       pluginMode: "scale",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      useGlobalAlgo: true,
+      useUniformAlgorithm: true,
       solverMode: "natural",
-      tokenNameOrder: ["color", "role", "variation"],
+      tokenNameSegments: ["color", "role", "variation"],
       useShorthandColors: false,
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      embedDirectly: false,
-      includeGlobalColors: false,
+      resolveTokensDirectly: false,
+      includeSourceColors: false,
       sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "10, 25, 50, 75, 90",
-      includeTonalCollection: true,
+      includeColorScalesCollection: true,
       includeDescriptions: false,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
@@ -50,7 +49,7 @@ const CTM_PRESETS = [
         { name: "Brand/Neutral", shorthand: "bn", value: "6B7280", description: "Neutral gray for surfaces and text" },
         { name: "Brand/Accent",  shorthand: "ba", value: "8B5CF6", description: "Accent — violet for highlights and CTAs" },
       ],
-      // variationTargets = ramp step indices (0–24) for 5 global variations.
+      // variationTargets = WCAG contrast ratios for 5 global variations.
       // Step reference for Natural algo, 25 steps:
       //   0–4   ≈ page wash  (1.0–1.5:1 on white)
       //   5–9   ≈ surface    (1.5–2.5:1)
@@ -84,34 +83,34 @@ const CTM_PRESETS = [
     },
   },
 
-  // ── CTM Pro ──────────────────────────────────────────────────────────────────
-  // Adaptive engine, natural solver. Every output channel enabled.
+  // ── TW Pro ───────────────────────────────────────────────────────────────────
+  // Direct mode, natural solver. Every output channel enabled.
   // Per-role variation overrides with "/" semantic names produce deeply-nested
   // Figma variable folder groups: Brand/Primary → Surface → Layer/01, etc.
   {
-    id: "ctm-pro",
-    name: "CTM Pro",
-    badge: "CTM",
-    description: "Full system. Adaptive engine, global brand constants + alpha tints, 3 themes. Per-role semantic variation groups for Surface, Text, Status, Outline, and Inverse.",
+    id: "tw-pro",
+    name: "TW Pro",
+    badge: "TW",
+    description: "Full system. Direct mode, global brand constants + alpha tints, 3 themes. Per-role semantic variation groups for Surface, Text, Status, Outline, and Inverse.",
     tags: ["Comprehensive", "Adaptive", "Multi-theme"],
     config: {
-      name: "CTM Pro",
+      name: "TW Pro",
       pluginMode: "direct",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      useGlobalAlgo: true,
+      useUniformAlgorithm: true,
       solverMode: "natural",
-      tokenNameOrder: ["color", "role", "variation"],
+      tokenNameSegments: ["color", "role", "variation"],
       useShorthandColors: false,
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      embedDirectly: false,
-      includeGlobalColors: true,
+      resolveTokensDirectly: false,
+      includeSourceColors: true,
       sourceCollectionName: "brand",
       includeAlphaTints: true,
       alphaValues: "10, 20, 40, 60, 80, 90",
-      includeTonalCollection: false,
+      includeColorScalesCollection: false,
       includeDescriptions: true,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
@@ -134,8 +133,8 @@ const CTM_PRESETS = [
         // Primary / Secondary — interactive accent colors, 4-state global variations.
         { name: "Primary",              shorthand: "pr",  minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
         { name: "Primary/Container",    shorthand: "prc", minContrast: 1.5,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Layer/01", shorthand: "l1" },
             { name: "Layer/02", shorthand: "l2" },
             { name: "Layer/03", shorthand: "l3" },
@@ -151,8 +150,8 @@ const CTM_PRESETS = [
         // Surface family — 5-layer depth model with "/" naming → nested Figma folders.
         // Layer/01 = page bg (barely-there), Layer/Scrim = modal overlay.
         { name: "Surface",              shorthand: "sf",  minContrast: 1.05,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Layer/01",    shorthand: "l1" },
             { name: "Layer/02",    shorthand: "l2" },
             { name: "Layer/03",    shorthand: "l3" },
@@ -164,8 +163,8 @@ const CTM_PRESETS = [
 
         // Text family — Emphasis hierarchy from accessible body copy to disabled.
         { name: "On/Surface",           shorthand: "ons", minContrast: 4.5,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Emphasis/High",     shorthand: "eh" },
             { name: "Emphasis/Medium",   shorthand: "em" },
             { name: "Emphasis/Low",      shorthand: "el" },
@@ -176,8 +175,8 @@ const CTM_PRESETS = [
 
         // Outline — three weights of border/separator.
         { name: "Outline",              shorthand: "ol",  minContrast: 2.5,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Weight/Subtle",  shorthand: "ws" },
             { name: "Weight/Default", shorthand: "wd" },
             { name: "Weight/Strong",  shorthand: "wst" },
@@ -193,8 +192,8 @@ const CTM_PRESETS = [
         // Status / Error — 4 semantic token slots per status color.
         // BG/Subtle = tinted bg, BG/Default = stronger bg, FG/Default = foreground text, Border = outline.
         { name: "Status/Error",         shorthand: "se",  minContrast: 4.5,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "BG/Subtle",  shorthand: "bgs" },
             { name: "BG/Default", shorthand: "bgd" },
             { name: "FG/Default", shorthand: "fgd" },
@@ -205,8 +204,8 @@ const CTM_PRESETS = [
 
         // Inverse — near-max contrast pair for high-contrast surfaces or dark tooltips.
         { name: "Inverse/Surface",      shorthand: "is",  minContrast: 12.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default", shorthand: "df" },
             { name: "Muted",   shorthand: "mu" },
           ],
@@ -222,34 +221,34 @@ const CTM_PRESETS = [
     },
   },
 
-  // ── CTM Funk ─────────────────────────────────────────────────────────────────
-  // Adaptive, chroma-maximized solver. Maximum saturation at every contrast target.
+  // ── TW Funk ──────────────────────────────────────────────────────────────────
+  // Direct mode, chroma-maximized solver. Maximum saturation at every contrast target.
   // Built for bold creative, gaming, or marketing products.
   // Flat variation names are the brand language — no overrides needed.
   {
-    id: "ctm-funk",
-    name: "CTM Funk",
-    badge: "CTM",
+    id: "tw-funk",
+    name: "TW Funk",
+    badge: "TW",
     description: "Maximum chroma at every contrast level. High-energy variation names, 3 vivid themes. Built for bold creative products.",
     tags: ["Bold", "Vivid", "Adaptive"],
     config: {
-      name: "CTM Funk",
+      name: "TW Funk",
       pluginMode: "direct",
       scaleAlgorithm: "Expressive",
       scaleLength: 25,
-      useGlobalAlgo: true,
+      useUniformAlgorithm: true,
       solverMode: "chroma-maximized",
-      tokenNameOrder: ["color", "role", "variation"],
+      tokenNameSegments: ["color", "role", "variation"],
       useShorthandColors: false,
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      embedDirectly: false,
-      includeGlobalColors: true,
+      resolveTokensDirectly: false,
+      includeSourceColors: true,
       sourceCollectionName: "electric",
       includeAlphaTints: false,
       alphaValues: "10, 25, 50, 75, 90",
-      includeTonalCollection: false,
+      includeColorScalesCollection: false,
       includeDescriptions: false,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",

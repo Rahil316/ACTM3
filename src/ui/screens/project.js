@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 SCREEN: PROJECT TAB
+ * Token Wand SCREEN: PROJECT TAB
  * Renders the project name input and themes list into the sidebar.
  * ============================================================================
  */
@@ -14,7 +14,7 @@ function renderSidebarProject() {
     el("div", { class: "space-y-4 p-1" }, [
       // Project name + presets button row
       el("div", { class: "space-y-2" }, [
-        panelUI.input({ value: appState.name || "", placeholder: "CTM316", label: "Project Name", width: "full", size: "lg", oninput: (e) => updateProjectName(e.target.value) }),
+        panelUI.input({ value: appState.name || "", placeholder: "Token Wand", label: "Project Name", width: "full", size: "lg", oninput: (e) => updateProjectName(e.target.value) }),
         el("button", {
           onclick: () => {
             const overlay = document.getElementById("theme-shop-overlay");

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 UI RUNTIME
+ * Token Wand UI RUNTIME
  *
  * Owns: runtime state, message handling, event wiring, UI prefs, boot.
  *
@@ -54,14 +54,14 @@ window.onmessage = (event) => {
           pluginMessage: {
             type: "collection-check-result",
             existing: [],
-            renames: { ramps: {}, contextual: {}, summary: { rampCount: 0, contextualCount: 0, changes: [] } }
+            renames: { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } }
           }
         }, "*");
       }, 50);
       return;
     }
     if (msg.type === "run-creator") {
-      localStorage.setItem("ctm316_state", JSON.stringify(msg.state));
+      localStorage.setItem("tw_state", JSON.stringify(msg.state));
       setTimeout(() => {
         window.postMessage({
           pluginMessage: {
@@ -116,14 +116,10 @@ window.onmessage = (event) => {
     const isFirstLaunch = !msg.state || Object.keys(msg.state).length === 0;
 
     if (isFirstLaunch && typeof PRESETS !== "undefined" && PRESETS.length > 0) {
-      // First-time user: load CTM Regular (PRESETS[0]) as the starting state
+      // First-time user: load TW Regular (PRESETS[0]) as the starting state
       loadState(JSON.parse(JSON.stringify(PRESETS[0].config)));
     } else {
-      // Migration: old numeric pluginMode → canonical string. loadState handles
-      // the rest (legacy collection names, role fields, perColorAlgo flag).
       const incoming = msg.state;
-      if (incoming.pluginMode === 0) incoming.pluginMode = "scale";
-      else if (incoming.pluginMode === 1) incoming.pluginMode = "direct";
       setSavedState(incoming);
       loadState(Object.assign({}, JSON.parse(JSON.stringify(_bootstrapConfig)), incoming));
     }
@@ -524,7 +520,7 @@ document.getElementById("drop-overlay").ondrop = (e) => {
 try {
   if (window.parent === window) {
     // Standalone browser boot mockup: load from localStorage
-    const savedConfig = localStorage.getItem("ctm316_state");
+    const savedConfig = localStorage.getItem("tw_state");
     if (savedConfig) {
       try {
         const parsed = JSON.parse(savedConfig);

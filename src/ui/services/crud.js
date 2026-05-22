@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 ENTITY CRUD
+ * Token Wand ENTITY CRUD
  *
  * Every user action that creates, updates, moves, or removes an entity in
  * appState lives here. Nothing else does.
@@ -10,7 +10,7 @@
  * │  Roles                appState.roles            renderRoles              │
  * │  Shared Variations    appState.variations       renderSettingsVariations  │
  * │                                                 renderRoles              │
- * │  Role Var Overrides   role.roleVariations       renderRoles              │
+ * │  Role Var Overrides   role.customVariations     renderRoles              │
  * │  Themes               appState.themes           renderSettingsThemes     │
  * │                                                 renderPreviewTabs        │
  * └─────────────────────────────────────────────────────────────────────────┘
@@ -179,8 +179,8 @@ function addRole() {
     mappingMethod: "contrast",
     variationTargets: defaultVariationTargets(appState.variations.length),
     description: "",
-    variationOverride: false,
-    roleVariations: [],
+    customVariationList: false,
+    customVariations: [],
   });
   renderRoles();
   schedulePreview();
@@ -288,9 +288,9 @@ function updateStepLabel(idx, field, value) {
 
 function toggleRoleVariationOverride(roleIdx) {
   const role = appState.roles[roleIdx];
-  role.variationOverride = !role.variationOverride;
-  if (role.variationOverride && (!role.roleVariations || role.roleVariations.length === 0)) {
-    role.roleVariations = appState.variations.map((v) => Object.assign({}, v, { _id: generateId() }));
+  role.customVariationList = !role.customVariationList;
+  if (role.customVariationList && (!role.customVariations || role.customVariations.length === 0)) {
+    role.customVariations = appState.variations.map((v) => Object.assign({}, v, { _id: generateId() }));
   }
   renderRoles();
   schedulePreview();
@@ -298,9 +298,9 @@ function toggleRoleVariationOverride(roleIdx) {
 
 function addRoleVariation(roleIdx) {
   const role = appState.roles[roleIdx];
-  if (!role.roleVariations) role.roleVariations = [];
-  const n = role.roleVariations.length + 1;
-  role.roleVariations.push({ _id: generateId(), name: String(n), shorthand: String(n) });
+  if (!role.customVariations) role.customVariations = [];
+  const n = role.customVariations.length + 1;
+  role.customVariations.push({ _id: generateId(), name: String(n), shorthand: String(n) });
   ensureVariations();
   renderRoles();
   schedulePreview();
@@ -308,15 +308,15 @@ function addRoleVariation(roleIdx) {
 
 function removeRoleVariation(roleIdx, varIdx) {
   const role = appState.roles[roleIdx];
-  if (!role.roleVariations || role.roleVariations.length <= 1) return;
-  role.roleVariations.splice(varIdx, 1);
+  if (!role.customVariations || role.customVariations.length <= 1) return;
+  role.customVariations.splice(varIdx, 1);
   ensureVariations();
   renderRoles();
   schedulePreview();
 }
 
 function moveRoleVariation(roleIdx, varIdx, dir) {
-  const arr = appState.roles[roleIdx].roleVariations;
+  const arr = appState.roles[roleIdx].customVariations;
   if (!arr) return;
   const newIdx = varIdx + dir;
   if (newIdx < 0 || newIdx >= arr.length) return;
@@ -332,8 +332,8 @@ function updateRoleVariation(roleIdx, varIdx, field, value) {
 
 function resetRoleVariationsToShared(roleIdx) {
   const role = appState.roles[roleIdx];
-  role.variationOverride = false;
-  role.roleVariations = [];
+  role.customVariationList = false;
+  role.customVariations = [];
   renderRoles();
   schedulePreview();
 }

@@ -7,7 +7,7 @@
  * plus distinct Background and Separator stacks. The naming mirrors Apple's published
  * UIColor/NSColor system color names exactly so designers recognize them immediately.
  *
- * includeGlobalColors: true — emits raw brand hex values to a fixed '_constants'
+ * includeSourceColors: true — emits raw brand hex values to a fixed '_constants'
  * collection, matching Apple's requirement for fixed-hex system colors (systemBlue,
  * systemRed, etc.) that never change per theme. These are reference primitives only.
  *
@@ -35,25 +35,25 @@ const APPLE_PRESETS = [
       pluginMode: "direct",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      useGlobalAlgo: true,
-      perColorAlgoScope: "color",
+      useUniformAlgorithm: true,
+      algorithmScopeLevel: "color",
       solverMode: "natural",
-      tokenNameOrder: ["color", "role", "variation"],
+      tokenNameSegments: ["color", "role", "variation"],
       useShorthandColors: false,
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      embedDirectly: false,
-      includeGlobalColors: true,
+      resolveTokensDirectly: false,
+      includeSourceColors: true,
       sourceCollectionName: "_system-colors",
       includeAlphaTints: true,
       alphaValues: "8, 16, 32, 50, 70, 85",
-      variableStructure: "color",
-      includeTonalCollection: false,
+      tokenGrouping: "color",
+      includeColorScalesCollection: false,
       includeDescriptions: true,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
-      perRoleControls: false,
+      
       scaleStepNames: [],
 
       // Global 4-tier label/fill hierarchy.
@@ -103,8 +103,8 @@ const APPLE_PRESETS = [
           name: "Background",
           shorthand: "bg",
           minContrast: 1.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default",   shorthand: "d" }, // 1.0:1 — systemBackground (pure white / pure black)
             { name: "Secondary", shorthand: "s" }, // 1.1:1 — secondarySystemBackground (grouped table bg)
             { name: "Tertiary",  shorthand: "t" }, // 1.2:1 — tertiarySystemBackground (nested groups)
@@ -119,8 +119,8 @@ const APPLE_PRESETS = [
           name: "Background/Grouped",
           shorthand: "bgg",
           minContrast: 1.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default",   shorthand: "d" }, // 1.0:1 — grouped page background
             { name: "Secondary", shorthand: "s" }, // 1.1:1 — inset table / card
             { name: "Tertiary",  shorthand: "t" }, // 1.2:1 — deeply nested card
@@ -136,8 +136,8 @@ const APPLE_PRESETS = [
           name: "Separator",
           shorthand: "sp",
           minContrast: 1.5,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Translucent", shorthand: "tr" }, // 1.5:1 — alpha-blended hairline divider
             { name: "Opaque",      shorthand: "op" }, // 2.5:1 — non-translucent separator (for screenshots)
           ],

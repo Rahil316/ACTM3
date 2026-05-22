@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 UI ORGANISMS
+ * Token Wand UI ORGANISMS
  * Reusable composite components — layout molecules and stateful cards.
  * Anything that could appear in more than one screen lives here.
  * Depends on: primitives.js
@@ -188,8 +188,8 @@ const Components = {
 
   _ColorSolverRow: (group, idx, config) => {
     if (config.pluginMode !== "direct") return null;
-    if (config.useGlobalAlgo !== false) return null;
-    if (config.perColorAlgoScope === "role") return null;
+    if (config.useUniformAlgorithm !== false) return null;
+    if (config.algorithmScopeLevel === "role") return null;
     const mode = group.solverMode || "natural";
     return el("div", { class: "space-y-1" }, [
       el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium" }, "Color Solver"),
@@ -205,7 +205,7 @@ const Components = {
 
   _ColorAlgoRow: (group, idx, config) => {
     if (config.pluginMode === "direct") return null;
-    if (config.useGlobalAlgo) return null;
+    if (config.useUniformAlgorithm) return null;
     const algo = group.scaleAlgorithm || config.scaleAlgorithm || "Natural";
     const opts = ["Natural", "Uniform", "Expressive", "Symmetric", "OKLCH", "Material", "Linear"];
     return el("div", { class: "space-y-1" }, [
@@ -222,7 +222,7 @@ const Components = {
   ColorGroupCard: (group, idx, config) => [Components._ColorMainRow(group, idx, config), Components._ColorSolverRow(group, idx, config), Components._ColorAlgoRow(group, idx, config), Components._ColorDescriptionRow(group, idx, config)].filter(Boolean),
 
   _RoleAlgoRow: (role, idx, config) => {
-    if (config.useGlobalAlgo || config.pluginMode !== "direct" || config.perColorAlgoScope !== "role") return null;
+    if (config.useUniformAlgorithm || config.pluginMode !== "direct" || config.algorithmScopeLevel !== "role") return null;
     const mode = role.solverMode || config.solverMode || "natural";
     return el("div", { class: "space-y-1 mt-2 pt-2 border-t border-[var(--border)]" }, [
       el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium" }, "Solver"),
@@ -242,8 +242,8 @@ const Components = {
   // --- ROLE COMPONENTS ---
   RoleGroupCard: (role, idx, config) => {
     const ui = _getRoleUI(role._id);
-    const useGlobal = !role.variationOverride;
-    const vars = useGlobal ? config.variations || [] : role.roleVariations || [];
+    const useGlobal = !role.customVariationList;
+    const vars = useGlobal ? config.variations || [] : role.customVariations || [];
 
     // ── TABLE ──
     function buildTable() {
@@ -258,14 +258,14 @@ const Components = {
           ? el("span", { class: roLabelCls }, `${v.name || "—"}${v.shorthand ? ` (${v.shorthand})` : ""}`)
           : panelUI.input({
               value: v.name || "", size: "table",
-              oninput: (e) => (role.variationOverride ? updateRoleVariation(idx, vi, "name", e.target.value) : updateSharedVariation(vi, "name", e.target.value)),
+              oninput: (e) => (role.customVariationList ? updateRoleVariation(idx, vi, "name", e.target.value) : updateSharedVariation(vi, "name", e.target.value)),
             });
 
         const shortCell = useGlobal
           ? null
           : panelUI.input({
               value: v.shorthand || "", size: "table",
-              oninput: (e) => (role.variationOverride ? updateRoleVariation(idx, vi, "shorthand", e.target.value) : updateSharedVariation(vi, "shorthand", e.target.value)),
+              oninput: (e) => (role.customVariationList ? updateRoleVariation(idx, vi, "shorthand", e.target.value) : updateSharedVariation(vi, "shorthand", e.target.value)),
             });
 
         const contrastInp = panelUI.input({
@@ -281,7 +281,7 @@ const Components = {
               icon: "−",
               disabled: vars.length <= 1,
               class: "hover:text-[var(--danger)] hover:bg-[var(--danger)]/10",
-              onclick: () => (role.variationOverride ? removeRoleVariation(idx, vi) : removeSharedVariation(vi)),
+              onclick: () => (role.customVariationList ? removeRoleVariation(idx, vi) : removeSharedVariation(vi)),
             })
           : null;
 
@@ -301,7 +301,7 @@ const Components = {
               size: "sm",
               label: "+ Add variation",
               class: "text-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10",
-              onclick: () => (role.variationOverride ? addRoleVariation(idx) : addSharedVariation()),
+              onclick: () => (role.customVariationList ? addRoleVariation(idx) : addSharedVariation()),
             }),
           ])
         : null;
@@ -333,7 +333,7 @@ const Components = {
       inputsUI.iconButton(Icons.Trash, () => removeRole(idx), "danger", { "aria-label": "Delete role" }),
     ]);
 
-    const canOverride = !!config.allowRoleVariations;
+    const canOverride = !!config.perRoleVariationOverride;
     const scopeBadge = el(
       "span",
       {

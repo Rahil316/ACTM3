@@ -22,25 +22,25 @@ const MATERIAL_PRESETS = [
       pluginMode: "scale",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      useGlobalAlgo: true,
-      perColorAlgoScope: "color",
+      useUniformAlgorithm: true,
+      algorithmScopeLevel: "color",
       solverMode: "natural",
-      tokenNameOrder: ["color", "role", "variation"],
+      tokenNameSegments: ["color", "role", "variation"],
       useShorthandColors: false,
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      embedDirectly: false,
-      includeGlobalColors: false,
+      resolveTokensDirectly: false,
+      includeSourceColors: false,
       sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
-      variableStructure: "color",
-      includeTonalCollection: true,
+      tokenGrouping: "color",
+      includeColorScalesCollection: true,
       includeDescriptions: true,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
-      perRoleControls: false,
+      
       scaleStepNames: [],
 
       // M3 global variations: 3 semantic tone roles
@@ -69,8 +69,8 @@ const MATERIAL_PRESETS = [
           name: "Surface",
           shorthand: "sf",
           minContrast: 1.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Surface/Dim",           shorthand: "sdm" }, // step 1 — dimmest background (≈page tint)
             { name: "Surface/Default",        shorthand: "sdf" }, // step 2 — default page surface
             { name: "Surface/Bright",         shorthand: "sbr" }, // step 3 — elevated/brighter surface
@@ -92,8 +92,8 @@ const MATERIAL_PRESETS = [
           name: "On/Surface",
           shorthand: "osf",
           minContrast: 4.5,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default", shorthand: "d" }, // step 17 — primary on-surface text
             { name: "Variant", shorthand: "v" }, // step 14 — variant / secondary on-surface
           ],
@@ -139,8 +139,8 @@ const MATERIAL_PRESETS = [
           name: "Outline",
           shorthand: "ol",
           minContrast: 2.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default", shorthand: "d" }, // step 12 — M3 outline (interactive border)
             { name: "Variant", shorthand: "v" }, // step 9  — M3 outlineVariant (dividers)
           ],
@@ -154,8 +154,8 @@ const MATERIAL_PRESETS = [
           name: "Scrim",
           shorthand: "sc",
           minContrast: 1.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default", shorthand: "d" },
           ],
           variationTargets: [14.0],
@@ -168,8 +168,8 @@ const MATERIAL_PRESETS = [
           name: "Inverse/Surface",
           shorthand: "isf",
           minContrast: 7.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Surface",    shorthand: "sf" }, // step 21 — inverse (dark) surface
             { name: "On/Surface", shorthand: "os" }, // step 3  — text on inverse surface
             { name: "Primary",    shorthand: "pr" }, // step 8  — tinted inverse action button

@@ -1,12 +1,12 @@
 /**
  * ============================================================================
- * CTM316 SCREEN: PREVIEW
- * Renders the tonal scale + theme token swatches in the preview panel.
+ * Token Wand SCREEN: PREVIEW
+ * Renders the color scale + theme token swatches in the preview panel.
  * Also owns the dynamic theme tab bar.
  * ============================================================================
  */
 
-// ── TONAL SCALE COMPONENTS ────────────────────────────────────────────────────
+// ── COLOR SCALE COMPONENTS ────────────────────────────────────────────────────
 
 function _pvScaleStep(step, data, onHover) {
   const labelEl = el(
@@ -214,11 +214,11 @@ const schedulePreview = debounce(() => {
 function renderPreviewPanel(result) {
   const themes = appState.themes || [];
 
-  // ── Tonal Scale / Solved Colors panel
+  // ── Color Scale / Solved Colors panel
   const colorEl = document.getElementById("preview-colors");
   colorEl.innerHTML = "";
   if (Object.keys(result.scales).length === 0) {
-    colorEl.innerHTML = `<p class="text-[12px] text-[var(--text-muted)] px-1 py-4 text-center">No tonal scale in Direct mode. Colors are solved directly per variation target.</p>`;
+    colorEl.innerHTML = `<p class="text-[12px] text-[var(--text-muted)] px-1 py-4 text-center">No scale in Direct mode. Colors are solved directly per variation target.</p>`;
   } else {
     const themeKeys = themes.map((t) => t.name.toLowerCase());
     for (const [colorName, scale] of Object.entries(result.scales)) {
@@ -230,7 +230,7 @@ function renderPreviewPanel(result) {
   }
 
   // ── Alpha Tints
-  if (appState.includeAlphaTints && appState.includeGlobalColors) {
+  if (appState.includeAlphaTints && appState.includeSourceColors) {
     const alphaInts = (appState.alphaValues || "10, 25, 50, 75, 90")
       .split(",").map((v) => parseInt(v.trim())).filter((v) => !isNaN(v));
     if (alphaInts.length > 0) {

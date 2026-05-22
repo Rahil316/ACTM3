@@ -35,25 +35,25 @@ const POLARIS_PRESETS = [
       pluginMode: "direct",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
-      useGlobalAlgo: true,
-      perColorAlgoScope: "color",
+      useUniformAlgorithm: true,
+      algorithmScopeLevel: "color",
       solverMode: "natural",
-      tokenNameOrder: ["color", "role", "variation"],
+      tokenNameSegments: ["color", "role", "variation"],
       useShorthandColors: false,
       useShorthandRoles: false,
       useShorthandVariations: true,
       useShorthandSteps: false,
-      embedDirectly: false,
-      includeGlobalColors: false,
+      resolveTokensDirectly: false,
+      includeSourceColors: false,
       sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
-      variableStructure: "color",
-      includeTonalCollection: false,
+      tokenGrouping: "color",
+      includeColorScalesCollection: false,
       includeDescriptions: true,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
-      perRoleControls: false,
+      
       scaleStepNames: [],
 
       // Global 5-state interaction model.
@@ -97,8 +97,8 @@ const POLARIS_PRESETS = [
           name: "Background",
           shorthand: "bg",
           minContrast: 1.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default",  shorthand: "d" }, // 1.0:1 — page background (near-white)
             { name: "Subdued",  shorthand: "s" }, // 1.15:1 — subdued page (section divider)
             { name: "Hover",    shorthand: "h" }, // 1.3:1 — hover state on background
@@ -113,8 +113,8 @@ const POLARIS_PRESETS = [
           name: "Surface",
           shorthand: "sf",
           minContrast: 1.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default",  shorthand: "d" }, // 1.0:1 — card / popover
             { name: "Raised",   shorthand: "r" }, // 1.05:1 — elevated card (e.g. dragging)
             { name: "Overlay",  shorthand: "o" }, // 1.1:1 — modal / sheet
@@ -129,8 +129,8 @@ const POLARIS_PRESETS = [
           name: "Text",
           shorthand: "tx",
           minContrast: 4.5,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default",  shorthand: "d"  }, // 7.0:1 — body text
             { name: "Subdued",  shorthand: "s"  }, // 4.5:1 — secondary / helper text
             { name: "Critical", shorthand: "c"  }, // 4.5:1 — error text
@@ -145,8 +145,8 @@ const POLARIS_PRESETS = [
           name: "Border",
           shorthand: "bo",
           minContrast: 2.0,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "Default",     shorthand: "d" }, // 2.0:1 — standard UI border
             { name: "Subdued",     shorthand: "s" }, // 1.5:1 — divider / subtle border
             { name: "Interactive", shorthand: "i" }, // 3.0:1 — focus ring / interactive border
@@ -169,8 +169,8 @@ const POLARIS_PRESETS = [
           name: "Status/Success",
           shorthand: "ssu",
           minContrast: 1.3,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "BG/Subtle",  shorthand: "bgs" },
             { name: "BG/Default", shorthand: "bgd" },
             { name: "FG",         shorthand: "fg"  },
@@ -185,8 +185,8 @@ const POLARIS_PRESETS = [
           name: "Status/Caution",
           shorthand: "sca",
           minContrast: 1.3,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "BG/Subtle",  shorthand: "bgs" },
             { name: "BG/Default", shorthand: "bgd" },
             { name: "FG",         shorthand: "fg"  },
@@ -201,8 +201,8 @@ const POLARIS_PRESETS = [
           name: "Status/Critical",
           shorthand: "scr",
           minContrast: 1.3,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "BG/Subtle",  shorthand: "bgs" },
             { name: "BG/Default", shorthand: "bgd" },
             { name: "FG",         shorthand: "fg"  },
@@ -219,8 +219,8 @@ const POLARIS_PRESETS = [
           name: "Status/Magic",
           shorthand: "sma",
           minContrast: 1.3,
-          variationOverride: true,
-          roleVariations: [
+          customVariationList: true,
+          customVariations: [
             { name: "BG/Subtle",  shorthand: "bgs" },
             { name: "BG/Default", shorthand: "bgd" },
             { name: "FG",         shorthand: "fg"  },

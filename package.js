@@ -168,7 +168,7 @@ async function main() {
     }
 
     try {
-      execSync(`git tag -a "${version}" -m "CTM316 release ${version}"`, { stdio: "inherit" });
+      execSync(`git tag -a "${version}" -m "Token Wand release ${version}"`, { stdio: "inherit" });
       console.log(`\nGit tag ${version} created.`);
       console.log(`Run: git push origin ${version}   ← to publish the tag`);
     } catch (e) {

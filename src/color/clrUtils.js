@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 COLOR MATH & UTILITIES
+ * Token Wand COLOR MATH & UTILITIES
  * Ported verbatim from Web_App/JS/Utils.js — single source of truth for color math.
  * Keep in sync with Utils.js; never add DOM-aware logic here.
  * ============================================================================

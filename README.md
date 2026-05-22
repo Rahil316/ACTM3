@@ -1,16 +1,17 @@
-# CTM316 — Color Token Machine
+# Token Wand — The magic wand for Figma design tokens.
 
-A Figma plugin that generates multi-theme design token systems from a set of brand colors and semantic role definitions.
+A Figma plugin that generates multi-theme design token systems from brand colors and semantic role definitions.
 
 ---
 
 ## What it does
 
-- **Tonal Scale mode** — generates a full tonal scale per color (configurable step count, 7 scale algorithms), then maps semantic roles (Text, Fill, Background, Border…) onto those steps by contrast or index
-- **Adaptive Engine mode** — solves role colors directly to target contrast ratios without an intermediate tonal scale; per-color or per-role solver modes (Balanced, Vivid, Muted, Hue Locked, Max Chroma)
+- **Scale mode** — generates a full tonal scale per color (7 algorithms, configurable step count), then maps semantic roles onto scale steps by WCAG contrast target or explicit step index
+- **Direct mode** — solves role colors directly to target contrast ratios without an intermediate scale; 5 solver modes (natural, saturated, luminance, hue-locked, chroma-maximized)
 - **Multi-theme** — unlimited themes, each with a configurable background color
-- **Rename-safe sync** — stable `_id` tracking means reordering or renaming colors/roles updates existing Figma variables in place instead of deleting and recreating them
-- **Exports** — Figma variables, CSS custom properties, SCSS (maps + mixin), CSV audit sheet, JSON token file
+- **Rename-safe sync** — stable `_id` tracking means reordering or renaming colors/roles updates existing Figma variables in place
+- **Presets** — 9 built-in design system presets: TW Regular, TW Pro, TW Funk, Apple HIG, IBM Carbon, Material Design 3, Shopify Polaris, Tailwind CSS, Radix UI
+- **Exports** — Figma variables, CSS custom properties, SCSS (maps + mixin), CSV audit sheet, JSON
 
 ---
 
@@ -50,16 +51,20 @@ Each command produces `release/<version>/` with `manifest.json`, `scripts.js`, a
 
 `src/tests.js` runs automatically on plugin load when `TESTS_ENABLED = true`. Output appears in Figma's DevTools console (Plugins → Development → Open Console).
 
-It covers color math (`clrUtils`), all 7 tonal scale algorithms, the contrast solver (all 5 modes), the full `variableMaker` pipeline in both tonal and adaptive modes, and `translateConfig`.
+Covers: color math (`clrUtils`), all 7 scale algorithms, all 5 solver modes, full `variableMaker` pipeline in both Scale and Direct modes, and `translateConfig`.
 
 Set `TESTS_ENABLED = false` before shipping a build.
 
 ---
 
-## Docs
+## Knowledge base
 
-| File | Contents |
-| ---- | -------- |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Two-thread model, source layout, module load order, config persistence |
-| [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | UI component rules, state management, naming, anti-patterns |
-| [docs/PROGRESS.md](docs/PROGRESS.md) | Done, next up, known issues — updated each session |
+Detailed documentation lives in [`lib/knowledge/`](lib/knowledge/):
+
+| File                                                                   | Contents                                                           |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [how-it-works.md](lib/knowledge/how-it-works.md)                       | Engine pipeline, two-thread model, token naming, Figma alias chain |
+| [how-to-use.md](lib/knowledge/how-to-use.md)                           | Step-by-step usage guide from install to export                    |
+| [color-system-guidelines.md](lib/knowledge/color-system-guidelines.md) | How to design a good color system using this tool                  |
+| [cheatsheet.md](lib/knowledge/cheatsheet.md)                           | Role names, variation sets, and contrast targets at a glance       |
+| [features-and-tricks.md](lib/knowledge/features-and-tricks.md)         | Full feature list, tips, preset reference                          |

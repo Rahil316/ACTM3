@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 SCREEN: PALETTE TAB
+ * Token Wand SCREEN: PALETTE TAB
  * Renders the color group cards into the sidebar.
  * Also owns the shared drag-reorder helper used by both colors and roles.
  * ============================================================================
@@ -53,7 +53,7 @@ const renderColorGroups = debounce(() => {
       empty.className = "flex flex-col items-center justify-center py-12 px-4 text-center";
       empty.innerHTML = `
         <p class="text-[13px] font-medium text-[var(--text-muted)] mb-1">No colors yet</p>
-        <p class="text-[11px] text-[var(--text-muted)] opacity-70">Click <strong>+ Add Color</strong> above to add your first palette color. Each color generates a full tonal scale used across all roles.</p>
+        <p class="text-[11px] text-[var(--text-muted)] opacity-70">Click <strong>+ Add Color</strong> above to add your first palette color. Each color generates a full color scale used across all roles.</p>
       `;
       fragment.appendChild(empty);
     }

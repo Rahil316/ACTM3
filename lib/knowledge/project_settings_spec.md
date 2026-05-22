@@ -1,134 +1,145 @@
 ---
 name: Settings spec
-description: Final settings module design, PDF gap analysis, and per-tab field inventory
+description: Actual settings module design — what is in the UI, what is wired, what is not
 type: project
-originSessionId: 8d8bcbc1-572d-4c9f-b8bd-4a9ae7f56916
 ---
-Last updated: 2026-05-17
-Source: Settings.pdf mockup (read via pdfminer) + current codebase audit
+
+Last updated: 2026-05-22
+Source: settings.js, store.js, config.js — direct code audit
 
 ---
 
 ## Settings screen layout
 
-Full-screen overlay (not bottom sheet). Fixed header with Cancel / Done. 5 tab pills.
-Cancel snapshots state on open, restores on cancel. Done calls updateSettingsFromInputs().
+Full-screen overlay. Fixed header with Cancel / Done. **Two** tab pills.
+Cancel snapshots state on open, restores on cancel. Done calls `updateSettingsFromInputs()`.
 
 ```
-┌─────────────────────────────────┐
-│ Settings         [Cancel] [Done]│
-├─────────────────────────────────┤
-│ [Project][Palettes][Roles][Figma][Plugin] │
-├─────────────────────────────────┤
-│  scrollable tab content         │
-└─────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ Settings              [Cancel]  [Done]  │
+├─────────────────────────────────────────┤
+│  [Token Settings]  [Plugin]             │
+├─────────────────────────────────────────┤
+│  scrollable tab content                 │
+└─────────────────────────────────────────┘
 ```
 
 ---
 
-## Tab-by-tab field spec
+## Token Settings Tab
 
-### Project tab
+### Token Creation Mode card
 
-| Field | Type | State key | Status |
+| Control | Type | State key | Status |
 |---|---|---|---|
-| Project Name | text input | `appState.name` | ✅ wired |
-| Light theme bg | hex input | `appState.themes[0].bg` | ✅ wired |
-| Dark theme bg | hex input | `appState.themes[1].bg` | ✅ wired |
-| Saved States list | list + actions | new — snapshot array | 🚧 placeholder only |
+| Scale / Direct segmented | segmented 2-way | `appState.pluginMode` = `"scale"` \| `"direct"` | ✅ wired |
+| Use Global Algorithm | toggle | `appState.useUniformAlgorithm` | ✅ wired — engine reads it in clrEngine.js |
+| Algorithm selector | select | `appState.scaleAlgorithm` | ✅ wired — hidden in Direct mode |
+| Solver selector | select | `appState.solverMode` | ✅ wired — shown in Direct mode + global on |
+| Solver scope (By Color / By Role) | segmented | `appState.algorithmScopeLevel` = `"color"` \| `"role"` | ✅ wired — shown in Direct mode + global off |
 
-Saved States row actions: View Changes, Restore, Preview, Delete.
+Visibility rules:
+- Algorithm selector hidden when `pluginMode === "direct"`
+- Solver selector shown when `pluginMode === "direct"` AND `useUniformAlgorithm === true`
+- Solver scope shown when `pluginMode === "direct"` AND `useUniformAlgorithm === false`
 
-### Palettes tab
+### Palette card (Scale mode only — hidden in Direct)
 
-| Field | Type | State key | Status |
+| Control | Type | State key | Status |
 |---|---|---|---|
-| Token Creation Mode | segmented (Tonal Scale / Adaptive Engine) | `appState.pluginMode` | ✅ wired |
-| Palette steps | number input | `appState.scaleLength` | ✅ wired |
-| Scale Algorithm | select | `appState.scaleAlgorithm` | ✅ wired |
-| Step Labels (CSV) | text input | `appState.scaleStepNames` | ✅ wired — verify engine uses it |
+| Steps | number input | `appState.scaleLength` | ✅ wired |
 
-### Roles tab
+### Variations card
 
-| Field | Type | State key | Status |
+| Control | Type | State key | Status |
 |---|---|---|---|
-| Role Specific Variations | toggle | `appState.allowRoleVariations` | ✅ wired |
-| Per-role Controls | toggle | `appState.perRoleControls` | ✅ wired |
-| Base Selection | select (By Contrast / By Index / Manual) | `appState.baseSelection` | ✅ wired |
-| Spread Unit | segmented (Steps / Contrast) | `appState.spreadUnit` | ✅ wired |
-| Variation Levels list | dynamic list | `appState.variations` | ✅ wired |
-| Role Labels CSV | text input | new — global variation name setter | 🚧 not implemented |
+| Role-specific Variations | toggle | `appState.perRoleVariationOverride` | ✅ wired — enables per-role customVariationList on role cards |
+| Global Variations list | dynamic list | `appState.variations[]` (name, shorthand) | ✅ wired |
 
-Role Labels CSV = convenience field to rename all variation levels at once via comma list
-(e.g. "Lighter, Light, Base, Dark, Darker" → sets each variation's name).
-Currently the only way to rename is per-variation inline in the list.
+### Token Naming card
 
-### Figma tab
-
-| Field | Type | State key | Status |
+| Control | Type | State key | Status |
 |---|---|---|---|
-| Tonal Scale Collection | text input | `appState.tonalScaleCollectionName` | ✅ wired |
-| Color Roles Collection | text input | `appState.tokenCollectionName` | ✅ wired |
-| Embed Colors Directly | toggle | `appState.embedDirectly` | ✅ wired |
-| Global Colors | toggle | `appState.includeGlobalColors` | ✅ wired |
-| Global Colors Collection Name | text input | `appState.globalColorsCollectionName` | ✅ wired |
-| Alpha Tints | toggle | `appState.includeAlphaTints` | ✅ wired |
-| Alpha Values (CSV) | text input | `appState.alphaValues` | ✅ wired — verify engine |
-| Variable Structure | segmented (Color-first / Role-first) | `appState.variableStructure` | ✅ wired |
-| Use shorthand for Colors | toggle | `appState.useShorthandColors` | ✅ wired |
-| Use shorthand for Roles | toggle | `appState.useShorthandRoles` | ✅ wired |
-| Use shorthand for Variations | toggle | `appState.useShorthandVariations` | ✅ wired |
-| Token name format preview | read-only display | derived | ✅ wired |
+| Shorthand for Colors | toggle | `appState.useShorthandColors` | ✅ wired |
+| Shorthand for Roles | toggle | `appState.useShorthandRoles` | ✅ wired |
+| Shorthand for Variations | toggle | `appState.useShorthandVariations` | ✅ wired |
+| Shorthand for Scale Steps | toggle | `appState.useShorthandSteps` | ✅ wired |
+| Token Name Format pills | drag-reorder | `appState.tokenNameSegments` | ✅ wired — `["color","role","variation"]` or any permutation/2-element |
+| Token Name Format preview | read-only | derived | ✅ wired |
 | Variable Descriptions | toggle | `appState.includeDescriptions` | ✅ wired |
 
-**New fields seen in PDF not yet in code:**
-- Global Variables collection name (`_Global`) — separate from "Global Colors" collection. Purpose unclear — may be the same field, or a separate "primitive tokens" layer. Needs clarification from user.
+### Collections card
 
-### Plugin tab
-
-| Field | Type | State key | Status |
+| Control | Type | State key | Status |
 |---|---|---|---|
-| UI Scale | select (70%–150%) | `uiPrefs.scale` | ✅ wired (moved from more-sheet) |
-| UI Theme | select (Follow Figma / Dark / Light) | `uiPrefs.theme` | ✅ wired (moved from more-sheet) |
-| Language | select | new — no i18n infra | 🚧 placeholder |
-| Beta Features — Enroll | toggle | new | 🚧 placeholder |
-| Beta Feature 1/2/3 | toggles | new | 🚧 placeholder |
-| About CTM — Feedback | link | new | 🚧 placeholder |
-| About CTM — Learn more | link | new | 🚧 placeholder |
+| Palettes collection toggle | toggle | `appState.includeColorScalesCollection` | ✅ wired — suppresses `_scale` collection from Figma output |
+| Palettes collection name | text input | `appState.scaleCollectionName` | ✅ wired (hidden when toggle off) |
+| Color role collection name | text input | `appState.tokenCollectionName` | ✅ wired |
+| Link tokens to color scale | toggle | `appState.resolveTokensDirectly` (inverted) | ✅ wired — when OFF, tokens embed hex instead of aliases |
+| Source Colors | toggle | `appState.includeSourceColors` | ✅ wired |
+| Source Colors collection name | text input | `appState.sourceCollectionName` | ✅ wired (shown when Source Colors on) |
+| Alpha Tints | toggle | `appState.includeAlphaTints` | ✅ wired (shown when Source Colors on) |
+| Alpha Values CSV | text input | `appState.alphaValues` | ✅ wired (shown when Alpha Tints on) |
+
+Note: "Link tokens to color scale" toggle is **inverted** — the UI button renders `on` when `resolveTokensDirectly === false` (aliases enabled). Toggle-off = resolve directly.
+
+### Scale Step Labels card (Scale mode only — hidden in Direct)
+
+| Control | Type | State key | Status |
+|---|---|---|---|
+| Step label list | dynamic list | `appState.scaleStepNames[]` (name, shorthand) | ✅ wired — if empty, steps numbered 1…N |
 
 ---
 
-## Gap analysis summary
+## Plugin Tab
 
-### In PDF mockup but NOT in code (user needs to add/implement)
-1. **Saved States** — version history with restore (Project tab)
-2. **Role Labels CSV** — bulk variation rename (Roles tab)
-3. **Global Variables `_Global` collection** — purpose TBD (Figma tab)
-4. **Language selector** (Plugin tab)
-5. **Beta Features** section (Plugin tab)
-6. **About CTM** section (Plugin tab)
-
-### In code but NOT visible in any mockup tab (user should add Figma slots)
-1. `pluginMode` — Token Creation Mode is in Palettes tab ✅ (it's there)
-2. `perRoleControls` — per-role override toggle is in Roles tab ✅
-3. `includeDescriptions` — in Figma tab ✅
-4. `variableStructure` — in Figma tab ✅
-5. `embedDirectly` — in Figma tab ✅
-6. `includeAlphaTints` + `alphaValues` — in Figma tab ✅
-7. **`scaleStepNames`** — Step Labels CSV, in Palettes tab ✅
-8. **`allowRoleVariations`** — in Roles tab ✅
-
-All major code settings are accounted for in the mockup tabs. Only the new features above are missing.
+| Control | Type | State key | Status |
+|---|---|---|---|
+| UI Scale | select | `uiPrefs.scale` | ✅ wired (persisted in Figma clientStorage) |
+| UI Theme | select | `uiPrefs.theme` | ✅ wired (persisted in Figma clientStorage) |
 
 ---
 
-## More-sheet (export menu) — what remains
+## More-sheet (••• button in toolbar)
 
-After moving UI Scale/Theme to Plugin tab, more-sheet contains:
+The more-sheet is NOT part of the settings overlay. It contains:
+
 - Save Config JSON
 - Export CSS Variables
 - Export CSV
 - Export SCSS
-- Clear All (destructive, red)
+- Clear All (destructive)
 
-This sheet is still needed. Accessed via the "•••" button in the toolbar.
+---
+
+## appState fields that exist in state but have no settings UI
+
+| Field | Location | Notes |
+|---|---|---|
+| `appState.name` | Project tab input in sidebar | System name; used in CSS/SCSS export headers and save filenames |
+| `appState.themes[]` | Project tab in sidebar | Theme names + background hex — not in the settings overlay |
+| `appState.tokenGrouping` | Token Name Format section | `"color"` \| `"role"` — variable structure (color-first vs role-first grouping); toggled via `setTokenGrouping()` but not currently exposed as a UI control in settings |
+
+---
+
+## Dead state keys (in appState, no UI control, no engine effect)
+
+| Field | Status |
+|---|---|
+| (none confirmed as of 2026-05-22) | All previously suspected "dead" keys (`includeColorScalesCollection`, `useUniformAlgorithm`, `algorithmScopeLevel`) are now confirmed wired and working |
+
+---
+
+## Gap analysis: what is not yet implemented
+
+### In PDF mockup design but NOT in code
+
+1. **Saved States** — version history with View / Restore / Delete (Project tab)
+2. **Role Labels CSV** — bulk-rename all variation names at once (Roles tab in mockup)
+3. **Language selector** (Plugin tab)
+4. **Beta Features** section (Plugin tab)
+5. **About Token Wand** section (Plugin tab)
+
+### In code / appState but NOT exposed in settings UI
+
+- `tokenGrouping` (`"color"` / `"role"`) — controls whether variable structure is color-first or role-first. Logic exists in `setTokenGrouping()` but no settings UI control is rendered.

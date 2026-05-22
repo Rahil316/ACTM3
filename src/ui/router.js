@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 ROUTER
+ * Token Wand ROUTER
  * Single owner of all screen and overlay visibility.
  * No appState mutations — pure show/hide logic.
  * ============================================================================

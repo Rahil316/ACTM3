@@ -21,29 +21,29 @@ const TAILWIND_PRESETS = [
       pluginMode: "scale",
       scaleAlgorithm: "Natural",
       scaleLength: 11,
-      useGlobalAlgo: true,
-      perColorAlgoScope: "color",
+      useUniformAlgorithm: true,
+      algorithmScopeLevel: "color",
       solverMode: "natural",
-      tokenNameOrder: ["color", "variation"],
+      tokenNameSegments: ["color", "variation"],
       useShorthandColors: true,
       useShorthandRoles: false,
       useShorthandVariations: true,
       useShorthandSteps: false,
-      embedDirectly: false,
-      includeGlobalColors: false,
+      resolveTokensDirectly: false,
+      includeSourceColors: false,
       sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
-      variableStructure: "color",
-      includeTonalCollection: true,
+      tokenGrouping: "color",
+      includeColorScalesCollection: true,
       includeDescriptions: true,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
-      perRoleControls: false,
+      
       scaleStepNames: [],
 
       // 11 global variations named after Tailwind's step numbers.
-      // tokenNameOrder: ["color", "variation"] — no role segment, so variables appear as
+      // tokenNameSegments: ["color", "variation"] — no role segment, so variables appear as
       // "Slate/Scale/50", "Blue/Scale/500", etc. in Figma — matching Tailwind's CSS class names.
       variations: [
         { name: "Scale/50",  shorthand: "50"  }, // step 0  — near-white
@@ -67,7 +67,7 @@ const TAILWIND_PRESETS = [
       ],
 
       // Single "Scale" role. Tailwind has no semantic role layer — colors are used directly
-      // by step number. tokenNameOrder excludes role so output matches Tailwind's flat namespace.
+      // by step number. tokenNameSegments excludes role so output matches Tailwind's flat namespace.
       roles: [
         {
           name: "Scale",

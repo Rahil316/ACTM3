@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 STATE MANAGEMENT (The Vanilla Store)
+ * Token Wand STATE MANAGEMENT (The Vanilla Store)
  * Single source of truth for all plugin state. Owns:
  *   - Identity helpers (generateId, ensureIds, ensureVariations)
  *   - appState and UI preferences
@@ -41,31 +41,30 @@ function ensureIds(state) {
 
 // ── BOOTSTRAP CONFIG ──
 // Minimal safe state used before themeShop.js loads. On first launch
-// runtime.js replaces this with PRESETS[0].config (CTM Regular).
+// runtime.js replaces this with PRESETS[0].config (TW Regular).
 const _bootstrapConfig = {
-  name: "CTM316",
+  name: "Token Wand",
   pluginMode: "scale",
   scaleAlgorithm: "Natural",
   scaleLength: 25,
-  useGlobalAlgo: true,
-  perColorAlgoScope: "color",
+  useUniformAlgorithm: true,
+  algorithmScopeLevel: "color",
   solverMode: "natural",
-  tokenNameOrder: ["color", "role", "variation"],
+  tokenNameSegments: ["color", "role", "variation"],
   useShorthandColors: false,
   useShorthandRoles: false,
   useShorthandVariations: false,
   useShorthandSteps: false,
-  embedDirectly: false,
-  includeGlobalColors: false,
+  resolveTokensDirectly: false,
+  includeSourceColors: false,
   sourceCollectionName: "global",
   includeAlphaTints: false,
   alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
-  variableStructure: "color",
-  includeTonalCollection: true,
+  tokenGrouping: "color",
+  includeColorScalesCollection: true,
   includeDescriptions: false,
   scaleCollectionName: "_scale",
   tokenCollectionName: "color tokens",
-  perRoleControls: false,
   scaleStepNames: [],
   variations: null,
   colors: [
@@ -116,7 +115,7 @@ function ensureVariations() {
     appState.variations = defaults.map((d) => ({ _id: generateId(), name: d.name, shorthand: d.shorthand }));
   }
   for (const role of appState.roles) {
-    const roleVars = role.variationOverride && role.roleVariations && role.roleVariations.length > 0 ? role.roleVariations : appState.variations;
+    const roleVars = role.customVariationList && role.customVariations && role.customVariations.length > 0 ? role.customVariations : appState.variations;
     const vLen = roleVars.length;
     if (!role.variationTargets || role.variationTargets.length !== vLen) {
       const oldVals = role.variations ? Object.values(role.variations) : Array.isArray(role.variationTargets) ? role.variationTargets : [];
@@ -152,44 +151,8 @@ function getSavedState() {
  * @param {object} incoming - Partial or full appState-shaped object
  */
 function loadState(incoming) {
-  // migrate legacy perColorAlgo flag
-  if (incoming.perColorAlgo !== undefined && incoming.useGlobalAlgo === undefined) {
-    incoming.useGlobalAlgo = !incoming.perColorAlgo;
-    delete incoming.perColorAlgo;
-  }
-  // migrate legacy scaleStepNames CSV string → [{name, shorthand}] array
-  if (typeof incoming.scaleStepNames === "string") {
-    const csv = incoming.scaleStepNames.trim();
-    incoming.scaleStepNames = csv
-      ? csv.split(",").map((n) => { const s = n.trim(); return { _id: generateId(), name: s, shorthand: s }; })
-      : [];
-  }
-  // migrate legacy pluginMode and collection field names
-  if (incoming.pluginMode === "tonalScalesBased") incoming.pluginMode = "scale";
-  if (incoming.pluginMode === "adaptiveEngine")   incoming.pluginMode = "direct";
-  if (incoming.tonalScaleCollectionName && !incoming.scaleCollectionName) {
-    incoming.scaleCollectionName = incoming.tonalScaleCollectionName;
-    delete incoming.tonalScaleCollectionName;
-  }
-  if (incoming.globalColorsCollectionName && !incoming.sourceCollectionName) {
-    incoming.sourceCollectionName = incoming.globalColorsCollectionName;
-    delete incoming.globalColorsCollectionName;
-  }
-  const isLegacyIndex = incoming.baseSelection === "By Index" || incoming.baseSelection === "Manual";
-  delete incoming.baseSelection;
-  delete incoming.spreadUnit;
-  // strip legacy per-role fields and set mappingMethod default
   (incoming.roles || []).forEach((r) => {
-    const roleIsIndex = isLegacyIndex || r.baseSelection === "By Index" || r.baseSelection === "Manual";
-    delete r.spread;
-    delete r.baseIndex;
-    delete r.darkBaseIndex;
-    delete r.contrastGap;
-    delete r.baseContrast;
-    delete r.useContrastGap;
-    delete r.baseSelection;
-    delete r.spreadUnit;
-    if (!r.mappingMethod) r.mappingMethod = roleIsIndex ? "index" : "contrast";
+    if (!r.mappingMethod) r.mappingMethod = "contrast";
   });
   Object.assign(appState, incoming);
   ensureIds(appState);
@@ -217,8 +180,8 @@ function _computeHash() {
     useShorthandRoles: s.useShorthandRoles,
     useShorthandVariations: s.useShorthandVariations,
     useShorthandSteps: s.useShorthandSteps,
-    tokenNameOrder: s.tokenNameOrder,
-    embedDirectly: s.embedDirectly,
+    tokenNameSegments: s.tokenNameSegments,
+    resolveTokensDirectly: s.resolveTokensDirectly,
   });
 }
 
@@ -316,9 +279,9 @@ function setRole(idx, key, value) {
  */
 function setRoleVariation(roleIdx, varIdx, field, value) {
   const role = appState.roles[roleIdx];
-  if (!role || !role.roleVariations) return;
-  if (varIdx < 0 || varIdx >= role.roleVariations.length) return;
-  role.roleVariations[varIdx][field] = value;
+  if (!role || !role.customVariations) return;
+  if (varIdx < 0 || varIdx >= role.customVariations.length) return;
+  role.customVariations[varIdx][field] = value;
 }
 
 // ── MUTATIONS: VARIATIONS ──

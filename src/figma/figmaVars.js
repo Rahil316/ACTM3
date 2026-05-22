@@ -39,12 +39,12 @@ const VariableManager = {
 
     // Build rename maps: position-matched items that only changed names get renamed
     // silently instead of being deleted and recreated.
-    const renameMap = savedAppState && appState ? buildVariableRenameMap(savedAppState, appState) : { ramps: {}, contextual: {} };
+    const renameMap = savedAppState && appState ? buildVariableRenameMap(savedAppState, appState) : { scale: {}, tokens: {} };
 
     const scaleCollectionName = (appState && appState.scaleCollectionName) || "_scale";
-    const contextualName = (appState && appState.tokenCollectionName) || "contextual";
-    const skipScales = config.embedDirectly || config.pluginMode === "direct" || config.includeTonalCollection === false;
-    const tokenNameOrder = config.tokenNameOrder || (config.variableStructure === "role" ? ["role", "color", "variation"] : ["color", "role", "variation"]);
+    const tokenColName = (appState && appState.tokenCollectionName) || "color tokens";
+    const skipScales = config.resolveTokensDirectly || config.pluginMode === "direct" || config.includeColorScalesCollection === false;
+    const tokenNameOrder = config.tokenNameSegments || (config.tokenGrouping === "role" ? ["role", "color", "variation"] : ["color", "role", "variation"]);
     const useShortColor = config.useShorthandColors || false;
     const useShortRole = config.useShorthandRoles || false;
     const useShortStep = config.useShorthandSteps || false;
@@ -72,16 +72,16 @@ const VariableManager = {
 
     // Fetch scale collection once — used by both stages when applicable.
     // scope="roles" skips Stage 1 but Stage 2 still needs scaleCol to resolve variable aliases
-    // (unless embedDirectly is true, in which case raw hex values are used directly).
+    // (unless resolveTokensDirectly is true, in which case raw hex values are used directly).
     const needsScaleCol = !skipScales && (scope === "all" || scope === "groups" || scope === "roles");
     const scaleCol = needsScaleCol ? await this.getOrCreateCollection(scaleCollectionName) : null;
 
     // Apply scale renames before upserting so the cache reflects new names immediately
-    if (scaleCol && renameMap.ramps && Object.keys(renameMap.ramps).length > 0) {
-      await this.applyRenames(scaleCol, renameMap.ramps);
+    if (scaleCol && renameMap.scale && Object.keys(renameMap.scale).length > 0) {
+      await this.applyRenames(scaleCol, renameMap.scale);
     }
 
-    // STAGE 1: Tonal Scale → scale collection (skipped when embedDirectly is true)
+    // STAGE 1: Color Scale → scale collection (skipped when resolveTokensDirectly is true)
     if (scaleCol && (scope === "all" || scope === "groups")) {
       const modeId = scaleCol.modes[0].modeId;
       const include = config.includeDescriptions !== false;
@@ -99,18 +99,18 @@ const VariableManager = {
       await this.upsertVariables(scaleCol, modeId, allScaleVars);
     }
 
-    // STAGE 2: Semantic Role Tokens → contextual collection
+    // STAGE 2: Semantic Role Tokens → token collection
     if (scope === "all" || scope === "roles") {
-      const contextualCol = await this.getOrCreateCollection(contextualName);
+      const tokenCol = await this.getOrCreateCollection(tokenColName);
 
-      // Apply contextual token renames before upserting
-      if (renameMap.contextual && Object.keys(renameMap.contextual).length > 0) {
-        await this.applyRenames(contextualCol, renameMap.contextual);
+      // Apply token renames before upserting
+      if (renameMap.tokens && Object.keys(renameMap.tokens).length > 0) {
+        await this.applyRenames(tokenCol, renameMap.tokens);
       }
 
       const skippedModes = [];
       for (const theme of Object.keys(result.tokens || {})) {
-        const modeId = this.ensureMode(contextualCol, theme);
+        const modeId = this.ensureMode(tokenCol, theme);
         if (modeId === null) {
           skippedModes.push(theme);
           continue;
@@ -149,20 +149,20 @@ const VariableManager = {
                 return [figmaName, "COLOR", value, fullDesc];
               })
               .filter(Boolean);
-            await this.upsertVariables(contextualCol, modeId, vars);
+            await this.upsertVariables(tokenCol, modeId, vars);
           }
         }
       }
       if (skippedModes.length > 0) {
         figma.ui.postMessage({
           type: "warning",
-          message: `The "${contextualName}" token collection is missing the ${skippedModes.join(" and ")} mode(s). Multiple modes per collection require a paid Figma plan.`,
+          message: `The "${tokenColName}" token collection is missing the ${skippedModes.join(" and ")} mode(s). Multiple modes per collection require a paid Figma plan.`,
         });
       }
     }
 
-    // STAGE 3: Global Colors collection — raw brand hex values, no themes
-    if (config.includeGlobalColors) {
+    // STAGE 3: Source Colors collection — raw brand hex values, no themes
+    if (config.includeSourceColors) {
       await this.syncGlobalColors(config);
     }
 
@@ -276,7 +276,7 @@ function hexToFigmaRgb(hex) {
 // Stored on the document (not clientStorage) so config travels with the Figma file.
 function savePluginConfig(appState) {
   try {
-    figma.root.setPluginData("ctm316_state", JSON.stringify(appState));
+    figma.root.setPluginData("tw_state", JSON.stringify(appState));
   } catch (e) {
     console.warn("savePluginConfig failed:", e);
   }

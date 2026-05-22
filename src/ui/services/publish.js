@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 SERVICE: PUBLISH
+ * Token Wand SERVICE: PUBLISH
  * Figma sync dispatch, dialog rendering, import/export, post-sync reporting.
  * ============================================================================
  */
@@ -83,9 +83,9 @@ function renderRunDialog() {
       el("div", { id: "embed-colors-directly", class: "items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
         el("div", {}, [
           el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Embed Colors Directly"),
-          el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "Write hex values into tokens instead of referencing the Tonal Scales"),
+          el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "Write hex values into tokens instead of referencing the color scales"),
         ]),
-        panelUI.togglePill("rd-toggle-embedDirectly", () => { toggleBoolSetting("embedDirectly"); refreshRunDialog(); }),
+        panelUI.togglePill("rd-toggle-resolveTokensDirectly", () => { toggleBoolSetting("resolveTokensDirectly"); refreshRunDialog(); }),
       ]),
       el("div", { class: "space-y-1" }, [
         el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium ml-1" }, "Variable Structure"),
@@ -173,7 +173,7 @@ function handleSubmit(scope = "all") {
       pluginMessage: {
         type: "check-collections",
         colorName: appState.scaleCollectionName || "_scale",
-        contextualName: appState.tokenCollectionName || "contextual",
+        tokenColName: appState.tokenCollectionName || "color tokens",
         state: appState,
         savedState: getSavedState(),
       },
@@ -202,10 +202,10 @@ function setRunScope(scope) {
 function refreshRunDialog() {
   const existing = lastCollectionCheckResult;
   const colorName = appState.scaleCollectionName || "_scale";
-  const ctxName = appState.tokenCollectionName || "contextual";
+  const tokenColName = appState.tokenCollectionName || "color tokens";
   const isDirect = appState.pluginMode === "direct";
-  const skipScales = appState.embedDirectly || isDirect;
-  const tg = appState.variableStructure || "color";
+  const skipScales = appState.resolveTokensDirectly || isDirect;
+  const tg = appState.tokenGrouping || "color";
   const shortC = appState.useShorthandColors;
   const shortR = appState.useShorthandRoles;
   const scope = pendingScope || "all";
@@ -226,10 +226,10 @@ function refreshRunDialog() {
       entries.push([colorName, exists ? "UPDATE" : "CREATE", exists]);
     }
     if (scope !== "groups") {
-      const exists = existing.includes(ctxName);
-      entries.push([ctxName, exists ? "UPDATE" : "CREATE", exists]);
+      const exists = existing.includes(tokenColName);
+      entries.push([tokenColName, exists ? "UPDATE" : "CREATE", exists]);
     }
-    if (appState.includeGlobalColors) {
+    if (appState.includeSourceColors) {
       const constName = appState.sourceCollectionName || "_constants";
       const exists = existing.includes(constName);
       entries.push([constName, exists ? "UPDATE" : "CREATE", exists]);
@@ -261,11 +261,12 @@ function refreshRunDialog() {
   const renameListEl = document.getElementById("rd-renames-list");
   if (renameEl && renameListEl) {
     const summary = lastRenameData && lastRenameData.summary;
-    const rampCount = isDirect ? 0 : (summary && summary.rampCount) || 0;
-    const ctxCount = (summary && summary.contextualCount) || 0;
+    const scaleCount = isDirect ? 0 : (summary && summary.scaleCount) || 0;
+    
+    const tokenCount = (summary && summary.tokenCount) || 0;
     const changes = ((summary && summary.changes) || []).filter((ch) => (isDirect ? ch.type !== "stepNames" : true));
 
-    if (rampCount + ctxCount > 0 && changes.length > 0) {
+    if (scaleCount + tokenCount > 0 && changes.length > 0) {
       renameEl.classList.remove("hidden");
       renameListEl.innerHTML = "";
       const typeLabels = { color: "Color", role: "Role", stepNames: "Scale Steps", roleStepNames: "Variation Levels", grouping: "Grouping" };
@@ -279,7 +280,7 @@ function refreshRunDialog() {
           ]),
         );
       });
-      const parts = [rampCount > 0 ? `${rampCount} scale var${rampCount > 1 ? "s" : ""}` : "", ctxCount > 0 ? `${ctxCount} token var${ctxCount > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
+      const parts = [scaleCount > 0 ? `${scaleCount} scale var${scaleCount > 1 ? "s" : ""}` : "", tokenCount > 0 ? `${tokenCount} token var${tokenCount > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
       renameListEl.appendChild(el("div", { class: "flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] px-1 pt-0.5" }, [el("span", { class: "inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" }), el("span", {}, `${parts} will be renamed`)]));
     } else {
       renameEl.classList.add("hidden");
@@ -312,7 +313,7 @@ function refreshRunDialog() {
 
   const warnEl = document.getElementById("rd-warnings");
   if (warnEl) {
-    const relevant = existing.filter((n) => (n === colorName && !skipScales && scope !== "roles") || (n === ctxName && scope !== "groups"));
+    const relevant = existing.filter((n) => (n === colorName && !skipScales && scope !== "roles") || (n === tokenColName && scope !== "groups"));
     if (relevant.length > 0) {
       warnEl.classList.remove("hidden");
       document.getElementById("rd-warning-text").textContent = `${relevant.map((n) => `"${n}"`).join(" and ")} already exist. Variables will be added or updated — nothing deleted.`;
@@ -329,13 +330,13 @@ let _pendingImportData = null;
 function handleImportJSON(json) {
   try {
     const imported = typeof json === "string" ? JSON.parse(json) : json;
-    if (!imported.colors || !imported.roles) throw new Error("Invalid config format");
+    if (!imported.colors || !imported.roles) throw new Error("Invalid Token Wand file — missing colors or roles.");
     _pendingImportData = imported;
     createDialogue("confirm-import-overlay", {
       layout:  "sheet",
       icon:    _buildImportWarningIcon(),
       title:   "Replace Configuration?",
-      body:    "The current configuration is different from the default. Importing a new file will replace all existing palettes and color roles.",
+      body:    "Loading this file will replace all current palettes, roles, and settings.",
       buttons: [
         { label: "Save Current & Import", variant: "primary",    action: () => { exportConfig(); finalizeImport(); } },
         { label: "Import & Replace",      variant: "secondary",  action: () => { finalizeImport(); } },
@@ -361,7 +362,7 @@ function finalizeImport() {
 
 function exportConfig() {
   const data = JSON.stringify(appState, null, 2);
-  triggerDownload(data, exportFileName("config", "json"), "application/json");
+  triggerDownload(data, exportFileName("config", "wand"), "application/octet-stream");
 }
 
 function exportToCSS() {

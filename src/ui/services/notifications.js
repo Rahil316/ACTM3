@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 NOTIFICATIONS
+ * Token Wand NOTIFICATIONS
  * Self-contained notification widget systems.
  * Zero appState dependency — loaded early, callable from anywhere.
  * ============================================================================

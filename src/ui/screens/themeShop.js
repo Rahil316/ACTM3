@@ -38,13 +38,13 @@ function renderThemeShop() {
 }
 // ── Theme Shop Card ─────────────────────────────────────────────────────────
 function _presetCard(preset) {
-  const isCTM = preset.badge === "CTM";
+  const isTW = preset.badge === "TW";
   return el("div", { class: "bg-[var(--bg-panel)] rounded-xl border-[var(--border)] flex flex-col gap-1.5 p-2" }, [
     // Badge + name row
     el("div", { class: "flex items-start justify-between gap-1" }, [
       el("div", {}, [
         el("div", { class: "flex items-center gap-1.5 mb-1" }, [
-          isCTM
+          isTW
             ? el("span", { class: "text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded bg-[var(--accent)] text-white" }, [preset.badge])
             : el("span", { class: "text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded bg-[var(--bg-active)] text-[var(--text-muted)]" }, [preset.badge]),
         ]),
@@ -76,7 +76,7 @@ function _presetCard(preset) {
     el("button", {
       onclick: () => _loadPreset(preset),
       class: `w-full h-[30px] rounded-[7px] text-[12px] font-semibold transition-colors ${
-        isCTM
+        isTW
           ? "bg-[var(--accent)] hover:opacity-90 text-white"
           : "bg-[var(--bg-input)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border)]"
       }`,

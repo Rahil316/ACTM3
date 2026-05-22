@@ -1,7 +1,7 @@
 {
-  "name": "ctm316Fig",
+  "name": "token-wand",
   "version": "1.0.0",
-  "description": "Your Figma Plugin",
+  "description": "Token Wand — Color Token System for Figma",
   "main": "code.js",
   "scripts": {
     "prebuild": "node -e \"if (!require('fs').existsSync('./node_modules') || !require('fs').existsSync('./node_modules/tailwindcss')) { console.log('Missing dependencies. Running npm install...'); require('child_process').execSync('npm install', {stdio: 'inherit'}); }\"",

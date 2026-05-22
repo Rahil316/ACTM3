@@ -15,7 +15,7 @@ function translateConfig(appState) {
   const themes = appState.themes || [{ bg: "FFFFFF" }, { bg: "000000" }];
 
   return {
-    name: appState.name || "ctm316",
+    name: appState.name || "token-wand",
     colors: (appState.colors || []).map((g) => ({
       name: g.name,
       shorthand: g.shorthand,
@@ -28,24 +28,23 @@ function translateConfig(appState) {
     scaleLength: count,
     scaleAlgorithm: appState.scaleAlgorithm || "Natural",
     pluginMode: appState.pluginMode || "scale",
-    perRoleControls: !!appState.perRoleControls,
     scaleStepNames: stepNames,
     roleStepNames,
     variations: variations.map(function (v) {
       return Object.assign({}, v);
     }),
     themes: _deduplicateThemeNames(themes),
-    embedDirectly: appState.embedDirectly || false,
-    variableStructure: appState.variableStructure || "color",
-    tokenNameOrder: appState.tokenNameOrder || ["color", "role", "variation"],
+    resolveTokensDirectly: appState.resolveTokensDirectly || false,
+    tokenGrouping: appState.tokenGrouping || "color",
+    tokenNameSegments: appState.tokenNameSegments || ["color", "role", "variation"],
     useShorthandColors: appState.useShorthandColors || false,
     useShorthandRoles: appState.useShorthandRoles || false,
     useShorthandVariations: appState.useShorthandVariations || false,
     useShorthandSteps: appState.useShorthandSteps || false,
     scaleStepShorthands: stepShorthands,
-    includeGlobalColors: appState.includeGlobalColors || false,
-    sourceCollectionName: appState.sourceCollectionName || appState.globalColorsCollectionName || "_constants",
-    scaleCollectionName: appState.scaleCollectionName || appState.tonalScaleCollectionName || "_scale",
+    includeSourceColors: appState.includeSourceColors || false,
+    sourceCollectionName: appState.sourceCollectionName || "_constants",
+    scaleCollectionName: appState.scaleCollectionName || "_scale",
     tokenCollectionName: appState.tokenCollectionName || "color tokens",
     includeAlphaTints: appState.includeAlphaTints || false,
     alphaValues: (appState.alphaValues || "10, 25, 50, 75, 90")
@@ -53,9 +52,9 @@ function translateConfig(appState) {
       .map((v) => Math.max(0, Math.min(100, parseInt(v.trim()))))
       .filter((v) => !isNaN(v)),
     includeDescriptions: appState.includeDescriptions !== false,
-    includeTonalCollection: appState.includeTonalCollection !== false,
-    useGlobalAlgo: appState.useGlobalAlgo !== false,
-    perColorAlgoScope: appState.perColorAlgoScope || "color",
+    includeColorScalesCollection: appState.includeColorScalesCollection !== false,
+    useUniformAlgorithm: appState.useUniformAlgorithm !== false,
+    algorithmScopeLevel: appState.algorithmScopeLevel || "color",
     solverMode: appState.solverMode || "natural",
   };
 }
@@ -110,10 +109,10 @@ function _mapRoles(appState, variations) {
     scaleAlgorithm: role.scaleAlgorithm || null,
     solverMode: role.solverMode || null, // null = fall back to config.solverMode
     description: role.description || "",
-    variationOverride: role.variationOverride || false,
-    roleVariations:
-      role.variationOverride && role.roleVariations && role.roleVariations.length > 0
-        ? role.roleVariations.map(function (v) {
+    customVariationList: role.customVariationList || false,
+    customVariations:
+      role.customVariationList && role.customVariations && role.customVariations.length > 0
+        ? role.customVariations.map(function (v) {
             return Object.assign({}, v);
           })
         : [],
@@ -131,7 +130,7 @@ function _mapRoles(appState, variations) {
 //   • Items without _id (old snapshots) → skipped entirely → safe no-op fallback
 function buildVariableRenameMap(savedAppState, newAppState) {
   if (!savedAppState || !newAppState) {
-    return { ramps: {}, contextual: {}, summary: { rampCount: 0, contextualCount: 0, changes: [] } };
+    return { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } };
   }
 
   const oldCfg = translateConfig(savedAppState);
@@ -142,15 +141,15 @@ function buildVariableRenameMap(savedAppState, newAppState) {
   const colorLabels = _mapIdToLabel(savedAppState.colors, newAppState.colors, oldCfg.useShorthandColors, newCfg.useShorthandColors);
   const roleLabels = _mapIdToLabel(savedAppState.roles, newAppState.roles, oldCfg.useShorthandRoles, newCfg.useShorthandRoles);
 
-  const rampRenames = _getRampRenames(colorLabels.pairs, oldStepNames, newStepNames, Math.min(oldCfg.scaleLength, newCfg.scaleLength));
-  const contextualRenames = _getContextualRenames(colorLabels.pairs, roleLabels.pairs, oldCfg, newCfg);
+  const scaleRenames = _getScaleRenames(colorLabels.pairs, oldStepNames, newStepNames, Math.min(oldCfg.scaleLength, newCfg.scaleLength));
+  const tokenRenames = _getTokenRenames(colorLabels.pairs, roleLabels.pairs, oldCfg, newCfg);
 
   return {
-    ramps: rampRenames,
-    contextual: contextualRenames,
+    scale: scaleRenames,
+    tokens: tokenRenames,
     summary: {
-      rampCount: Object.keys(rampRenames).length,
-      contextualCount: Object.keys(contextualRenames).length,
+      scaleCount: Object.keys(scaleRenames).length,
+      tokenCount: Object.keys(tokenRenames).length,
       changes: _getSummaryChanges(colorLabels.pairs, roleLabels.pairs, oldCfg, newCfg, oldStepNames, newStepNames),
     },
   };
@@ -172,7 +171,7 @@ function _mapIdToLabel(oldItems, newItems, oldShort, newShort) {
   return { pairs };
 }
 
-function _getRampRenames(colorPairs, oldSteps, newSteps, count) {
+function _getScaleRenames(colorPairs, oldSteps, newSteps, count) {
   const renames = {};
   for (const { oldLabel, newLabel } of colorPairs) {
     for (let i = 0; i < count; i++) {
@@ -185,18 +184,18 @@ function _getRampRenames(colorPairs, oldSteps, newSteps, count) {
   return renames;
 }
 
-function _getContextualRenames(colorPairs, rolePairs, oldCfg, newCfg) {
+function _getTokenRenames(colorPairs, rolePairs, oldCfg, newCfg) {
   const renames = {};
-  const oldOrder = oldCfg.tokenNameOrder || (oldCfg.variableStructure === "role" ? ["role", "color", "variation"] : ["color", "role", "variation"]);
-  const newOrder = newCfg.tokenNameOrder || (newCfg.variableStructure === "role" ? ["role", "color", "variation"] : ["color", "role", "variation"]);
+  const oldOrder = oldCfg.tokenNameSegments || (oldCfg.tokenGrouping === "role" ? ["role", "color", "variation"] : ["color", "role", "variation"]);
+  const newOrder = newCfg.tokenNameSegments || (newCfg.tokenGrouping === "role" ? ["role", "color", "variation"] : ["color", "role", "variation"]);
   const buildName = (order, color, role, variation) =>
     order.map((s) => ({ color, role, variation })[s] || s).join("/");
 
   // Returns Map<_id, displayName> — falls back to String(index) for items without _id
   const getVarMap = (cfg, roleItem) => {
     const vars =
-      roleItem && roleItem.variationOverride && roleItem.roleVariations && roleItem.roleVariations.length > 0
-        ? roleItem.roleVariations
+      roleItem && roleItem.customVariationList && roleItem.customVariations && roleItem.customVariations.length > 0
+        ? roleItem.customVariations
         : cfg.variations || [];
     const map = new Map();
     vars.forEach((v, i) => {
@@ -234,8 +233,8 @@ function _getSummaryChanges(colorPairs, rolePairs, oldCfg, newCfg, oldSteps, new
 
   const sample = (s) => s.slice(0, 3).join(",") + (s.length > 3 ? "…" : "");
   if (sample(oldSteps) !== sample(newSteps)) changes.push({ type: "stepNames", from: sample(oldSteps), to: sample(newSteps) });
-  const oldOrder = (oldCfg.tokenNameOrder || []).join(",");
-  const newOrder = (newCfg.tokenNameOrder || []).join(",");
+  const oldOrder = (oldCfg.tokenNameSegments || []).join(",");
+  const newOrder = (newCfg.tokenNameSegments || []).join(",");
   if (oldOrder !== newOrder) changes.push({ type: "grouping", from: oldOrder, to: newOrder });
 
   return changes;

@@ -9,10 +9,10 @@
  *   3. Spread it into PRESETS below
  *
  * Order determines display order in the theme shop.
- * CTM presets are always first — they are the defaults and the showcase.
+ * Token Wand presets are always first — they are the defaults and the showcase.
  */
 const PRESETS = [
-  ...CTM_PRESETS,
+  ...TW_PRESETS,
   ...MATERIAL_PRESETS,
   ...RADIX_PRESETS,
   ...APPLE_PRESETS,

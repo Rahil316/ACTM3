@@ -1,83 +1,86 @@
 ---
 name: Todo list
-description: Prioritised actionable tasks for the CTM316 plugin — updated 2026-05-20
+description: Prioritised actionable tasks for the Token Wand plugin — updated 2026-05-22
 type: project
 ---
-Last updated: 2026-05-20
+
+Last updated: 2026-05-22
 
 ---
 
 ## 🔴 High priority — blocks other work or visible to user
 
-- [ ] **Wire `includeTonalCollection` to engine**
-  Toggle exists in UI and appState but `translateConfig()` never passes it. Intended purpose: suppress the `_scale` ramp collection from Figma output. Add to `translateConfig` and gate the ramp-write in `figmaVars.js`.
-
-- [ ] **Decide fate of `addSeedValues`**
-  Toggle in Figma tab settings. In appState and snapshot but not in `translateConfig`. Either remove the toggle + state key, or define and implement the feature. Currently a dead UI control.
-
 - [ ] **Role variation rename detection**
-  `buildVariableRenameMap` handles shared variations. Per-role variation renames silently create new variables instead of renaming. Fix or document the limitation explicitly.
+      `buildVariableRenameMap` handles shared variations only. Per-role custom variation renames (`customVariationList: true`) silently create new variables instead of renaming. Fix or document the limitation explicitly in the Run dialog.
 
 - [ ] **Alpha tints in preview panel**
-  `includeAlphaTints` flag works in Figma output. Preview panel doesn't show alpha tokens visually. Add a section to `renderPreviewPanel`.
+      `includeAlphaTints` flag works in Figma output. `preview.js` doesn't show alpha tokens visually. Add a section to `renderPreviewPanel`.
+
+- [ ] **`tokenGrouping` UI control missing**
+      `appState.tokenGrouping` (`"color"` / `"role"`) controls color-first vs role-first variable structure and is wired in the engine, but no settings UI control renders it. Add a segmented control to the Collections section of Token Settings.
 
 ---
 
 ## 🟡 Medium priority — polish and correctness
 
 - [ ] **Role card — full end-to-end test in both modes**
-  Manual test matrix: Tonal Scale × Adaptive Engine × each Find Base By × each Spread Unit × Auto/Manual mapping. Verify Figma variable output is correct in all 12 combinations.
+      Manual test matrix: Scale mode × Direct mode × `mappingMethod: "contrast"` × `mappingMethod: "index"` × `customVariationList: true/false`. Verify Figma variable output is correct in all combinations.
 
 - [ ] **Inline validation feedback**
-  Duplicate names and invalid hex currently show in full error overlay. Add inline red border / helper text directly on the offending input field.
+      Duplicate names and invalid hex currently show in full error overlay. Add inline red border / helper text directly on the offending input field.
 
-- [ ] **`output.js` preview rendering — migrate to `el()`**
-  Preview panel HTML generation still uses some innerHTML string concatenation. Migrate to `el()`.
+- [ ] **`preview.js` — migrate remaining innerHTML to `el()`**
+      Preview panel HTML generation still uses some innerHTML string concatenation. Migrate to `el()` for consistency.
 
-- [ ] **Settings — Role Labels CSV field**
-  Add a "Role Labels (CSV)" text input to the Roles tab. On change: parse comma-separated names, write each into `appState.variations[i].name`, re-render the variation list.
+- [ ] **Project Name end-to-end verification**
+      `appState.name` is read in `translateConfig`. Verify it is used in: export filenames (CSS, SCSS, CSV, JSON downloads) and Figma sync success messages.
 
-- [ ] **Settings — Project Name actually saving**
-  `appState.name` is read in `updateSettingsFromInputs()`. Verify it's used in: export filenames and success messages.
-
-- [ ] **Plan `useGlobalAlgo` / `perColorAlgoScope`**
-  These are in appState and settings snapshot. `config.js` stopped passing them to the engine. Decide: implement per-color algorithm scoping in the engine, or remove the state keys and UI toggles entirely.
+- [ ] **Per-role variation override — full manual test**
+      `customVariationList: true` + `customVariations[]` paths exist in state and UI. Full manual test across Scale and Direct modes not completed. Cover: add/remove custom variations, drag to reorder, sync to Figma, export to CSS/JSON.
 
 ---
 
 ## 🟢 Low priority — new features, future work
 
 - [ ] **Saved States (version history)**
-  Store snapshot array in `figma.root.setPluginData("ctm316_snapshots")`.
-  UI: list in Project tab with timestamp, name, View / Restore / Delete buttons.
+      Store snapshot array in `figma.root.setPluginData("tw_snapshots")`.
+      UI: list in Project tab with timestamp, name, View / Restore / Delete buttons.
 
 - [ ] **Pro mode definition**
-  Before any implementation: define which features are gated, what upgrade UX looks like, and how flags are stored.
-  Current branch: `ProModeBeta_updated`.
+      Before any implementation: define which features are gated, what upgrade UX looks like, and how flags are stored.
+      Current branch: `ProModeBeta_updated`.
 
-- [ ] **Plugin tab — Language, Beta Features, About CTM**
-  Placeholder UI exists. Implement when content is defined. Language needs i18n infrastructure.
+- [ ] **Plugin tab — Language, Beta Features, About Token Wand**
+      Placeholder UI exists. Implement when content is defined. Language needs i18n infrastructure.
 
 - [ ] **Design Lab**
-  Button in more-sheet via `temp.js` shows an alert. Replace with actual overlay when implemented.
+      `betaLab.js` has `LAB_ENABLED = false`. Button in more-sheet shows an alert. Replace with actual overlay when implemented.
 
 - [ ] **Offline / inlined font support**
-  Google Fonts loaded at runtime (`fonts.googleapis.com`). Low priority unless offline use case arises.
+      Google Fonts loaded at runtime (`fonts.googleapis.com`). Low priority unless offline use case arises.
+
+- [ ] **Role Labels CSV**
+      Convenience field to rename all variation levels at once via comma-separated string. Currently the only way to rename is per-variation inline in the list.
 
 ---
 
 ## ✅ Recently completed
 
 - [x] Full file restructure: `color/`, `ui/` folders, dissolved `utils.js`
-- [x] Settings migrated from bottom sheet to full-screen 5-tab panel
-- [x] `inputsUI.btn()` — universal button primitive with 5 variants + 3 sizes
+- [x] Settings migrated to full-screen 2-tab panel (Token Settings, Plugin)
+- [x] `inputsUI.btn()` — universal button primitive with 5 variants + sizes
 - [x] `RoleGroupCard` fixed — was returning single element, `.forEach` expected array
 - [x] `DEFAULT_VARIATION_TARGETS` duplicate `const` removed from `config.js`
 - [x] `setRole()` and `setRoleVariation()` — bounds checks added
-- [x] `syncInputsFromState()` — now calls `syncUiSettingsInputs()` (Plugin tab values)
+- [x] `syncInputsFromState()` — now calls plugin tab values sync
 - [x] `uiPrefs` load — validated against allowed scales/themes before applying
-- [x] Role card control logic spec — permanently documented in README
-- [x] Dead code cleanup (2026-05-20): removed `_demoConfigStr`, removed `variationTargetL/D` dead mutation branches in `setRole()`, fixed `run-creater` typo → `run-creator`, fixed Burgundy shorthand `"bg"` → `"bu"` collision, removed stale `"3."` numbering from config.js header, stopped forwarding `useGlobalAlgo`/`perColorAlgoScope` as live config values (now commented)
-- [x] `manifest.json` — only Google Fonts in `allowedDomains` (cdn.tailwindcss.com was never present; Tailwind is inlined at build)
-- [x] `scaleStepNames` verified wired end-to-end: config.js parses → clrEngine.js line 346 uses for variable naming
-- [x] `alphaValues` verified wired end-to-end: config.js parses → figmaVars.js line 214 uses for alpha tint generation
+- [x] Dead code cleanup: removed `_demoConfigStr`, removed dead mutation branches in `setRole()`, fixed `run-creater` typo → `run-creator`, fixed Burgundy shorthand collision, removed stale numbering from config.js header
+- [x] Terminology refactor: `pluginMode: "tonal"` → `"scale"`, `"adaptiveEngine"` → `"direct"`; `tonalScales`/`colorTokens` → `scales`/`tokens`; `tknName`/`tknRef` → `tokenName`/`tokenRef`; all "ramp" → "scale" references updated
+- [x] Renamed config fields: `tonalScaleCollectionName` → `scaleCollectionName`, `tokenNameOrder` → `tokenNameSegments`, `useGlobalAlgo` → `useUniformAlgorithm`, `perColorAlgoScope` → `algorithmScopeLevel`, `includeGlobalColors` → `includeSourceColors`, `globalColorsCollectionName` → `sourceCollectionName`, `embedDirectly` → `resolveTokensDirectly`
+- [x] `includeColorScalesCollection` verified wired: config.js line 55 forwards it; figmaVars.js line 46 checks it in `skipScales` condition
+- [x] `useUniformAlgorithm` / `algorithmScopeLevel` verified wired: config.js forwards; clrEngine.js reads at lines 237, 265, 289–290
+- [x] `scaleStepNames` verified wired end-to-end
+- [x] `alphaValues` verified wired end-to-end
+- [x] `ctm.js` preset deleted — no longer referenced
+- [x] TW presets moved to `tw.js` (TW Regular, TW Pro, TW Funk)
+- [x] `manifest.json` — only Google Fonts in `allowedDomains`

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * CTM316 SCREEN: SETTINGS
+ * Token Wand SCREEN: SETTINGS
  * List renderers, mode setters, state↔DOM sync,
  * and the settings open/cancel/done lifecycle.
  * Layout primitives live in organisms.js (panelUI namespace).
@@ -28,10 +28,10 @@ function renderSettingsTokensPanel() {
         el("p", { id: "setting-global-algo-title", class: "text-[13px] font-medium text-[var(--text-primary)]" }, ["Use Global Algorithm"]),
         el("p", { id: "setting-global-algo-desc",  class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, ["Use one algorithm for all colors"]),
       ]),
-      panelUI.togglePill("toggle-useGlobalAlgo", () => toggleBoolSetting("useGlobalAlgo")),
+      panelUI.togglePill("toggle-useUniformAlgorithm", () => toggleBoolSetting("useUniformAlgorithm")),
     ]),
 
-    // Global tonal algorithm selector (tonal mode + global)
+    // Global scale algorithm selector (scale mode + global)
     el("div", { id: "setting-global-algo-row", class: "space-y-1" }, [
       panelUI.selectInput("setting-scaleAlgorithm", [
         ["Natural","Natural"], ["Uniform","Uniform"], ["Expressive","Expressive"],
@@ -58,7 +58,7 @@ function renderSettingsTokensPanel() {
   ]);
   mount.appendChild(modeCard);
 
-  // ── Palette (tonal-only, hidden in adaptive mode) ──
+  // ── Palette (scale mode only, hidden in direct mode) ──
   const paletteCard = el("div", { id: "settings-scale-section", class: "settings-card space-y-3" }, [
     panelUI.sectionLabel("Palette"),
     el("div", { class: "grid grid-cols-2 gap-3" }, [
@@ -74,7 +74,7 @@ function renderSettingsTokensPanel() {
     panelUI.row(
       "Role-specific Variations",
       "Allow individual roles to override the global variation list",
-      panelUI.togglePill("toggle-allowRoleVariations", () => toggleBoolSetting("allowRoleVariations"))
+      panelUI.togglePill("toggle-perRoleVariationOverride", () => toggleBoolSetting("perRoleVariationOverride"))
     ),
 
     el("div", { class: "pt-2 border-t border-[var(--border)] space-y-2" }, [
@@ -131,7 +131,7 @@ function renderSettingsTokensPanel() {
       panelUI.row(
         "Palettes collection",
         null,
-        panelUI.togglePill("toggle-includeTonalCollection", () => toggleBoolSetting("includeTonalCollection"))
+        panelUI.togglePill("toggle-includeColorScalesCollection", () => toggleBoolSetting("includeColorScalesCollection"))
       ),
       el("div", { id: "settings-scale-collection-row" }, [
         panelUI.input({ id: "setting-scaleCollectionName", placeholder: "_Palettes", size: "lg" }),
@@ -145,16 +145,16 @@ function renderSettingsTokensPanel() {
 
     el("div", { id: "settings-map-roles-row" }, [
       panelUI.row(
-        "Map roles with Palettes",
-        "Role tokens reference the Palettes collection",
-        panelUI.togglePill("toggle-mapRolesWithPalettes", () => toggleMapRolesWithPalettes())
+        "Link tokens to color scale",
+        "Role tokens reference the color scale collection",
+        panelUI.togglePill("toggle-resolveTokensDirectly", () => toggleResolveTokensDirectly())
       ),
     ]),
 
     panelUI.row(
-      "Global Colors",
+      "Source Colors",
       "Store raw brand hex values — no themes, no processing",
-      panelUI.togglePill("toggle-includeGlobalColors", () => toggleBoolSetting("includeGlobalColors"))
+      panelUI.togglePill("toggle-includeSourceColors", () => toggleBoolSetting("includeSourceColors"))
     ),
     el("div", { id: "constants-options", class: "hidden space-y-2 pl-2 border-l-2 border-[var(--border)]" }, [
       panelUI.input({ id: "setting-sourceCollectionName", placeholder: "_constants", label: "Collection Name", size: "lg" }),
@@ -172,10 +172,10 @@ function renderSettingsTokensPanel() {
   ]);
   mount.appendChild(collectionsCard);
 
-  // ── Step Labels (tonal-only, hidden in adaptive mode) ──
+  // ── Step Labels (scale mode only, hidden in direct mode) ──
   const stepLabelsCard = el("div", { id: "settings-step-labels-section", class: "settings-card space-y-3" }, [
     panelUI.sectionLabel("Scale Step Labels"),
-    el("p", { class: "text-[11px] text-[var(--text-muted)] -mt-1" }, ["Name each step in the tonal scale. Shorthand is used in token names when 'Shorthand for Scale Steps' is on."]),
+    el("p", { class: "text-[11px] text-[var(--text-muted)] -mt-1" }, ["Name each step in the scale. Shorthand is used in token names when 'Shorthand for Scale Steps' is on."]),
     el("div", { class: "flex items-center justify-between" }, [
       el("div", { class: "flex items-center gap-1.5 px-0.5 flex-1" }, [
         el("span", { class: "w-[18px] shrink-0" }),
@@ -234,7 +234,7 @@ function renderSettingsPanels() {
 function toggleBoolSetting(key) {
   appState[key] = !appState[key];
   syncOutputToggles();
-  if (key === "allowRoleVariations" || key === "includeDescriptions" || key === "perRoleControls") {
+  if (key === "perRoleVariationOverride" || key === "includeDescriptions") {
     renderColorGroups();
     renderRoles();
   }
@@ -252,20 +252,20 @@ function setPluginMode(idx) {
 }
 
 function setTokenGrouping(idx) {
-  appState.variableStructure = UI_MODES.grouping[idx] || "color";
+  appState.tokenGrouping = UI_MODES.grouping[idx] || "color";
   syncOutputToggles();
   schedulePreview();
 }
 
-function toggleMapRolesWithPalettes() {
-  appState.embedDirectly = !appState.embedDirectly;
-  const btn = document.getElementById("toggle-mapRolesWithPalettes");
-  if (btn) btn.classList.toggle("on", !appState.embedDirectly);
+function toggleResolveTokensDirectly() {
+  appState.resolveTokensDirectly = !appState.resolveTokensDirectly;
+  const btn = document.getElementById("toggle-resolveTokensDirectly");
+  if (btn) btn.classList.toggle("on", !appState.resolveTokensDirectly);
   schedulePreview();
 }
 
 function setAlgoScope(scope) {
-  appState.perColorAlgoScope = scope;
+  appState.algorithmScopeLevel = scope;
   const colorBtn = document.getElementById("algo-scope-btn-color");
   const roleBtn  = document.getElementById("algo-scope-btn-role");
   if (colorBtn) colorBtn.classList.toggle("active", scope === "color");
@@ -275,8 +275,8 @@ function setAlgoScope(scope) {
   schedulePreview();
 }
 
-function setTokenNameOrder(order) {
-  appState.tokenNameOrder = order;
+function setTokenNameSegments(order) {
+  appState.tokenNameSegments = order;
   renderTokenOrderPills();
   _syncNameFormatPreview();
   schedulePreview();
@@ -286,28 +286,28 @@ function setTokenNameOrder(order) {
 
 function _syncTogglePills() {
   [
-    "embedDirectly", "useShorthandColors", "useShorthandRoles", "useShorthandVariations", "useShorthandSteps",
-    "includeGlobalColors", "includeAlphaTints", "allowRoleVariations", "includeDescriptions",
-    "perRoleControls", "useGlobalAlgo", "includeTonalCollection",
+    "resolveTokensDirectly", "useShorthandColors", "useShorthandRoles", "useShorthandVariations", "useShorthandSteps",
+    "includeSourceColors", "includeAlphaTints", "perRoleVariationOverride", "includeDescriptions",
+    "useUniformAlgorithm", "includeColorScalesCollection",
   ].forEach((key) => {
     ["toggle-" + key, "rd-toggle-" + key].forEach((id) => {
       const btn = document.getElementById(id);
       if (btn) btn.classList.toggle("on", !!appState[key]);
     });
   });
-  const mapBtn = document.getElementById("toggle-mapRolesWithPalettes");
-  if (mapBtn) mapBtn.classList.toggle("on", !appState.embedDirectly);
+  const mapBtn = document.getElementById("toggle-resolveTokensDirectly");
+  if (mapBtn) mapBtn.classList.toggle("on", !appState.resolveTokensDirectly);
 
   const constOpts = document.getElementById("constants-options");
-  if (constOpts) constOpts.classList.toggle("hidden", !appState.includeGlobalColors);
+  if (constOpts) constOpts.classList.toggle("hidden", !appState.includeSourceColors);
   const opacRow = document.getElementById("opacity-values-row");
   if (opacRow) opacRow.classList.toggle("hidden", !appState.includeAlphaTints);
   const scaleNameRow = document.getElementById("settings-scale-collection-row");
-  if (scaleNameRow) scaleNameRow.classList.toggle("hidden", !appState.includeTonalCollection);
+  if (scaleNameRow) scaleNameRow.classList.toggle("hidden", !appState.includeColorScalesCollection);
 }
 
 function _syncGroupingButtons() {
-  const tg = appState.variableStructure || "color";
+  const tg = appState.tokenGrouping || "color";
   [
     ["seg-group-color", "rd-seg-group-color"],
     ["seg-group-role",  "rd-seg-group-role"],
@@ -333,7 +333,7 @@ function _syncModeControls() {
   const stepLabelsSection = document.getElementById("settings-step-labels-section");
   const palettesGroup     = document.getElementById("settings-palettes-collection-group");
   const mapRolesRow       = document.getElementById("settings-map-roles-row");
-  const embedDirectlyRow  = document.getElementById("settings-embed-directly-row");
+  const embedDirectlyRow  = document.getElementById("settings-resolve-tokens-directly-row");
   if (scaleSection)      scaleSection.classList.toggle("hidden", isDirect);
   if (stepLabelsSection) stepLabelsSection.classList.toggle("hidden", isDirect);
   if (palettesGroup)     palettesGroup.classList.toggle("hidden", isDirect);
@@ -341,7 +341,7 @@ function _syncModeControls() {
   if (embedDirectlyRow)  embedDirectlyRow.classList.toggle("hidden", isDirect);
 
   const previewTabColors = document.getElementById("preview-tab-colors");
-  if (previewTabColors) previewTabColors.textContent = isDirect ? "Solved Colors" : "Tonal Scale";
+  if (previewTabColors) previewTabColors.textContent = isDirect ? "Solved Colors" : "Color Scale";
 }
 
 function _syncNameFormatPreview() {
@@ -355,7 +355,7 @@ function _syncNameFormatPreview() {
   const v3     = appState.variations && appState.variations[2];
   const vLabel = v3 ? (appState.useShorthandVariations && v3.shorthand ? v3.shorthand : v3.name) : "3";
   const segValues = { color: cLabel, role: rLabel, variation: vLabel };
-  const order = appState.tokenNameOrder || ["color", "role", "variation"];
+  const order = appState.tokenNameSegments || ["color", "role", "variation"];
   const sep = `<span style="color:var(--text-muted);opacity:0.35">/</span>`;
   previewEl.innerHTML = order
     .map((s) => `<span style="color:${_pillColor(s)};font-weight:600">${segValues[s] || s}</span>`)
@@ -364,14 +364,14 @@ function _syncNameFormatPreview() {
 
 function syncAlgoSection() {
   const isAdaptive = appState.pluginMode === "direct";
-  const useGlobal  = appState.useGlobalAlgo !== false;
+  const useGlobal  = appState.useUniformAlgorithm !== false;
 
   const title = document.getElementById("setting-global-algo-title");
   const desc  = document.getElementById("setting-global-algo-desc");
   if (title) title.textContent = isAdaptive ? "Global Solver" : "Global Algorithm";
   if (desc)  desc.textContent  = isAdaptive ? "Use one solver mode for all colors and roles" : "Use one algorithm for all colors";
 
-  // Tonal algo selector: tonal mode + global
+  // Scale algo selector: scale mode + global
   const algoRow = document.getElementById("setting-global-algo-row");
   if (algoRow) algoRow.classList.toggle("hidden", isAdaptive || !useGlobal);
 
@@ -383,7 +383,7 @@ function syncAlgoSection() {
   const scopeRow = document.getElementById("setting-algo-scope-row");
   if (scopeRow) scopeRow.classList.toggle("hidden", !(isAdaptive && !useGlobal));
 
-  const scope    = appState.perColorAlgoScope || "color";
+  const scope    = appState.algorithmScopeLevel || "color";
   const colorBtn = document.getElementById("algo-scope-btn-color");
   const roleBtn  = document.getElementById("algo-scope-btn-role");
   if (colorBtn) colorBtn.classList.toggle("active", scope === "color");
@@ -465,7 +465,7 @@ let _pillDragSrc = null;
 function renderTokenOrderPills() {
   const container = document.getElementById("token-order-pills");
   if (!container) return;
-  const order = appState.tokenNameOrder || ["color", "role", "variation"];
+  const order = appState.tokenNameSegments || ["color", "role", "variation"];
   container.innerHTML = "";
 
   order.forEach((segment, idx) => {
@@ -486,7 +486,7 @@ function renderTokenOrderPills() {
       const newOrder = [...order];
       const [moved] = newOrder.splice(_pillDragSrc, 1);
       newOrder.splice(idx, 0, moved);
-      setTokenNameOrder(newOrder);
+      setTokenNameSegments(newOrder);
     });
 
     container.appendChild(pill);
@@ -614,24 +614,23 @@ function openSettings() {
     pluginMode:                 appState.pluginMode,
     scaleCollectionName:        appState.scaleCollectionName,
     tokenCollectionName:        appState.tokenCollectionName,
-    embedDirectly:              appState.embedDirectly,
-    includeGlobalColors:        appState.includeGlobalColors,
+    resolveTokensDirectly:      appState.resolveTokensDirectly,
+    includeSourceColors:        appState.includeSourceColors,
     sourceCollectionName:       appState.sourceCollectionName,
     includeAlphaTints:          appState.includeAlphaTints,
     alphaValues:                appState.alphaValues,
-    variableStructure:          appState.variableStructure,
+    tokenGrouping:              appState.tokenGrouping,
     useShorthandColors:         appState.useShorthandColors,
     useShorthandRoles:          appState.useShorthandRoles,
     useShorthandVariations:     appState.useShorthandVariations,
     useShorthandSteps:          appState.useShorthandSteps,
     includeDescriptions:        appState.includeDescriptions,
-    allowRoleVariations:        appState.allowRoleVariations,
-    perRoleControls:            appState.perRoleControls,
-    includeTonalCollection:     appState.includeTonalCollection,
-    useGlobalAlgo:              appState.useGlobalAlgo,
-    perColorAlgoScope:          appState.perColorAlgoScope,
+    perRoleVariationOverride:   appState.perRoleVariationOverride,
+    includeColorScalesCollection:     appState.includeColorScalesCollection,
+    useUniformAlgorithm:        appState.useUniformAlgorithm,
+    algorithmScopeLevel:        appState.algorithmScopeLevel,
     solverMode:                 appState.solverMode,
-    tokenNameOrder:             appState.tokenNameOrder ? [...appState.tokenNameOrder] : null,
+    tokenNameSegments:          appState.tokenNameSegments ? [...appState.tokenNameSegments] : null,
     variations:                 appState.variations ? JSON.parse(JSON.stringify(appState.variations)) : null,
   }));
   syncInputsFromState();
