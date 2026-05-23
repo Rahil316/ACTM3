@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore, makeBootstrapState, ensureIds, ensureVariations } from '../store/appStore';
+import { banner } from '../store/bannerStore';
 import { useUiStore } from '../store/uiStore';
 import { VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from '../store/uiStore';
 import type { PluginToUiMessage, CollectionCheckResultMessage, SyncTally } from '../types/messages';
@@ -164,6 +165,12 @@ function handleMessage(
 
     case 'capabilities': {
       if (!msg.capabilities.multiMode) {
+        banner.show({
+          id: 'multi-mode-disabled',
+          type: 'warning',
+          title: 'Multi-mode not available',
+          message: 'Your Figma plan does not support multi-mode variables. Themes will be created as separate collections.',
+        });
         callbacks.onMultiModeDisabled?.();
       }
       break;

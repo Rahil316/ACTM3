@@ -1,3 +1,132 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Design tokens ──────────────────────────────────────────────────────────
+   Dark is default (matches Figma's default dark UI).
+   Light overrides are applied when body has data-ui-theme="light".
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root,
+  body[data-ui-theme="dark"] {
+    --bg-app:    #0d0d0d;
+    --bg-panel:  #1e1e1e;
+    --bg-card:   #2b2b2b;
+    --bg-input:  #3c3c3c;
+    --bg-hover:  #444444;
+    --bg-active: #555555;
+
+    --border:       #444444;
+    --border-input: #555555;
+    --border-focus: #18a0fb;
+
+    --text-primary: #ffffff;
+    --text-muted:   #b3b3b3;
+    --text-dim:     #888888;
+
+    --accent:      #18a0fb;
+    --accent-hover: #0089e8;
+    --accent-glow:  rgba(24, 160, 251, 0.3);
+
+    --danger: #ef4444;
+
+    --font: Inter, "Inter", system-ui, -apple-system, sans-serif;
+  }
+
+  body[data-ui-theme="light"] {
+    --bg-app:    #d2d8e5;
+    --bg-panel:  #ffffff;
+    --bg-card:   #f8f9fa;
+    --bg-input:  #ffffff;
+    --bg-hover:  #e9ecef;
+    --bg-active: #dee2e6;
+
+    --border:       #dee2e6;
+    --border-input: #ced4da;
+    --border-focus: #18a0fb;
+
+    --text-primary: #212529;
+    --text-muted:   #6c757d;
+    --text-dim:     #adb5bd;
+
+    --accent:      #18a0fb;
+    --accent-hover: #0089e8;
+    --accent-glow:  rgba(24, 160, 251, 0.3);
+
+    --danger: #ef4444;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font);
+  }
+
+  /* thin scrollbar */
+  ::-webkit-scrollbar        { width: 4px; }
+  ::-webkit-scrollbar-track  { background: transparent; }
+  ::-webkit-scrollbar-thumb  { background: var(--bg-active); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--bg-hover); }
+}
+
+/* ── Component classes ──────────────────────────────────────────────────────
+   Only classes that can't be expressed as Tailwind utilities (pseudo-elements,
+   complex transitions with multiple properties, etc.)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@layer components {
+  /* Toggle pill */
+  .toggle-pill {
+    @apply w-10 h-[22px] rounded-full border-none cursor-pointer relative transition-colors duration-200 shrink-0;
+    background: var(--border);
+  }
+  .toggle-pill::after {
+    content: "";
+    @apply absolute top-[3px] left-[3px] w-4 h-4 rounded-full transition-all duration-200;
+    background: var(--text-muted);
+  }
+  .toggle-pill.on {
+    background: var(--accent);
+  }
+  .toggle-pill.on::after {
+    transform: translateX(18px);
+    background: #fff;
+  }
+
+  /* Segmented control button */
+  .seg-btn {
+    @apply flex-1 h-9 border text-[12px] font-semibold rounded-lg cursor-pointer transition-all duration-150;
+    border-color: var(--border);
+    background: var(--bg-input);
+    color: var(--text-muted);
+  }
+  .seg-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    @apply text-white;
+  }
+
+  /* Settings tab pill */
+  .settings-tab {
+    @apply text-[13px] font-medium px-[14px] py-[6px] rounded-full border cursor-pointer whitespace-nowrap transition-all duration-150;
+    border-color: var(--border);
+    background: transparent;
+    color: var(--text-muted);
+  }
+  .settings-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    @apply text-white;
+  }
+
+  /* Bottom sheet */
+  .bottom-sheet {
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .bottom-sheet.open {
+    transform: translateY(0);
+  }
+}

@@ -107,6 +107,7 @@ export interface AppState {
 
   scaleStepNames: ScaleStepName[] | null;
   variations: Variation[] | null;
+  perRoleVariationOverride: boolean;
 
   colors: Color[];
   roles: Role[];
@@ -128,7 +129,7 @@ export interface UiPrefs {
 
 // ── UI routing ───────────────────────────────────────────────────────────────
 
-export type SidebarTab = 'color-groups' | 'roles-config' | 'project';
+export type SidebarTab = 'color-groups' | 'roles' | 'preview' | 'project';
 export type ActiveOverlay =
   | null
   | 'settings'
@@ -136,7 +137,7 @@ export type ActiveOverlay =
   | 'theme-shop'
   | 'quick-start'
   | 'design-lab';
-export type SettingsTab = 'tokens' | 'plugin';
+export type SettingsTab = 'tokens' | 'roles' | 'themes' | 'plugin';
 
 // ── Validation ───────────────────────────────────────────────────────────────
 

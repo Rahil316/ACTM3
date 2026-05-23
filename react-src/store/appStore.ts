@@ -117,6 +117,7 @@ export function makeBootstrapState(): AppState {
     tokenCollectionName: 'color tokens',
     scaleStepNames: null,
     variations,
+    perRoleVariationOverride: false,
     colors: [
       { _id: generateId(), name: 'Primary', shorthand: 'pr', value: '#0066FF', description: '' },
       { _id: generateId(), name: 'Gray',    shorthand: 'gr', value: '#6B7280', description: '' },
@@ -285,25 +286,45 @@ interface AppStoreState {
   markClean: () => void;
   isDirty: () => boolean;
 
+  // Global app field setter (used by settings overlay)
+  setAppField: <K extends keyof AppState>(key: K, value: AppState[K]) => void;
+
   // Project
   updateProjectName: (value: string) => void;
   updateProjectDescription: (value: string) => void;
 
-  // Colors
+  // Colors — set / add / remove / move
   setColor: (idx: number, key: keyof Color | string, value: string) => void;
+  addColor: () => void;
+  removeColor: (idx: number) => void;
+  moveColor: (from: number, to: number) => void;
 
-  // Roles
+  // Roles — set / add / remove / move
   setRole: (idx: number, key: keyof Role | string, value: string | MappingMethod) => void;
+  addRole: () => void;
+  removeRole: (idx: number) => void;
+  moveRole: (from: number, to: number) => void;
   setRoleVariation: (roleIdx: number, varIdx: number, field: string, value: string) => void;
+  addRoleVariation: (roleIdx: number) => void;
+  removeRoleVariation: (roleIdx: number, varIdx: number) => void;
+  toggleRoleCustomVariations: (roleIdx: number) => void;
 
-  // Shared variations
+  // Shared variations — set / add / remove / move
   setVariation: (idx: number, field: string, value: string) => void;
+  addVariation: () => void;
+  removeVariation: (idx: number) => void;
+  moveVariation: (from: number, to: number) => void;
 
-  // Scale step names
+  // Scale step names — set / init / remove
   setScaleStepName: (idx: number, field: 'name' | 'shorthand', value: string) => void;
+  addScaleStepName: () => void;
+  removeScaleStepName: (idx: number) => void;
 
-  // Themes
+  // Themes — set / add / remove / move
   setTheme: (idx: number, field: keyof Theme, value: string) => void;
+  addTheme: () => void;
+  removeTheme: (idx: number) => void;
+  moveTheme: (from: number, to: number) => void;
 
   // Versions
   versionSaveBlockedReason: () => string | null;
@@ -351,6 +372,12 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
   isDirty: () => computeHash(get().appState) !== get().stateHash,
 
+  // ── Global field setter ──
+
+  setAppField: (key, value) => {
+    set((s) => ({ appState: { ...s.appState, [key]: value } }));
+  },
+
   // ── Project ──
 
   updateProjectName: (value) => {
@@ -371,6 +398,29 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       if (key === 'value') val = sanitizeHex(value);
       if (key === 'name' || key === 'shorthand') val = normalizeSegment(value);
       colors[idx] = { ...colors[idx], [key]: val };
+      return { appState: { ...s.appState, colors } };
+    });
+  },
+
+  addColor: () => {
+    set((s) => {
+      const color: Color = { _id: generateId(), name: 'New Color', shorthand: '', value: '#888888', description: '' };
+      return { appState: { ...s.appState, colors: [...s.appState.colors, color] } };
+    });
+  },
+
+  removeColor: (idx) => {
+    set((s) => {
+      const colors = s.appState.colors.filter((_, i) => i !== idx);
+      return { appState: { ...s.appState, colors } };
+    });
+  },
+
+  moveColor: (from, to) => {
+    set((s) => {
+      const colors = [...s.appState.colors];
+      const [item] = colors.splice(from, 1);
+      colors.splice(to, 0, item);
       return { appState: { ...s.appState, colors } };
     });
   },
@@ -426,6 +476,39 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     });
   },
 
+  addRole: () => {
+    set((s) => {
+      const varCount = (s.appState.variations ?? []).length || 5;
+      const role: Role = {
+        _id: generateId(),
+        name: 'New Role',
+        shorthand: '',
+        minContrast: 4.5,
+        mappingMethod: 'contrast',
+        variationTargets: Array.from({ length: varCount }, (_, i) => DEFAULT_VARIATION_TARGETS[i] ?? 4.5),
+        customVariationList: false,
+        customVariations: [],
+      };
+      return { appState: { ...s.appState, roles: [...s.appState.roles, role] } };
+    });
+  },
+
+  removeRole: (idx) => {
+    set((s) => {
+      const roles = s.appState.roles.filter((_, i) => i !== idx);
+      return { appState: { ...s.appState, roles } };
+    });
+  },
+
+  moveRole: (from, to) => {
+    set((s) => {
+      const roles = [...s.appState.roles];
+      const [item] = roles.splice(from, 1);
+      roles.splice(to, 0, item);
+      return { appState: { ...s.appState, roles } };
+    });
+  },
+
   setRoleVariation: (roleIdx, varIdx, field, value) => {
     set((s) => {
       const roles = [...s.appState.roles];
@@ -436,6 +519,48 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       const val = (field === 'name' || field === 'shorthand') ? normalizeSegment(value) : value;
       vars[varIdx] = { ...vars[varIdx], [field]: val };
       role.customVariations = vars;
+      roles[roleIdx] = role;
+      return { appState: { ...s.appState, roles } };
+    });
+  },
+
+  addRoleVariation: (roleIdx) => {
+    set((s) => {
+      const roles = [...s.appState.roles];
+      const role = { ...roles[roleIdx] };
+      if (!role) return s;
+      const newVar: Variation = { _id: generateId(), name: 'Variation', shorthand: '' };
+      role.customVariations = [...(role.customVariations ?? []), newVar];
+      role.variationTargets = [...(role.variationTargets ?? []), 4.5];
+      roles[roleIdx] = role;
+      return { appState: { ...s.appState, roles } };
+    });
+  },
+
+  removeRoleVariation: (roleIdx, varIdx) => {
+    set((s) => {
+      const roles = [...s.appState.roles];
+      const role = { ...roles[roleIdx] };
+      if (!role?.customVariations) return s;
+      role.customVariations = role.customVariations.filter((_, i) => i !== varIdx);
+      role.variationTargets = (role.variationTargets ?? []).filter((_, i) => i !== varIdx);
+      roles[roleIdx] = role;
+      return { appState: { ...s.appState, roles } };
+    });
+  },
+
+  toggleRoleCustomVariations: (roleIdx) => {
+    set((s) => {
+      const roles = [...s.appState.roles];
+      const role = { ...roles[roleIdx] };
+      if (!role) return s;
+      const turning = !role.customVariationList;
+      role.customVariationList = turning;
+      if (turning && (!role.customVariations || role.customVariations.length === 0)) {
+        const shared = s.appState.variations ?? [];
+        role.customVariations = shared.map((v) => ({ ...v, _id: generateId() }));
+        role.variationTargets = [...(role.variationTargets ?? [])];
+      }
       roles[roleIdx] = role;
       return { appState: { ...s.appState, roles } };
     });
@@ -453,6 +578,44 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     });
   },
 
+  addVariation: () => {
+    set((s) => {
+      const newVar: Variation = { _id: generateId(), name: 'Variation', shorthand: '' };
+      const variations = [...(s.appState.variations ?? []), newVar];
+      const roles = s.appState.roles.map((r) => ({
+        ...r,
+        variationTargets: [...(r.variationTargets ?? []), 4.5],
+      }));
+      return { appState: { ...s.appState, variations, roles } };
+    });
+  },
+
+  removeVariation: (idx) => {
+    set((s) => {
+      const variations = (s.appState.variations ?? []).filter((_, i) => i !== idx);
+      const roles = s.appState.roles.map((r) => ({
+        ...r,
+        variationTargets: (r.variationTargets ?? []).filter((_, i) => i !== idx),
+      }));
+      return { appState: { ...s.appState, variations, roles } };
+    });
+  },
+
+  moveVariation: (from, to) => {
+    set((s) => {
+      const variations = [...(s.appState.variations ?? [])];
+      const [item] = variations.splice(from, 1);
+      variations.splice(to, 0, item);
+      const roles = s.appState.roles.map((r) => {
+        const targets = [...(r.variationTargets ?? [])];
+        const [t] = targets.splice(from, 1);
+        targets.splice(to, 0, t);
+        return { ...r, variationTargets: targets };
+      });
+      return { appState: { ...s.appState, variations, roles } };
+    });
+  },
+
   // ── Scale step names ──
 
   setScaleStepName: (idx, field, value) => {
@@ -464,6 +627,20 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     });
   },
 
+  addScaleStepName: () => {
+    set((s) => {
+      const steps = [...(s.appState.scaleStepNames ?? []), { _id: generateId(), name: '', shorthand: '' }];
+      return { appState: { ...s.appState, scaleStepNames: steps } };
+    });
+  },
+
+  removeScaleStepName: (idx) => {
+    set((s) => {
+      const steps = (s.appState.scaleStepNames ?? []).filter((_, i) => i !== idx);
+      return { appState: { ...s.appState, scaleStepNames: steps.length ? steps : null } };
+    });
+  },
+
   // ── Themes ──
 
   setTheme: (idx, field, value) => {
@@ -472,6 +649,29 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       if (!themes[idx]) return s;
       const val = field === 'bg' ? sanitizeHex(value) : value;
       themes[idx] = { ...themes[idx], [field]: val };
+      return { appState: { ...s.appState, themes } };
+    });
+  },
+
+  addTheme: () => {
+    set((s) => {
+      const theme: Theme = { _id: generateId(), name: 'Theme', bg: '#FFFFFF' };
+      return { appState: { ...s.appState, themes: [...s.appState.themes, theme] } };
+    });
+  },
+
+  removeTheme: (idx) => {
+    set((s) => {
+      const themes = s.appState.themes.filter((_, i) => i !== idx);
+      return { appState: { ...s.appState, themes } };
+    });
+  },
+
+  moveTheme: (from, to) => {
+    set((s) => {
+      const themes = [...s.appState.themes];
+      const [item] = themes.splice(from, 1);
+      themes.splice(to, 0, item);
       return { appState: { ...s.appState, themes } };
     });
   },
