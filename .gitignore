@@ -9,3 +9,6 @@ release/
 
 # Generated preset bundle — built from react-src/lib/presets/raw/*.js
 react-src/lib/presets/presets.json
+
+*storybook.log
+storybook-static
