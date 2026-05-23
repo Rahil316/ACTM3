@@ -153,12 +153,16 @@ window.onmessage = (event) => {
   if (msg.type === "load-ui-prefs-meta") {
     const VALID_SCALES = [0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5];
     const VALID_THEMES = ["figma", "dark", "light"];
+    const VALID_LANGS = ["en", "es", "hi"];
     if (msg.prefs.scale !== undefined) {
       const s = parseFloat(msg.prefs.scale);
       if (VALID_SCALES.includes(s)) uiPrefs.scale = s;
     }
     if (msg.prefs.theme !== undefined && VALID_THEMES.includes(msg.prefs.theme)) {
       uiPrefs.theme = msg.prefs.theme;
+    }
+    if (msg.prefs.language !== undefined && VALID_LANGS.includes(msg.prefs.language)) {
+      uiPrefs.language = msg.prefs.language;
     }
     applyUiPrefs();
     syncUiSettingsInputs();

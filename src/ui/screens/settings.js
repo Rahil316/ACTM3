@@ -216,13 +216,27 @@ function renderSettingsPluginPanel() {
     ["dark",  "Dark"],
     ["light", "Light"],
   ], "UI Theme");
+  const langSelect = panelUI.selectInput("setting-ui-lang", [
+    ["en", "English"],
+    ["es", "Español"],
+    ["hi", "हिन्दी"],
+  ], "Language");
 
   scaleSelect.querySelector("select").onchange = (e) => updateUiPref("scale", parseFloat(e.target.value) || 1.0);
   themeSelect.querySelector("select").onchange = (e) => updateUiPref("theme", e.target.value);
+  langSelect.querySelector("select").onchange = (e) => {
+    updateUiPref("language", e.target.value);
+    // Re-render UI screens immediately to apply the language change
+    renderSettingsPanels();
+    renderColorGroups();
+    renderRoles();
+    if (typeof renderThemeShop === "function") renderThemeShop();
+    if (typeof renderSidebarProject === "function") renderSidebarProject();
+  };
 
   const uiCard = panelUI.card([
     panelUI.sectionLabel("Interface"),
-    el("div", { class: "flex gap-3" }, [scaleSelect, themeSelect]),
+    el("div", { class: "flex gap-3" }, [scaleSelect, themeSelect, langSelect]),
   ]);
   mount.appendChild(uiCard);
 }
@@ -405,8 +419,10 @@ function syncOutputToggles() {
 function syncUiSettingsInputs() {
   const scaleEl = document.getElementById("setting-ui-scale");
   const themeEl = document.getElementById("setting-ui-theme");
+  const langEl = document.getElementById("setting-ui-lang");
   if (scaleEl) scaleEl.value = String(uiPrefs.scale);
   if (themeEl) themeEl.value = uiPrefs.theme;
+  if (langEl) langEl.value = uiPrefs.language || "en";
 }
 
 function syncInputsFromState() {

@@ -68,12 +68,21 @@ const htmlHdr = "<!-- AUTO-GENERATED — do not edit. Source: src/ui.html + src/
 
 // 1. Inline scripts (matches src/path/to/file.js)
 html = html.replace(/<script src="src\/([^"]+)"><\/script>/g, (_, f) => {
-  const content = fs
+  let content = fs
     .readFileSync(path.join(srcDir, f), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "") // strip block comments
     .replace(/^\s*\/\/.*$/gm, "") // strip line comments
     .replace(/\n{3,}/g, "\n\n") // collapse excessive blank lines
     .trim();
+  if (f === "ui/lang/lang.js") {
+    const en = fs.readFileSync(path.join(srcDir, "ui/lang/en.json"), "utf8").trim();
+    const es = fs.readFileSync(path.join(srcDir, "ui/lang/es.json"), "utf8").trim();
+    const hi = fs.readFileSync(path.join(srcDir, "ui/lang/hi.json"), "utf8").trim();
+    content = content
+      .replace("__EN_JSON__", en)
+      .replace("__ES_JSON__", es)
+      .replace("__HI_JSON__", hi);
+  }
   return `<script>/* ${f} */\n${content}\n</script>`;
 });
 // 2. Inline JSZip verbatim (no comment stripping — minified code must stay intact)

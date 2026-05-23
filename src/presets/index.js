@@ -12,7 +12,7 @@
  * Token Wand presets are always first — they are the defaults and the showcase.
  */
 const PRESETS = [
-  ...TW_PRESETS,
+  ...TOKEN_WAND_PRESETS,
   ...MATERIAL_PRESETS,
   ...ATLASSIAN_PRESETS,
   ...RADIX_PRESETS,

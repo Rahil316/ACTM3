@@ -1,0 +1,11 @@
+languageIds:
+  - javascript
+  - html
+
+usageMatchRegex:
+  - "[^\\w\\d]t\\(['\"`]({key})['\"`]"
+
+refactorTemplates:
+  - t("$1")
+
+monopoly: true

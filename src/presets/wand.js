@@ -3,19 +3,19 @@
 // Funk (chroma-maximized, bold creative).
 // variationTargets = WCAG contrast ratios (1.0 – 21.0).
 
-const TW_PRESETS = [
-
+const TOKEN_WAND_PRESETS = [
   // ── TW Regular ──────────────────────────────────────────────────────────────
   // Tonal, Natural algo, 25-step scale. Semantic layer stack.
   // Swap the 3 seed colors and ship. Default preset on first launch.
   {
-    id: "tw-regular",
-    name: "TW Regular",
+    id: "regular-wand",
+    name: "Regular Wand",
     badge: "TW",
-    description: "Clean professional system. Full semantic layer stack — backgrounds, surfaces, borders, fills, text. Swap the seed colors and ship.",
+    description:
+      "Clean professional system. Full semantic layer stack — backgrounds, surfaces, borders, fills, text. Swap the seed colors and ship.",
     tags: ["Professional", "Tonal", "Light+Dark"],
     config: {
-      name: "TW Regular",
+      name: "Regular Wand",
       pluginMode: "scale",
       scaleAlgorithm: "Natural",
       scaleLength: 25,
@@ -27,7 +27,7 @@ const TW_PRESETS = [
       useShorthandVariations: false,
       useShorthandSteps: false,
       resolveTokensDirectly: false,
-      includeSourceColors: false,
+      includeSourceColors: true,
       sourceCollectionName: "global",
       includeAlphaTints: false,
       alphaValues: "10, 25, 50, 75, 90",
@@ -38,16 +38,31 @@ const TW_PRESETS = [
       // Global variations — 5 semantic intensity levels used by all 12 roles.
       // Flat names work universally across backgrounds, borders, fills, and text.
       variations: [
-        { name: "Subtle",  shorthand: "1" },
-        { name: "Soft",    shorthand: "2" },
+        { name: "Subtle", shorthand: "1" },
+        { name: "Soft", shorthand: "2" },
         { name: "Default", shorthand: "3" },
-        { name: "Strong",  shorthand: "4" },
-        { name: "Bold",    shorthand: "5" },
+        { name: "Strong", shorthand: "4" },
+        { name: "Bold", shorthand: "5" },
       ],
       colors: [
-        { name: "Brand/Primary", shorthand: "bp", value: "0066FF", description: "Primary brand color — vivid blue" },
-        { name: "Brand/Neutral", shorthand: "bn", value: "6B7280", description: "Neutral gray for surfaces and text" },
-        { name: "Brand/Accent",  shorthand: "ba", value: "8B5CF6", description: "Accent — violet for highlights and CTAs" },
+        {
+          name: "Brand/Primary",
+          shorthand: "bp",
+          value: "0066FF",
+          description: "Primary brand color — vivid blue",
+        },
+        {
+          name: "Brand/Neutral",
+          shorthand: "bn",
+          value: "6B7280",
+          description: "Neutral gray for surfaces and text",
+        },
+        {
+          name: "Brand/Accent",
+          shorthand: "ba",
+          value: "8B5CF6",
+          description: "Accent — violet for highlights and CTAs",
+        },
       ],
       // variationTargets = WCAG contrast ratios for 5 global variations.
       // Step reference for Natural algo, 25 steps:
@@ -58,27 +73,87 @@ const TW_PRESETS = [
       //  20–24  ≈ near-black (13–21:1)
       roles: [
         // Backgrounds — lightest wash of the scale. Page and off-white variants.
-        { name: "Background",         shorthand: "bg",  minContrast: 1.05, variationTargets: [1.0, 1.05, 1.1, 1.2, 1.35] },
-        { name: "Background/Subtle",  shorthand: "bgs", minContrast: 1.1,  variationTargets: [1.1, 1.2, 1.35, 1.5, 1.8] },
+        {
+          name: "Background",
+          shorthand: "bg",
+          minContrast: 1.05,
+          variationTargets: [1.0, 1.05, 1.1, 1.2, 1.35],
+        },
+        {
+          name: "Background/Subtle",
+          shorthand: "bgs",
+          minContrast: 1.1,
+          variationTargets: [1.1, 1.2, 1.35, 1.5, 1.8],
+        },
         // Surfaces — card and raised element backgrounds.
-        { name: "Surface",            shorthand: "sf",  minContrast: 1.15, variationTargets: [1.35, 1.5, 1.8, 2.2, 2.7] },
-        { name: "Surface/Raised",     shorthand: "sfr", minContrast: 1.25, variationTargets: [1.8, 2.2, 2.7, 3.2, 4.0] },
+        {
+          name: "Surface",
+          shorthand: "sf",
+          minContrast: 1.15,
+          variationTargets: [1.35, 1.5, 1.8, 2.2, 2.7],
+        },
+        {
+          name: "Surface/Raised",
+          shorthand: "sfr",
+          minContrast: 1.25,
+          variationTargets: [1.8, 2.2, 2.7, 3.2, 4.0],
+        },
         // Borders — subtle to strong outlines.
-        { name: "Border",             shorthand: "bd",  minContrast: 1.6,  variationTargets: [2.7, 3.2, 4.0, 4.8, 5.8] },
-        { name: "Border/Strong",      shorthand: "bds", minContrast: 2.5,  variationTargets: [4.0, 4.8, 5.8, 7.0, 8.5] },
+        {
+          name: "Border",
+          shorthand: "bd",
+          minContrast: 1.6,
+          variationTargets: [2.7, 3.2, 4.0, 4.8, 5.8],
+        },
+        {
+          name: "Border/Strong",
+          shorthand: "bds",
+          minContrast: 2.5,
+          variationTargets: [4.0, 4.8, 5.8, 7.0, 8.5],
+        },
         // Fills — interactive component fills and solid CTAs.
-        { name: "Fill",               shorthand: "fi",  minContrast: 3.0,  variationTargets: [2.7, 4.0, 5.8, 8.5, 11.5] },
-        { name: "Fill/Strong",        shorthand: "fis", minContrast: 4.5,  variationTargets: [4.0, 5.8, 8.5, 11.5, 14.5] },
+        {
+          name: "Fill",
+          shorthand: "fi",
+          minContrast: 3.0,
+          variationTargets: [2.7, 4.0, 5.8, 8.5, 11.5],
+        },
+        {
+          name: "Fill/Strong",
+          shorthand: "fis",
+          minContrast: 4.5,
+          variationTargets: [4.0, 5.8, 8.5, 11.5, 14.5],
+        },
         // Text — from placeholder/muted through to AAA headings.
-        { name: "Text/Muted",         shorthand: "txm", minContrast: 3.0,  variationTargets: [7.0, 8.5, 10.0, 11.5, 13.0] },
-        { name: "Text",               shorthand: "tx",  minContrast: 4.5,  variationTargets: [10.0, 11.5, 13.0, 14.5, 16.0] },
-        { name: "Text/Strong",        shorthand: "txs", minContrast: 7.0,  variationTargets: [13.0, 14.5, 16.0, 17.5, 19.0] },
+        {
+          name: "Text/Muted",
+          shorthand: "txm",
+          minContrast: 3.0,
+          variationTargets: [7.0, 8.5, 10.0, 11.5, 13.0],
+        },
+        {
+          name: "Text",
+          shorthand: "tx",
+          minContrast: 4.5,
+          variationTargets: [10.0, 11.5, 13.0, 14.5, 16.0],
+        },
+        {
+          name: "Text/Strong",
+          shorthand: "txs",
+          minContrast: 7.0,
+          variationTargets: [13.0, 14.5, 16.0, 17.5, 19.0],
+        },
         // Inverse — text or fill used against a dark/colored background.
-        { name: "Text/Inverse",       shorthand: "txi", minContrast: 4.5,  variationTargets: [1.1, 1.2, 1.35, 1.5, 1.8] },
+        {
+          name: "Text/Inverse",
+          shorthand: "txi",
+          minContrast: 4.5,
+          variationTargets: [1.1, 1.2, 1.35, 1.5, 1.8],
+        },
       ],
       themes: [
         { name: "Light", bg: "FFFFFF" },
-        { name: "Dark",  bg: "0F0F0F" },
+        { name: "Dark", bg: "0F0F0F" },
       ],
     },
   },
@@ -91,7 +166,8 @@ const TW_PRESETS = [
     id: "tw-pro",
     name: "TW Pro",
     badge: "TW",
-    description: "Full system. Direct mode, global brand constants + alpha tints, 3 themes. Per-role semantic variation groups for Surface, Text, Status, Outline, and Inverse.",
+    description:
+      "Full system. Direct mode, global brand constants + alpha tints, 3 themes. Per-role semantic variation groups for Surface, Text, Status, Outline, and Inverse.",
     tags: ["Comprehensive", "Adaptive", "Multi-theme"],
     config: {
       name: "TW Pro",
@@ -118,21 +194,49 @@ const TW_PRESETS = [
       // variationTargets (adaptive) = WCAG contrast ratios.
       // Rest:4.5 Hover:6.0 Pressed:7.0 Disabled:2.0
       variations: [
-        { name: "State/Rest",     shorthand: "r" },
-        { name: "State/Hover",    shorthand: "h" },
-        { name: "State/Pressed",  shorthand: "p" },
+        { name: "State/Rest", shorthand: "r" },
+        { name: "State/Hover", shorthand: "h" },
+        { name: "State/Pressed", shorthand: "p" },
         { name: "State/Disabled", shorthand: "d" },
       ],
       colors: [
-        { name: "Brand/Primary",   shorthand: "bp", value: "0055E5", description: "Primary brand — deep vivid blue" },
-        { name: "Brand/Secondary", shorthand: "bs", value: "7C3AED", description: "Secondary brand — violet" },
-        { name: "Brand/Neutral",   shorthand: "bn", value: "64748B", description: "Neutral slate — surfaces and text" },
-        { name: "Status/Error",    shorthand: "er", value: "DC2626", description: "Error and danger states" },
+        {
+          name: "Brand/Primary",
+          shorthand: "bp",
+          value: "0055E5",
+          description: "Primary brand — deep vivid blue",
+        },
+        {
+          name: "Brand/Secondary",
+          shorthand: "bs",
+          value: "7C3AED",
+          description: "Secondary brand — violet",
+        },
+        {
+          name: "Brand/Neutral",
+          shorthand: "bn",
+          value: "64748B",
+          description: "Neutral slate — surfaces and text",
+        },
+        {
+          name: "Status/Error",
+          shorthand: "er",
+          value: "DC2626",
+          description: "Error and danger states",
+        },
       ],
       roles: [
         // Primary / Secondary — interactive accent colors, 4-state global variations.
-        { name: "Primary",              shorthand: "pr",  minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
-        { name: "Primary/Container",    shorthand: "prc", minContrast: 1.5,
+        {
+          name: "Primary",
+          shorthand: "pr",
+          minContrast: 4.5,
+          variationTargets: [4.5, 6.0, 7.0, 2.0],
+        },
+        {
+          name: "Primary/Container",
+          shorthand: "prc",
+          minContrast: 1.5,
           customVariationList: true,
           customVariations: [
             { name: "Layer/01", shorthand: "l1" },
@@ -143,79 +247,129 @@ const TW_PRESETS = [
           ],
           variationTargets: [1.05, 1.2, 1.4, 1.7, 2.5],
         },
-        { name: "On/Primary",           shorthand: "op",  minContrast: 7.0, variationTargets: [4.5, 6.0, 7.0, 2.0] },
-        { name: "Secondary",            shorthand: "sc",  minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
-        { name: "On/Secondary",         shorthand: "os",  minContrast: 7.0, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        {
+          name: "On/Primary",
+          shorthand: "op",
+          minContrast: 7.0,
+          variationTargets: [4.5, 6.0, 7.0, 2.0],
+        },
+        {
+          name: "Secondary",
+          shorthand: "sc",
+          minContrast: 4.5,
+          variationTargets: [4.5, 6.0, 7.0, 2.0],
+        },
+        {
+          name: "On/Secondary",
+          shorthand: "os",
+          minContrast: 7.0,
+          variationTargets: [4.5, 6.0, 7.0, 2.0],
+        },
 
         // Surface family — 5-layer depth model with "/" naming → nested Figma folders.
         // Layer/01 = page bg (barely-there), Layer/Scrim = modal overlay.
-        { name: "Surface",              shorthand: "sf",  minContrast: 1.05,
+        {
+          name: "Surface",
+          shorthand: "sf",
+          minContrast: 1.05,
           customVariationList: true,
           customVariations: [
-            { name: "Layer/01",    shorthand: "l1" },
-            { name: "Layer/02",    shorthand: "l2" },
-            { name: "Layer/03",    shorthand: "l3" },
-            { name: "Layer/04",    shorthand: "l4" },
+            { name: "Layer/01", shorthand: "l1" },
+            { name: "Layer/02", shorthand: "l2" },
+            { name: "Layer/03", shorthand: "l3" },
+            { name: "Layer/04", shorthand: "l4" },
             { name: "Layer/Scrim", shorthand: "ls" },
           ],
           variationTargets: [1.05, 1.2, 1.4, 1.7, 2.5],
         },
 
         // Text family — Emphasis hierarchy from accessible body copy to disabled.
-        { name: "On/Surface",           shorthand: "ons", minContrast: 4.5,
+        {
+          name: "On/Surface",
+          shorthand: "ons",
+          minContrast: 4.5,
           customVariationList: true,
           customVariations: [
-            { name: "Emphasis/High",     shorthand: "eh" },
-            { name: "Emphasis/Medium",   shorthand: "em" },
-            { name: "Emphasis/Low",      shorthand: "el" },
+            { name: "Emphasis/High", shorthand: "eh" },
+            { name: "Emphasis/Medium", shorthand: "em" },
+            { name: "Emphasis/Low", shorthand: "el" },
             { name: "Emphasis/Disabled", shorthand: "ed" },
           ],
           variationTargets: [7.0, 4.5, 3.0, 2.0],
         },
 
         // Outline — three weights of border/separator.
-        { name: "Outline",              shorthand: "ol",  minContrast: 2.5,
+        {
+          name: "Outline",
+          shorthand: "ol",
+          minContrast: 2.5,
           customVariationList: true,
           customVariations: [
-            { name: "Weight/Subtle",  shorthand: "ws" },
+            { name: "Weight/Subtle", shorthand: "ws" },
             { name: "Weight/Default", shorthand: "wd" },
-            { name: "Weight/Strong",  shorthand: "wst" },
+            { name: "Weight/Strong", shorthand: "wst" },
           ],
           variationTargets: [1.8, 2.5, 3.5],
         },
 
         // Action roles — 4 interaction states via global variations.
-        { name: "Action/Primary",       shorthand: "ap",  minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
-        { name: "Action/Secondary",     shorthand: "as",  minContrast: 3.0, variationTargets: [3.0, 4.5, 6.0, 2.0] },
-        { name: "Action/Destructive",   shorthand: "ade", minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        {
+          name: "Action/Primary",
+          shorthand: "ap",
+          minContrast: 4.5,
+          variationTargets: [4.5, 6.0, 7.0, 2.0],
+        },
+        {
+          name: "Action/Secondary",
+          shorthand: "as",
+          minContrast: 3.0,
+          variationTargets: [3.0, 4.5, 6.0, 2.0],
+        },
+        {
+          name: "Action/Destructive",
+          shorthand: "ade",
+          minContrast: 4.5,
+          variationTargets: [4.5, 6.0, 7.0, 2.0],
+        },
 
         // Status / Error — 4 semantic token slots per status color.
         // BG/Subtle = tinted bg, BG/Default = stronger bg, FG/Default = foreground text, Border = outline.
-        { name: "Status/Error",         shorthand: "se",  minContrast: 4.5,
+        {
+          name: "Status/Error",
+          shorthand: "se",
+          minContrast: 4.5,
           customVariationList: true,
           customVariations: [
-            { name: "BG/Subtle",  shorthand: "bgs" },
+            { name: "BG/Subtle", shorthand: "bgs" },
             { name: "BG/Default", shorthand: "bgd" },
             { name: "FG/Default", shorthand: "fgd" },
-            { name: "Border",     shorthand: "bor" },
+            { name: "Border", shorthand: "bor" },
           ],
           variationTargets: [1.3, 1.8, 4.5, 2.5],
         },
 
         // Inverse — near-max contrast pair for high-contrast surfaces or dark tooltips.
-        { name: "Inverse/Surface",      shorthand: "is",  minContrast: 12.0,
+        {
+          name: "Inverse/Surface",
+          shorthand: "is",
+          minContrast: 12.0,
           customVariationList: true,
           customVariations: [
             { name: "Default", shorthand: "df" },
-            { name: "Muted",   shorthand: "mu" },
+            { name: "Muted", shorthand: "mu" },
           ],
           variationTargets: [12.0, 4.5],
         },
-        { name: "Inverse/On/Surface",   shorthand: "ios", minContrast: 4.5, variationTargets: [4.5, 6.0, 7.0, 2.0] },
+        {
+          name: "Inverse/On/Surface",
+          shorthand: "ios",
+          minContrast: 4.5,
+          variationTargets: [4.5, 6.0, 7.0, 2.0],
+        },
       ],
       themes: [
         { name: "Light", bg: "FFFFFF" },
-        { name: "Dark",  bg: "111827" },
+        { name: "Dark", bg: "111827" },
         { name: "Brand", bg: "0A1628" },
       ],
     },
@@ -229,7 +383,8 @@ const TW_PRESETS = [
     id: "tw-funk",
     name: "TW Funk",
     badge: "TW",
-    description: "Maximum chroma at every contrast level. High-energy variation names, 3 vivid themes. Built for bold creative products.",
+    description:
+      "Maximum chroma at every contrast level. High-energy variation names, 3 vivid themes. Built for bold creative products.",
     tags: ["Bold", "Vivid", "Adaptive"],
     config: {
       name: "TW Funk",
@@ -255,42 +410,127 @@ const TW_PRESETS = [
       // Ghost=barely visible tint, Whisper=hover, Core=primary, Loud=bold, Max=near-black.
       // Contrast targets: 1.5 / 2.5 / 4.5 / 7.0 / 12.0
       variations: [
-        { name: "Ghost",   shorthand: "1" },
+        { name: "Ghost", shorthand: "1" },
         { name: "Whisper", shorthand: "2" },
-        { name: "Core",    shorthand: "3" },
-        { name: "Loud",    shorthand: "4" },
-        { name: "Max",     shorthand: "5" },
+        { name: "Core", shorthand: "3" },
+        { name: "Loud", shorthand: "4" },
+        { name: "Max", shorthand: "5" },
       ],
       colors: [
-        { name: "Electric/Blue", shorthand: "eb", value: "0EA5E9", description: "Sky blue — high chroma" },
-        { name: "Electric/Pink", shorthand: "ep", value: "EC4899", description: "Hot pink" },
-        { name: "Electric/Lime", shorthand: "el", value: "84CC16", description: "Lime green" },
+        {
+          name: "Electric/Blue",
+          shorthand: "eb",
+          value: "0EA5E9",
+          description: "Sky blue — high chroma",
+        },
+        {
+          name: "Electric/Pink",
+          shorthand: "ep",
+          value: "EC4899",
+          description: "Hot pink",
+        },
+        {
+          name: "Electric/Lime",
+          shorthand: "el",
+          value: "84CC16",
+          description: "Lime green",
+        },
       ],
       roles: [
         // Canvas — the base surface. Ghost=invisible, Max=heavy scrim.
-        { name: "Canvas",           shorthand: "ca",  minContrast: 1.05, variationTargets: [1.05, 1.2, 1.5, 2.0, 3.0 ] },
-        { name: "Canvas/Raised",    shorthand: "cr",  minContrast: 1.2,  variationTargets: [1.1,  1.3, 1.6, 2.5, 4.0 ] },
+        {
+          name: "Canvas",
+          shorthand: "ca",
+          minContrast: 1.05,
+          variationTargets: [1.05, 1.2, 1.5, 2.0, 3.0],
+        },
+        {
+          name: "Canvas/Raised",
+          shorthand: "cr",
+          minContrast: 1.2,
+          variationTargets: [1.1, 1.3, 1.6, 2.5, 4.0],
+        },
         // Glow — color-tinted fills, from subtle aura to heavy overlay.
-        { name: "Glow",             shorthand: "gl",  minContrast: 1.5,  variationTargets: [1.5,  2.0, 3.0, 4.5, 7.0 ] },
-        { name: "Glow/Strong",      shorthand: "gls", minContrast: 3.0,  variationTargets: [2.0,  2.5, 3.5, 5.5, 9.0 ] },
+        {
+          name: "Glow",
+          shorthand: "gl",
+          minContrast: 1.5,
+          variationTargets: [1.5, 2.0, 3.0, 4.5, 7.0],
+        },
+        {
+          name: "Glow/Strong",
+          shorthand: "gls",
+          minContrast: 3.0,
+          variationTargets: [2.0, 2.5, 3.5, 5.5, 9.0],
+        },
         // Edge — borders and outlines.
-        { name: "Edge",             shorthand: "eg",  minContrast: 2.0,  variationTargets: [1.5,  2.0, 2.5, 3.5, 5.0 ] },
+        {
+          name: "Edge",
+          shorthand: "eg",
+          minContrast: 2.0,
+          variationTargets: [1.5, 2.0, 2.5, 3.5, 5.0],
+        },
         // Fill — interactive component fills.
-        { name: "Fill/Soft",        shorthand: "fs",  minContrast: 2.5,  variationTargets: [1.8,  2.2, 3.0, 4.5, 6.0 ] },
-        { name: "Fill/Core",        shorthand: "fc",  minContrast: 4.0,  variationTargets: [2.5,  3.5, 4.5, 6.5, 9.0 ] },
-        { name: "Fill/Pop",         shorthand: "fp",  minContrast: 6.5,  variationTargets: [4.5,  5.5, 7.0, 10.0, 14.0] },
+        {
+          name: "Fill/Soft",
+          shorthand: "fs",
+          minContrast: 2.5,
+          variationTargets: [1.8, 2.2, 3.0, 4.5, 6.0],
+        },
+        {
+          name: "Fill/Core",
+          shorthand: "fc",
+          minContrast: 4.0,
+          variationTargets: [2.5, 3.5, 4.5, 6.5, 9.0],
+        },
+        {
+          name: "Fill/Pop",
+          shorthand: "fp",
+          minContrast: 6.5,
+          variationTargets: [4.5, 5.5, 7.0, 10.0, 14.0],
+        },
         // Ink — text from dim to maximum.
-        { name: "Ink/Dim",          shorthand: "id",  minContrast: 2.5,  variationTargets: [1.5,  2.5, 3.0, 4.5, 6.0 ] },
-        { name: "Ink",              shorthand: "ik",  minContrast: 4.0,  variationTargets: [2.5,  3.5, 4.5, 7.0, 10.0] },
-        { name: "Ink/Loud",         shorthand: "il",  minContrast: 6.5,  variationTargets: [4.5,  5.5, 7.0, 10.0, 14.0] },
-        { name: "Ink/Max",          shorthand: "im",  minContrast: 12.0, variationTargets: [7.0,  10.0, 14.0, 18.0, 21.0] },
+        {
+          name: "Ink/Dim",
+          shorthand: "id",
+          minContrast: 2.5,
+          variationTargets: [1.5, 2.5, 3.0, 4.5, 6.0],
+        },
+        {
+          name: "Ink",
+          shorthand: "ik",
+          minContrast: 4.0,
+          variationTargets: [2.5, 3.5, 4.5, 7.0, 10.0],
+        },
+        {
+          name: "Ink/Loud",
+          shorthand: "il",
+          minContrast: 6.5,
+          variationTargets: [4.5, 5.5, 7.0, 10.0, 14.0],
+        },
+        {
+          name: "Ink/Max",
+          shorthand: "im",
+          minContrast: 12.0,
+          variationTargets: [7.0, 10.0, 14.0, 18.0, 21.0],
+        },
         // Highlight — decorative accent washes and pops.
-        { name: "Highlight",        shorthand: "hl",  minContrast: 2.5,  variationTargets: [1.5,  2.0, 3.0, 4.5, 7.0 ] },
-        { name: "Highlight/Strong", shorthand: "hls", minContrast: 4.5,  variationTargets: [3.0,  4.0, 5.0, 7.0, 10.0] },
+        {
+          name: "Highlight",
+          shorthand: "hl",
+          minContrast: 2.5,
+          variationTargets: [1.5, 2.0, 3.0, 4.5, 7.0],
+        },
+        {
+          name: "Highlight/Strong",
+          shorthand: "hls",
+          minContrast: 4.5,
+          variationTargets: [3.0, 4.0, 5.0, 7.0, 10.0],
+        },
       ],
       themes: [
         { name: "Light", bg: "FAFAFA" },
-        { name: "Dark",  bg: "09090B" },
+        { name: "Dark", bg: "09090B" },
         { name: "Vivid", bg: "1A0533" },
       ],
     },
@@ -305,9 +545,18 @@ const TW_PRESETS = [
     id: "tw-native",
     name: "TW Native",
     badge: "TW",
-    description: "Token Wand's native system. Palette (7 colors) → Role (what the color does) → Variation (state within that role). Path: Brand/button/hover, Neutral/text/base, Danger/fill/disabled.",
+    description:
+      "Token Wand's native system. Palette (7 colors) → Role (what the color does) → Variation (state within that role). Path: Brand/button/hover, Neutral/text/base, Danger/fill/disabled.",
     tags: ["Native", "Semantic", "Light+Dark", "Starter"],
-    swatches: ["0066FF", "7C3AED", "6B7280", "16A34A", "D97706", "DC2626", "0284C7"],
+    swatches: [
+      "0066FF",
+      "7C3AED",
+      "6B7280",
+      "16A34A",
+      "D97706",
+      "DC2626",
+      "0284C7",
+    ],
     config: {
       name: "TW Native",
       pluginMode: "scale",
@@ -335,23 +584,55 @@ const TW_PRESETS = [
       scaleStepNames: null,
 
       // Global variations — not used directly (all roles use customVariationList).
-      variations: [
-        { name: "default", shorthand: "default" },
-      ],
+      variations: [{ name: "default", shorthand: "default" }],
 
       // ── 7 palette colors ─────────────────────────────────────────────────────
       colors: [
-        { name: "Brand",   shorthand: "Brand",   value: "0066FF", description: "Primary brand color" },
-        { name: "Accent",  shorthand: "Accent",  value: "7C3AED", description: "Secondary accent — violet" },
-        { name: "Neutral", shorthand: "Neutral", value: "6B7280", description: "Neutral gray — surfaces, borders, text" },
-        { name: "Success", shorthand: "Success", value: "16A34A", description: "Positive / confirm" },
-        { name: "Warning", shorthand: "Warning", value: "D97706", description: "Caution / attention" },
-        { name: "Danger",  shorthand: "Danger",  value: "DC2626", description: "Error / destructive" },
-        { name: "Info",    shorthand: "Info",    value: "0284C7", description: "Informational" },
+        {
+          name: "Brand",
+          shorthand: "Brand",
+          value: "0066FF",
+          description: "Primary brand color",
+        },
+        {
+          name: "Accent",
+          shorthand: "Accent",
+          value: "7C3AED",
+          description: "Secondary accent — violet",
+        },
+        {
+          name: "Neutral",
+          shorthand: "Neutral",
+          value: "6B7280",
+          description: "Neutral gray — surfaces, borders, text",
+        },
+        {
+          name: "Success",
+          shorthand: "Success",
+          value: "16A34A",
+          description: "Positive / confirm",
+        },
+        {
+          name: "Warning",
+          shorthand: "Warning",
+          value: "D97706",
+          description: "Caution / attention",
+        },
+        {
+          name: "Danger",
+          shorthand: "Danger",
+          value: "DC2626",
+          description: "Error / destructive",
+        },
+        {
+          name: "Info",
+          shorthand: "Info",
+          value: "0284C7",
+          description: "Informational",
+        },
       ],
 
       roles: [
-
         // ── BG ────────────────────────────────────────────────────────────────
         // Page and section background fills. 3 steps: barely-there → light → section.
         // Neutral drives page bg. Brand/status colors drive tinted section bgs.
@@ -361,12 +642,13 @@ const TW_PRESETS = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "subtle",  shorthand: "subtle"  }, // barely-there page wash
+            { name: "subtle", shorthand: "subtle" }, // barely-there page wash
             { name: "default", shorthand: "default" }, // light section background
-            { name: "strong",  shorthand: "strong"  }, // stronger section divider
+            { name: "strong", shorthand: "strong" }, // stronger section divider
           ],
           variationTargets: [1.05, 1.15, 1.3],
-          description: "Background fills · subtle wash · default section · strong divider",
+          description:
+            "Background fills · subtle wash · default section · strong divider",
         },
 
         // ── SURFACE ───────────────────────────────────────────────────────────
@@ -378,13 +660,14 @@ const TW_PRESETS = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "sunken",  shorthand: "sunken"  }, // recessed well / inset area
+            { name: "sunken", shorthand: "sunken" }, // recessed well / inset area
             { name: "default", shorthand: "default" }, // card / panel canvas
-            { name: "raised",  shorthand: "raised"  }, // elevated card / popover
+            { name: "raised", shorthand: "raised" }, // elevated card / popover
             { name: "overlay", shorthand: "overlay" }, // modal / sheet / drawer
           ],
           variationTargets: [1.05, 1.0, 1.08, 1.15],
-          description: "Surface elevation · sunken · card · raised · modal overlay",
+          description:
+            "Surface elevation · sunken · card · raised · modal overlay",
         },
 
         // ── FILL ──────────────────────────────────────────────────────────────
@@ -396,8 +679,8 @@ const TW_PRESETS = [
           minContrast: 1.5,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  }, // AA solid fill
-            { name: "hover",    shorthand: "hover"    }, // hover — one step darker
+            { name: "default", shorthand: "default" }, // AA solid fill
+            { name: "hover", shorthand: "hover" }, // hover — one step darker
             { name: "disabled", shorthand: "disabled" }, // clearly inactive
           ],
           variationTargets: [4.5, 5.5, 2.0],
@@ -412,13 +695,14 @@ const TW_PRESETS = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "base",     shorthand: "base"     }, // AAA body copy
-            { name: "subtle",   shorthand: "subtle"   }, // AA secondary text
-            { name: "muted",    shorthand: "muted"    }, // AA-large placeholder/hint
+            { name: "base", shorthand: "base" }, // AAA body copy
+            { name: "subtle", shorthand: "subtle" }, // AA secondary text
+            { name: "muted", shorthand: "muted" }, // AA-large placeholder/hint
             { name: "disabled", shorthand: "disabled" }, // disabled label
           ],
           variationTargets: [7.0, 4.5, 3.0, 2.0],
-          description: "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
+          description:
+            "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
         },
 
         // ── STROKE ────────────────────────────────────────────────────────────
@@ -429,12 +713,13 @@ const TW_PRESETS = [
           minContrast: 1.5,
           customVariationList: true,
           customVariations: [
-            { name: "subtle",  shorthand: "subtle"  }, // decorative separator / hairline
+            { name: "subtle", shorthand: "subtle" }, // decorative separator / hairline
             { name: "default", shorthand: "default" }, // standard UI border
-            { name: "strong",  shorthand: "strong"  }, // focus ring / emphasis outline
+            { name: "strong", shorthand: "strong" }, // focus ring / emphasis outline
           ],
           variationTargets: [1.5, 2.5, 4.0],
-          description: "Borders and dividers · subtle hairline · UI border · focus ring",
+          description:
+            "Borders and dividers · subtle hairline · UI border · focus ring",
         },
 
         // ── ICON ──────────────────────────────────────────────────────────────
@@ -445,12 +730,13 @@ const TW_PRESETS = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  }, // AA standard icon
-            { name: "subtle",   shorthand: "subtle"   }, // AA-large secondary icon
+            { name: "default", shorthand: "default" }, // AA standard icon
+            { name: "subtle", shorthand: "subtle" }, // AA-large secondary icon
             { name: "disabled", shorthand: "disabled" }, // disabled icon
           ],
           variationTargets: [4.5, 3.0, 2.0],
-          description: "Icon fills · default (AA) · subtle (AA-large) · disabled",
+          description:
+            "Icon fills · default (AA) · subtle (AA-large) · disabled",
         },
 
         // ── BUTTON ────────────────────────────────────────────────────────────
@@ -461,14 +747,15 @@ const TW_PRESETS = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  }, // AA resting fill
-            { name: "hover",    shorthand: "hover"    }, // hover — one step darker
-            { name: "active",   shorthand: "active"   }, // pressed / mouse-down
+            { name: "default", shorthand: "default" }, // AA resting fill
+            { name: "hover", shorthand: "hover" }, // hover — one step darker
+            { name: "active", shorthand: "active" }, // pressed / mouse-down
             { name: "selected", shorthand: "selected" }, // toggled / checked
             { name: "disabled", shorthand: "disabled" }, // below action threshold
           ],
           variationTargets: [4.5, 5.5, 6.5, 7.0, 2.0],
-          description: "Button fills · 5 interaction states · default → hover → active → selected → disabled",
+          description:
+            "Button fills · 5 interaction states · default → hover → active → selected → disabled",
         },
 
         // ── LINK ──────────────────────────────────────────────────────────────
@@ -480,7 +767,7 @@ const TW_PRESETS = [
           customVariationList: true,
           customVariations: [
             { name: "default", shorthand: "default" }, // AA resting link
-            { name: "hover",   shorthand: "hover"   }, // hover emphasis
+            { name: "hover", shorthand: "hover" }, // hover emphasis
             { name: "visited", shorthand: "visited" }, // de-emphasized visited
           ],
           variationTargets: [4.5, 5.5, 3.5],
@@ -500,12 +787,11 @@ const TW_PRESETS = [
           variationTargets: [14.0],
           description: "Modal scrim · darkest achievable from palette hue",
         },
-
       ],
 
       themes: [
         { name: "Light", bg: "FFFFFF" },
-        { name: "Dark",  bg: "0F172A" },
+        { name: "Dark", bg: "0F172A" },
       ],
     },
   },
@@ -525,9 +811,18 @@ const TW_PRESETS = [
     id: "tw-native-direct",
     name: "TW Native Direct",
     badge: "TW",
-    description: "TW Native in direct mode. Same palette → role → variation architecture but tokens are solved straight from the seed color — richer, more saturated. No tonal ramp collection.",
+    description:
+      "TW Native in direct mode. Same palette → role → variation architecture but tokens are solved straight from the seed color — richer, more saturated. No tonal ramp collection.",
     tags: ["Native", "Direct", "Vivid", "Light+Dark"],
-    swatches: ["0066FF", "7C3AED", "6B7280", "16A34A", "D97706", "DC2626", "0284C7"],
+    swatches: [
+      "0066FF",
+      "7C3AED",
+      "6B7280",
+      "16A34A",
+      "D97706",
+      "DC2626",
+      "0284C7",
+    ],
     config: {
       name: "TW Native Direct",
       pluginMode: "direct",
@@ -555,23 +850,55 @@ const TW_PRESETS = [
       scaleStepNames: null,
 
       // Global variations — not used directly (all roles use customVariationList).
-      variations: [
-        { name: "default", shorthand: "default" },
-      ],
+      variations: [{ name: "default", shorthand: "default" }],
 
       // ── 7 palette colors ─────────────────────────────────────────────────────
       colors: [
-        { name: "Brand",   shorthand: "Brand",   value: "0066FF", description: "Primary brand color" },
-        { name: "Accent",  shorthand: "Accent",  value: "7C3AED", description: "Secondary accent — violet" },
-        { name: "Neutral", shorthand: "Neutral", value: "6B7280", description: "Neutral gray — surfaces, borders, text" },
-        { name: "Success", shorthand: "Success", value: "16A34A", description: "Positive / confirm" },
-        { name: "Warning", shorthand: "Warning", value: "D97706", description: "Caution / attention" },
-        { name: "Danger",  shorthand: "Danger",  value: "DC2626", description: "Error / destructive" },
-        { name: "Info",    shorthand: "Info",    value: "0284C7", description: "Informational" },
+        {
+          name: "Brand",
+          shorthand: "Brand",
+          value: "0066FF",
+          description: "Primary brand color",
+        },
+        {
+          name: "Accent",
+          shorthand: "Accent",
+          value: "7C3AED",
+          description: "Secondary accent — violet",
+        },
+        {
+          name: "Neutral",
+          shorthand: "Neutral",
+          value: "6B7280",
+          description: "Neutral gray — surfaces, borders, text",
+        },
+        {
+          name: "Success",
+          shorthand: "Success",
+          value: "16A34A",
+          description: "Positive / confirm",
+        },
+        {
+          name: "Warning",
+          shorthand: "Warning",
+          value: "D97706",
+          description: "Caution / attention",
+        },
+        {
+          name: "Danger",
+          shorthand: "Danger",
+          value: "DC2626",
+          description: "Error / destructive",
+        },
+        {
+          name: "Info",
+          shorthand: "Info",
+          value: "0284C7",
+          description: "Informational",
+        },
       ],
 
       roles: [
-
         // ── BG ────────────────────────────────────────────────────────────────
         {
           name: "bg",
@@ -579,12 +906,13 @@ const TW_PRESETS = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "subtle",  shorthand: "subtle"  },
+            { name: "subtle", shorthand: "subtle" },
             { name: "default", shorthand: "default" },
-            { name: "strong",  shorthand: "strong"  },
+            { name: "strong", shorthand: "strong" },
           ],
           variationTargets: [1.05, 1.15, 1.3],
-          description: "Background fills · subtle wash · default section · strong divider",
+          description:
+            "Background fills · subtle wash · default section · strong divider",
         },
 
         // ── SURFACE ───────────────────────────────────────────────────────────
@@ -594,13 +922,14 @@ const TW_PRESETS = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "sunken",  shorthand: "sunken"  },
+            { name: "sunken", shorthand: "sunken" },
             { name: "default", shorthand: "default" },
-            { name: "raised",  shorthand: "raised"  },
+            { name: "raised", shorthand: "raised" },
             { name: "overlay", shorthand: "overlay" },
           ],
           variationTargets: [1.05, 1.0, 1.08, 1.15],
-          description: "Surface elevation · sunken · card · raised · modal overlay",
+          description:
+            "Surface elevation · sunken · card · raised · modal overlay",
         },
 
         // ── FILL ──────────────────────────────────────────────────────────────
@@ -610,8 +939,8 @@ const TW_PRESETS = [
           minContrast: 1.5,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  },
-            { name: "hover",    shorthand: "hover"    },
+            { name: "default", shorthand: "default" },
+            { name: "hover", shorthand: "hover" },
             { name: "disabled", shorthand: "disabled" },
           ],
           variationTargets: [4.5, 5.5, 2.0],
@@ -625,13 +954,14 @@ const TW_PRESETS = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "base",     shorthand: "base"     },
-            { name: "subtle",   shorthand: "subtle"   },
-            { name: "muted",    shorthand: "muted"    },
+            { name: "base", shorthand: "base" },
+            { name: "subtle", shorthand: "subtle" },
+            { name: "muted", shorthand: "muted" },
             { name: "disabled", shorthand: "disabled" },
           ],
           variationTargets: [7.0, 4.5, 3.0, 2.0],
-          description: "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
+          description:
+            "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
         },
 
         // ── STROKE ────────────────────────────────────────────────────────────
@@ -641,12 +971,13 @@ const TW_PRESETS = [
           minContrast: 1.5,
           customVariationList: true,
           customVariations: [
-            { name: "subtle",  shorthand: "subtle"  },
+            { name: "subtle", shorthand: "subtle" },
             { name: "default", shorthand: "default" },
-            { name: "strong",  shorthand: "strong"  },
+            { name: "strong", shorthand: "strong" },
           ],
           variationTargets: [1.5, 2.5, 4.0],
-          description: "Borders and dividers · subtle hairline · UI border · focus ring",
+          description:
+            "Borders and dividers · subtle hairline · UI border · focus ring",
         },
 
         // ── ICON ──────────────────────────────────────────────────────────────
@@ -656,12 +987,13 @@ const TW_PRESETS = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  },
-            { name: "subtle",   shorthand: "subtle"   },
+            { name: "default", shorthand: "default" },
+            { name: "subtle", shorthand: "subtle" },
             { name: "disabled", shorthand: "disabled" },
           ],
           variationTargets: [4.5, 3.0, 2.0],
-          description: "Icon fills · default (AA) · subtle (AA-large) · disabled",
+          description:
+            "Icon fills · default (AA) · subtle (AA-large) · disabled",
         },
 
         // ── BUTTON ────────────────────────────────────────────────────────────
@@ -671,9 +1003,9 @@ const TW_PRESETS = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  },
-            { name: "hover",    shorthand: "hover"    },
-            { name: "active",   shorthand: "active"   },
+            { name: "default", shorthand: "default" },
+            { name: "hover", shorthand: "hover" },
+            { name: "active", shorthand: "active" },
             { name: "selected", shorthand: "selected" },
             { name: "disabled", shorthand: "disabled" },
           ],
@@ -689,7 +1021,7 @@ const TW_PRESETS = [
           customVariationList: true,
           customVariations: [
             { name: "default", shorthand: "default" },
-            { name: "hover",   shorthand: "hover"   },
+            { name: "hover", shorthand: "hover" },
             { name: "visited", shorthand: "visited" },
           ],
           variationTargets: [4.5, 5.5, 3.5],
@@ -702,20 +1034,16 @@ const TW_PRESETS = [
           shorthand: "overlay",
           minContrast: 1.0,
           customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" },
-          ],
+          customVariations: [{ name: "default", shorthand: "default" }],
           variationTargets: [14.0],
           description: "Modal scrim · darkest achievable from palette hue",
         },
-
       ],
 
       themes: [
         { name: "Light", bg: "FFFFFF" },
-        { name: "Dark",  bg: "0F172A" },
+        { name: "Dark", bg: "0F172A" },
       ],
     },
   },
-
 ];

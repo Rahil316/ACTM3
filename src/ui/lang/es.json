@@ -1,0 +1,13 @@
+{
+  "back": "Atrás",
+  "designSystemPresets": "Preajustes del Sistema de Diseño",
+  "presetsSub": "Carga un preajuste y empieza a usarlo: todo es editable después de cargarlo.",
+  "loaded": "✓ Cargado",
+  "load": "Cargar",
+  "successLoaded": "\"{name}\" cargado — todo es editable.",
+  "shop": {
+    "Header": {
+      "SubHeader": "Cargue un ajuste preestablecido y comience a usarlo; todo se puede editar después de cargarlo."
+    }
+  }
+}

@@ -124,7 +124,7 @@ const UI_DIMS = {
   maxHeight: 1400,
 };
 
-let uiPrefs = { scale: 1.0, theme: "dark" };
+let uiPrefs = { scale: 1.0, theme: "dark", language: "en" };
 let activeSidebarTab = "color-groups";
 let _colorDragSrcIdx = null;
 let _roleDragSrcIdx = null;

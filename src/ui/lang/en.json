@@ -1,0 +1,9 @@
+{
+  "back": "Back",
+  "designSystemPresets": "Design System Presets",
+  "presetsSub": "Load a preset and start using it — everything is editable after loading.",
+  "loaded": "✓ Loaded",
+  "load": "Load",
+  "successLoaded": "\"{name}\" loaded — everything is editable.",
+  "shop.Header.SubHeader": "Load a preset and start using it — everything is editable after loading."
+}
