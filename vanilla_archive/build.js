@@ -3,27 +3,31 @@ const { execSync } = require("child_process");
 const path = require("path");
 
 // Failsafe: Ensure dependencies are installed
-const nodeModulesPath = path.join(__dirname, "node_modules");
+const rootDir = path.join(__dirname, "..");
+const nodeModulesPath = path.join(rootDir, "node_modules");
 if (!fs.existsSync(nodeModulesPath) || !fs.existsSync(path.join(nodeModulesPath, "tailwindcss"))) {
   console.log("Missing dependencies. Running 'npm install'...");
   try {
-    execSync("npm install", { stdio: "inherit" });
+    execSync("npm install", { stdio: "inherit", cwd: rootDir });
   } catch (err) {
     console.error("Failed to run 'npm install'. Please run it manually.", err);
     process.exit(1);
   }
 }
 
-const outDir = "dist/";
-const srcDir = "src/";
+const outDir = path.join(__dirname, "../dist");
+const srcDir = path.join(__dirname, "src");
 
 if (!fs.existsSync(outDir)) {
-  fs.mkdirSync(outDir);
+  fs.mkdirSync(outDir, { recursive: true });
 }
 
 console.log("Building Tailwind CSS...");
 try {
-  execSync("npx tailwindcss -i src/input.css -o src/output.css --minify");
+  execSync(
+    `npx tailwindcss -i ${path.join(srcDir, "input.css")} -o ${path.join(srcDir, "output.css")} --minify --config ${path.join(__dirname, "tailwind.config.js")}`,
+    { cwd: rootDir }
+  );
 } catch (err) {
   console.error("Tailwind build failed:", err);
 }

@@ -2,12 +2,14 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
+const rootDir = path.join(__dirname, "..");
+
 // Failsafe: Ensure dependencies are installed
-const nodeModulesPath = path.join(__dirname, "node_modules");
+const nodeModulesPath = path.join(rootDir, "node_modules");
 if (!fs.existsSync(nodeModulesPath) || !fs.existsSync(path.join(nodeModulesPath, "tailwindcss"))) {
   console.log("Missing dependencies. Running 'npm install'...");
   try {
-    execSync("npm install", { stdio: "inherit" });
+    execSync("npm install", { stdio: "inherit", cwd: rootDir });
   } catch (err) {
     console.error("Failed to run 'npm install'. Please run it manually.", err);
     process.exit(1);
@@ -18,7 +20,7 @@ const SRC_DIR = path.join(__dirname, "src");
 
 function build() {
   try {
-    execSync("npm run build", { stdio: "inherit" });
+    execSync("npm run build", { stdio: "inherit", cwd: rootDir });
     console.log(`[${new Date().toLocaleTimeString()}] Build complete. Reload the plugin in Figma.\n`);
   } catch (_) {
     console.error(`[${new Date().toLocaleTimeString()}] Build failed — check errors above.\n`);
