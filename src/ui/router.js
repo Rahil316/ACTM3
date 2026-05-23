@@ -53,12 +53,8 @@ function hideOverlay(id) {
 // ── SETTINGS TABS ──
 
 function switchSettingsTab(tab) {
-  document.querySelectorAll(".settings-tab").forEach((btn) =>
-    btn.classList.toggle("active", btn.dataset.tab === tab)
-  );
-  document.querySelectorAll(".settings-panel").forEach((panel) =>
-    panel.classList.toggle("hidden", panel.dataset.panel !== tab)
-  );
+  document.querySelectorAll(".settings-tab").forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
+  document.querySelectorAll(".settings-panel").forEach((panel) => panel.classList.toggle("hidden", panel.dataset.panel !== tab));
 }
 
 // ── DIALOGUE FACTORY ──
@@ -71,13 +67,7 @@ function switchSettingsTab(tab) {
 //         "bottom-sheet" — slides up from the bottom edge
 //                          targetID should be "dialogue-sheet"
 
-function createDialogue(targetID, {
-  title   = "Are you sure?",
-  body    = "",
-  icon    = null,
-  buttons = [{ label: "Cancel" }],
-  layout  = "row",
-} = {}) {
+function createDialogue(targetID, { title = "Are you sure?", body = "", icon = null, buttons = [{ label: t("cancel") }], layout = "row" } = {}) {
   const slot = document.getElementById(targetID);
   if (!slot) return;
   slot.innerHTML = "";
@@ -88,31 +78,39 @@ function createDialogue(targetID, {
       inputsUI.btn(variant, {
         id,
         label,
-        size:  "xl",
+        size: "xl",
         class: "w-full",
-        onclick: () => { hideSheets(); action?.(); },
+        onclick: () => {
+          hideSheets();
+          action?.();
+        },
       });
 
     slot.appendChild(
       el("div", { class: "flex flex-col" }, [
         // drag handle
-        el("div", { class: "flex justify-center pt-3 pb-1" }, [
-          el("div", { class: "w-9 h-1 rounded-full bg-[var(--border)]" }),
-        ]),
+        el("div", { class: "flex justify-center pt-3 pb-1" }, [el("div", { class: "w-9 h-1 rounded-full bg-[var(--border)]" })]),
         // header
-        el("div", { class: "px-5 pt-3 pb-4 border-b border-[var(--border)]" }, [
-          icon ? el("div", { class: "mb-3" }, [icon]) : null,
-          el("h2", { class: "text-[17px] font-bold text-[var(--text-primary)]" }, title),
-          body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed mt-1" }, body) : null,
-        ].filter(Boolean)),
+        el(
+          "div",
+          { class: "px-5 pt-3 pb-4 border-b border-[var(--border)]" },
+          [
+            icon ? el("div", { class: "mb-3" }, [icon]) : null,
+            el("h2", { class: "text-[17px] font-bold text-[var(--text-primary)]" }, title),
+            body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed mt-1" }, body) : null,
+          ].filter(Boolean),
+        ),
         // buttons
         el("div", { class: "p-4 space-y-2" }, buttons.map(mkBtn)),
-      ])
+      ]),
     );
 
     // Close other open sheets without closing the target, then open it directly.
     document.querySelectorAll(".bottom-sheet").forEach((s) => {
-      if (s.id !== targetID) { s.classList.remove("open"); s.setAttribute("inert", ""); }
+      if (s.id !== targetID) {
+        s.classList.remove("open");
+        s.setAttribute("inert", "");
+      }
     });
     showSheet(targetID);
     return;
@@ -125,41 +123,52 @@ function createDialogue(targetID, {
     inputsUI.btn(variant, {
       id,
       label,
-      size:  stacked ? "xl" : "lg",
+      size: stacked ? "xl" : "lg",
       class: stacked ? "w-full" : "flex-1",
-      onclick: () => { hideOverlay(targetID); action?.(); },
+      onclick: () => {
+        hideOverlay(targetID);
+        action?.();
+      },
     });
 
-  const btnContainer = el(
-    "div",
-    { class: stacked ? "w-full space-y-3" : "flex gap-2 w-full" },
-    buttons.map(mkBtn),
-  );
+  const btnContainer = el("div", { class: stacked ? "w-full space-y-3" : "flex gap-2 w-full" }, buttons.map(mkBtn));
 
   const cardCls = "bg-[var(--bg-card)] rounded-[14px] border border-[var(--border)] shadow-xl w-full max-w-[320px]";
 
   if (stacked) {
     slot.appendChild(
       el("div", { class: cardCls }, [
-        el("div", { class: "flex flex-col items-center gap-5 p-6 text-center" }, [
-          icon || null,
-          el("div", { class: "space-y-2 w-full" }, [
-            el("h2", { class: "text-[17px] font-bold text-[var(--text-primary)]" }, title),
-            body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed" }, body) : null,
-          ].filter(Boolean)),
-          btnContainer,
-        ].filter(Boolean)),
-      ])
+        el(
+          "div",
+          { class: "flex flex-col items-center gap-5 p-6 text-center" },
+          [
+            icon || null,
+            el(
+              "div",
+              { class: "space-y-2 w-full" },
+              [
+                el("h2", { class: "text-[17px] font-bold text-[var(--text-primary)]" }, title),
+                body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed" }, body) : null,
+              ].filter(Boolean),
+            ),
+            btnContainer,
+          ].filter(Boolean),
+        ),
+      ]),
     );
   } else {
     slot.appendChild(
       el("div", { class: cardCls }, [
-        el("div", { class: "space-y-4 p-5" }, [
-          el("p", { class: "text-[15px] font-semibold text-[var(--text-primary)] text-left" }, title),
-          body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed text-left" }, body) : null,
-          btnContainer,
-        ].filter(Boolean)),
-      ])
+        el(
+          "div",
+          { class: "space-y-4 p-5" },
+          [
+            el("p", { class: "text-[15px] font-semibold text-[var(--text-primary)] text-left" }, title),
+            body ? el("p", { class: "text-[12px] text-[var(--text-muted)] leading-relaxed text-left" }, body) : null,
+            btnContainer,
+          ].filter(Boolean),
+        ),
+      ]),
     );
   }
 
@@ -172,9 +181,7 @@ function createDialogue(targetID, {
 
 function switchSidebarTab(tab) {
   activeSidebarTab = tab;
-  document.querySelectorAll(".sidebar-tab-btn").forEach((b) =>
-    b.classList.toggle("active", b.dataset.tab === tab)
-  );
+  document.querySelectorAll(".sidebar-tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
   if (tab === "color-groups") renderColorGroups();
   else if (tab === "roles-config") renderRoles();
   else if (tab === "project") renderSidebarProject();

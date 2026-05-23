@@ -24,8 +24,8 @@ function renderThemeShop() {
         title: "Back",
       }),
       el("div", {}, [
-        el("h2", { class: "text-[15px] font-semibold text-[var(--text-primary)]" }, ["Design System Presets"]),
-        el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, [t("shop.Header.SubHeader")]),
+        el("h2", { class: "text-[15px] font-semibold text-[var(--text-primary)]" }, [t("shop.header.header")]),
+        el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, [t("shop.header.subHeader")]),
       ]),
     ],
   );
@@ -92,12 +92,12 @@ function _presetCard(preset) {
                 class:
                   "shrink-0 h-[28px] px-3 rounded-[7px] text-[11px] font-semibold flex items-center gap-1 bg-[var(--accent)]/10 border border-[var(--accent)] text-[var(--accent)]",
               },
-              ["✓ Loaded"],
+              [t("loaded")],
             )
           : inputsUI.btn(isTW ? "primary" : "secondary", {
               onclick: () => _loadPreset(preset),
               size: "sm",
-              label: "Load",
+              label: t("load"),
               class: "shrink-0 font-semibold",
             }),
       ]),

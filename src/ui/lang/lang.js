@@ -18,7 +18,7 @@ function t(key, data = {}) {
   const getNested = (obj, path) => {
     if (!obj) return undefined;
     if (obj[path] !== undefined) return obj[path]; // support flat keys first
-    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+    return path.split(".").reduce((acc, part) => acc && acc[part], obj);
   };
 
   let text = getNested(dict, key) || getNested(TRANSLATIONS.en, key) || key;
@@ -28,4 +28,23 @@ function t(key, data = {}) {
   });
 
   return text;
+}
+
+/**
+ * Scans the DOM for any elements with a data-t attribute and updates
+ * their text content with the translated string.
+ */
+function translateStaticDOM() {
+  document.querySelectorAll("[data-t]").forEach((el) => {
+    const key = el.getAttribute("data-t");
+    el.textContent = t(key);
+  });
+  document.querySelectorAll("[data-t-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-t-placeholder");
+    el.setAttribute("placeholder", t(key));
+  });
+  document.querySelectorAll("[data-t-title]").forEach((el) => {
+    const key = el.getAttribute("data-t-title");
+    el.setAttribute("title", t(key));
+  });
 }

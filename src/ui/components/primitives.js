@@ -57,6 +57,39 @@ async function copyToClipboard(text) {
   }
 }
 
+// ── DRAG-DROP REORDER ─────────────────────────────────────────────────────────
+
+function bindDragDrop(card, idx, { cardSelector, getIdx, setIdx, onDrop }) {
+  card.draggable = true;
+  card.addEventListener("dragstart", (e) => {
+    setIdx(idx);
+    e.dataTransfer.effectAllowed = "move";
+    card.style.opacity = "0.5";
+  });
+  card.addEventListener("dragend", () => {
+    setIdx(null);
+    card.style.opacity = "";
+    document.querySelectorAll(cardSelector).forEach((c) => c.classList.remove("border-t-2", "!border-t-[var(--accent)]"));
+  });
+  card.addEventListener("dragover", (e) => {
+    const src = getIdx();
+    if (src === null || src === idx) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    document.querySelectorAll(cardSelector).forEach((c) => c.classList.remove("border-t-2", "!border-t-[var(--accent)]"));
+    card.classList.add("border-t-2", "!border-t-[var(--accent)]");
+  });
+  card.addEventListener("dragleave", (e) => {
+    if (!card.contains(e.relatedTarget)) card.classList.remove("border-t-2", "!border-t-[var(--accent)]");
+  });
+  card.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const src = getIdx();
+    if (src === null || src === idx) return;
+    onDrop(src, idx);
+  });
+}
+
 // ── ICONS ──
 
 const Icons = {

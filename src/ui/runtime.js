@@ -22,9 +22,9 @@
 
 // Plugin mode / selection constants — consumed by screens/settings.js setters.
 const UI_MODES = {
-  plugin:   ["scale", "direct"],
+  plugin: ["scale", "direct"],
   grouping: ["color", "role"],
-  mapping:  ["contrast", "index"],
+  mapping: ["contrast", "index"],
 };
 
 // Sync dialog state — scoped to the run-confirm flow.
@@ -50,27 +50,33 @@ window.onmessage = (event) => {
   if (window.parent === window) {
     if (msg.type === "check-collections") {
       setTimeout(() => {
-        window.postMessage({
-          pluginMessage: {
-            type: "collection-check-result",
-            existing: [],
-            renames: { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } }
-          }
-        }, "*");
+        window.postMessage(
+          {
+            pluginMessage: {
+              type: "collection-check-result",
+              existing: [],
+              renames: { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } },
+            },
+          },
+          "*",
+        );
       }, 50);
       return;
     }
     if (msg.type === "run-creator") {
       localStorage.setItem("tw_state", JSON.stringify(msg.state));
       setTimeout(() => {
-        window.postMessage({
-          pluginMessage: {
-            type: "finish",
-            tally: { created: 12, updated: 4, renamed: 0, failed: 0 },
-            errors: null,
-            result: null
-          }
-        }, "*");
+        window.postMessage(
+          {
+            pluginMessage: {
+              type: "finish",
+              tally: { created: 12, updated: 4, renamed: 0, failed: 0 },
+              errors: null,
+              result: null,
+            },
+          },
+          "*",
+        );
       }, 1000);
       return;
     }
@@ -86,8 +92,14 @@ window.onmessage = (event) => {
       else if (et === "tailwind") content = fmtTailwind.config(result, config);
       else if (et === "dtcg") content = fmtDTCG.scale(result, config);
       else if (et === "style-dictionary") content = fmtStyleDictionary.global(result, config);
-      else if (et === "ios-swift") content = Object.keys(result.tokens || {}).map(t => fmtSwift.file(result, config, t)).join("\n\n");
-      else if (et === "android") content = Object.keys(result.tokens || {}).map(t => fmtAndroid.file(result, config, t)).join("\n\n");
+      else if (et === "ios-swift")
+        content = Object.keys(result.tokens || {})
+          .map((t) => fmtSwift.file(result, config, t))
+          .join("\n\n");
+      else if (et === "android")
+        content = Object.keys(result.tokens || {})
+          .map((t) => fmtAndroid.file(result, config, t))
+          .join("\n\n");
       else if (et === "rn-ts") content = fmtReactNative.index(result, config);
       setTimeout(() => {
         window.postMessage({ pluginMessage: { type: "processed-data-response", content, exportType: msg.exportType } }, "*");
@@ -191,9 +203,42 @@ window.onmessage = (event) => {
 
   if (msg.type === "processed-data-response") {
     const { content, exportType } = msg;
-    const mimeMap = { json: "application/json", css: "text/css", csv: "text/csv", scss: "text/plain", tailwind: "text/javascript", dtcg: "application/json", "style-dictionary": "application/json", "ios-swift": "text/plain", android: "application/xml", "rn-ts": "text/plain" };
-    const extMap = { json: "json", css: "css", csv: "csv", scss: "scss", tailwind: "js", dtcg: "json", "style-dictionary": "json", "ios-swift": "swift", android: "xml", "rn-ts": "ts" };
-    const typeLabel = { json: "tokens", css: "variables", csv: "token_list", scss: "tokens", tailwind: "tailwind.config", dtcg: "dtcg-tokens", "style-dictionary": "sd-tokens", "ios-swift": "Colors", android: "colors", "rn-ts": "tokens" };
+    const mimeMap = {
+      json: "application/json",
+      css: "text/css",
+      csv: "text/csv",
+      scss: "text/plain",
+      tailwind: "text/javascript",
+      dtcg: "application/json",
+      "style-dictionary": "application/json",
+      "ios-swift": "text/plain",
+      android: "application/xml",
+      "rn-ts": "text/plain",
+    };
+    const extMap = {
+      json: "json",
+      css: "css",
+      csv: "csv",
+      scss: "scss",
+      tailwind: "js",
+      dtcg: "json",
+      "style-dictionary": "json",
+      "ios-swift": "swift",
+      android: "xml",
+      "rn-ts": "ts",
+    };
+    const typeLabel = {
+      json: "tokens",
+      css: "variables",
+      csv: "token_list",
+      scss: "tokens",
+      tailwind: "tailwind.config",
+      dtcg: "dtcg-tokens",
+      "style-dictionary": "sd-tokens",
+      "ios-swift": "Colors",
+      android: "colors",
+      "rn-ts": "tokens",
+    };
     triggerDownload(content, exportFileName(typeLabel[exportType] || exportType, extMap[exportType] || exportType), mimeMap[exportType] || "text/plain");
     return;
   }
@@ -231,6 +276,7 @@ function applyUiPrefs() {
   document.body.style.zoom = uiPrefs.scale;
   const theme = uiPrefs.theme === "figma" ? _detectFigmaTheme() : uiPrefs.theme;
   document.body.setAttribute("data-ui-theme", theme);
+  if (typeof translateStaticDOM === "function") translateStaticDOM();
 }
 
 function updateUiPref(key, value) {
@@ -310,7 +356,10 @@ document.getElementById("btn-settings").onclick = openSettings;
 document.getElementById("settings-cancel").onclick = () => closeSettings(true);
 document.getElementById("settings-done").onclick = () => closeSettings(false);
 document.querySelectorAll(".settings-tab").forEach((btn) => btn.addEventListener("click", () => switchSettingsTab(btn.dataset.tab)));
-document.getElementById("btn-more").onclick = () => { renderExportSheet(); showSheet("more-sheet"); };
+document.getElementById("btn-more").onclick = () => {
+  renderExportSheet();
+  showSheet("more-sheet");
+};
 document.getElementById("overlay").onclick = hideSheets;
 document.getElementById("close-more").onclick = hideSheets;
 
@@ -360,6 +409,7 @@ document.querySelectorAll(".sidebar-tab-btn").forEach((btn) => {
       const ps = document.getElementById("preview-screen");
       ps.classList.remove("hidden");
       ps.style.display = "flex";
+      syncPreviewBackground();
       return;
     }
     switchSidebarTab(btn.dataset.tab);
@@ -369,7 +419,10 @@ document.querySelectorAll(".sidebar-tab-btn").forEach((btn) => {
 // Export (More sheet) — ZIP button
 document.getElementById("btn-export-zip").onclick = () => {
   const formats = Array.from(selectedFormats);
-  if (formats.length === 0) { BannerManager.show({ type: "warning", message: "Select at least one format.", autoClose: 2500 }); return; }
+  if (formats.length === 0) {
+    BannerManager.show({ type: "warning", message: "Select at least one format.", autoClose: 2500 });
+    return;
+  }
   BannerManager.show({ type: "info", message: "Building export package…", autoClose: 3000 });
   parent.postMessage({ pluginMessage: { type: "request-export-bundle", state: appState, formats } }, "*");
 };
@@ -384,9 +437,9 @@ if (document.getElementById("btn-export-json")) document.getElementById("btn-exp
 document.getElementById("opt-clear").onclick = () => {
   createDialogue("confirm-clear-overlay", {
     title: "Reset to defaults",
-    body:  "This will clear all colors, roles, themes and settings. This cannot be undone.",
+    body: "This will clear all colors, roles, themes and settings. This cannot be undone.",
     buttons: [
-      { label: "Cancel" },
+      { label: t("cancel") },
       {
         label: "Clear All",
         variant: "danger-solid",
@@ -419,6 +472,7 @@ document.getElementById("preview-screen").addEventListener("click", (e) => {
   if (panelEl) panelEl.classList.add("active");
   const toolbar = document.getElementById("preview-theme-toolbar");
   if (toolbar) toolbar.style.display = target === "preview-colors" ? "none" : "flex";
+  syncPreviewBackground();
 });
 
 // Resize handle
@@ -516,6 +570,7 @@ _dropOverlay.ondrop = (e) => {
     }
     document.querySelectorAll("#preview-screen .preview-tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.target === panelId));
     document.querySelectorAll("#preview-content .preview-panel, #preview-theme-panels > div").forEach((p) => p.classList.toggle("active", p.id === panelId));
+    syncPreviewBackground();
   }
 
   function closePreview() {
@@ -586,7 +641,10 @@ try {
       }
     } else {
       // No saved state — show quick start on next render tick
-      setTimeout(() => { renderQuickStart(); showOverlay("quickstart-overlay"); }, 0);
+      setTimeout(() => {
+        renderQuickStart();
+        showOverlay("quickstart-overlay");
+      }, 0);
     }
     const savedUiPrefs = localStorage.getItem("uiPrefsMeta");
     if (savedUiPrefs) {

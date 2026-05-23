@@ -1,9 +1,35 @@
 {
   "back": "Back",
-  "designSystemPresets": "Design System Presets",
-  "presetsSub": "Load a preset and start using it — everything is editable after loading.",
+  "done": "Done",
+  "cancel": "Cancel",
   "loaded": "✓ Loaded",
   "load": "Load",
   "successLoaded": "\"{name}\" loaded — everything is editable.",
-  "shop.Header.SubHeader": "Load a preset and start using it — everything is editable after loading."
+  "shop": {
+    "header": {
+      "header": "Design System Presets",
+      "subHeader": "Load a preset and start using it — everything is editable after loading."
+    }
+  },
+  "settings": "Settings",
+  "token-settings": "Token Settings",
+  "export": {
+    "export": "Export",
+    "zip": {
+      "instructions": "Select formats and export as a ZIP package",
+      "confirm": "Export Selected as ZIP"
+    }
+  },
+  "import": {
+    "title": "Import Wand File",
+    "subTitle": "Drop a .wand file to load your configuration"
+  },
+  "project": "Project",
+  "palette": "Palette",
+  "roles": "Roles",
+  "preview": "Preview",
+  "start-from-blank": "Start from blank",
+  "browse-templates": "Browse templates",
+  "welcome-to-token-wand": "Welcome to Token Wand",
+  "interface": "Interface"
 }

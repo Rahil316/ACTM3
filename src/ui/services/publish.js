@@ -28,7 +28,12 @@ function renderSuccessDialog(tally) {
 
   const resultsEl = el("div", { id: "success-results", class: "text-[var(--text-muted)] space-y-1" });
   if (tally) {
-    [["Created", tally.created, "text-white"], ["Updated", tally.updated, "text-white"], ...(tally.renamed > 0 ? [["Renamed", tally.renamed, "text-blue-300"]] : []), ["Failed", tally.failed, "text-red-400"]].forEach(([label, count, cls]) => {
+    [
+      ["Created", tally.created, "text-white"],
+      ["Updated", tally.updated, "text-white"],
+      ...(tally.renamed > 0 ? [["Renamed", tally.renamed, "text-blue-300"]] : []),
+      ["Failed", tally.failed, "text-red-400"],
+    ].forEach(([label, count, cls]) => {
       resultsEl.appendChild(el("p", { class: "text-sm" }, [`${label}: `, el("span", { class: `${cls} font-bold` }, String(count))]));
     });
   }
@@ -37,7 +42,15 @@ function renderSuccessDialog(tally) {
     iconEl,
     el("h2", { class: "text-2xl font-bold text-[var(--text-primary)]" }, "Success!"),
     resultsEl,
-    el("button", { onclick: () => hideOverlay("success-overlay"), class: "mt-4 h-[36px] px-6 text-[12px] font-semibold rounded-[8px] bg-[var(--accent)] border border-[var(--accent)] text-white hover:opacity-90 cursor-pointer transition-all" }, "Back to Editor"),
+    el(
+      "button",
+      {
+        onclick: () => hideOverlay("success-overlay"),
+        class:
+          "mt-4 h-[36px] px-6 text-[12px] font-semibold rounded-[8px] bg-[var(--accent)] border border-[var(--accent)] text-white hover:opacity-90 cursor-pointer transition-all",
+      },
+      "Back to Editor",
+    ),
   ]);
   slot.appendChild(inner);
 }
@@ -47,20 +60,45 @@ function renderValidationWarningDialog(issues, onContinue) {
   if (!slot) return;
   slot.innerHTML = "";
 
-  slot.appendChild(el("div", { class: "w-16 h-16 bg-[var(--warning)]/10 rounded-full flex items-center justify-center text-[var(--warning)]" }, [Icons.AlertTriangle]));
+  slot.appendChild(
+    el("div", { class: "w-16 h-16 bg-[var(--warning)]/10 rounded-full flex items-center justify-center text-[var(--warning)]" }, [Icons.AlertTriangle]),
+  );
   slot.appendChild(el("h2", { class: "text-xl font-bold text-[var(--text-primary)]" }, `${issues.length} issue${issues.length > 1 ? "s" : ""} found`));
   slot.appendChild(el("p", { class: "text-[var(--text-muted)] text-[12px] text-center" }, "These may corrupt variables in Figma. Review before continuing."));
 
   const list = el("ul", { class: "w-full text-left space-y-2 max-h-48 overflow-y-auto" });
   issues.forEach((msg) => {
-    list.appendChild(el("li", { class: "text-[12px] text-[var(--text-secondary)] bg-[var(--warning)]/5 border border-[var(--warning)]/20 rounded-[6px] px-3 py-2" }, msg));
+    list.appendChild(
+      el("li", { class: "text-[12px] text-[var(--text-secondary)] bg-[var(--warning)]/5 border border-[var(--warning)]/20 rounded-[6px] px-3 py-2" }, msg),
+    );
   });
   slot.appendChild(list);
 
-  slot.appendChild(el("div", { class: "flex gap-2 w-full" }, [
-    el("button", { onclick: () => hideOverlay("error-overlay"), class: "flex-1 h-[36px] px-4 text-[12px] font-medium rounded-[8px] bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-all" }, "Go back"),
-    el("button", { onclick: () => { hideOverlay("error-overlay"); onContinue(); }, class: "flex-1 h-[36px] px-4 text-[12px] font-medium rounded-[8px] bg-[var(--warning)] text-white hover:opacity-90 cursor-pointer transition-all border-0" }, "Continue Anyway"),
-  ]));
+  slot.appendChild(
+    el("div", { class: "flex gap-2 w-full" }, [
+      el(
+        "button",
+        {
+          onclick: () => hideOverlay("error-overlay"),
+          class:
+            "flex-1 h-[36px] px-4 text-[12px] font-medium rounded-[8px] bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-all",
+        },
+        "Go back",
+      ),
+      el(
+        "button",
+        {
+          onclick: () => {
+            hideOverlay("error-overlay");
+            onContinue();
+          },
+          class:
+            "flex-1 h-[36px] px-4 text-[12px] font-medium rounded-[8px] bg-[var(--warning)] text-white hover:opacity-90 cursor-pointer transition-all border-0",
+        },
+        "Continue Anyway",
+      ),
+    ]),
+  );
 }
 
 function renderErrorDialog(message) {
@@ -74,7 +112,17 @@ function renderErrorDialog(message) {
   slot.appendChild(iconEl);
   slot.appendChild(el("h2", { class: "text-2xl font-bold text-[var(--text-primary)]" }, "Error"));
   slot.appendChild(el("p", { id: "error-message", class: "text-[var(--danger)]" }, message || ""));
-  slot.appendChild(el("button", { onclick: () => hideOverlay("error-overlay"), class: "mt-4 h-[36px] px-6 text-[12px] font-medium rounded-[8px] bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-all" }, "Dismiss"));
+  slot.appendChild(
+    el(
+      "button",
+      {
+        onclick: () => hideOverlay("error-overlay"),
+        class:
+          "mt-4 h-[36px] px-6 text-[12px] font-medium rounded-[8px] bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-all",
+      },
+      "Dismiss",
+    ),
+  );
 }
 
 function renderRunDialog() {
@@ -84,7 +132,15 @@ function renderRunDialog() {
 
   const header = el("div", { class: "px-4 py-3 flex items-center justify-between border-b border-[var(--border)]" }, [
     el("h2", { class: "text-[17px] font-bold text-[var(--text-primary)]" }, "Apply to Figma"),
-    el("button", { onclick: () => hideOverlay("run-dialog-overlay"), class: "h-[36px] px-3 text-[12px] font-medium rounded-[8px] bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-all" }, "Cancel"),
+    el(
+      "button",
+      {
+        onclick: () => hideOverlay("run-dialog-overlay"),
+        class:
+          "h-[36px] px-3 text-[12px] font-medium rounded-[8px] bg-[var(--bg-input)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] cursor-pointer transition-all",
+      },
+      "Cancel",
+    ),
   ]);
 
   const body = el("div", { class: "flex-1 overflow-y-auto p-4 space-y-5" }, [
@@ -92,44 +148,89 @@ function renderRunDialog() {
     el("div", { id: "rd-scope-section", class: "space-y-2" }, [
       panelUI.sectionLabel("WHAT TO UPDATE"),
       panelUI.segmented([
-        { id: "rd-scope-all",    label: "Everything", onclick: () => setRunScope("all") },
+        { id: "rd-scope-all", label: "Everything", onclick: () => setRunScope("all") },
         { id: "rd-scope-groups", label: "Scale Only", onclick: () => setRunScope("groups") },
-        { id: "rd-scope-roles",  label: "Roles Only", onclick: () => setRunScope("roles") },
+        { id: "rd-scope-roles", label: "Roles Only", onclick: () => setRunScope("roles") },
       ]),
     ]),
 
     // Output options
     el("div", { class: "space-y-2" }, [
       panelUI.sectionLabel("OUTPUT OPTIONS"),
-      el("div", { id: "embed-colors-directly", class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
-        el("div", {}, [
-          el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Embed Colors Directly"),
-          el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "Write hex values into tokens instead of referencing the color scales"),
-        ]),
-        panelUI.togglePill("rd-toggle-resolveTokensDirectly", () => { toggleBoolSetting("resolveTokensDirectly"); refreshRunDialog(); }),
-      ]),
+      el(
+        "div",
+        { id: "embed-colors-directly", class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" },
+        [
+          el("div", {}, [
+            el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Embed Colors Directly"),
+            el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "Write hex values into tokens instead of referencing the color scales"),
+          ]),
+          panelUI.togglePill("rd-toggle-resolveTokensDirectly", () => {
+            toggleBoolSetting("resolveTokensDirectly");
+            refreshRunDialog();
+          }),
+        ],
+      ),
       el("div", { class: "space-y-1" }, [
         el("label", { class: "text-[var(--text-muted)] text-[12px] font-medium ml-1" }, "Variable Structure"),
         panelUI.segmented([
-          { id: "rd-seg-group-color", label: "Color-first color/role/step", onclick: () => { setTokenGrouping(0); refreshRunDialog(); } },
-          { id: "rd-seg-group-role",  label: "Role-first role/color/step",  onclick: () => { setTokenGrouping(1); refreshRunDialog(); } },
+          {
+            id: "rd-seg-group-color",
+            label: "Color-first color/role/step",
+            onclick: () => {
+              setTokenGrouping(0);
+              refreshRunDialog();
+            },
+          },
+          {
+            id: "rd-seg-group-role",
+            label: "Role-first role/color/step",
+            onclick: () => {
+              setTokenGrouping(1);
+              refreshRunDialog();
+            },
+          },
         ]),
       ]),
       el("div", { class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
-        el("div", {}, [el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Colors"), el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. primary → pr")]),
-        panelUI.togglePill("rd-toggle-useShorthandColors", () => { toggleBoolSetting("useShorthandColors"); refreshRunDialog(); }),
+        el("div", {}, [
+          el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Colors"),
+          el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. primary → pr"),
+        ]),
+        panelUI.togglePill("rd-toggle-useShorthandColors", () => {
+          toggleBoolSetting("useShorthandColors");
+          refreshRunDialog();
+        }),
       ]),
       el("div", { class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
-        el("div", {}, [el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Roles"), el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. Text → tx")]),
-        panelUI.togglePill("rd-toggle-useShorthandRoles", () => { toggleBoolSetting("useShorthandRoles"); refreshRunDialog(); }),
+        el("div", {}, [
+          el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Roles"),
+          el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. Text → tx"),
+        ]),
+        panelUI.togglePill("rd-toggle-useShorthandRoles", () => {
+          toggleBoolSetting("useShorthandRoles");
+          refreshRunDialog();
+        }),
       ]),
       el("div", { class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
-        el("div", {}, [el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Variations"), el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. Darker → dk")]),
-        panelUI.togglePill("rd-toggle-useShorthandVariations", () => { toggleBoolSetting("useShorthandVariations"); refreshRunDialog(); }),
+        el("div", {}, [
+          el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Variations"),
+          el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. Darker → dk"),
+        ]),
+        panelUI.togglePill("rd-toggle-useShorthandVariations", () => {
+          toggleBoolSetting("useShorthandVariations");
+          refreshRunDialog();
+        }),
       ]),
       el("div", { class: "flex items-center justify-between p-3 bg-[var(--bg-card)] rounded-[8px] border border-[var(--border)]" }, [
-        el("div", {}, [el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Steps"), el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. 500 → 5")]),
-        panelUI.togglePill("rd-toggle-useShorthandSteps", () => { toggleBoolSetting("useShorthandSteps"); refreshRunDialog(); }),
+        el("div", {}, [
+          el("p", { class: "text-[13px] font-medium text-[var(--text-primary)]" }, "Use shorthand for Steps"),
+          el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5" }, "e.g. 500 → 5"),
+        ]),
+        panelUI.togglePill("rd-toggle-useShorthandSteps", () => {
+          toggleBoolSetting("useShorthandSteps");
+          refreshRunDialog();
+        }),
       ]),
       el("div", { class: "bg-[var(--bg-input)] border border-[var(--border)] rounded-[8px] px-3 py-2" }, [
         el("p", { class: "text-[11px] text-[var(--text-muted)]" }, "Example variable name:"),
@@ -138,23 +239,21 @@ function renderRunDialog() {
     ]),
 
     // Collections
-    el("div", { class: "space-y-2" }, [
-      panelUI.sectionLabel("COLLECTIONS"),
-      el("div", { id: "rd-collections", class: "space-y-1.5" }),
-    ]),
+    el("div", { class: "space-y-2" }, [panelUI.sectionLabel("COLLECTIONS"), el("div", { id: "rd-collections", class: "space-y-1.5" })]),
 
     // Renames
     el("div", { id: "rd-renames", class: "hidden space-y-2" }, [
       panelUI.sectionLabel("VARIABLES TO RENAME"),
       el("div", { id: "rd-renames-list", class: "space-y-1.5" }),
-      el("p", { class: "text-[11px] text-[var(--text-muted)] px-1 leading-relaxed" }, "Existing variables matching the previous names will be renamed in place — no variables are deleted or recreated."),
+      el(
+        "p",
+        { class: "text-[11px] text-[var(--text-muted)] px-1 leading-relaxed" },
+        "Existing variables matching the previous names will be renamed in place — no variables are deleted or recreated.",
+      ),
     ]),
 
     // Summary
-    el("div", { class: "space-y-2" }, [
-      panelUI.sectionLabel("SUMMARY"),
-      el("div", { id: "rd-summary", class: "space-y-1" }),
-    ]),
+    el("div", { class: "space-y-2" }, [panelUI.sectionLabel("SUMMARY"), el("div", { id: "rd-summary", class: "space-y-1" })]),
 
     // Warning
     el("div", { id: "rd-warnings", class: "hidden bg-[var(--warning)]/10 border border-[var(--warning)]/30 rounded-[8px] p-3 space-y-1" }, [
@@ -164,7 +263,15 @@ function renderRunDialog() {
   ]);
 
   const footer = el("div", { class: "p-4 border-t border-[var(--border)]" }, [
-    el("button", { id: "btn-run-confirm", class: "w-full h-[40px] px-4 text-[13px] font-semibold rounded-[8px] bg-[var(--accent)] border border-[var(--accent)] text-white hover:opacity-90 cursor-pointer transition-all" }, "Apply to Figma"),
+    el(
+      "button",
+      {
+        id: "btn-run-confirm",
+        class:
+          "w-full h-[40px] px-4 text-[13px] font-semibold rounded-[8px] bg-[var(--accent)] border border-[var(--accent)] text-white hover:opacity-90 cursor-pointer transition-all",
+      },
+      "Apply to Figma",
+    ),
   ]);
 
   slot.appendChild(header);
@@ -234,19 +341,19 @@ function refreshRunDialog() {
 
   const rdToggleKeys = [
     ["rd-toggle-resolveTokensDirectly", "resolveTokensDirectly"],
-    ["rd-toggle-useShorthandColors",    "useShorthandColors"],
-    ["rd-toggle-useShorthandRoles",     "useShorthandRoles"],
-    ["rd-toggle-useShorthandVariations","useShorthandVariations"],
-    ["rd-toggle-useShorthandSteps",     "useShorthandSteps"],
+    ["rd-toggle-useShorthandColors", "useShorthandColors"],
+    ["rd-toggle-useShorthandRoles", "useShorthandRoles"],
+    ["rd-toggle-useShorthandVariations", "useShorthandVariations"],
+    ["rd-toggle-useShorthandSteps", "useShorthandSteps"],
   ];
-  rdToggleKeys.forEach(function(pair) {
+  rdToggleKeys.forEach(function (pair) {
     var btn = document.getElementById(pair[0]);
     if (btn) btn.classList.toggle("on", !!appState[pair[1]]);
   });
   var tgColorBtn = document.getElementById("rd-seg-group-color");
-  var tgRoleBtn  = document.getElementById("rd-seg-group-role");
+  var tgRoleBtn = document.getElementById("rd-seg-group-role");
   if (tgColorBtn) tgColorBtn.classList.toggle("active", tg !== "role");
-  if (tgRoleBtn)  tgRoleBtn.classList.toggle("active",  tg === "role");
+  if (tgRoleBtn) tgRoleBtn.classList.toggle("active", tg === "role");
 
   const scopeSection = document.getElementById("rd-scope-section");
   if (scopeSection) scopeSection.classList.toggle("hidden", isDirect);
@@ -275,7 +382,13 @@ function refreshRunDialog() {
         colsEl.appendChild(
           el("div", { class: "flex items-center justify-between bg-[var(--bg-card)] border border-[var(--border)] rounded-[8px] px-3 py-2" }, [
             el("span", { class: "text-[13px] text-[var(--text-primary)] font-mono" }, name),
-            el("span", { class: `text-[11px] font-bold px-2 py-0.5 rounded ${isExisting ? "bg-[var(--warning)]/15 text-[var(--warning)]" : "bg-[var(--success)]/15 text-[var(--success)]"}` }, label),
+            el(
+              "span",
+              {
+                class: `text-[11px] font-bold px-2 py-0.5 rounded ${isExisting ? "bg-[var(--warning)]/15 text-[var(--warning)]" : "bg-[var(--success)]/15 text-[var(--success)]"}`,
+              },
+              label,
+            ),
           ]),
         );
       });
@@ -299,7 +412,7 @@ function refreshRunDialog() {
   if (renameEl && renameListEl) {
     const summary = lastRenameData && lastRenameData.summary;
     const scaleCount = isDirect ? 0 : (summary && summary.scaleCount) || 0;
-    
+
     const tokenCount = (summary && summary.tokenCount) || 0;
     const changes = ((summary && summary.changes) || []).filter((ch) => (isDirect ? ch.type !== "stepNames" : true));
 
@@ -317,8 +430,18 @@ function refreshRunDialog() {
           ]),
         );
       });
-      const parts = [scaleCount > 0 ? `${scaleCount} scale var${scaleCount > 1 ? "s" : ""}` : "", tokenCount > 0 ? `${tokenCount} token var${tokenCount > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
-      renameListEl.appendChild(el("div", { class: "flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] px-1 pt-0.5" }, [el("span", { class: "inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" }), el("span", {}, `${parts} will be renamed`)]));
+      const parts = [
+        scaleCount > 0 ? `${scaleCount} scale var${scaleCount > 1 ? "s" : ""}` : "",
+        tokenCount > 0 ? `${tokenCount} token var${tokenCount > 1 ? "s" : ""}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      renameListEl.appendChild(
+        el("div", { class: "flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] px-1 pt-0.5" }, [
+          el("span", { class: "inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" }),
+          el("span", {}, `${parts} will be renamed`),
+        ]),
+      );
     } else {
       renameEl.classList.add("hidden");
     }
@@ -333,7 +456,16 @@ function refreshRunDialog() {
       ["Project Name", appState.name || "—"],
       [`Colors x${appState.colors.length}`, colorList],
       [`Roles x${appState.roles.length}`, roleList],
-      ["Themes", appState.themes ? appState.themes.map(function(t) { return t.name; }).join(", ") : "—"],
+      [
+        "Themes",
+        appState.themes
+          ? appState.themes
+              .map(function (t) {
+                return t.name;
+              })
+              .join(", ")
+          : "—",
+      ],
       ["Mode", isDirect ? "Direct" : "Scale"],
       ...(isDirect
         ? []
@@ -344,7 +476,10 @@ function refreshRunDialog() {
     ];
     rows.forEach(([label, value]) => {
       sumEl.appendChild(
-        el("div", { class: "flex items-start justify-between gap-2 text-[12px] py-1 border-b border-[var(--border)]/40 last:border-0" }, [el("span", { class: "text-[var(--text-muted)] shrink-0" }, label), el("span", { class: "text-[var(--text-primary)] text-right text-[11px]" }, value)]),
+        el("div", { class: "flex items-start justify-between gap-2 text-[12px] py-1 border-b border-[var(--border)]/40 last:border-0" }, [
+          el("span", { class: "text-[var(--text-muted)] shrink-0" }, label),
+          el("span", { class: "text-[var(--text-primary)] text-right text-[11px]" }, value),
+        ]),
       );
     });
   }
@@ -354,7 +489,8 @@ function refreshRunDialog() {
     const relevant = existing.filter((n) => (n === colorName && !skipScales && scope !== "roles") || (n === tokenColName && scope !== "groups"));
     if (relevant.length > 0) {
       warnEl.classList.remove("hidden");
-      document.getElementById("rd-warning-text").textContent = `${relevant.map((n) => `"${n}"`).join(" and ")} already exist. Variables will be added or updated — nothing deleted.`;
+      document.getElementById("rd-warning-text").textContent =
+        `${relevant.map((n) => `"${n}"`).join(" and ")} already exist. Variables will be added or updated — nothing deleted.`;
     } else {
       warnEl.classList.add("hidden");
     }
@@ -371,14 +507,27 @@ function handleImportJSON(json) {
     if (!imported.colors || !imported.roles) throw new Error("Invalid Token Wand file — missing colors or roles.");
     _pendingImportData = imported;
     createDialogue("confirm-import-overlay", {
-      layout:  "stacked",
-      icon:    _buildImportWarningIcon(),
-      title:   "Replace Configuration?",
-      body:    "Loading this file will replace all current palettes, roles, and settings.",
+      layout: "stacked",
+      icon: _buildImportWarningIcon(),
+      title: "Replace Configuration?",
+      body: "Loading this file will replace all current palettes, roles, and settings.",
       buttons: [
-        { label: "Save Current & Import", variant: "primary",    action: () => { exportConfig(); finalizeImport(); } },
-        { label: "Import & Replace",      variant: "secondary",  action: () => { finalizeImport(); } },
-        { label: "Cancel",                variant: "ghost" },
+        {
+          label: "Save Current & Import",
+          variant: "primary",
+          action: () => {
+            exportConfig();
+            finalizeImport();
+          },
+        },
+        {
+          label: "Import & Replace",
+          variant: "secondary",
+          action: () => {
+            finalizeImport();
+          },
+        },
+        { label: t("cancel"), variant: "ghost" },
       ],
     });
   } catch (err) {
@@ -403,12 +552,21 @@ function exportConfig() {
   triggerDownload(data, exportFileName("config", "wand"), "application/octet-stream");
 }
 
-function exportToCSS()  { parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "css" } }, "*"); }
-function exportToCSV()  { parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "csv" } }, "*"); }
-function exportToSCSS() { parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "scss" } }, "*"); }
+function exportToCSS() {
+  parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "css" } }, "*");
+}
+function exportToCSV() {
+  parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "csv" } }, "*");
+}
+function exportToSCSS() {
+  parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: "scss" } }, "*");
+}
 
 function _exportSingle(formatId) {
-  if (formatId === "wand") { exportConfig(); return; }
+  if (formatId === "wand") {
+    exportConfig();
+    return;
+  }
   parent.postMessage({ pluginMessage: { type: "request-processed-data", state: appState, exportType: formatId } }, "*");
 }
 
@@ -418,59 +576,94 @@ let selectedFormats = new Set(["css", "scss", "wand"]);
 
 const FORMAT_DEFS = [
   {
-    id: "css",         label: "CSS Variables",               subtitle: "Per-theme custom properties + :root scale",
-    color: "var(--creative)",    iconKey: "Code",
-    files: (themes) => ["css/scale.css", ...themes.map(t => "css/themes/" + t + ".css")],
+    id: "css",
+    label: "CSS Variables",
+    subtitle: "Per-theme custom properties + :root scale",
+    color: "var(--creative)",
+    iconKey: "Code",
+    files: (themes) => ["css/scale.css", ...themes.map((t) => "css/themes/" + t + ".css")],
   },
   {
-    id: "scss",        label: "SCSS",                        subtitle: "Scale vars, token maps, apply-theme mixin",
-    color: "var(--secondary)",   iconKey: "Layers",
+    id: "scss",
+    label: "SCSS",
+    subtitle: "Scale vars, token maps, apply-theme mixin",
+    color: "var(--secondary)",
+    iconKey: "Layers",
     files: () => ["scss/scale.scss", "scss/tokens.scss", "scss/index.scss"],
   },
   {
-    id: "tailwind",    label: "Tailwind Config",             subtitle: "theme.extend.colors with CSS var references",
-    color: "#0ea5e9",            iconKey: "Code",
+    id: "tailwind",
+    label: "Tailwind Config",
+    subtitle: "theme.extend.colors with CSS var references",
+    color: "#0ea5e9",
+    iconKey: "Code",
     files: () => ["tailwind/tailwind.config.js"],
   },
   {
-    id: "dtcg",        label: "W3C Design Tokens (DTCG)",    subtitle: "W3C DTCG spec — works with Tokens Studio",
-    color: "#7c3aed",            iconKey: "File",
-    files: (themes) => ["dtcg/scale.json", ...themes.map(t => "dtcg/themes/" + t + ".json")],
+    id: "dtcg",
+    label: "W3C Design Tokens (DTCG)",
+    subtitle: "W3C DTCG spec — works with Tokens Studio",
+    color: "#7c3aed",
+    iconKey: "File",
+    files: (themes) => ["dtcg/scale.json", ...themes.map((t) => "dtcg/themes/" + t + ".json")],
   },
   {
-    id: "style-dictionary", label: "Style Dictionary",      subtitle: "SD v3 input format — transform to any platform",
-    color: "#f59e0b",            iconKey: "File",
-    files: (themes) => ["style-dictionary/global.json", ...themes.map(t => "style-dictionary/" + t + ".json")],
+    id: "style-dictionary",
+    label: "Style Dictionary",
+    subtitle: "SD v3 input format — transform to any platform",
+    color: "#f59e0b",
+    iconKey: "File",
+    files: (themes) => ["style-dictionary/global.json", ...themes.map((t) => "style-dictionary/" + t + ".json")],
   },
   {
-    id: "ios-swift",   label: "iOS / Swift",                 subtitle: "UIColor + SwiftUI Color static extensions",
-    color: "#64748b",            iconKey: "Code",
-    files: (themes) => themes.map(t => "ios/" + t.charAt(0).toUpperCase() + t.slice(1) + "Colors.swift"),
+    id: "ios-swift",
+    label: "iOS / Swift",
+    subtitle: "UIColor + SwiftUI Color static extensions",
+    color: "#64748b",
+    iconKey: "Code",
+    files: (themes) => themes.map((t) => "ios/" + t.charAt(0).toUpperCase() + t.slice(1) + "Colors.swift"),
   },
   {
-    id: "android",     label: "Android XML",                 subtitle: "values/ + values-night/ color resources",
-    color: "#22c55e",            iconKey: "Code",
-    files: (themes) => ["android/res/values/colors.xml", ...themes.slice(1).map(t => "android/res/values-" + t + "/colors.xml")],
+    id: "android",
+    label: "Android XML",
+    subtitle: "values/ + values-night/ color resources",
+    color: "#22c55e",
+    iconKey: "Code",
+    files: (themes) => ["android/res/values/colors.xml", ...themes.slice(1).map((t) => "android/res/values-" + t + "/colors.xml")],
   },
   {
-    id: "rn-ts",       label: "React Native TypeScript",     subtitle: "Typed token objects with useTokens() helper",
-    color: "#38bdf8",            iconKey: "Code",
-    files: (themes) => ["rn/tokens/index.ts", ...themes.map(t => "rn/tokens/" + t + ".ts")],
+    id: "rn-ts",
+    label: "React Native TypeScript",
+    subtitle: "Typed token objects with useTokens() helper",
+    color: "#38bdf8",
+    iconKey: "Code",
+    files: (themes) => ["rn/tokens/index.ts", ...themes.map((t) => "rn/tokens/" + t + ".ts")],
   },
   {
-    id: "csv",         label: "CSV Spreadsheet",             subtitle: "Scale + role token table with contrast data",
-    color: "var(--discovery)",   iconKey: "File",
+    id: "csv",
+    label: "CSV Spreadsheet",
+    subtitle: "Scale + role token table with contrast data",
+    color: "var(--discovery)",
+    iconKey: "File",
     files: () => ["tokens.csv"],
   },
   {
-    id: "wand",        label: "Token Wand Config (.wand)",   subtitle: "Full plugin config — reimportable",
-    color: "var(--success)",     iconKey: "Save",
+    id: "wand",
+    label: "Token Wand Config (.wand)",
+    subtitle: "Full plugin config — reimportable",
+    color: "var(--success)",
+    iconKey: "Save",
     files: () => ["config.wand"],
   },
 ];
 
 function _themeNames() {
-  return (appState.themes || []).map(t => t.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
+  return (appState.themes || []).map((t) =>
+    t.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, ""),
+  );
 }
 
 function renderFormatCard(def) {
@@ -478,43 +671,63 @@ function renderFormatCard(def) {
   const files = def.files(themes);
   const isSelected = selectedFormats.has(def.id);
 
-  const fileTree = el("div", { class: "mt-1.5 bg-[var(--bg-app)] rounded-[6px] px-2.5 py-2 font-mono text-[10px] text-[var(--text-muted)] leading-[1.7]" },
-    files.map(f => el("div", {}, f))
+  const fileTree = el(
+    "div",
+    { class: "mt-1.5 bg-[var(--bg-app)] rounded-[6px] px-2.5 py-2 font-mono text-[10px] text-[var(--text-muted)] leading-[1.7]" },
+    files.map((f) => el("div", {}, f)),
   );
 
-  const iconEl = el("div", { class: "w-7 h-7 rounded-[6px] flex items-center justify-center shrink-0", style: `background:${def.color}22; color:${def.color}` });
+  const iconEl = el("div", {
+    class: "w-7 h-7 rounded-[6px] flex items-center justify-center shrink-0",
+    style: `background:${def.color}22; color:${def.color}`,
+  });
   iconEl.innerHTML = Icons[def.iconKey] || "";
 
   const checkbox = el("div", {
     class: `w-4 h-4 rounded-[4px] border-2 shrink-0 flex items-center justify-center transition-colors ${isSelected ? "border-[var(--accent)] bg-[var(--accent)]" : "border-[var(--border)]"}`,
   });
-  if (isSelected) checkbox.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  if (isSelected)
+    checkbox.innerHTML =
+      '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-  const exportBtn = el("button", {
-    onclick: (e) => { e.stopPropagation(); _exportSingle(def.id); BannerManager.show({ type: "info", message: "Exporting " + def.label + "…", autoClose: 2000 }); },
-    class: "shrink-0 h-[26px] px-2.5 rounded-[6px] text-[11px] font-medium border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors",
-  }, "↓ Export");
-
-  const card = el("div", {
-    "data-format-id": def.id,
-    class: `p-3 rounded-[10px] border cursor-pointer transition-all ${isSelected ? "border-[var(--accent)] bg-[var(--accent)]/5" : "border-[var(--border)] bg-[var(--bg-card)]"}`,
-    onclick: () => {
-      if (selectedFormats.has(def.id)) selectedFormats.delete(def.id);
-      else selectedFormats.add(def.id);
-      renderExportSheet();
+  const exportBtn = el(
+    "button",
+    {
+      onclick: (e) => {
+        e.stopPropagation();
+        _exportSingle(def.id);
+        BannerManager.show({ type: "info", message: "Exporting " + def.label + "…", autoClose: 2000 });
+      },
+      class:
+        "shrink-0 h-[26px] px-2.5 rounded-[6px] text-[11px] font-medium border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors",
     },
-  }, [
-    el("div", { class: "flex items-center gap-2.5" }, [
-      checkbox,
-      iconEl,
-      el("div", { class: "flex-1 min-w-0" }, [
-        el("p", { class: "text-[13px] font-semibold text-[var(--text-primary)] leading-tight" }, def.label),
-        el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5 leading-relaxed" }, def.subtitle),
+    "↓ Export",
+  );
+
+  const card = el(
+    "div",
+    {
+      "data-format-id": def.id,
+      class: `p-3 rounded-[10px] border cursor-pointer transition-all ${isSelected ? "border-[var(--accent)] bg-[var(--accent)]/5" : "border-[var(--border)] bg-[var(--bg-card)]"}`,
+      onclick: () => {
+        if (selectedFormats.has(def.id)) selectedFormats.delete(def.id);
+        else selectedFormats.add(def.id);
+        renderExportSheet();
+      },
+    },
+    [
+      el("div", { class: "flex items-center gap-2.5" }, [
+        checkbox,
+        iconEl,
+        el("div", { class: "flex-1 min-w-0" }, [
+          el("p", { class: "text-[13px] font-semibold text-[var(--text-primary)] leading-tight" }, def.label),
+          el("p", { class: "text-[11px] text-[var(--text-muted)] mt-0.5 leading-relaxed" }, def.subtitle),
+        ]),
+        exportBtn,
       ]),
-      exportBtn,
-    ]),
-    fileTree,
-  ]);
+      fileTree,
+    ],
+  );
 
   return card;
 }
@@ -523,7 +736,7 @@ function renderExportSheet() {
   const list = document.getElementById("export-format-list");
   if (!list) return;
   list.innerHTML = "";
-  FORMAT_DEFS.forEach(def => list.appendChild(renderFormatCard(def)));
+  FORMAT_DEFS.forEach((def) => list.appendChild(renderFormatCard(def)));
 
   const zipBtn = document.getElementById("btn-export-zip");
   if (zipBtn) {

@@ -1,13 +1,36 @@
 {
   "back": "Atrás",
-  "designSystemPresets": "Preajustes del Sistema de Diseño",
-  "presetsSub": "Carga un preajuste y empieza a usarlo: todo es editable después de cargarlo.",
+  "done": "Hecho",
+  "cancel": "Cancelar",
   "loaded": "✓ Cargado",
   "load": "Cargar",
   "successLoaded": "\"{name}\" cargado — todo es editable.",
   "shop": {
-    "Header": {
-      "SubHeader": "Cargue un ajuste preestablecido y comience a usarlo; todo se puede editar después de cargarlo."
+    "header": {
+      "header": "Ajustes preestablecidos del sistema de diseño",
+      "subHeader": "Cargue un ajuste preestablecido y comience a usarlo; todo se puede editar después de cargarlo."
     }
-  }
+  },
+  "export": {
+    "export": "Exportar",
+    "zip": {
+      "instructions": "Seleccione formatos y exporte como un paquete ZIP",
+      "confirm": "Exportar seleccionado como ZIP"
+    },
+    "zi": {}
+  },
+  "settings": "Ajustes",
+  "token-settings": "Configuración de tokens",
+  "import": {
+    "subTitle": "Suelte un archivo .wand para cargar su configuración",
+    "title": "Importar archivo de varita"
+  },
+  "palette": "Paleta",
+  "preview": "Avance",
+  "project": "Proyecto",
+  "roles": "Roles",
+  "browse-templates": "Explorar plantillas",
+  "start-from-blank": "Empezar desde blanco",
+  "welcome-to-token-wand": "Bienvenido a Token Wand",
+  "interface": "Interfaz"
 }
