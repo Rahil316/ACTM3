@@ -2,7 +2,7 @@
 /**
  * build-presets.ts
  *
- * Imports every typed preset file from react-src/lib/presets/raw/*.ts,
+ * Imports every typed preset file from src/ui/lib/presets/raw/*.ts,
  * merges them in display order, and writes a single presets.json.
  *
  * Run automatically via `prebuild:react` in package.json.
@@ -13,18 +13,18 @@ import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import wandPresets      from '../react-src/lib/presets/raw/wand';
-import materialPresets  from '../react-src/lib/presets/raw/material';
-import atlassianPresets from '../react-src/lib/presets/raw/atlassian';
-import radixPresets     from '../react-src/lib/presets/raw/radix';
-import applePresets     from '../react-src/lib/presets/raw/apple';
-import tailwindPresets  from '../react-src/lib/presets/raw/tailwind';
-import carbonPresets    from '../react-src/lib/presets/raw/carbon';
-import polarisPresets   from '../react-src/lib/presets/raw/polaris';
-import blankPresets     from '../react-src/lib/presets/raw/blank';
+import wandPresets      from '../src/ui/lib/presets/raw/wand';
+import materialPresets  from '../src/ui/lib/presets/raw/material';
+import atlassianPresets from '../src/ui/lib/presets/raw/atlassian';
+import radixPresets     from '../src/ui/lib/presets/raw/radix';
+import applePresets     from '../src/ui/lib/presets/raw/apple';
+import tailwindPresets  from '../src/ui/lib/presets/raw/tailwind';
+import carbonPresets    from '../src/ui/lib/presets/raw/carbon';
+import polarisPresets   from '../src/ui/lib/presets/raw/polaris';
+import blankPresets     from '../src/ui/lib/presets/raw/blank';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUT_FILE  = path.resolve(__dirname, '../react-src/lib/presets/presets.json');
+const OUT_FILE  = path.resolve(__dirname, '../src/ui/lib/presets/presets.json');
 
 const all = [
   ...wandPresets,

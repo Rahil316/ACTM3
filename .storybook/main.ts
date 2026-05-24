@@ -3,10 +3,8 @@ import path from 'node:path';
 
 const config: StorybookConfig = {
   "stories": [
-    "../stories/**/*.mdx",
-    "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-    "../react-src/**/*.mdx",
-    "../react-src/**/*.stories.@(js|jsx|mjs|ts|tsx)"
+    "../src/ui/stories/**/*.mdx",
+    "../src/ui/stories/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
   "addons": [
     "@chromatic-com/storybook",

@@ -4,20 +4,20 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 
 export default defineConfig({
   plugins: [react(), viteSingleFile()],
-  root: 'react-src',
+  root: 'src/ui',
   build: {
-    outDir: '../dist-react',
-    emptyOutDir: true,
+    outDir: '../../dist',
+    emptyOutDir: false,
     target: 'es2017',
     assetsInlineLimit: 100000000,
     cssCodeSplit: false,
     rollupOptions: {
-      input: 'react-src/ui.html',
+      input: 'src/ui/ui.html',
     },
   },
   test: {
     root: '.',
-    include: ['react-src/**/*.test.ts', 'react-src/**/*.test.tsx'],
+    include: ['src/ui/**/*.test.ts', 'src/ui/**/*.test.tsx'],
     environment: 'node',
   },
 });

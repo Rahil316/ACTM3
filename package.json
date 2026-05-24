@@ -5,8 +5,9 @@
   "main": "code.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsx scripts/build-presets.ts && vite build",
-    "watch": "vite",
+    "build": "tsx scripts/build-presets.ts && node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && node scripts/build-plugin.js",
+    "build:plugin": "node scripts/build-plugin.js",
+    "watch": "node scripts/watch-plugin.js & vite build --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",

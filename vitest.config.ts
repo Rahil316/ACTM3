@@ -17,7 +17,7 @@ export default mergeConfig(
           extends: true,
           test: {
             root: '.',
-            include: ['react-src/**/*.test.ts', 'react-src/**/*.test.tsx'],
+            include: ['src/ui/**/*.test.ts', 'src/ui/**/*.test.tsx'],
             environment: 'node',
           },
         },

@@ -16,9 +16,9 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["react-src/*"]
+      "@/*": ["src/ui/*"]
     }
   },
-  "include": ["react-src"],
+  "include": ["src/ui", "src/shared"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
