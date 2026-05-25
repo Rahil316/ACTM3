@@ -128,7 +128,7 @@ export function ExportSheet() {
                     selected ? 'bg-accent border-accent' : 'border-border-input',
                   ].join(' ')}
                 >
-                  {selected && <span className="text-white text-[10px] font-bold">✓</span>}
+                  {selected && <span className="text-text-on-accent text-[10px] font-bold">✓</span>}
                 </div>
               </button>
             );

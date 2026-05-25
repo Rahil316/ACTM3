@@ -7,6 +7,7 @@ import { SectionSpinner } from '../components/Spinner';
 import { EmptyState } from '../components/EmptyState';
 import { Modal, ModalHeader } from '../components/Modal';
 import { Button } from '../components/Button';
+import { SegmentedControl } from '../components/SegmentedControl';
 import { Badge, type BadgeVariant } from '../components/Badge';
 import { variableMaker, type EngineConfig, type EngineResult } from '../lib/colorEngine';
 import type { AppState } from '../types/state';
@@ -426,20 +427,11 @@ function PreviewContent() {
         </p>
         <div className="flex items-center gap-2">
           {computing && <span className="text-[10px] text-text-dim">Computing…</span>}
-          <div className="flex rounded-[6px] border border-border-base overflow-hidden">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`px-2 py-1 text-[10px] font-medium transition-colors ${viewMode === 'grid' ? 'bg-accent text-white' : 'bg-bg-input text-text-muted hover:bg-bg-hover'}`}
-            >
-              Grid
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`px-2 py-1 text-[10px] font-medium transition-colors ${viewMode === 'table' ? 'bg-accent text-white' : 'bg-bg-input text-text-muted hover:bg-bg-hover'}`}
-            >
-              Table
-            </button>
-          </div>
+          <SegmentedControl
+            segments={[{ value: 'grid', label: 'Grid' }, { value: 'table', label: 'Table' }]}
+            value={viewMode}
+            onChange={(v) => setViewMode(v as 'grid' | 'table')}
+          />
         </div>
       </div>
 

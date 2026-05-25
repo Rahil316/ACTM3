@@ -8,7 +8,7 @@ import { EmptyState } from "../components/EmptyState";
 import { Input } from "../components/Input";
 import { Button, ActionButton } from "../components/Button";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { Version } from "@/types/state";
+import type { Version } from "../types/state";
 
 // ── Save form ─────────────────────────────────────────────────────────────────
 
