@@ -6,6 +6,7 @@ import { Modal, ModalHeader } from '../components/Modal';
 import { SettingsCard, SmallRow } from '../components/SettingsCard';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Button } from '../components/Button';
+import { Badge } from '../components/Badge';
 import { LoadingOverlay, SuccessOverlay, ErrorOverlay, ValidationWarningOverlay } from '../components/ResultOverlay';
 import { sendToPlugin, type SyncScope, type SyncTally, type ExistingCollection, type RenameData, type CollectionCheckResultMessage } from '../types/messages';
 import { banner } from '../store/bannerStore';
@@ -164,9 +165,9 @@ export function RunDialog() {
               <SettingsCard>
                 <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide mb-2">Existing Collections</p>
                 {existingCollections.map((col) => (
-                  <div key={col.id} className="flex items-center justify-between py-1 border-b border-border-base/30 last:border-0">
+                  <div key={col.id} className="flex items-center justify-between py-1 border-b border-border-subtle last:border-0">
                     <span className="text-[12px] text-text-primary">{col.name}</span>
-                    <span className="text-[10px] text-text-muted bg-bg-input px-2 py-0.5 rounded-full">Update</span>
+                    <Badge variant="muted" size="xs">Update</Badge>
                   </div>
                 ))}
               </SettingsCard>

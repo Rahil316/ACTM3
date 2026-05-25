@@ -114,7 +114,7 @@ export function ExportSheet() {
                 className={[
                   'flex items-center justify-between px-3 py-2 rounded-[10px] border transition-colors text-left',
                   selected
-                    ? 'border-accent bg-accent/10'
+                    ? 'border-accent bg-accent-subtle'
                     : 'border-border-base bg-bg-card hover:bg-bg-hover',
                 ].join(' ')}
               >

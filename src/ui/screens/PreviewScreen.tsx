@@ -7,6 +7,7 @@ import { SectionSpinner } from '../components/Spinner';
 import { EmptyState } from '../components/EmptyState';
 import { Modal, ModalHeader } from '../components/Modal';
 import { Button } from '../components/Button';
+import { Badge, type BadgeVariant } from '../components/Badge';
 import { variableMaker, type EngineConfig, type EngineResult } from '../lib/colorEngine';
 import type { AppState } from '../types/state';
 
@@ -65,18 +66,18 @@ function copyText(text: string, label: string) {
 
 // ── WCAG rating badge ─────────────────────────────────────────────────────────
 
-const RATING_COLORS: Record<string, string> = {
-  AAA:      'bg-green-500/20 text-green-700 dark:text-green-400',
-  AA:       'bg-blue-500/20 text-blue-700 dark:text-blue-400',
-  'AA Large': 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400',
-  Fail:     'bg-red-500/20 text-red-600 dark:text-red-400',
+const RATING_VARIANT: Record<string, BadgeVariant> = {
+  AAA:        'success',
+  AA:         'accent',
+  'AA Large': 'warning',
+  Fail:       'danger',
 };
 
 function RatingBadge({ rating }: { rating: string }) {
   return (
-    <span className={`text-[8px] font-bold px-1 py-0.5 rounded-[3px] ${RATING_COLORS[rating] ?? RATING_COLORS['Fail']}`}>
+    <Badge variant={RATING_VARIANT[rating] ?? 'danger'} size="xs">
       {rating}
-    </span>
+    </Badge>
   );
 }
 
@@ -101,7 +102,7 @@ function SwatchCell({ hex, ratio, rating, label, tokenName }: SwatchCellProps) {
     >
       {/* Swatch — click copies hex */}
       <div
-        className="w-10 h-10 rounded-md border border-border-base/40 shrink-0 cursor-pointer hover:ring-2 hover:ring-accent/50 transition-shadow"
+        className="w-10 h-10 rounded-md border border-border-subtle shrink-0 cursor-pointer hover:ring-2 hover:ring-accent transition-shadow"
         style={{ backgroundColor: hex }}
         onClick={() => copyText(hex, 'hex')}
         title="Click to copy hex"
@@ -155,7 +156,7 @@ function AlphaTintStrip({ colors, alphaValues }: AlphaTintStripProps) {
               return (
                 <div key={alpha} className="flex flex-col items-center gap-0.5">
                   <div
-                    className="w-10 h-10 rounded-md border border-border-base/40 shrink-0 cursor-pointer hover:ring-2 hover:ring-accent/50 transition-shadow"
+                    className="w-10 h-10 rounded-md border border-border-subtle shrink-0 cursor-pointer hover:ring-2 hover:ring-accent transition-shadow"
                     style={{ backgroundColor: hex, opacity: alpha / 100 }}
                     onClick={() => copyText(`${hex}${Math.round(alpha * 2.55).toString(16).padStart(2, '0')}`, `${alpha}% alpha`)}
                     title={`${alpha}% — click to copy`}
@@ -291,7 +292,7 @@ function TokenTableView({ result, appState }: TokenGridProps) {
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-b border-border-base/30 hover:bg-bg-hover transition-colors">
+            <tr key={i} className="border-b border-border-subtle hover:bg-bg-hover transition-colors">
               <td className="px-2 py-1.5">
                 <span
                   className="font-mono text-text-primary cursor-pointer hover:text-accent"
@@ -304,7 +305,7 @@ function TokenTableView({ result, appState }: TokenGridProps) {
                 <td key={entry.theme} className="px-2 py-1.5">
                   <div className="flex items-center gap-1.5">
                     <div
-                      className="w-5 h-5 rounded border border-border-base/40 shrink-0 cursor-pointer hover:ring-1 hover:ring-accent/50"
+                      className="w-5 h-5 rounded border border-border-subtle shrink-0 cursor-pointer hover:ring-1 hover:ring-accent"
                       style={{ backgroundColor: entry.hex }}
                       onClick={() => copyText(entry.hex, 'hex')}
                       title="Click to copy hex"

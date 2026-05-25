@@ -1,21 +1,36 @@
-import type { Preview } from '@storybook/react-vite'
+import type { Preview } from '@storybook/react-vite';
+import { useEffect } from 'react';
 import '../src/ui/index.css';
 
+// Apply the dark theme by default so tokens resolve correctly.
+// Stories can override via the `theme` parameter.
+const ThemeDecorator = (Story: React.ComponentType, context: { parameters: { theme?: 'dark' | 'light' } }) => {
+  const theme = context.parameters.theme ?? 'dark';
+  useEffect(() => {
+    document.body.setAttribute('data-ui-theme', theme);
+    return () => document.body.removeAttribute('data-ui-theme');
+  }, [theme]);
+  return (
+    <div style={{ background: theme === 'light' ? 'var(--bg-app)' : 'var(--bg-app)', minHeight: '100vh', padding: '24px' }}>
+      <Story />
+    </div>
+  );
+};
+
 const preview: Preview = {
+  decorators: [ThemeDecorator],
+
   parameters: {
+    backgrounds: { disable: true }, // we handle bg via tokens
     controls: {
       matchers: {
-       color: /(background|color)$/i,
-       date: /Date$/i,
+        color: /(background|color)$/i,
+        date:  /Date$/i,
       },
     },
-
     a11y: {
-      // 'todo' - show a11y violations in the test UI only
-      // 'error' - fail CI on a11y violations
-      // 'off' - skip a11y checks entirely
-      test: 'todo'
-    }
+      test: 'todo',
+    },
   },
 };
 

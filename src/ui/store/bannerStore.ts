@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type BannerType = 'success' | 'error' | 'warning' | 'info' | 'neutral';
+export type BannerType = 'success' | 'error' | 'warning' | 'info' | 'neutral' | 'loading';
 
 export interface BannerAction {
   label: string;
@@ -20,10 +20,14 @@ export interface Banner {
   autoClose?: number;
 }
 
+export const BANNER_EXIT_MS = 280; // must match CSS transition duration
+
 interface BannerStore {
-  banners: Banner[];
+  banners:  Banner[];
+  exiting:  Set<string>; // ids currently playing exit animation
   show:    (banner: Omit<Banner, 'id'> & { id?: string }) => string;
-  remove:  (id: string) => void;
+  remove:  (id: string) => void;  // triggers exit animation, then deletes
+  _delete: (id: string) => void;  // immediate delete, used internally
   clear:   () => void;
   has:     (id: string) => boolean;
   warn:    (message: string, opts?: Partial<Omit<Banner, 'id' | 'type' | 'message'>>) => string;
@@ -36,13 +40,17 @@ let _uid = 0;
 
 export const useBannerStore = create<BannerStore>((set, get) => ({
   banners: [],
+  exiting: new Set(),
 
   show(cfg) {
     const id = cfg.id ?? `bn-${++_uid}`;
-    // Update in-place if id already exists
     const existing = get().banners.find((b) => b.id === id);
     if (existing) {
+      // cancel any in-flight exit for this id then update in place
+      const exiting = new Set(get().exiting);
+      exiting.delete(id);
       set((s) => ({
+        exiting,
         banners: s.banners.map((b) => (b.id === id ? { ...b, ...cfg, id } : b)),
       }));
       return id;
@@ -56,11 +64,25 @@ export const useBannerStore = create<BannerStore>((set, get) => ({
   },
 
   remove(id) {
-    set((s) => ({ banners: s.banners.filter((b) => b.id !== id) }));
+    // Mark as exiting — component plays slide-out, then calls _delete
+    const exiting = new Set(get().exiting);
+    exiting.add(id);
+    set({ exiting });
+    setTimeout(() => get()._delete(id), BANNER_EXIT_MS);
+  },
+
+  _delete(id) {
+    const exiting = new Set(get().exiting);
+    exiting.delete(id);
+    set((s) => ({
+      exiting,
+      banners: s.banners.filter((b) => b.id !== id),
+    }));
   },
 
   clear() {
-    set({ banners: [] });
+    // Immediately wipe everything — no animation (e.g. story cleanup)
+    set({ banners: [], exiting: new Set() });
   },
 
   has(id) {

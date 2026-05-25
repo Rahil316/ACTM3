@@ -74,8 +74,8 @@ export function RoleGroupCard({ role, idx }: RoleGroupCardProps) {
               key={v._id ?? vi}
               className={[
                 'grid px-2 py-1 items-center gap-1.5',
-                vi < vars.length - 1 ? 'border-b border-border-base/40' : '',
-                vi % 2 ? 'bg-bg-input/20' : '',
+                vi < vars.length - 1 ? 'border-b border-border-subtle' : '',
+                vi % 2 ? 'bg-bg-app' : '',
               ].join(' ')}
               style={{ gridTemplateColumns: cols }}
             >
@@ -123,7 +123,7 @@ export function RoleGroupCard({ role, idx }: RoleGroupCardProps) {
                   label="−"
                   disabled={vars.length <= 1}
                   onClick={() => removeRoleVariation(idx, vi)}
-                  className="hover:text-danger hover:bg-danger/10"
+                  className="hover:text-danger hover:bg-danger-subtle"
                 />
               )}
             </div>
@@ -132,13 +132,13 @@ export function RoleGroupCard({ role, idx }: RoleGroupCardProps) {
 
         {/* Add row (custom only) */}
         {useCustomVars && (
-          <div className="flex px-2 py-1.5 border-t border-border-base/40">
+          <div className="flex px-2 py-1.5 border-t border-border-subtle">
             <Button
               variant="ghost"
               size="sm"
               label="+ Add variation"
               onClick={() => addRoleVariation(idx)}
-              className="text-accent hover:text-accent hover:bg-accent/10"
+              className="text-accent hover:text-accent hover:bg-accent-subtle"
             />
           </div>
         )}

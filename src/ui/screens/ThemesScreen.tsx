@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAppStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/appStore";
 import { toast } from "../store/toastStore";
 import { SettingsCard } from "../components/SettingsCard";
+import { Badge } from "../components/Badge";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PRESETS, type Preset } from "../lib/presets/presets";
 import type { AppState } from "../types/state";
@@ -26,12 +27,10 @@ function PresetShop() {
     return (
       <button key={preset.id} onClick={() => handlePresetClick(preset)} className="w-full text-left bg-bg-card border border-border-base rounded-[10px] p-3 hover:bg-bg-hover transition-colors">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-          {preset.badge && <span className="text-[9px] font-bold bg-accent/20 text-accent px-1.5 py-0.5 rounded-full">{preset.badge}</span>}
+          {preset.badge && <Badge variant="accent" size="xs" pill>{preset.badge}</Badge>}
           <p className="text-[13px] font-semibold text-text-primary">{preset.name}</p>
           {preset.tags?.slice(0, 2).map((tag) => (
-            <span key={tag} className="text-[9px] text-text-dim bg-bg-input px-1.5 py-0.5 rounded-full">
-              {tag}
-            </span>
+            <Badge key={tag} variant="muted" size="xs" pill>{tag}</Badge>
           ))}
         </div>
         {preset.description && <p className="text-[11px] text-text-muted line-clamp-2">{preset.description}</p>}

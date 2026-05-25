@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { SectionLabel, Caption, FieldLabel } from '../components/typography';
-import { HeaderIconButton } from '../components/HeaderIconButton';
+import { Button } from '../components/Button';
 import * as Icons from '../components/icons';
 
 const meta: Meta = {
@@ -36,18 +36,10 @@ export const TypographyElements: StoryObj = {
 
 export const HeaderIconButtons: StoryObj = {
   render: () => (
-    <div className="flex gap-4 p-4 max-w-sm bg-bg-app border border-border-base rounded-lg items-center">
-      <HeaderIconButton onClick={() => alert('Settings Clicked')} title="Settings">
-        <Icons.IconSettings className="w-5 h-5" />
-      </HeaderIconButton>
-
-      <HeaderIconButton onClick={() => alert('Run Clicked')} title="Run Sync">
-        <Icons.IconRun className="w-5 h-5" />
-      </HeaderIconButton>
-
-      <HeaderIconButton onClick={() => alert('Code Clicked')} title="Export formats">
-        <Icons.IconCode className="w-5 h-5" />
-      </HeaderIconButton>
+    <div className="flex gap-2 p-4 max-w-sm bg-bg-app border border-border-base rounded-lg items-center">
+      <Button variant="ghost" size="sm" square icon={<Icons.IconSettings />} aria-label="Settings" title="Settings" onClick={() => alert('Settings')} />
+      <Button variant="ghost" size="sm" square icon={<Icons.IconRun />}      aria-label="Run"      title="Run Sync"  onClick={() => alert('Run')} />
+      <Button variant="ghost" size="sm" square icon={<Icons.IconCode />}     aria-label="Export"   title="Export"   onClick={() => alert('Export')} />
     </div>
   ),
 };

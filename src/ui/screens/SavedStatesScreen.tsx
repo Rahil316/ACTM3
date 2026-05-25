@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAppStore, relativeTime } from "../store/appStore";
 import { toast } from "../store/toastStore";
 import { SettingsCard } from "../components/SettingsCard";
+import { Badge } from "../components/Badge";
 import { ActionCard } from "../components/ActionCard";
 import { EmptyState } from "../components/EmptyState";
 import { Input } from "../components/Input";
@@ -84,7 +85,7 @@ export function SavedStatesScreen() {
       <SettingsCard>
         <div className="flex items-center justify-between">
           <p className="text-[12px] font-semibold text-text-primary">Saved Versions</p>
-          <span className="text-[10px] text-text-muted bg-bg-input px-1.5 py-0.5 rounded-full">{versions.length}</span>
+          <Badge variant="muted" size="xs">{versions.length}</Badge>
         </div>
         {versions.length === 0 ? <EmptyState icon="📦" title="No versions yet" description="Save a version to snapshot your current configuration." /> : <div className="flex flex-col gap-2 pt-1">{versions.map((v) => savedEntry(v, setConfirmRestore, setConfirmDelete))}</div>}
       </SettingsCard>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Spinner, SectionSpinner } from '../components/Spinner';
 import { BannerSlot } from '../components/Banner';
@@ -33,55 +33,79 @@ export const Spinners: StoryObj = {
   ),
 };
 
+// Static showcase — all banner types visible immediately, no interaction needed.
+export const Banners: StoryObj = {
+  render: () => (
+    <div className="flex flex-col w-full max-w-lg rounded-lg overflow-hidden border border-border-base">
+      <BannerSlot />
+    </div>
+  ),
+  decorators: [
+    (Story) => {
+      const store = useBannerStore();
+      useEffect(() => {
+        store.clear();
+        store.show({ id: 'b-info',    type: 'info',    title: 'Update available', message: 'A new version of Token Wand is ready to install.' });
+        store.show({ id: 'b-success', type: 'success', title: 'Sync complete',    message: '24 variables created, 8 updated, 2 renamed.' });
+        store.show({ id: 'b-warning', type: 'warning', title: 'Contrast warning', message: 'Some variations fail WCAG AA.',
+          detail: 'Primary/Text/Default (2.1:1, target 4.5:1)\nNeutral/BG/Active (1.4:1, target 3.0:1)', dismissable: true });
+        store.show({ id: 'b-error',   type: 'error',   title: 'Sync failed',      message: 'Could not write variables — permission denied.',
+          actions: [{ label: 'Retry', style: 'primary', onClick: () => {} }, { label: 'Dismiss', onClick: () => store.remove('b-error') }] });
+        store.show({ id: 'b-autoclose', type: 'success', title: 'Auto-dismiss (5s)', message: 'This banner will slide away automatically.', autoClose: 5000 });
+        store.show({ id: 'b-loading', type: 'loading', message: 'Syncing variables to Figma…', dismissable: false });
+        store.show({ id: 'b-neutral', type: 'neutral', message: 'Direct mode active — scale generation is skipped.' });
+        return () => store.clear();
+      }, []);
+      return <Story />;
+    },
+  ],
+};
+
+// Interactive playbox — trigger banners and toasts on demand.
 export const BannersAndToasts: StoryObj = {
   render: () => {
     const bannersStore = useBannerStore();
-    const toastsStore = useToastStore();
+    const toastsStore  = useToastStore();
 
-    const triggerWarningBanner = () => {
+    const add = (type: import('../store/bannerStore').BannerType) => {
       bannersStore.show({
-        id: `warning-${Date.now()}`,
-        type: 'warning',
-        title: 'Accessibility Warning',
-        message: 'Some variations fail to meet WCAG AA contrast requirements.',
-        detail: 'Primary/Text/Default (contrast: 2.1:1, target: 4.5:1)\nSecondary/Background/Active (contrast: 1.4:1, target: 3.0:1)',
-        dismissable: true,
+        id: `${type}-${Date.now()}`,
+        type,
+        title: type.charAt(0).toUpperCase() + type.slice(1),
+        message: `This is a ${type} banner — click × to dismiss.`,
+        dismissable: type !== 'loading',
       });
     };
 
-    const triggerSuccessBanner = () => {
-      bannersStore.show({
-        id: `success-${Date.now()}`,
-        type: 'success',
-        title: 'Sync Complete',
-        message: 'Variables successfully synchronized to Figma.',
-        dismissable: true,
-      });
-    };
-
-    const triggerToast = (type: 'success' | 'error' | 'info' | 'warn' | 'neutral') => {
-      toastsStore.show(`Toast message: Action completed (${type})`, { type });
-    };
+    const triggerToast = (type: 'success' | 'error' | 'info' | 'warn' | 'neutral') =>
+      toastsStore.show(`Toast: ${type}`, { type });
 
     return (
-      <div className="flex flex-col gap-4 p-4 max-w-sm bg-bg-app rounded-lg border border-border-base relative overflow-hidden min-h-[300px]">
-        <h4 className="text-text-muted text-[11px] uppercase tracking-wider mb-2 font-bold">Banners & Toasts Playbox</h4>
-        
-        {/* Banner container inside preview */}
-        <BannerSlot className="border rounded border-border-base overflow-hidden" />
+      <div className="flex flex-col gap-4 max-w-lg">
+        {/* Live banner output — sits above controls, not clipped */}
+        <div className="rounded-lg overflow-hidden border border-border-base">
+          <BannerSlot />
+        </div>
 
-        <div className="flex flex-col gap-2 mt-4">
-          <Button variant="secondary" size="sm" label="Trigger Warning Banner" onClick={triggerWarningBanner} />
-          <Button variant="secondary" size="sm" label="Trigger Success Banner" onClick={triggerSuccessBanner} />
-          <div className="grid grid-cols-2 gap-1.5 mt-2">
-            <Button variant="primary" size="sm" label="Success Toast" onClick={() => triggerToast('success')} />
-            <Button variant="danger" size="sm" label="Error Toast" onClick={() => triggerToast('error')} />
-            <Button variant="secondary" size="sm" label="Warning Toast" onClick={() => triggerToast('warn')} />
-            <Button variant="ghost" size="sm" label="Info Toast" onClick={() => triggerToast('info')} />
+        <div className="flex flex-col gap-2 p-3 bg-bg-card rounded-lg border border-border-base">
+          <p className="text-text-muted text-[11px] uppercase tracking-wider font-bold mb-1">Trigger banners</p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {(['info', 'success', 'warning', 'error', 'loading', 'neutral'] as const).map((t) => (
+              <Button key={t} variant="secondary" size="sm" label={t} onClick={() => add(t)} />
+            ))}
+          </div>
+          <Button variant="danger" size="sm" label="Clear all" onClick={() => bannersStore.clear()} />
+        </div>
+
+        <div className="flex flex-col gap-2 p-3 bg-bg-card rounded-lg border border-border-base">
+          <p className="text-text-muted text-[11px] uppercase tracking-wider font-bold mb-1">Trigger toasts</p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {(['success', 'error', 'warn', 'info', 'neutral'] as const).map((t) => (
+              <Button key={t} variant="secondary" size="sm" label={t} onClick={() => triggerToast(t)} />
+            ))}
           </div>
         </div>
 
-        {/* Local ToastHub rendering bottom-anchored */}
         <ToastHub />
       </div>
     );

@@ -39,16 +39,16 @@ interface SuccessOverlayProps {
 export function SuccessOverlay({ open, tally, onDismiss }: SuccessOverlayProps) {
   if (!open) return null;
   const rows: [string, number, string][] = tally ? [
-    ['Created', tally.created, 'text-white'],
-    ['Updated', tally.updated, 'text-white'],
-    ...(tally.renamed > 0 ? [['Renamed', tally.renamed, 'text-blue-300'] as [string, number, string]] : []),
-    ['Failed',  tally.failed,  'text-red-400'],
+    ['Created', tally.created, 'text-text-primary'],
+    ['Updated', tally.updated, 'text-text-primary'],
+    ...(tally.renamed > 0 ? [['Renamed', tally.renamed, 'text-accent'] as [string, number, string]] : []),
+    ['Failed',  tally.failed,  'text-danger'],
   ] : [];
 
   return (
     <div className="absolute inset-0 bg-bg-app z-50 flex flex-col">
       <div className="flex-1 flex items-center justify-center p-8 text-center flex-col gap-4">
-        <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
+        <div className="w-20 h-20 bg-success-subtle rounded-full flex items-center justify-center text-success">
           <IconCheck className="w-8 h-8" />
         </div>
         <h2 className="text-2xl font-bold text-text-primary">Success!</h2>
@@ -79,7 +79,7 @@ export function ErrorOverlay({ open, message, onDismiss }: ErrorOverlayProps) {
   if (!open) return null;
   return (
     <div className="absolute inset-0 bg-bg-app z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
-      <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center text-red-500">
+      <div className="w-20 h-20 bg-danger-subtle rounded-full flex items-center justify-center text-danger">
         <IconClose className="w-6 h-6" />
       </div>
       <h2 className="text-2xl font-bold text-text-primary">Error</h2>
@@ -103,7 +103,7 @@ export function ValidationWarningOverlay({ open, issues, onBack, onContinue }: V
   if (!open) return null;
   return (
     <div className="absolute inset-0 bg-bg-app z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
-      <div className="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center text-yellow-400">
+      <div className="w-16 h-16 bg-warning-subtle rounded-full flex items-center justify-center text-warning">
         <IconAlertTriangle className="w-8 h-8" />
       </div>
       <h2 className="text-xl font-bold text-text-primary">
@@ -114,7 +114,7 @@ export function ValidationWarningOverlay({ open, issues, onBack, onContinue }: V
       </p>
       <ul className="w-full text-left space-y-2 max-h-48 overflow-y-auto">
         {issues.map((msg, i) => (
-          <li key={i} className="text-[12px] bg-yellow-500/5 border border-yellow-500/20 rounded-[6px] px-3 py-2 text-text-primary">
+          <li key={i} className="text-[12px] bg-warning-subtle border border-warning rounded-[6px] px-3 py-2 text-text-primary">
             {msg}
           </li>
         ))}

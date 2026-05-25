@@ -53,7 +53,7 @@ function SortableSegmentPill({ id }: { id: TokenNameSegment }) {
       style={style}
       {...attributes}
       {...listeners}
-      className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-accent/15 border border-accent/30 text-[11px] font-semibold text-accent cursor-grab select-none"
+      className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-accent-subtle border border-accent text-[11px] font-semibold text-accent cursor-grab select-none"
     >
       <span className="text-[9px] opacity-60">⠿</span>
       {SEGMENT_LABELS[id]}
@@ -146,7 +146,7 @@ function TokensTab() {
                 min="5"
                 max="100"
                 step="1"
-                width={null}
+                width={undefined}
                 onChange={(e) => {
                   const v = parseInt(e.target.value);
                   if (!isNaN(v) && v >= 5 && v <= 100) setAppField('scaleLength', v);

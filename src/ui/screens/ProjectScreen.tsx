@@ -1,21 +1,20 @@
 import { useState, useRef } from "react";
 import { useAppStore, ensureIds, ensureVariations, relativeTime } from "../store/appStore";
-import { useUiStore } from "../store/uiStore";
 import { toast } from "../store/toastStore";
 import { SectionCollapsible } from "../components/Collapsible";
 import { ActionCard } from "../components/ActionCard";
 import { EmptyState } from "../components/EmptyState";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { SettingsCard } from "../components/SettingsCard";
-import { Modal, ModalHeader } from "../components/Modal";
 import { Input } from "../components/Input";
 import { ColorInput } from "../components/ColorInput";
 import { Button, ActionButton } from "../components/Button";
+import { Badge } from "../components/Badge";
 import { ListHeader, ListRow } from "../components/ListRow";
 import type { AppState } from "../types/state";
 
 // ── Version save form ─────────────────────────────────────────────────────────
-function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
+export function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const saveVersion = useAppStore((s) => s.saveVersion);
@@ -44,23 +43,6 @@ function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
   );
 }
 
-// ── Save Version overlay (triggered from header) ──────────────────────────────
-
-export function SaveVersionOverlay() {
-  const isOpen = useUiStore((s) => s.activeOverlay === "save-version");
-  const closeOverlay = useUiStore((s) => s.closeOverlay);
-
-  if (!isOpen) return null;
-
-  return (
-    <Modal open layer="dialog">
-      <ModalHeader title="Save State" subtitle="Snapshot the current configuration as a named version." actions={<Button variant="secondary" size="md" label="Cancel" onClick={closeOverlay} />} />
-      <div className="p-3">
-        <SaveVersionForm onSaved={closeOverlay} />
-      </div>
-    </Modal>
-  );
-}
 
 // ── JSON Import/Export ────────────────────────────────────────────────────────
 
@@ -196,7 +178,7 @@ export function ProjectScreen() {
 
       {/* Themes */}
       <SettingsCard>
-        <SectionCollapsible open={themesOpen} onToggle={() => setThemesOpen((v) => !v)} label="Themes" badge={<span className="text-[10px] text-text-muted bg-bg-input px-1.5 py-0.5 rounded-full">{themes.length}</span>}>
+        <SectionCollapsible open={themesOpen} onToggle={() => setThemesOpen((v) => !v)} label="Themes" badge={<Badge variant="muted" size="xs">{themes.length}</Badge>}>
           <div className="flex flex-col gap-1 pt-2">
             <p className="text-[11px] text-text-muted mb-1">Each theme defines a background color used for contrast calculation.</p>
             {themes.length > 0 && (
@@ -226,7 +208,7 @@ export function ProjectScreen() {
 
       {/* Versions */}
       <SettingsCard>
-        <SectionCollapsible open={versionsOpen} onToggle={() => setVersionsOpen((v) => !v)} label="Versions" badge={<span className="text-[10px] text-text-muted bg-bg-input px-1.5 py-0.5 rounded-full">{versions.length}</span>}>
+        <SectionCollapsible open={versionsOpen} onToggle={() => setVersionsOpen((v) => !v)} label="Versions" badge={<Badge variant="muted" size="xs">{versions.length}</Badge>}>
           <div className="flex flex-col gap-2 pt-2">
             {versions.length === 0 ? (
               <EmptyState icon="📦" title="No versions yet" description="Save a version to snapshot your current configuration." />

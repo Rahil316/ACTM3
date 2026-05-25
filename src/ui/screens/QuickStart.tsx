@@ -3,6 +3,7 @@ import { useAppStore, makeBootstrapState, ensureIds, ensureVariations, generateI
 import { useUiStore } from "../store/uiStore";
 import { toast } from "../store/toastStore";
 import { Button } from "../components/Button";
+import { Badge } from "../components/Badge";
 import { CentredOverlay } from "../components/ResultOverlay";
 import { PRESETS, type Preset } from "../lib/presets/presets";
 import type { AppState } from "../types/state";
@@ -80,9 +81,9 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
       <p className="text-[13px] text-text-muted max-w-[300px] text-center">Pick a design system to start from, or begin with a blank canvas.</p>
       <div className="grid grid-cols-2 gap-2 w-full max-w-[360px]">
         {quickPresets.map((preset) => (
-          <button key={preset.id} onClick={() => loadPreset(preset)} className="text-left bg-bg-card border border-border-base rounded-[10px] p-3 hover:bg-bg-hover hover:border-accent/40 transition-colors">
+          <button key={preset.id} onClick={() => loadPreset(preset)} className="text-left bg-bg-card border border-border-base rounded-[10px] p-3 hover:bg-bg-hover hover:border-accent transition-colors">
             <div className="flex items-center gap-1.5 mb-1">
-              {preset.badge && <span className="text-[9px] font-bold bg-accent/15 text-accent px-1.5 py-0.5 rounded-full shrink-0">{preset.badge}</span>}
+              {preset.badge && <Badge variant="accent" size="xs" pill>{preset.badge}</Badge>}
               <p className="text-[12px] font-semibold text-text-primary truncate">{preset.name}</p>
             </div>
             {preset.description && <p className="text-[10px] text-text-muted line-clamp-2 leading-snug">{preset.description}</p>}
