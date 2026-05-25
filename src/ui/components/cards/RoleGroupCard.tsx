@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { Input } from '../Input';
 import { Button } from '../Button';
@@ -6,6 +5,7 @@ import { Badge } from '../Badge';
 import { Collapsible } from '../Collapsible';
 import { IconTrash } from '../icons';
 import { Select } from '../Select';
+import { usePersistedToggle } from '../../hooks/usePersistedToggle';
 import type { Role, Variation } from '../../types/state';
 import { SOLVER_MODE_OPTIONS } from '../../store/appStore';
 
@@ -15,7 +15,7 @@ interface RoleGroupCardProps {
 }
 
 export function RoleGroupCard({ role, idx }: RoleGroupCardProps) {
-  const [open, setOpen] = useState(false);
+  const [open, toggleOpen] = usePersistedToggle(`role_${role._id}`, false);
 
   const setRole                 = useAppStore((s) => s.setRole);
   const removeRole              = useAppStore((s) => s.removeRole);
@@ -30,7 +30,6 @@ export function RoleGroupCard({ role, idx }: RoleGroupCardProps) {
   const algoScope               = useAppStore((s) => s.appState.algorithmScopeLevel);
   const perRoleOverride         = useAppStore((s) => s.appState.perRoleVariationOverride);
 
-  const useShorthandRoles = useAppStore((s) => s.appState.useShorthandRoles);
   const roleCount         = useAppStore((s) => s.appState.roles.length);
 
   const useCustomVars = role.customVariationList;
@@ -169,27 +168,25 @@ export function RoleGroupCard({ role, idx }: RoleGroupCardProps) {
   return (
     <div className="bg-bg-card rounded-[12px] border border-border-base p-3 space-y-2">
       {/* Name row */}
-      <div className="grid gap-2 items-end" style={{ gridTemplateColumns: useShorthandRoles ? '1fr 96px 36px' : '1fr 36px' }}>
+      <div className="grid gap-2 items-end" style={{ gridTemplateColumns: '1fr 72px 40px' }}>
         <Input
           id={`role-${role._id}-name`}
           value={role.name}
           onChange={(e) => setRole(idx, 'name', e.target.value)}
-          label="Role Name"
+          label="Name"
           size="xl"
         />
-        {useShorthandRoles && (
-          <Input
-            id={`role-${role._id}-short`}
-            value={role.shorthand ?? ''}
-            onChange={(e) => setRole(idx, 'shorthand', e.target.value)}
-            label="Shorthand"
-            size="xl"
-          />
-        )}
+        <Input
+          id={`role-${role._id}-short`}
+          value={role.shorthand ?? ''}
+          onChange={(e) => setRole(idx, 'shorthand', e.target.value)}
+          label="Short"
+          size="xl"
+        />
         <div className="self-end">
           <Button
             variant="danger"
-            size="md"
+            size="xl"
             square
             icon={<IconTrash />}
             onClick={() => removeRole(idx)}
@@ -202,7 +199,7 @@ export function RoleGroupCard({ role, idx }: RoleGroupCardProps) {
       {/* Collapsible variation section */}
       <Collapsible
         open={open}
-        onToggle={() => setOpen((v) => !v)}
+        onToggle={toggleOpen}
         header={
           <>
             <span className="text-[12px] font-medium text-text-primary flex-1">

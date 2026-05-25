@@ -1,6 +1,7 @@
-import { type ReactNode } from 'react';
-import clsx from 'clsx';
-import { IconChevronDown } from './icons';
+import { type ReactNode } from "react";
+import clsx from "clsx";
+import { IconChevronDown } from "./icons";
+import { SectionLabel } from "./typography";
 
 interface CollapsibleProps {
   open: boolean;
@@ -15,15 +16,9 @@ interface CollapsibleProps {
 // Used in: role variation panel, project profile section, versions section.
 export function Collapsible({ open, onToggle, header, children, className, headerClassName }: CollapsibleProps) {
   return (
-    <div className={clsx('border border-border-base rounded-[10px] overflow-hidden', className)}>
-      <div
-        className={clsx('flex items-center gap-2 px-3 py-2 bg-bg-input cursor-pointer select-none', headerClassName)}
-        onClick={onToggle}
-      >
-        <span
-          className="flex items-center justify-center w-3 shrink-0 transition-transform duration-150"
-          style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}
-        >
+    <div className={clsx("border border-border-base rounded-[10px] overflow-hidden", className)}>
+      <div className={clsx("flex items-center gap-2 px-3 py-2 bg-bg-input cursor-pointer select-none", headerClassName)} onClick={onToggle}>
+        <span className="flex items-center justify-center w-3 shrink-0 transition-transform duration-150" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)" }}>
           <IconChevronDown />
         </span>
         {header}
@@ -47,18 +42,12 @@ interface SectionCollapsibleProps {
 export function SectionCollapsible({ open, onToggle, label, badge, children, className }: SectionCollapsibleProps) {
   return (
     <div className={className}>
-      <div
-        className="flex items-center justify-between cursor-pointer select-none py-1"
-        onClick={onToggle}
-      >
-        <p className="text-[11px] font-bold tracking-[0.6px] text-text-muted uppercase">{label}</p>
+      <div className="flex items-center align-center justify-between cursor-pointer select-none py-1" onClick={onToggle}>
+        <SectionLabel className="mb-0">{label}</SectionLabel>
         <div className="flex items-center gap-1">
           {badge}
-          <span
-            className="text-text-muted text-[10px] transition-transform duration-150"
-            style={{ display: 'inline-block', transform: open ? 'rotate(0deg)' : 'rotate(180deg)' }}
-          >
-            ▲
+          <span className="text-text-muted transition-transform duration-150 flex items-center" style={{ display: "inline-flex", transform: open ? "rotate(0deg)" : "rotate(180deg)" }}>
+            <IconChevronDown className="w-3 h-3" />
           </span>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import clsx from 'clsx';
+import { CardTitle, Subtitle, MicroText } from './typography';
 
 interface ActionCardProps {
   title: string;
@@ -26,9 +27,9 @@ export function ActionCard({ title, subtitle, meta, actions, leading, className,
     >
       {leading && <div className="shrink-0">{leading}</div>}
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-text-primary truncate">{title}</p>
-        {subtitle && <p className="text-[11px] text-text-muted mt-0.5 leading-relaxed">{subtitle}</p>}
-        {meta && <p className="text-[10px] text-text-dim mt-1">{meta}</p>}
+        <CardTitle className="truncate">{title}</CardTitle>
+        {subtitle && <Subtitle>{subtitle}</Subtitle>}
+        {meta && <MicroText className="mt-1 block">{meta}</MicroText>}
       </div>
       {actions && <div className="flex gap-1 shrink-0">{actions}</div>}
     </div>

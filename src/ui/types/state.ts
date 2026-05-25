@@ -138,7 +138,9 @@ export type ActiveOverlay =
   | 'run-dialog'
   | 'save-version'
   | 'quick-start'
-  | 'design-lab';
+  | 'design-lab'
+  | 'export-sheet'
+  | 'theme-shop';
 export type SettingsTab = 'tokens' | 'roles' | 'plugin';
 
 // ── Validation ───────────────────────────────────────────────────────────────

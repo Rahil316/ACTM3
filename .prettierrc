@@ -1,0 +1,4 @@
+{
+  "plugins": ["@huggingface/prettier-plugin-vertical-align"],
+  "alignInGroups": "always"
+}

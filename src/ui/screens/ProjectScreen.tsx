@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { usePersistedToggle } from "../hooks/usePersistedToggle";
 import { useAppStore, ensureIds, ensureVariations, relativeTime } from "../store/appStore";
 import { toast } from "../store/toastStore";
 import { SectionCollapsible } from "../components/Collapsible";
@@ -19,9 +20,10 @@ export function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const saveVersion = useAppStore((s) => s.saveVersion);
-  const blockedReason = useAppStore((s) => s.versionSaveBlockedReason);
-
-  const reason = blockedReason();
+  const versionSaveBlockedReason = useAppStore((s) => s.versionSaveBlockedReason);
+  // Subscribe to appState so this re-evaluates reactively when state changes
+  useAppStore((s) => s.appState);
+  const reason = versionSaveBlockedReason();
 
   function handleSave() {
     if (!name.trim()) return;
@@ -44,26 +46,6 @@ export function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
   );
 }
 
-// ── JSON Import/Export ────────────────────────────────────────────────────────
-
-function useJsonExport() {
-  const appState = useAppStore((s) => s.appState);
-
-  function exportJson() {
-    const json = JSON.stringify(appState, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${(appState.name || "token-wand").replace(/\s+/g, "-").toLowerCase()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Exported JSON");
-  }
-
-  return { exportJson };
-}
-
 // ── Main Project screen ───────────────────────────────────────────────────────
 
 export function ProjectScreen() {
@@ -81,14 +63,13 @@ export function ProjectScreen() {
   const addTheme = useAppStore((s) => s.addTheme);
   const removeTheme = useAppStore((s) => s.removeTheme);
 
-  const [profileOpen, setProfileOpen] = useState(true);
-  const [versionsOpen, setVersionsOpen] = useState(true);
+  const [profileOpen, toggleProfileOpen] = usePersistedToggle("project_profile", true);
+  const [versionsOpen, toggleVersionsOpen] = usePersistedToggle("project_versions", true);
   const [saveFormOpen, setSaveFormOpen] = useState(false);
   const [confirmRestore, setConfirmRestore] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmImport, setConfirmImport] = useState<AppState | null>(null);
 
-  const { exportJson } = useJsonExport();
   const versions = appState.versions ?? [];
 
   function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -167,13 +148,13 @@ export function ProjectScreen() {
 
       {/* Project Profile */}
       <SettingsCard>
-        <SectionCollapsible open={profileOpen} onToggle={() => setProfileOpen((v) => !v)} label="Project Profile">
+        <SectionCollapsible open={profileOpen} onToggle={toggleProfileOpen} label="Project Profile">
           <div className="flex flex-col gap-2 pt-2">
             <Input label="Project Name" size="lg" value={appState.name} onChange={(e) => updateName(e.target.value)} />
             <Input label="Description" size="lg" placeholder="Optional…" value={appState.description} onChange={(e) => updateDesc(e.target.value)} />
           </div>
-          <div className="flex flex-col gap-1 pt-2">
-            <HelperText className="mb-1">Theme Modes.</HelperText>
+          <div className="flex flex-col gap-1 pt-2 mt-2">
+            <SectionLabel className="mb-1 text-[14px] text-white">Theme Modes</SectionLabel>
             <HelperText className="mb-1">Each theme defines a background color used for contrast calculation.</HelperText>
             {themes.length > 0 && (
               <>
@@ -192,19 +173,20 @@ export function ProjectScreen() {
       </SettingsCard>
 
       {/* Quick actions */}
-      <SettingsCard>
-        <SectionLabel className="uppercase">Quick Actions</SectionLabel>
+      {/* <SettingsCard>
+        <SectionLabel className="text-white">Quick Actions</SectionLabel>
         <div className="flex gap-1.5">
           <Button variant="secondary" size="md" label="Export .wand" onClick={exportJson} className="w-full justify-start" />
           <Button variant="secondary" size="md" label="Import .wand" onClick={() => fileInputRef.current?.click()} className="w-full justify-start" />
         </div>
-      </SettingsCard>
+      </SettingsCard> */}
 
       {/* Versions */}
+      {/* this should not be collpasable but a plain list with the title always visible  */}
       <SettingsCard>
         <SectionCollapsible
           open={versionsOpen}
-          onToggle={() => setVersionsOpen((v) => !v)}
+          onToggle={toggleVersionsOpen}
           label="Versions"
           badge={
             <Badge variant="muted" size="xs">

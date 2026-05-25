@@ -24,7 +24,12 @@ export function TabBar<T extends string>({ tabs, active, onChange, className }: 
           id={tab.id}
           type="button"
           onClick={() => onChange(tab.value)}
-          className={clsx('settings-tab shrink-0', tab.value === active && 'active')}
+          className={clsx(
+            'shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap transition-all duration-150',
+            tab.value === active
+              ? 'bg-accent border-accent text-text-on-accent'
+              : 'border-border-base bg-transparent text-text-muted hover:bg-bg-hover hover:text-text-primary',
+          )}
         >
           {tab.label}
         </button>

@@ -17,9 +17,9 @@ function normalizeHex(hex: string): string {
 export type ColorInputSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZE: Record<ColorInputSize, { wrap: string; swatch: string; text: string }> = {
-  sm: { wrap: 'h-[28px] rounded-[6px]', swatch: 'w-7',  text: 'text-[11px]' },
-  md: { wrap: 'h-[32px] rounded-[7px]', swatch: 'w-8',  text: 'text-[12px]' },
-  lg: { wrap: 'h-[36px] rounded-[8px]', swatch: 'w-9',  text: 'text-[12px]' },
+  sm: { wrap: 'h-[28px] rounded-[5px]', swatch: 'w-7',  text: 'text-[11px]' },
+  md: { wrap: 'h-[32px] rounded-[6px]', swatch: 'w-8',  text: 'text-[12px]' },
+  lg: { wrap: 'h-[36px] rounded-[7px]', swatch: 'w-9',  text: 'text-[12px]' },
   xl: { wrap: 'h-[40px] rounded-[8px]', swatch: 'w-10', text: 'text-[13px]' },
 };
 
@@ -53,7 +53,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
 
   return (
     <div className={clsx(
-      'flex items-center w-full bg-bg-input border border-border-base overflow-hidden',
+      'flex items-center w-full bg-bg-input border border-border-input overflow-hidden',
       s.wrap,
       className,
     )}>

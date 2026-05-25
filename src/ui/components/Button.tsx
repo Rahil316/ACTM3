@@ -257,3 +257,39 @@ export function ActionButton({
     />
   );
 }
+
+// ── SplitActionButton ─────────────────────────────────────────────────────────
+// Left side: direct add (random preset). Right side: open picker sheet.
+
+export function SplitActionButton({
+  label,
+  onAdd,
+  onPick,
+  className,
+}: {
+  label: string;
+  onAdd: () => void;
+  onPick: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={clsx('flex w-full rounded-[10px] border border-dashed border-accent overflow-hidden', className)}>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="flex-1 h-10 text-[12px] font-semibold text-accent bg-transparent hover:bg-accent-subtle transition-colors cursor-pointer"
+      >
+        {label}
+      </button>
+      <div className="w-px bg-accent opacity-30 shrink-0" />
+      <button
+        type="button"
+        onClick={onPick}
+        title="Browse suggestions"
+        className="w-9 h-10 flex items-center justify-center text-accent bg-transparent hover:bg-accent-subtle transition-colors cursor-pointer shrink-0 text-[16px] leading-none"
+      >
+        ⊞
+      </button>
+    </div>
+  );
+}

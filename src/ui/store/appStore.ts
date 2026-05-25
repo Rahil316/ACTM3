@@ -24,6 +24,88 @@ export const UI_DIMS = {
   maxHeight: 1400,
 };
 
+// ── Preset pools (mirrors vanilla crud.js) ───────────────────────────────────
+
+const PRESET_COLORS = [
+  { name: "Crimson",    shorthand: "cr", value: "#DC143C" },
+  { name: "Coral",      shorthand: "co", value: "#FF6B6B" },
+  { name: "Tomato",     shorthand: "to", value: "#FF4500" },
+  { name: "Orange",     shorthand: "or", value: "#FF7F00" },
+  { name: "Amber",      shorthand: "am", value: "#F59E0B" },
+  { name: "Gold",       shorthand: "gd", value: "#FFD700" },
+  { name: "Lime",       shorthand: "li", value: "#84CC16" },
+  { name: "Emerald",    shorthand: "em", value: "#10B981" },
+  { name: "Teal",       shorthand: "te", value: "#14B8A6" },
+  { name: "Cyan",       shorthand: "cy", value: "#06B6D4" },
+  { name: "Sky",        shorthand: "sk", value: "#0EA5E9" },
+  { name: "Blue",       shorthand: "bl", value: "#3B82F6" },
+  { name: "Cobalt",     shorthand: "cb", value: "#0047AB" },
+  { name: "Indigo",     shorthand: "in", value: "#6366F1" },
+  { name: "Violet",     shorthand: "vi", value: "#7C3AED" },
+  { name: "Purple",     shorthand: "pu", value: "#A855F7" },
+  { name: "Fuchsia",    shorthand: "fu", value: "#D946EF" },
+  { name: "Pink",       shorthand: "pk", value: "#EC4899" },
+  { name: "Rose",       shorthand: "ro", value: "#F43F5E" },
+  { name: "Brown",      shorthand: "br", value: "#92400E" },
+  { name: "Sienna",     shorthand: "si", value: "#A0522D" },
+  { name: "Sand",       shorthand: "sa", value: "#C2B280" },
+  { name: "Slate",      shorthand: "sl", value: "#64748B" },
+  { name: "Stone",      shorthand: "st", value: "#78716C" },
+  { name: "Zinc",       shorthand: "zn", value: "#71717A" },
+  { name: "Gray",       shorthand: "gr", value: "#6B7280" },
+  { name: "Neutral",    shorthand: "nt", value: "#737373" },
+  { name: "Charcoal",   shorthand: "ch", value: "#374151" },
+  { name: "Navy",       shorthand: "nv", value: "#1E3A5F" },
+  { name: "Forest",     shorthand: "fo", value: "#166534" },
+  { name: "Olive",      shorthand: "ol", value: "#6B7C2C" },
+  { name: "Mint",       shorthand: "mn", value: "#A7F3D0" },
+  { name: "Lavender",   shorthand: "lv", value: "#C4B5FD" },
+  { name: "Peach",      shorthand: "pe", value: "#FBBF9C" },
+  { name: "Midnight",   shorthand: "md", value: "#121212" },
+  { name: "Magenta",    shorthand: "mg", value: "#FF00FF" },
+  { name: "Turquoise",  shorthand: "tu", value: "#40E0D0" },
+  { name: "Maroon",     shorthand: "mr", value: "#800000" },
+  { name: "Burgundy",   shorthand: "bu", value: "#800020" },
+  { name: "Scarlet",    shorthand: "sc", value: "#FF2400" },
+  { name: "Tangerine",  shorthand: "tg", value: "#F28500" },
+];
+
+const PRESET_ROLES = [
+  { name: "Text",        shorthand: "tx" },
+  { name: "Fill",        shorthand: "fi" },
+  { name: "Background",  shorthand: "bg" },
+  { name: "Border",      shorthand: "bd" },
+  { name: "Icon",        shorthand: "ic" },
+  { name: "Surface",     shorthand: "su" },
+  { name: "Overlay",     shorthand: "ov" },
+  { name: "Accent",      shorthand: "ac" },
+  { name: "Muted",       shorthand: "mu" },
+  { name: "Subtle",      shorthand: "sb" },
+  { name: "Emphasis",    shorthand: "em" },
+  { name: "Link",        shorthand: "lk" },
+  { name: "Placeholder", shorthand: "ph" },
+  { name: "Disabled",    shorthand: "ds" },
+  { name: "Success",     shorthand: "ok" },
+  { name: "Warning",     shorthand: "wn" },
+  { name: "Error",       shorthand: "er" },
+  { name: "Info",        shorthand: "nf" },
+  { name: "Inverse",     shorthand: "iv" },
+];
+
+function pickPreset<T extends { name: string; shorthand: string }>(
+  pool: T[],
+  existing: { name: string; shorthand?: string }[],
+  fallback: (n: number) => T,
+): T {
+  const usedNames = new Set(existing.map((x) => x.name.toLowerCase()));
+  const usedShorthands = new Set(existing.map((x) => (x.shorthand ?? '').toLowerCase()));
+  const available = pool.filter(
+    (p) => !usedNames.has(p.name.toLowerCase()) && !usedShorthands.has(p.shorthand.toLowerCase()),
+  );
+  if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
+  return fallback(existing.length + 1);
+}
+
 // ── Identity helpers ─────────────────────────────────────────────────────────
 
 export function generateId(): string {
@@ -282,12 +364,14 @@ interface AppStoreState {
   // Colors — set / add / remove / move
   setColor: (idx: number, key: keyof Color | string, value: string) => void;
   addColor: () => void;
+  addColorWith: (name: string, value: string, shorthand?: string) => void;
   removeColor: (idx: number) => void;
   moveColor: (from: number, to: number) => void;
 
   // Roles — set / add / remove / move
   setRole: (idx: number, key: keyof Role | string, value: string | MappingMethod) => void;
   addRole: () => void;
+  addRoleWith: (name: string, shorthand: string, minContrast: number, variationTargets: number[]) => void;
   removeRole: (idx: number) => void;
   moveRole: (from: number, to: number) => void;
   setRoleVariation: (roleIdx: number, varIdx: number, field: string, value: string) => void;
@@ -392,7 +476,15 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
   addColor: () => {
     set((s) => {
-      const color: Color = { _id: generateId(), name: "New Color", shorthand: "", value: "#888888", description: "" };
+      const preset = pickPreset(PRESET_COLORS, s.appState.colors, (n) => ({ name: `Color ${n}`, shorthand: `c${n}`, value: '#888888' }));
+      const color: Color = { _id: generateId(), name: preset.name, shorthand: preset.shorthand, value: preset.value, description: '' };
+      return { appState: { ...s.appState, colors: [...s.appState.colors, color] } };
+    });
+  },
+
+  addColorWith: (name, value, shorthand = '') => {
+    set((s) => {
+      const color: Color = { _id: generateId(), name, shorthand, value: value.startsWith('#') ? value : `#${value}`, description: '' };
       return { appState: { ...s.appState, colors: [...s.appState.colors, color] } };
     });
   },
@@ -467,13 +559,30 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
   addRole: () => {
     set((s) => {
       const varCount = (s.appState.variations ?? []).length || 5;
+      const preset = pickPreset(PRESET_ROLES, s.appState.roles, (n) => ({ name: `Role ${n}`, shorthand: `r${n}` }));
       const role: Role = {
         _id: generateId(),
-        name: "New Role",
-        shorthand: "",
+        name: preset.name,
+        shorthand: preset.shorthand,
         minContrast: 4.5,
         mappingMethod: "contrast",
         variationTargets: Array.from({ length: varCount }, (_, i) => DEFAULT_VARIATION_TARGETS[i] ?? 4.5),
+        customVariationList: false,
+        customVariations: [],
+      };
+      return { appState: { ...s.appState, roles: [...s.appState.roles, role] } };
+    });
+  },
+
+  addRoleWith: (name, shorthand, minContrast, variationTargets) => {
+    set((s) => {
+      const role: Role = {
+        _id: generateId(),
+        name,
+        shorthand,
+        minContrast,
+        mappingMethod: 'contrast',
+        variationTargets,
         customVariationList: false,
         customVariations: [],
       };

@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Button, type ButtonVariant } from './Button';
 import { Sheet } from './Sheet';
 import { ConfirmOverlay } from './Modal';
+import { SheetTitle, DetailText } from './typography';
 
 export interface DialogueButton {
   label: string;
@@ -53,8 +54,8 @@ export function Dialogue({ open, title, body, icon, buttons = [], layout = 'row'
           {/* header */}
           <div className="px-5 pt-3 pb-4 border-b border-border-base">
             {icon && <div className="mb-3">{icon}</div>}
-            <h2 className="text-[17px] font-bold text-text-primary">{title}</h2>
-            {body && <p className="text-[12px] text-text-muted leading-relaxed mt-1">{body}</p>}
+            <SheetTitle>{title}</SheetTitle>
+            {body && <DetailText className="mt-1">{body}</DetailText>}
           </div>
           {/* buttons */}
           <div className="p-4 space-y-2">
@@ -73,8 +74,8 @@ export function Dialogue({ open, title, body, icon, buttons = [], layout = 'row'
         <div className="flex flex-col items-center gap-5 p-6 text-center">
           {icon}
           <div className="space-y-2 w-full">
-            <h2 className="text-[17px] font-bold text-text-primary">{title}</h2>
-            {body && <p className="text-[12px] text-text-muted leading-relaxed">{body}</p>}
+            <SheetTitle>{title}</SheetTitle>
+            {body && <DetailText>{body}</DetailText>}
           </div>
           <div className={clsx('w-full space-y-3')}>
             {buttons.map((btn) => mkBtn(btn, true, 'xl'))}
@@ -82,8 +83,8 @@ export function Dialogue({ open, title, body, icon, buttons = [], layout = 'row'
         </div>
       ) : (
         <div className="space-y-4 p-5">
-          <p className="text-[15px] font-semibold text-text-primary text-left">{title}</p>
-          {body && <p className="text-[12px] text-text-muted leading-relaxed text-left">{body}</p>}
+          <SheetTitle className="text-left">{title}</SheetTitle>
+          {body && <DetailText className="text-left">{body}</DetailText>}
           <div className="flex gap-2 w-full">
             {buttons.map((btn) => mkBtn(btn, false, 'lg'))}
           </div>

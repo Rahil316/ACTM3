@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { ConfirmOverlay } from './Modal';
 import { Button } from './Button';
 import { IconAlertTriangle } from './icons';
+import { ModalTitle, BodyText } from './typography';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -37,8 +38,8 @@ export function ConfirmDialog({
         {icon ?? <IconAlertTriangle />}
       </div>
       <div className="space-y-2">
-        <p className="text-[16px] font-bold text-text-primary">{title}</p>
-        {body && <p className="text-[13px] text-text-muted leading-relaxed max-w-[260px]">{body}</p>}
+        <ModalTitle>{title}</ModalTitle>
+        {body && <BodyText className="max-w-[260px]">{body}</BodyText>}
       </div>
       <div className={clsx('flex gap-3 w-full max-w-[280px]')}>
         <Button variant="secondary" size="xl" label={cancelLabel} onClick={onCancel} className="flex-1" />

@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import clsx from 'clsx';
+import { CardTitle, HelperText } from './typography';
 
 interface EmptyStateProps {
   icon: ReactNode;
@@ -18,10 +19,8 @@ export function EmptyState({ icon, title, description, action, className }: Empt
         {icon}
       </div>
       <div className="space-y-1">
-        <p className="text-[13px] font-semibold text-text-primary">{title}</p>
-        {description && (
-          <p className="text-[11px] text-text-muted leading-relaxed max-w-[220px]">{description}</p>
-        )}
+        <CardTitle>{title}</CardTitle>
+        {description && <HelperText className="max-w-[220px]">{description}</HelperText>}
       </div>
       {action}
     </div>

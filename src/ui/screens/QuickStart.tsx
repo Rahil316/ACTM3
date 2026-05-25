@@ -3,6 +3,7 @@ import { useAppStore, makeBootstrapState, ensureIds, ensureVariations, generateI
 import { useUiStore } from "../store/uiStore";
 import { toast } from "../store/toastStore";
 import { Button } from "../components/Button";
+import { PageTitle, BodyText, ItemTitle, Caption } from "../components/typography";
 import { Badge } from "../components/Badge";
 import { CentredOverlay } from "../components/ResultOverlay";
 import { PRESETS, type Preset } from "../lib/presets/presets";
@@ -77,16 +78,16 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
     <CentredOverlay open zIndex={80}>
       <input ref={importRef} type="file" accept=".json,.wand" className="hidden" onChange={handleImportFile} />
       <div className="text-[32px] leading-none">✦</div>
-      <h2 className="text-[20px] font-bold text-text-primary">Welcome to Token Wand</h2>
-      <p className="text-[13px] text-text-muted max-w-[300px] text-center">Pick a design system to start from, or begin with a blank canvas.</p>
+      <PageTitle>Welcome to Token Wand</PageTitle>
+      <BodyText className="max-w-[300px] text-center">Pick a design system to start from, or begin with a blank canvas.</BodyText>
       <div className="grid grid-cols-2 gap-2 w-full max-w-[360px]">
         {quickPresets.map((preset) => (
           <button key={preset.id} onClick={() => loadPreset(preset)} className="text-left bg-bg-card border border-border-base rounded-[10px] p-3 hover:bg-bg-hover hover:border-accent transition-colors">
             <div className="flex items-center gap-1.5 mb-1">
               {preset.badge && <Badge variant="accent" size="xs" pill>{preset.badge}</Badge>}
-              <p className="text-[12px] font-semibold text-text-primary truncate">{preset.name}</p>
+              <ItemTitle className="truncate">{preset.name}</ItemTitle>
             </div>
-            {preset.description && <p className="text-[10px] text-text-muted line-clamp-2 leading-snug">{preset.description}</p>}
+            {preset.description && <Caption className="line-clamp-2">{preset.description}</Caption>}
           </button>
         ))}
       </div>

@@ -10,7 +10,8 @@ import { Badge } from '../components/Badge';
 import { LoadingOverlay, SuccessOverlay, ErrorOverlay, ValidationWarningOverlay } from '../components/ResultOverlay';
 import { sendToPlugin, type SyncScope, type SyncTally, type ExistingCollection, type RenameData, type CollectionCheckResultMessage } from '../types/messages';
 import { banner } from '../store/bannerStore';
-import { SectionLabel, HelperText } from '../components/typography';
+import { toast } from '../store/toastStore';
+import { SectionLabel, HelperText, StatValue, Mono, MicroText, CardTitle } from '../components/typography';
 
 type RunPhase = 'config' | 'validation-warning' | 'loading' | 'success' | 'error';
 
@@ -112,12 +113,7 @@ export function RunDialog() {
           <ModalHeader
             title="Apply to Figma"
             subtitle="Generate or update color variables in your Figma file."
-            actions={
-              <>
-                <Button variant="secondary" size="md" label="Cancel" onClick={handleCancel} />
-                <Button variant="primary"   size="md" label="Run" onClick={handleConfirmRun} />
-              </>
-            }
+            actions={<Button variant="ghost" size="sm" label="Cancel" onClick={handleCancel} />}
           />
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
 
@@ -138,7 +134,7 @@ export function RunDialog() {
             {/* Pending renames summary */}
             {hasRenames && (
               <SettingsCard>
-                <SectionLabel className="uppercase">Pending Renames</SectionLabel>
+                <SectionLabel>Pending Renames</SectionLabel>
                 <HelperText className="mb-2">
                   {renames!.summary.scaleCount > 0 && `${renames!.summary.scaleCount} scale variable${renames!.summary.scaleCount > 1 ? 's' : ''}`}
                   {renames!.summary.scaleCount > 0 && renames!.summary.tokenCount > 0 && ', '}
@@ -147,16 +143,14 @@ export function RunDialog() {
                 </HelperText>
                 {renameChanges.slice(0, 5).map((change, i) => (
                   <div key={i} className="flex items-center gap-1.5 py-0.5">
-                    <span className="text-[11px] text-text-muted capitalize">{change.type}:</span>
-                    <span className="text-[11px] font-mono text-text-primary">{change.from}</span>
-                    <span className="text-[10px] text-text-muted">→</span>
-                    <span className="text-[11px] font-mono text-accent">{change.to}</span>
+                    <MicroText className="capitalize">{change.type}:</MicroText>
+                    <Mono>{change.from}</Mono>
+                    <MicroText>→</MicroText>
+                    <Mono className="text-accent">{change.to}</Mono>
                   </div>
                 ))}
                 {renameChanges.length > 5 && (
-                  <HelperText className="text-[10px] mt-1">
-                    +{renameChanges.length - 5} more
-                  </HelperText>
+                  <MicroText className="mt-1">+{renameChanges.length - 5} more</MicroText>
                 )}
               </SettingsCard>
             )}
@@ -164,10 +158,10 @@ export function RunDialog() {
             {/* Existing collections summary */}
             {existingCollections.length > 0 && (
               <SettingsCard>
-                 <SectionLabel className="uppercase">Existing Collections</SectionLabel>
+                 <SectionLabel>Existing Collections</SectionLabel>
                 {existingCollections.map((col) => (
                   <div key={col.id} className="flex items-center justify-between py-1 border-b border-border-subtle last:border-0">
-                    <span className="text-[12px] text-text-primary">{col.name}</span>
+                    <CardTitle>{col.name}</CardTitle>
                     <Badge variant="muted" size="xs">Update</Badge>
                   </div>
                 ))}
@@ -176,30 +170,46 @@ export function RunDialog() {
 
             {/* Config summary */}
             <SettingsCard>
-              <SectionLabel className="uppercase">Summary</SectionLabel>
+              <SectionLabel>Summary</SectionLabel>
               <SmallRow
                 label="Colors"
-                control={<span className="text-[12px] text-text-primary font-semibold">{appState.colors.length}</span>}
+                control={<StatValue>{appState.colors.length}</StatValue>}
               />
               <SmallRow
                 label="Roles"
-                control={<span className="text-[12px] text-text-primary font-semibold">{appState.roles.length}</span>}
+                control={<StatValue>{appState.roles.length}</StatValue>}
               />
               <SmallRow
                 label="Themes"
-                control={<span className="text-[12px] text-text-primary font-semibold">{appState.themes.length}</span>}
+                control={<StatValue>{appState.themes.length}</StatValue>}
               />
               <SmallRow
                 label="Variations"
-                control={<span className="text-[12px] text-text-primary font-semibold">{(appState.variations ?? []).length}</span>}
+                control={<StatValue>{(appState.variations ?? []).length}</StatValue>}
               />
               <SmallRow
                 label="Mode"
-                control={
-                  <span className="text-[12px] text-text-primary font-semibold capitalize">{appState.pluginMode}</span>
-                }
+                control={<StatValue className="capitalize">{appState.pluginMode}</StatValue>}
               />
             </SettingsCard>
+          </div>
+
+          {/* Footer */}
+          <div className="shrink-0 px-3 py-3 border-t border-border-base flex gap-2">
+            <Button
+              variant="secondary"
+              size="xl"
+              label="Preview in Canvas"
+              onClick={() => toast.success('Command received — preview coming soon.')}
+              className="flex-1"
+            />
+            <Button
+              variant="primary"
+              size="xl"
+              label="Create / Update Variables"
+              onClick={handleConfirmRun}
+              className="flex-1"
+            />
           </div>
         </>
       )}

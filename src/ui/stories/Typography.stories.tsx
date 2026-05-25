@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { SectionLabel, Caption, FieldLabel, HelperText } from '../components/typography';
+import {
+  SectionLabel, FieldLabel,
+  ModalTitle, SheetTitle,
+  CardTitle, Subtitle,
+  Caption, HelperText, MicroText,
+  StatValue, Mono,
+} from '../components/typography';
 import { Button } from '../components/Button';
 import * as Icons from '../components/icons';
 
@@ -9,57 +15,89 @@ const meta: Meta = {
 };
 export default meta;
 
-export const TypographyElements: StoryObj = {
+// ── Type scale showcase ───────────────────────────────────────────────────────
+
+export const TypeScale: StoryObj = {
   render: () => (
-    <div className="flex flex-col gap-4 p-4 max-w-sm bg-bg-app border border-border-base rounded-lg text-text-primary">
-      <div>
-        <SectionLabel>SECTION_LABEL</SectionLabel>
-        <p className="text-[12px] text-text-muted">Used as an uppercase section divider label in settings panels.</p>
-      </div>
+    <div className="flex flex-col gap-5 p-4 max-w-sm bg-bg-app border border-border-base rounded-lg">
 
-      <hr className="border-border-base" />
+      <Row label="ModalTitle" usage="Full-screen result overlays (success, error)">
+        <ModalTitle>Success!</ModalTitle>
+      </Row>
 
-      <div>
-        <FieldLabel>FIELD_LABEL</FieldLabel>
-        <p className="text-[12px] text-text-muted mt-1">Small uppercase tracking label used for card section dividers.</p>
-      </div>
+      <Row label="SheetTitle" usage="Validation warnings, modal sub-headings">
+        <SheetTitle>3 issues found</SheetTitle>
+      </Row>
 
-      <hr className="border-border-base" />
+      <Row label="CardTitle" usage="Card headers, list item primary text, collapsible labels">
+        <CardTitle>Neutral / Background</CardTitle>
+      </Row>
 
-      <div>
-        <p className="text-[13px] font-medium mb-1">Standard Body Text</p>
-        <Caption className="mb-2">This is caption/hint text (11px, dim, leading-snug) for additional context.</Caption>
-        <HelperText>This is helper/description text (11px, muted, leading-snug) for paragraphs and validation messages.</HelperText>
-      </div>
+      <Row label="Subtitle" usage="Secondary label beneath a card title, role names">
+        <Subtitle>Subtle · Muted · Strong</Subtitle>
+      </Row>
+
+      <Row label="SectionLabel" usage="Uppercase divider inside settings panels">
+        <SectionLabel>Token Naming</SectionLabel>
+      </Row>
+
+      <Row label="FieldLabel" usage="Form group headers, heavier variant of SectionLabel">
+        <FieldLabel>Scale Algorithm</FieldLabel>
+      </Row>
+
+      <Row label="HelperText" usage="Settings descriptions, empty state body, form hints">
+        <HelperText>Pre-built design system configurations. Loading a preset replaces your current setup.</HelperText>
+      </Row>
+
+      <Row label="Caption" usage="Dim 11px — input hints, tooltip sub-lines">
+        <Caption>We'll never share your email with anyone else.</Caption>
+      </Row>
+
+      <Row label="MicroText" usage="Timestamps, word counts, secondary metadata">
+        <MicroText>2 days ago · 3 min read</MicroText>
+      </Row>
+
+      <Row label="StatValue" usage="Bold numeric values in summary rows">
+        <StatValue>42</StatValue>
+      </Row>
+
+      <Row label="Mono" usage="Hex values, token paths, CSS variable names">
+        <Mono>--color-primary-500</Mono>
+      </Row>
+
     </div>
   ),
 };
 
-export const HeaderIconButtons: StoryObj = {
+// ── Icon button showcase ──────────────────────────────────────────────────────
+
+export const IconButtons: StoryObj = {
   render: () => (
-    <div className="flex gap-2 p-4 max-w-sm bg-bg-app border border-border-base rounded-lg items-center">
+    <div className="flex gap-2 p-4 bg-bg-app border border-border-base rounded-lg items-center">
       <Button variant="ghost" size="sm" square icon={<Icons.IconSettings />} aria-label="Settings" title="Settings" onClick={() => alert('Settings')} />
-      <Button variant="ghost" size="sm" square icon={<Icons.IconRun />}      aria-label="Run"      title="Run Sync"  onClick={() => alert('Run')} />
+      <Button variant="ghost" size="sm" square icon={<Icons.IconRun />}      aria-label="Run"      title="Run"      onClick={() => alert('Run')} />
       <Button variant="ghost" size="sm" square icon={<Icons.IconCode />}     aria-label="Export"   title="Export"   onClick={() => alert('Export')} />
+      <Button variant="ghost" size="sm" square icon={<Icons.IconImport />}   aria-label="Import"   title="Import"   onClick={() => alert('Import')} />
+      <Button variant="ghost" size="sm" square icon={<Icons.IconReset />}    aria-label="Reset"    title="Reset"    onClick={() => alert('Reset')} />
     </div>
   ),
 };
+
+// ── Icons gallery ─────────────────────────────────────────────────────────────
 
 export const IconsGallery: StoryObj = {
   render: () => {
-    // Filter and show all exports from components/icons.tsx
     const allIcons = Object.entries(Icons).filter(([name]) => name.startsWith('Icon'));
-
     return (
       <div className="p-4 max-w-md bg-bg-app border border-border-base rounded-lg text-text-primary">
-        <h4 className="text-text-muted text-[11px] uppercase tracking-wider font-bold mb-4">Icons Registry ({allIcons.length})</h4>
-        <div className="grid grid-cols-4 gap-4">
+        <SectionLabel>Icons Registry ({allIcons.length})</SectionLabel>
+        <div className="grid grid-cols-4 gap-3 mt-3">
           {allIcons.map(([name, Comp]) => {
             const IconComp = Comp as React.ComponentType<{ className?: string }>;
             return (
               <div key={name} className="flex flex-col items-center justify-center p-2 rounded border border-border-base bg-bg-card hover:bg-bg-hover text-center" title={name}>
                 <IconComp className="w-5 h-5 mb-1.5 text-text-muted" />
-                <span className="text-[9px] text-text-dim select-all truncate w-full">{name.replace('Icon', '')}</span>
+                <MicroText className="select-all truncate w-full text-center">{name.replace('Icon', '')}</MicroText>
               </div>
             );
           })}
@@ -68,3 +106,17 @@ export const IconsGallery: StoryObj = {
     );
   },
 };
+
+// ── Helper ────────────────────────────────────────────────────────────────────
+
+function Row({ label, usage, children }: { label: string; usage: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1 border-b border-border-subtle pb-4 last:border-0 last:pb-0">
+      <div className="flex items-baseline gap-2 mb-0.5">
+        <span className="text-[10px] font-mono text-accent">{label}</span>
+        <span className="text-[10px] text-text-dim">{usage}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
