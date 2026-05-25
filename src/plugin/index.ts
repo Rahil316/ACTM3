@@ -7,37 +7,8 @@
 import { translateConfig, buildVariableRenameMap } from './config';
 import { VariableManager, savePluginConfig } from './figmaVars';
 import { variableMaker } from '../shared/clrEngine.js';
-import './docGen.js';
-import './exportEng/helpers.js';
-import './exportEng/fmtCSS.js';
-import './exportEng/fmtSCSS.js';
-import './exportEng/fmtTailwind.js';
-import './exportEng/fmtDTCG.js';
-import './exportEng/fmtStyleDictionary.js';
-import './exportEng/fmtSwift.js';
-import './exportEng/fmtAndroid.js';
-import './exportEng/fmtReactNative.js';
-import './exportEng/bundler.js';
-
-// These global functions/objects are declared in the JS files imported above (exportEng).
-// Declare them here so TypeScript knows they exist at runtime.
-declare function buildExportBundle(
-  result: unknown,
-  config: unknown,
-  formats: string[],
-  appState: unknown,
-): Array<{ path: string; content: string }>;
-declare const ExportFormatter: {
-  toCSV(result: unknown, config: unknown): string;
-  toCSS(result: unknown, config: unknown): string;
-};
-declare function generateScss(result: unknown, config: unknown): string;
-declare const fmtTailwind: { config(result: unknown, config: unknown): string };
-declare const fmtDTCG: { scale(r: unknown, c: unknown): string };
-declare const fmtStyleDictionary: { global(r: unknown, c: unknown): string };
-declare const fmtSwift: { file(r: unknown, c: unknown, theme: string): string };
-declare const fmtAndroid: { file(r: unknown, c: unknown, theme: string): string };
-declare const fmtReactNative: { index(r: unknown, c: unknown): string };
+import { ExportFormatter } from './docGen';
+import { buildExportBundle } from './exportEng/bundler';
 
 // ── 1. UI INITIALIZATION ─────────────────────────────────────────────────────
 
@@ -149,44 +120,22 @@ figma.ui.onmessage = async (msg: any) => {
       case 'request-processed-data': {
         const config = translateConfig(msg.state);
         const result = variableMaker(config) as any;
-        let content = '';
         const et: string = msg.exportType;
 
-        if (et === 'json') {
-          content = JSON.stringify(
-            { config, scales: result.scales, tokens: result.tokens, errors: result.errors },
-            null,
-            2,
+        // Build files[] via bundler, then fill in docGen formats
+        const files = buildExportBundle(result, config, [et], msg.state);
+
+        // Fill content for docGen-owned formats (bundler leaves content empty)
+        if (et === 'csv') {
+          files[0].content = ExportFormatter.toCSV(result, config);
+        } else if (et === 'json') {
+          files[0].content = JSON.stringify(
+            { scales: result.scales, tokens: result.tokens, errors: result.errors },
+            null, 2,
           );
-        } else if (et === 'csv') {
-          content = ExportFormatter.toCSV(result, config);
-        } else if (et === 'css') {
-          content = ExportFormatter.toCSS(result, config);
-        } else if (et === 'scss') {
-          content = generateScss(result, config);
-        } else if (et === 'tailwind') {
-          content = fmtTailwind.config(result, config);
-        } else if (et === 'dtcg') {
-          content = fmtDTCG.scale(result, config);
-        } else if (et === 'style-dictionary') {
-          content = fmtStyleDictionary.global(result, config);
-        } else if (et === 'ios-swift') {
-          const themeKeys = Object.keys(result.tokens || {});
-          content = themeKeys.map((t) => fmtSwift.file(result, config, t)).join('\n\n');
-        } else if (et === 'android') {
-          const themeKeys = Object.keys(result.tokens || {});
-          content = themeKeys.map((t) => fmtAndroid.file(result, config, t)).join('\n\n');
-        } else if (et === 'rn-ts') {
-          content = fmtReactNative.index(result, config);
-        } else if (et === 'wand') {
-          content = JSON.stringify(msg.state || {}, null, 2);
         }
 
-        figma.ui.postMessage({
-          type: 'processed-data-response',
-          content,
-          exportType: msg.exportType,
-        });
+        figma.ui.postMessage({ type: 'export-bundle-response', files });
         break;
       }
 

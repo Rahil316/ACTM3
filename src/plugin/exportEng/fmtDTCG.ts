@@ -1,14 +1,9 @@
-/**
- * exportEng/fmtDTCG.js
- * W3C Design Token Community Group (DTCG) format.
- * scale.json — raw scale values
- * [theme].json — semantic tokens with alias references
- */
+import type { EngineResult, ExportConfig } from './types';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, _splitTokenRef } from './helpers';
 
-var fmtDTCG = {
-
-  scale: function(result, config) {
-    var out = {};
+export const fmtDTCG = {
+  scale(result: EngineResult, config: ExportConfig): string {
+    var out: Record<string, Record<string, Record<string, string>>> = {};
     var scaleNames = Object.keys(result.scales || {});
     for (var ci = 0; ci < scaleNames.length; ci++) {
       var colorName = scaleNames[ci];
@@ -20,7 +15,7 @@ var fmtDTCG = {
         var step = steps[si];
         var entry = scale[step];
         var stepKey = _slug(_stepLabel(step, config));
-        var node = { "$value": entry.value, "$type": "color" };
+        var node: Record<string, string> = { "$value": entry.value, "$type": "color" };
         if (config.includeDescriptions !== false && entry.description) {
           node["$description"] = entry.description;
         }
@@ -30,11 +25,10 @@ var fmtDTCG = {
     return JSON.stringify(out, null, 2);
   },
 
-  theme: function(result, config, themeName) {
+  theme(result: EngineResult, config: ExportConfig, themeName: string): string {
     var themeTokens = result.tokens && result.tokens[themeName];
     if (!themeTokens) return "{}";
-
-    var out = {};
+    var out: Record<string, Record<string, Record<string, Record<string, string>>>> = {};
     var colorNames = Object.keys(themeTokens);
     for (var ci = 0; ci < colorNames.length; ci++) {
       var colorName = colorNames[ci];
@@ -53,14 +47,14 @@ var fmtDTCG = {
           var token = variations[String(vi)];
           if (!token) continue;
           var vLabel = _slug(_varLabel(varDefs[vi], config));
-          var dtcgValue;
+          var dtcgValue: string;
           if (token.tokenRef) {
             var parts = _splitTokenRef(token.tokenRef);
             dtcgValue = "{" + _slug(parts.color) + "." + _slug(parts.step) + "}";
           } else {
             dtcgValue = token.value;
           }
-          var node = { "$value": dtcgValue, "$type": "color" };
+          var node: Record<string, string> = { "$value": dtcgValue, "$type": "color" };
           if (token.isAdjusted) node["$description"] = "⚠ Adjusted for contrast";
           out[cLabel][rLabel][vLabel] = node;
         }

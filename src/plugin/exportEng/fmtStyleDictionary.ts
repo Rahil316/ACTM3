@@ -1,14 +1,9 @@
-/**
- * exportEng/fmtStyleDictionary.js
- * Style Dictionary v3 input format.
- * global.json — scale tokens
- * [theme].json — semantic tokens with SD brace-alias references
- */
+import type { EngineResult, ExportConfig } from './types';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, _splitTokenRef } from './helpers';
 
-var fmtStyleDictionary = {
-
-  global: function(result, config) {
-    var out = { color: {} };
+export const fmtStyleDictionary = {
+  global(result: EngineResult, config: ExportConfig): string {
+    var out: Record<string, Record<string, Record<string, Record<string, unknown>>>> = { color: {} };
     var scaleNames = Object.keys(result.scales || {});
     for (var ci = 0; ci < scaleNames.length; ci++) {
       var colorName = scaleNames[ci];
@@ -30,11 +25,10 @@ var fmtStyleDictionary = {
     return JSON.stringify(out, null, 2);
   },
 
-  theme: function(result, config, themeName) {
+  theme(result: EngineResult, config: ExportConfig, themeName: string): string {
     var themeTokens = result.tokens && result.tokens[themeName];
     if (!themeTokens) return "{}";
-
-    var out = { color: {} };
+    var out: Record<string, Record<string, Record<string, Record<string, unknown>>>> = { color: {} };
     var colorNames = Object.keys(themeTokens);
     for (var ci = 0; ci < colorNames.length; ci++) {
       var colorName = colorNames[ci];
@@ -53,7 +47,7 @@ var fmtStyleDictionary = {
           var token = variations[String(vi)];
           if (!token) continue;
           var vLabel = _slug(_varLabel(varDefs[vi], config));
-          var sdValue;
+          var sdValue: string;
           if (token.tokenRef) {
             var parts = _splitTokenRef(token.tokenRef);
             sdValue = "{color." + _slug(parts.color) + "." + _slug(parts.step) + "}";

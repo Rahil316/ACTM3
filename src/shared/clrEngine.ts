@@ -10,9 +10,9 @@ import {
   shortestHueDiff,
   srgbDelinearize,
   srgbLinearize,
-} from "./clrUtils.js";
+} from "./clrUtils";
 
-import type { ContrastRating } from "./clrUtils.js";
+import type { ContrastRating } from "./clrUtils";
 
 // ── Public types ──────────────────────────────────────────────────────────────
 

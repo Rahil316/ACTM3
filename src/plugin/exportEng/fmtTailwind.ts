@@ -1,19 +1,15 @@
-/**
- * exportEng/fmtTailwind.js
- * Tailwind CSS v3/v4 config — theme.extend.colors with CSS var references.
- */
+import type { EngineResult, ExportConfig } from './types';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug } from './helpers';
 
-var fmtTailwind = {
-
-  config: function(result, config) {
-    var lines = [];
-    lines.push("/" + "** @type {import" + "('tailwindcss').Config} *" + "/");
+export const fmtTailwind = {
+  config(result: EngineResult, config: ExportConfig): string {
+    var lines: string[] = [];
+    const imp = "import";
+    lines.push("/** @type {" + imp + "('tailwindcss').Config} */");
     lines.push("module.exports = {");
     lines.push("  theme: {");
     lines.push("    extend: {");
     lines.push("      colors: {");
-
-    // Scale palette — nested by color name
     var scaleNames = Object.keys(result.scales || {});
     for (var ci = 0; ci < scaleNames.length; ci++) {
       var colorName = scaleNames[ci];
@@ -29,9 +25,6 @@ var fmtTailwind = {
       }
       lines.push("        },");
     }
-
-    // Semantic tokens — flat, keyed by full token name
-    // Collect unique token names across all themes (use first theme for structure)
     var themeKeys = Object.keys(result.tokens || {});
     if (themeKeys.length > 0) {
       var firstTheme = themeKeys[0];
@@ -63,7 +56,6 @@ var fmtTailwind = {
         }
       }
     }
-
     lines.push("      },");
     lines.push("    },");
     lines.push("  },");

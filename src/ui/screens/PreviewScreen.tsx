@@ -81,19 +81,27 @@ function inkColor(mode: 'light' | 'dark', opacity = 1): string {
 
 function normalizeHex(raw: string): string {
   const h = raw.replace(/^#/, '');
-  return '#' + (h.length === 3
-    ? h.split('').map((c) => c + c).join('')
-    : h
-  ).toUpperCase().padEnd(6, '0');
+  return (
+    '#' +
+    (h.length === 3
+      ? h
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : h
+    )
+      .toUpperCase()
+      .padEnd(6, '0')
+  );
 }
 
 // ── WCAG rating badge ─────────────────────────────────────────────────────────
 
 const RATING_VARIANT: Record<string, BadgeVariant> = {
-  AAA:        'success',
-  AA:         'accent',
+  AAA: 'success',
+  AA: 'accent',
   'AA Large': 'warning',
-  Fail:       'danger',
+  Fail: 'danger',
 };
 
 function RatingBadge({ rating }: { rating: string }) {
@@ -148,7 +156,9 @@ function TokenTile({ hex, ratio, rating, varLabel, tokenName, ink }: TokenTilePr
           >
             {ratioStr}
           </span>
-          <span className="text-[10px] font-bold opacity-70 mb-px" style={{ color: swatchTextColor }}>:1</span>
+          <span className="text-[10px] font-bold opacity-70 mb-px" style={{ color: swatchTextColor }}>
+            :1
+          </span>
         </div>
 
         {/* Hex overlay on hover */}
@@ -156,7 +166,10 @@ function TokenTile({ hex, ratio, rating, varLabel, tokenName, ink }: TokenTilePr
           className="absolute inset-0 flex items-center justify-center rounded-t-[10px] pointer-events-none transition-opacity"
           style={{ background: 'rgba(0,0,0,0.18)', opacity: swatchHovered ? 1 : 0 }}
         >
-          <span className="text-[12px] font-bold font-mono tracking-widest" style={{ color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+          <span
+            className="text-[12px] font-bold font-mono tracking-widest"
+            style={{ color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
+          >
             {safeHex.toUpperCase()}
           </span>
         </div>
@@ -165,15 +178,15 @@ function TokenTile({ hex, ratio, rating, varLabel, tokenName, ink }: TokenTilePr
       {/* Footer zone — click copies token name */}
       <div
         className={`px-2 pb-2 pt-1.5 flex flex-col gap-0.5 rounded-b-[10px] border-t-0 transition-colors ${tokenName ? 'cursor-pointer' : ''}`}
-        style={{ border: `1px solid ${inkColor(ink, 0.10)}`, background: inkColor(ink, 0.04) }}
+        style={{ border: `1px solid ${inkColor(ink, 0.1)}`, background: inkColor(ink, 0.04) }}
         onClick={tokenName ? () => copyText(tokenName, 'token name') : undefined}
         title={tokenName ? `${tokenName} — click to copy` : undefined}
       >
-        <span className="text-[11px] font-semibold leading-snug truncate" style={{ color: inkColor(ink, 0.80) }}>
+        <span className="text-[11px] font-semibold leading-snug truncate" style={{ color: inkColor(ink, 0.8) }}>
           {varLabel}
         </span>
         {tokenName && (
-          <span className="text-[9px] leading-snug truncate tracking-[0.03em]" style={{ color: inkColor(ink, 0.40) }}>
+          <span className="text-[9px] leading-snug truncate tracking-[0.03em]" style={{ color: inkColor(ink, 0.4) }}>
             {tokenName}
           </span>
         )}
@@ -187,7 +200,7 @@ function TokenTile({ hex, ratio, rating, varLabel, tokenName, ink }: TokenTilePr
 interface ColorSectionProps {
   colorName: string;
   srcHex: string;
-  roles: Record<number, Record<number, import('../../shared/clrEngine.js').TokenEntry>>;
+  roles: Record<number, Record<number, import('../../shared/clrEngine').TokenEntry>>;
   appState: AppState;
   ink: 'light' | 'dark';
 }
@@ -198,14 +211,16 @@ function ColorSection({ colorName, srcHex, roles, appState, ink }: ColorSectionP
   return (
     <div
       className="rounded-[14px] p-4"
-      style={{ border: `1px solid ${inkColor(ink, 0.10)}`, background: inkColor(ink, 0.03) }}
+      style={{ border: `1px solid ${inkColor(ink, 0.1)}`, background: inkColor(ink, 0.03) }}
     >
       <div className="flex items-center gap-2 mb-3">
         <div
           className="w-3 h-3 rounded-[3px] shrink-0"
           style={{ background: srcHex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }}
         />
-        <span className="text-[13px] font-bold" style={{ color: inkColor(ink) }}>{colorName}</span>
+        <span className="text-[13px] font-bold" style={{ color: inkColor(ink) }}>
+          {colorName}
+        </span>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -213,20 +228,19 @@ function ColorSection({ colorName, srcHex, roles, appState, ink }: ColorSectionP
           const roleIdx = parseInt(roleIdxStr);
           const role = appState.roles[roleIdx];
           if (!role) return null;
-          const roleVars = role.customVariationList && role.customVariations?.length
-            ? role.customVariations
-            : variations;
+          const roleVars =
+            role.customVariationList && role.customVariations?.length ? role.customVariations : variations;
 
           return (
             <div key={roleIdx} className="flex flex-col gap-2">
-              <span className="text-[12px] font-bold truncate" style={{ color: inkColor(ink, 0.90) }}>
+              <span className="text-[12px] font-bold truncate" style={{ color: inkColor(ink, 0.9) }}>
                 {role.name}
               </span>
               <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(88px,1fr))' }}>
                 {Object.entries(vars).map(([varIdxStr, token]) => {
                   const varIdx = parseInt(varIdxStr);
                   const v = roleVars[varIdx];
-                  const varLabel = v ? (v.shorthand || v.name) : String(varIdx);
+                  const varLabel = v ? v.shorthand || v.name : String(varIdx);
                   return (
                     <TokenTile
                       key={varIdxStr}
@@ -253,7 +267,7 @@ function ColorSection({ colorName, srcHex, roles, appState, ink }: ColorSectionP
 interface TableSectionProps {
   colorName: string;
   srcHex: string;
-  roles: Record<number, Record<number, import('../../shared/clrEngine.js').TokenEntry>>;
+  roles: Record<number, Record<number, import('../../shared/clrEngine').TokenEntry>>;
   appState: AppState;
   ink: 'light' | 'dark';
 }
@@ -264,12 +278,15 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
   const COL = 'minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)';
 
   return (
-    <div className="rounded-[10px] overflow-hidden" style={{ border: `1px solid ${inkColor(ink, 0.10)}` }}>
+    <div className="rounded-[10px] overflow-hidden" style={{ border: `1px solid ${inkColor(ink, 0.1)}` }}>
       {/* Section header — uses source color as bg */}
       <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: srcHex, gridTemplateColumns: COL }}>
         {(['Token', 'Hex', 'Ratio', 'WCAG', 'Token Name'] as const).map((h, i) => (
-          <div key={h} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate"
-            style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>
+          <div
+            key={h}
+            className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate"
+            style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}
+          >
             {h}
           </div>
         ))}
@@ -279,15 +296,18 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
         const roleIdx = parseInt(roleIdxStr);
         const role = appState.roles[roleIdx];
         if (!role) return null;
-        const roleVars = role.customVariationList && role.customVariations?.length
-          ? role.customVariations : variations;
+        const roleVars = role.customVariationList && role.customVariations?.length ? role.customVariations : variations;
 
         return (
           <div key={roleIdx}>
-            <div className="h-[26px] flex items-center px-4"
-              style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}>
-              <span className="text-[10px] font-bold tracking-[0.06em] uppercase truncate"
-                style={{ color: inkColor(ink, 0.50) }}>
+            <div
+              className="h-[26px] flex items-center px-4"
+              style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}
+            >
+              <span
+                className="text-[10px] font-bold tracking-[0.06em] uppercase truncate"
+                style={{ color: inkColor(ink, 0.5) }}
+              >
                 {role.name}
               </span>
             </div>
@@ -295,32 +315,40 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
             {Object.entries(vars).map(([varIdxStr, token]) => {
               const varIdx = parseInt(varIdxStr);
               const v = roleVars[varIdx];
-              const varLabel = v ? (v.shorthand || v.name) : String(varIdx);
+              const varLabel = v ? v.shorthand || v.name : String(varIdx);
               const ratio = typeof token.contrast?.ratio === 'number' ? token.contrast.ratio.toFixed(1) : '—';
 
               return (
-                <div key={varIdxStr}
+                <div
+                  key={varIdxStr}
                   className="grid items-center h-9 cursor-pointer hover:opacity-80 transition-opacity"
                   style={{ gridTemplateColumns: COL, borderTop: `1px solid ${inkColor(ink, 0.06)}` }}
                   onClick={() => copyText(token.value, 'hex')}
                   title={`${token.value.toUpperCase()} — click to copy hex`}
                 >
                   <div className="px-3 flex items-center gap-1.5 min-w-0">
-                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0"
-                      style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
+                    <div
+                      className="w-3.5 h-3.5 rounded-[3px] shrink-0"
+                      style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }}
+                    />
                     <span className="text-[11px] font-semibold truncate" style={{ color: inkColor(ink, 0.85) }}>
                       {varLabel}
                     </span>
                   </div>
                   <div className="px-2 min-w-0">
-                    <span className="text-[10px] font-mono font-semibold tracking-[0.04em]"
+                    <span
+                      className="text-[10px] font-mono font-semibold tracking-[0.04em]"
                       style={{ color: token.value }}
-                      onClick={(e) => { e.stopPropagation(); copyText(token.value, 'hex'); }}>
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyText(token.value, 'hex');
+                      }}
+                    >
                       {token.value.toUpperCase()}
                     </span>
                   </div>
                   <div className="px-2">
-                    <span className="text-[12px] font-bold tabular-nums" style={{ color: inkColor(ink, 0.80) }}>
+                    <span className="text-[12px] font-bold tabular-nums" style={{ color: inkColor(ink, 0.8) }}>
                       {ratio}
                     </span>
                   </div>
@@ -329,14 +357,21 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
                   </div>
                   <div className="px-2 min-w-0">
                     {token.tokenName ? (
-                      <span className="text-[10px] font-mono truncate block cursor-pointer hover:underline"
+                      <span
+                        className="text-[10px] font-mono truncate block cursor-pointer hover:underline"
                         style={{ color: inkColor(ink, 0.45) }}
-                        onClick={(e) => { e.stopPropagation(); copyText(token.tokenName, 'token name'); }}
-                        title={`${token.tokenName} — click to copy`}>
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyText(token.tokenName, 'token name');
+                        }}
+                        title={`${token.tokenName} — click to copy`}
+                      >
                         {token.tokenName}
                       </span>
                     ) : (
-                      <span className="text-[10px]" style={{ color: inkColor(ink, 0.20) }}>—</span>
+                      <span className="text-[10px]" style={{ color: inkColor(ink, 0.2) }}>
+                        —
+                      </span>
                     )}
                   </div>
                 </div>
@@ -354,7 +389,7 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
 
 interface RoleTableSectionProps {
   roleName: string;
-  colorMap: Record<string, Record<number, import('../../shared/clrEngine.js').TokenEntry>>;
+  colorMap: Record<string, Record<number, import('../../shared/clrEngine').TokenEntry>>;
   appState: AppState;
   ink: 'light' | 'dark';
 }
@@ -362,17 +397,22 @@ interface RoleTableSectionProps {
 function RoleTableSection({ roleName, colorMap, appState, ink }: RoleTableSectionProps) {
   const COL = 'minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)';
   const role = appState.roles.find((r) => r.name === roleName);
-  const roleVars = role?.customVariationList && role.customVariations?.length
-    ? role.customVariations : (appState.variations ?? []);
+  const roleVars =
+    role?.customVariationList && role.customVariations?.length ? role.customVariations : (appState.variations ?? []);
 
   return (
-    <div className="rounded-[10px] overflow-hidden" style={{ border: `1px solid ${inkColor(ink, 0.10)}` }}>
+    <div className="rounded-[10px] overflow-hidden" style={{ border: `1px solid ${inkColor(ink, 0.1)}` }}>
       {/* Role header row */}
-      <div className="grid items-center h-8 sticky top-0 z-10"
-        style={{ background: inkColor(ink, 0.12), gridTemplateColumns: COL }}>
+      <div
+        className="grid items-center h-8 sticky top-0 z-10"
+        style={{ background: inkColor(ink, 0.12), gridTemplateColumns: COL }}
+      >
         {(['Role / Color', 'Hex', 'Ratio', 'WCAG', 'Token Name'] as const).map((h, i) => (
-          <div key={h} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate"
-            style={{ color: inkColor(ink, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>
+          <div
+            key={h}
+            className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate"
+            style={{ color: inkColor(ink, 0.75), paddingLeft: i === 0 ? 12 : undefined }}
+          >
             {i === 0 ? roleName : h}
           </div>
         ))}
@@ -384,11 +424,15 @@ function RoleTableSection({ roleName, colorMap, appState, ink }: RoleTableSectio
         return (
           <div key={colorName}>
             {/* Color sub-header */}
-            <div className="h-[26px] flex items-center gap-2 px-4"
-              style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}>
+            <div
+              className="h-[26px] flex items-center gap-2 px-4"
+              style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}
+            >
               <div className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ background: cHex }} />
-              <span className="text-[10px] font-bold tracking-[0.06em] uppercase truncate"
-                style={{ color: inkColor(ink, 0.50) }}>
+              <span
+                className="text-[10px] font-bold tracking-[0.06em] uppercase truncate"
+                style={{ color: inkColor(ink, 0.5) }}
+              >
                 {colorName}
               </span>
             </div>
@@ -396,43 +440,62 @@ function RoleTableSection({ roleName, colorMap, appState, ink }: RoleTableSectio
             {Object.entries(vars).map(([varIdxStr, token]) => {
               const varIdx = parseInt(varIdxStr);
               const v = roleVars[varIdx];
-              const varLabel = v ? (v.shorthand || v.name) : String(varIdx);
-              const contrastRatioStr = typeof token.contrast?.ratio === 'number' ? token.contrast.ratio.toFixed(1) : '—';
+              const varLabel = v ? v.shorthand || v.name : String(varIdx);
+              const contrastRatioStr =
+                typeof token.contrast?.ratio === 'number' ? token.contrast.ratio.toFixed(1) : '—';
 
               return (
-                <div key={varIdxStr}
+                <div
+                  key={varIdxStr}
                   className="grid items-center h-9 cursor-pointer hover:opacity-80 transition-opacity"
                   style={{ gridTemplateColumns: COL, borderTop: `1px solid ${inkColor(ink, 0.06)}` }}
                   onClick={() => copyText(token.value, 'hex')}
                 >
                   <div className="px-3 flex items-center gap-1.5 min-w-0">
-                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0"
-                      style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
+                    <div
+                      className="w-3.5 h-3.5 rounded-[3px] shrink-0"
+                      style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }}
+                    />
                     <span className="text-[11px] font-semibold truncate" style={{ color: inkColor(ink, 0.85) }}>
                       {varLabel}
                     </span>
                   </div>
                   <div className="px-2 min-w-0">
-                    <span className="text-[10px] font-mono font-semibold tracking-[0.04em]" style={{ color: token.value }}
-                      onClick={(e) => { e.stopPropagation(); copyText(token.value, 'hex'); }}>
+                    <span
+                      className="text-[10px] font-mono font-semibold tracking-[0.04em]"
+                      style={{ color: token.value }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyText(token.value, 'hex');
+                      }}
+                    >
                       {token.value.toUpperCase()}
                     </span>
                   </div>
                   <div className="px-2">
-                    <span className="text-[12px] font-bold tabular-nums" style={{ color: inkColor(ink, 0.80) }}>
+                    <span className="text-[12px] font-bold tabular-nums" style={{ color: inkColor(ink, 0.8) }}>
                       {contrastRatioStr}
                     </span>
                   </div>
-                  <div className="px-2"><RatingBadge rating={token.contrast?.rating ?? 'Fail'} /></div>
+                  <div className="px-2">
+                    <RatingBadge rating={token.contrast?.rating ?? 'Fail'} />
+                  </div>
                   <div className="px-2 min-w-0">
                     {token.tokenName ? (
-                      <span className="text-[10px] font-mono truncate block cursor-pointer hover:underline"
+                      <span
+                        className="text-[10px] font-mono truncate block cursor-pointer hover:underline"
                         style={{ color: inkColor(ink, 0.45) }}
-                        onClick={(e) => { e.stopPropagation(); copyText(token.tokenName, 'token name'); }}>
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyText(token.tokenName, 'token name');
+                        }}
+                      >
                         {token.tokenName}
                       </span>
                     ) : (
-                      <span className="text-[10px]" style={{ color: inkColor(ink, 0.20) }}>—</span>
+                      <span className="text-[10px]" style={{ color: inkColor(ink, 0.2) }}>
+                        —
+                      </span>
                     )}
                   </div>
                 </div>
@@ -471,12 +534,18 @@ function ScaleTableView({ result, appState }: ScaleTableViewProps) {
         return (
           <div key={color._id} className="rounded-[10px] overflow-hidden border border-border-base">
             {/* Color header */}
-            <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: srcHex, gridTemplateColumns: COL }}>
+            <div
+              className="grid items-center h-8 sticky top-0 z-10"
+              style={{ background: srcHex, gridTemplateColumns: COL }}
+            >
               {(['Step', 'Hex', 'Ratio', 'WCAG', ''].concat(themes.map((t) => t.name)) as string[])
                 .slice(0, 4 + themes.length)
                 .map((h, i) => (
-                  <div key={i} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate"
-                    style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>
+                  <div
+                    key={i}
+                    className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate"
+                    style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}
+                  >
                     {i === 0 ? color.name : h}
                   </div>
                 ))}
@@ -488,33 +557,44 @@ function ScaleTableView({ result, appState }: ScaleTableViewProps) {
               const ratioStr = typeof contrast?.ratio === 'number' ? contrast.ratio.toFixed(1) : '—';
 
               return (
-                <div key={stepName}
+                <div
+                  key={stepName}
                   className="grid items-center h-9 border-t border-border-subtle cursor-pointer hover:bg-bg-hover transition-colors"
                   style={{ gridTemplateColumns: COL }}
                   onClick={() => copyText(stepData.value, `${color.name}/${stepName}`)}
                 >
                   <div className="px-3 flex items-center gap-1.5">
-                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0 border border-border-subtle"
-                      style={{ background: stepData.value }} />
+                    <div
+                      className="w-3.5 h-3.5 rounded-[3px] shrink-0 border border-border-subtle"
+                      style={{ background: stepData.value }}
+                    />
                     <span className="text-[11px] font-semibold text-text-primary">{stepName}</span>
                   </div>
                   <div className="px-2">
-                    <span className="text-[10px] font-mono font-semibold" style={{ color: stepData.value }}
-                      onClick={(e) => { e.stopPropagation(); copyText(stepData.value, 'hex'); }}>
+                    <span
+                      className="text-[10px] font-mono font-semibold"
+                      style={{ color: stepData.value }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyText(stepData.value, 'hex');
+                      }}
+                    >
                       {stepData.value.toUpperCase()}
                     </span>
                   </div>
                   <div className="px-2">
                     <span className="text-[12px] font-bold tabular-nums text-text-primary">{ratioStr}</span>
                   </div>
-                  <div className="px-2">
-                    {contrast?.rating && <RatingBadge rating={contrast.rating} />}
-                  </div>
+                  <div className="px-2">{contrast?.rating && <RatingBadge rating={contrast.rating} />}</div>
                   <div className="px-2 text-[10px] text-text-dim font-mono truncate">
-                    {themes.slice(1).map((t) => {
-                      const c = stepData.contrast?.[t.name.toLowerCase()];
-                      return c ? `${t.name}: ${c.ratio?.toFixed(1)}` : '';
-                    }).filter(Boolean).join(' · ')}
+                    {themes
+                      .slice(1)
+                      .map((t) => {
+                        const c = stepData.contrast?.[t.name.toLowerCase()];
+                        return c ? `${t.name}: ${c.ratio?.toFixed(1)}` : '';
+                      })
+                      .filter(Boolean)
+                      .join(' · ')}
                   </div>
                 </div>
               );
@@ -549,7 +629,7 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
   const themeTokens = result.tokens[themeKey] ?? {};
 
   // Re-group by role if needed: role → { colorName → { varIdx → token } }
-  type VarMap = Record<number, import('../../shared/clrEngine.js').TokenEntry>;
+  type VarMap = Record<number, import('../../shared/clrEngine').TokenEntry>;
   type ByRole = Record<number, Record<string, VarMap>>;
 
   function buildByRole(): ByRole {
@@ -570,7 +650,9 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
   if (colorEntries.length === 0) {
     return (
       <div className="p-6 text-center">
-        <p className="text-[12px] opacity-60" style={{ color: inkColor(ink) }}>No tokens for this theme.</p>
+        <p className="text-[12px] opacity-60" style={{ color: inkColor(ink) }}>
+          No tokens for this theme.
+        </p>
       </div>
     );
   }
@@ -583,27 +665,25 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
         ? colorEntries.map(([colorName, roles]) => {
             const colorEntry = appState.colors.find((c) => c.name === colorName);
             const srcHex = normalizeHex(colorEntry?.value ?? '888888');
-            return viewMode === 'grid'
-              ? (
-                <ColorSection
-                  key={colorName}
-                  colorName={colorName}
-                  srcHex={srcHex}
-                  roles={roles}
-                  appState={appState}
-                  ink={ink}
-                />
-              )
-              : (
-                <TableSection
-                  key={colorName}
-                  colorName={colorName}
-                  srcHex={srcHex}
-                  roles={roles}
-                  appState={appState}
-                  ink={ink}
-                />
-              );
+            return viewMode === 'grid' ? (
+              <ColorSection
+                key={colorName}
+                colorName={colorName}
+                srcHex={srcHex}
+                roles={roles}
+                appState={appState}
+                ink={ink}
+              />
+            ) : (
+              <TableSection
+                key={colorName}
+                colorName={colorName}
+                srcHex={srcHex}
+                roles={roles}
+                appState={appState}
+                ink={ink}
+              />
+            );
           })
         : Object.entries(byRole!).map(([roleIdxStr, colorMap]) => {
             const roleIdx = parseInt(roleIdxStr);
@@ -626,30 +706,41 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
               <div
                 key={roleIdxStr}
                 className="rounded-[14px] p-4"
-                style={{ border: `1px solid ${inkColor(ink, 0.10)}`, background: inkColor(ink, 0.03) }}
+                style={{ border: `1px solid ${inkColor(ink, 0.1)}`, background: inkColor(ink, 0.03) }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[13px] font-bold" style={{ color: inkColor(ink) }}>{role.name}</span>
+                  <span className="text-[13px] font-bold" style={{ color: inkColor(ink) }}>
+                    {role.name}
+                  </span>
                 </div>
                 <div className="flex flex-col gap-4">
                   {Object.entries(colorMap).map(([colorName, vars]) => {
                     const colorEntry = appState.colors.find((c) => c.name === colorName);
                     const cHex = normalizeHex(colorEntry?.value ?? '888888');
-                    const roleVarsArr = role.customVariationList && role.customVariations?.length
-                      ? role.customVariations : (appState.variations ?? []);
+                    const roleVarsArr =
+                      role.customVariationList && role.customVariations?.length
+                        ? role.customVariations
+                        : (appState.variations ?? []);
 
                     return (
                       <div key={colorName}>
                         <div className="flex items-center gap-1.5 mb-2">
-                          <div className="w-2.5 h-2.5 rounded-[2px] shrink-0"
-                            style={{ background: cHex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
-                          <span className="text-[11px] font-bold" style={{ color: inkColor(ink, 0.70) }}>{colorName}</span>
+                          <div
+                            className="w-2.5 h-2.5 rounded-[2px] shrink-0"
+                            style={{ background: cHex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }}
+                          />
+                          <span className="text-[11px] font-bold" style={{ color: inkColor(ink, 0.7) }}>
+                            {colorName}
+                          </span>
                         </div>
-                        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(88px,1fr))' }}>
+                        <div
+                          className="grid gap-2"
+                          style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(88px,1fr))' }}
+                        >
                           {Object.entries(vars).map(([varIdxStr, token]) => {
                             const varIdx = parseInt(varIdxStr);
                             const v = roleVarsArr[varIdx];
-                            const varLabel = v ? (v.shorthand || v.name) : String(varIdx);
+                            const varLabel = v ? v.shorthand || v.name : String(varIdx);
                             return (
                               <TokenTile
                                 key={varIdxStr}
@@ -669,22 +760,33 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
                 </div>
               </div>
             );
-          })
-      }
+          })}
 
       {/* Source colors */}
-      <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: inkColor(ink, 0.10) }}>
-        <span className="text-[10px] font-bold tracking-[0.08em] uppercase" style={{ color: inkColor(ink, 0.45) }}>Source</span>
+      <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: inkColor(ink, 0.1) }}>
+        <span className="text-[10px] font-bold tracking-[0.08em] uppercase" style={{ color: inkColor(ink, 0.45) }}>
+          Source
+        </span>
         <div className="flex gap-2 flex-wrap">
           {appState.colors.map((color) => {
             const hex = normalizeHex(color.value);
             return (
-              <div key={color._id} className="flex items-center gap-1.5 cursor-pointer" onClick={() => copyText(hex, color.name)}
-                title={`${hex} — click to copy`}>
-                <div className="w-5 h-5 rounded-[4px] shrink-0"
-                  style={{ background: hex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.15)}` }} />
-                <span className="text-[10px] font-mono" style={{ color: inkColor(ink, 0.60) }}>{color.name}</span>
-                <span className="text-[10px] font-mono" style={{ color: inkColor(ink, 0.35) }}>{hex}</span>
+              <div
+                key={color._id}
+                className="flex items-center gap-1.5 cursor-pointer"
+                onClick={() => copyText(hex, color.name)}
+                title={`${hex} — click to copy`}
+              >
+                <div
+                  className="w-5 h-5 rounded-[4px] shrink-0"
+                  style={{ background: hex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.15)}` }}
+                />
+                <span className="text-[10px] font-mono" style={{ color: inkColor(ink, 0.6) }}>
+                  {color.name}
+                </span>
+                <span className="text-[10px] font-mono" style={{ color: inkColor(ink, 0.35) }}>
+                  {hex}
+                </span>
               </div>
             );
           })}
@@ -694,7 +796,9 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
       {/* Alpha tints */}
       {showAlphas && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold tracking-[0.08em] uppercase" style={{ color: inkColor(ink, 0.45) }}>Alpha</span>
+          <span className="text-[10px] font-bold tracking-[0.08em] uppercase" style={{ color: inkColor(ink, 0.45) }}>
+            Alpha
+          </span>
           {appState.colors.map((color) => (
             <AlphaTintRow key={color._id} color={color} alphaValues={appState.alphaValues ?? ''} />
           ))}
@@ -721,7 +825,9 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
   if (Object.keys(result.scales).length === 0) {
     return (
       <div className="p-4 text-center">
-        <p className="text-[12px] text-text-muted">No scale in Direct mode — colors are solved directly per variation target.</p>
+        <p className="text-[12px] text-text-muted">
+          No scale in Direct mode — colors are solved directly per variation target.
+        </p>
       </div>
     );
   }
@@ -734,7 +840,9 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
       <div className="flex flex-col gap-4 p-3 pb-6">
         {stepNames.map((stepName) => (
           <div key={stepName} className="flex flex-col gap-2">
-            <div className="px-1"><CardTitle>{stepName}</CardTitle></div>
+            <div className="px-1">
+              <CardTitle>{stepName}</CardTitle>
+            </div>
 
             {viewMode === 'table' ? (
               // Table: one row per color at this step
@@ -746,33 +854,42 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
                   const contrast = themeKeys.length > 0 ? stepData.contrast?.[themeKeys[0]] : null;
                   const ratioStr = typeof contrast?.ratio === 'number' ? contrast.ratio.toFixed(1) : '—';
                   return (
-                    <div key={color._id}
+                    <div
+                      key={color._id}
                       className="grid items-center h-9 border-t border-border-subtle first:border-0 cursor-pointer hover:bg-bg-hover transition-colors"
                       style={{ gridTemplateColumns: '1fr 64px 56px 48px' }}
                       onClick={() => copyText(stepData.value, `${color.name}/${stepName}`)}
                     >
                       <div className="px-3 flex items-center gap-2 min-w-0">
-                        <div className="w-3.5 h-3.5 rounded-[3px] shrink-0" style={{ background: stepData.value, boxShadow: '0 0 0 1px rgba(0,0,0,0.10)' }} />
-                        <div className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ background: srcHex, boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }} />
+                        <div
+                          className="w-3.5 h-3.5 rounded-[3px] shrink-0"
+                          style={{ background: stepData.value, boxShadow: '0 0 0 1px rgba(0,0,0,0.10)' }}
+                        />
+                        <div
+                          className="w-2.5 h-2.5 rounded-[2px] shrink-0"
+                          style={{ background: srcHex, boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }}
+                        />
                         <span className="text-[11px] font-semibold text-text-primary truncate">{color.name}</span>
                       </div>
                       <div className="px-2">
-                        <span className="text-[10px] font-mono font-semibold" style={{ color: stepData.value }}>{stepData.value.toUpperCase()}</span>
+                        <span className="text-[10px] font-mono font-semibold" style={{ color: stepData.value }}>
+                          {stepData.value.toUpperCase()}
+                        </span>
                       </div>
                       <div className="px-2">
                         <span className="text-[12px] font-bold tabular-nums text-text-primary">{ratioStr}</span>
                       </div>
-                      <div className="px-2">
-                        {contrast?.rating && <RatingBadge rating={contrast.rating} />}
-                      </div>
+                      <div className="px-2">{contrast?.rating && <RatingBadge rating={contrast.rating} />}</div>
                     </div>
                   );
                 })}
               </div>
             ) : (
               // Strip: all colors at this step as a horizontal spectrum
-              <div className="flex w-full h-20 rounded-[10px] overflow-hidden cursor-crosshair"
-                style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.12)', border: '1px solid rgba(136,136,136,0.10)' }}>
+              <div
+                className="flex w-full h-24 rounded-[10px] overflow-hidden cursor-crosshair"
+                style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.12)', border: '1px solid rgba(136,136,136,0.10)' }}
+              >
                 {colors.map((color) => {
                   const stepData = result.scales[color.name]?.[stepName];
                   if (!stepData) return null;
@@ -815,7 +932,7 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
             </div>
 
             <div
-              className="flex w-full h-20 rounded-[10px] overflow-hidden cursor-crosshair"
+              className="flex w-full h-24 rounded-[10px] overflow-hidden cursor-crosshair"
               style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.12)', border: '1px solid rgba(136,136,136,0.10)' }}
             >
               {steps.map(([stepName, stepData]) => (
@@ -843,7 +960,7 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
 
 interface ScaleStepSliceProps {
   stepName: string;
-  stepData: import('../../shared/clrEngine.js').ScaleStep;
+  stepData: import('../../shared/clrEngine').ScaleStep;
   themeKeys: string[];
   colorName: string;
 }
@@ -863,7 +980,7 @@ function ScaleStepSlice({ stepName, stepData, themeKeys, colorName }: ScaleStepS
       className="relative h-full transition-all duration-150 cursor-pointer"
       style={{
         background: stepData.value,
-        flex: hovered ? 4 : 1,
+        flex: hovered ? 5.5 : 1,
         borderRadius: hovered ? 8 : 0,
         zIndex: hovered ? 10 : undefined,
       }}
@@ -874,12 +991,29 @@ function ScaleStepSlice({ stepName, stepData, themeKeys, colorName }: ScaleStepS
     >
       {hovered && (
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 pointer-events-none"
-          style={{ color: inkColor(getInkMode(stepData.value.startsWith('#') ? stepData.value : '#' + stepData.value)) }}
+          className="absolute px-2.5 inset-0 flex flex-col items-center justify-center gap-1.5 pointer-events-none"
+          style={{
+            color: inkColor(getInkMode(stepData.value.startsWith('#') ? stepData.value : '#' + stepData.value)),
+          }}
         >
-          <span className="text-[12px] font-bold leading-none">{stepName}</span>
-          <span className="text-[14px] font-mono leading-none opacity-80">{stepData.value}</span>
-          {contrastStr && <span className="text-[9px] opacity-60 mt-0.5">{contrastStr}</span>}
+          <span className="text-[10px] font-bold tracking-wider uppercase opacity-75 leading-none">
+            {stepName}
+          </span>
+          <span
+            className="text-[12px] font-mono font-bold px-2 py-0.5 rounded shadow-sm leading-none"
+            style={{
+              background: getInkMode(stepData.value.startsWith('#') ? stepData.value : '#' + stepData.value) === 'light'
+                ? 'rgba(0,0,0,0.06)'
+                : 'rgba(255,255,255,0.18)',
+            }}
+          >
+            {stepData.value.toUpperCase()}
+          </span>
+          {contrastStr && (
+            <span className="text-[10px] font-bold leading-none opacity-80 whitespace-nowrap">
+              {contrastStr}
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -939,11 +1073,11 @@ function PreviewContent() {
   const appState = useAppStore((s) => s.appState);
   const deferred = useDeferredValue(appState);
 
-  const [result, setResult]       = useState<EngineResult | null>(null);
+  const [result, setResult] = useState<EngineResult | null>(null);
   const [computing, setComputing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('scale');
-  const [groupBy, setGroupBy]     = useState<GroupBy>('color');
-  const [viewMode, setViewMode]   = useState<ViewMode>('grid');
+  const [groupBy, setGroupBy] = useState<GroupBy>('color');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const compute = useCallback((state: AppState) => {
     setComputing(true);
@@ -953,23 +1087,29 @@ function PreviewContent() {
     if (r) reportAccessibilityWarnings(r);
   }, []);
 
-  useEffect(() => { compute(deferred); }, [deferred, compute]);
+  useEffect(() => {
+    compute(deferred);
+  }, [deferred, compute]);
 
   // Default to first theme tab in direct mode
   useEffect(() => {
     if (appState.pluginMode === 'direct' && activeTab === 'scale' && appState.themes.length > 0) {
       setActiveTab('theme-0');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState.pluginMode, appState.themes.length]);
 
   const isScaleMode = appState.pluginMode === 'scale';
-  const isEmpty     = !appState.colors.length || !appState.roles.length;
+  const isEmpty = !appState.colors.length || !appState.roles.length;
 
   if (isEmpty) {
     return (
       <div className="p-3">
-        <EmptyState icon="👁" title="Nothing to preview" description="Add at least one color and one role to see a preview." />
+        <EmptyState
+          icon="👁"
+          title="Nothing to preview"
+          description="Add at least one color and one role to see a preview."
+        />
       </div>
     );
   }
@@ -984,10 +1124,10 @@ function PreviewContent() {
   ];
 
   const activeThemeMatch = activeTab.match(/^theme-(\d+)$/);
-  const activeThemeIdx   = activeThemeMatch ? parseInt(activeThemeMatch[1]) : -1;
-  const activeTheme      = activeThemeIdx >= 0 ? appState.themes[activeThemeIdx] : null;
-  const panelBg          = activeTheme ? normalizeHex(activeTheme.bg || '#FFFFFF') : undefined;
-  const isScaleTab       = activeTab === 'scale';
+  const activeThemeIdx = activeThemeMatch ? parseInt(activeThemeMatch[1]) : -1;
+  const activeTheme = activeThemeIdx >= 0 ? appState.themes[activeThemeIdx] : null;
+  const panelBg = activeTheme ? normalizeHex(activeTheme.bg || '#FFFFFF') : undefined;
+  const isScaleTab = activeTab === 'scale';
 
   function cycleTab(dir: 1 | -1) {
     const idx = tabs.findIndex((t) => t.id === activeTab);
@@ -996,8 +1136,14 @@ function PreviewContent() {
   }
 
   function onTabBarKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'ArrowRight') { e.preventDefault(); cycleTab(1); }
-    if (e.key === 'ArrowLeft')  { e.preventDefault(); cycleTab(-1); }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      cycleTab(1);
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      cycleTab(-1);
+    }
   }
 
   return (
@@ -1005,11 +1151,7 @@ function PreviewContent() {
       {/* Tab bar + toolbar */}
       <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-2 border-b border-border-subtle flex-wrap gap-y-2">
         {/* Tabs — arrow-key navigable */}
-        <div
-          className="flex items-center gap-1 flex-wrap"
-          role="tablist"
-          onKeyDown={onTabBarKeyDown}
-        >
+        <div className="flex items-center gap-1 flex-wrap" role="tablist" onKeyDown={onTabBarKeyDown}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -1026,8 +1168,10 @@ function PreviewContent() {
                 }`}
               >
                 {tab.bg && (
-                  <span className="w-2.5 h-2.5 rounded-[2px] shrink-0 inline-block"
-                    style={{ background: tab.bg, boxShadow: '0 0 0 1px rgba(128,128,128,0.2)' }} />
+                  <span
+                    className="w-2.5 h-2.5 rounded-[2px] shrink-0 inline-block"
+                    style={{ background: tab.bg, boxShadow: '0 0 0 1px rgba(128,128,128,0.2)' }}
+                  />
                 )}
                 {tab.label}
               </button>
@@ -1039,17 +1183,31 @@ function PreviewContent() {
         <div className="flex items-center gap-2">
           {computing && <MicroText className="text-text-dim">Computing…</MicroText>}
           <SegmentedControl
-            segments={isScaleTab
-              ? [{ value: 'color', label: 'Color' }, { value: 'role', label: 'Step' }]
-              : [{ value: 'color', label: 'Color' }, { value: 'role', label: 'Role' }]
+            segments={
+              isScaleTab
+                ? [
+                    { value: 'color', label: 'Color' },
+                    { value: 'role', label: 'Step' },
+                  ]
+                : [
+                    { value: 'color', label: 'Color' },
+                    { value: 'role', label: 'Role' },
+                  ]
             }
             value={groupBy}
             onChange={(v) => setGroupBy(v as GroupBy)}
           />
           <SegmentedControl
-            segments={isScaleTab
-              ? [{ value: 'grid', label: 'Strip' }, { value: 'table', label: 'Table' }]
-              : [{ value: 'grid', label: 'Grid' }, { value: 'table', label: 'Table' }]
+            segments={
+              isScaleTab
+                ? [
+                    { value: 'grid', label: 'Strip' },
+                    { value: 'table', label: 'Table' },
+                  ]
+                : [
+                    { value: 'grid', label: 'Grid' },
+                    { value: 'table', label: 'Table' },
+                  ]
             }
             value={viewMode}
             onChange={(v) => setViewMode(v as ViewMode)}
@@ -1068,12 +1226,22 @@ function PreviewContent() {
             <ScaleSection result={result} appState={appState} groupByStep={groupBy === 'role'} viewMode={viewMode} />
           )}
           {activeThemeIdx >= 0 && (
-            <ThemePanel result={result} appState={appState} themeIdx={activeThemeIdx} groupBy={groupBy} viewMode={viewMode} />
+            <ThemePanel
+              result={result}
+              appState={appState}
+              themeIdx={activeThemeIdx}
+              groupBy={groupBy}
+              viewMode={viewMode}
+            />
           )}
         </div>
       ) : (
         <div className="flex-1 p-3">
-          <EmptyState icon="⚠" title="Engine error" description="Could not compute tokens. Check color values and settings." />
+          <EmptyState
+            icon="⚠"
+            title="Engine error"
+            description="Could not compute tokens. Check color values and settings."
+          />
         </div>
       )}
     </div>
@@ -1081,7 +1249,7 @@ function PreviewContent() {
 }
 
 export function PreviewScreen() {
-  const isOpen       = useUiStore((s) => s.activeOverlay === 'preview');
+  const isOpen = useUiStore((s) => s.activeOverlay === 'preview');
   const closeOverlay = useUiStore((s) => s.closeOverlay);
 
   if (!isOpen) return null;

@@ -118,7 +118,7 @@ const EXPORT_FORMATS: FormatDef[] = [
   },
 ];
 
-// ── Download helper ───────────────────────────────────────────────────────────
+// ── Download helpers ──────────────────────────────────────────────────────────
 
 function downloadBlob(content: string, filename: string) {
   const blob = new Blob([content], { type: "text/plain" });
@@ -128,6 +128,29 @@ function downloadBlob(content: string, filename: string) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+async function downloadFiles(files: Array<{ path: string; content: string }>, zipName: string) {
+  if (files.length === 1) {
+    // Single file — direct download using the path as filename
+    const f = files[0];
+    const filename = f.path.includes("/") ? f.path.split("/").pop()! : f.path;
+    downloadBlob(f.content, filename);
+  } else {
+    // Multiple files — zip them preserving directory structure
+    const JSZip = (await import("jszip")).default;
+    const zip = new JSZip();
+    for (const f of files) {
+      zip.file(f.path, f.content);
+    }
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = zipName + ".zip";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -147,37 +170,25 @@ export function ExportSheet() {
 
   // ── Bridge callbacks ──────────────────────────────────────────────────────
 
-  const handleProcessedData = useCallback(
-    (format: string, content: string) => {
-      setDownloading(null);
-      if (!content) {
-        toast.error("Export returned empty content.");
-        return;
-      }
-      const fmt = EXPORT_FORMATS.find((f) => f.format === format);
-      const projectName = (appState.name || "tokens")
-        .replace(/\s+/g, "-")
-        .toLowerCase();
-      downloadBlob(content, `${projectName}.${fmt?.ext ?? "txt"}`);
-      toast.success(`Downloaded ${fmt?.label ?? format}`);
-    },
-    [appState.name],
-  );
-
   const handleExportBundle = useCallback(
-    (files: Array<{ name: string; content: string }>) => {
+    (files: Array<{ path: string; content: string }>) => {
+      const wasBulk = building;
       setBuilding(false);
+      setDownloading(null);
       if (!files || files.length === 0) {
         toast.error("Export returned no files.");
         return;
       }
-      files.forEach((f) => downloadBlob(f.content, f.name));
-      toast.success(
-        `Exported ${files.length} file${files.length > 1 ? "s" : ""}`,
-      );
-      setQueue(new Set());
+      const projectSlug = (appState.name || "tokens").replace(/\s+/g, "-").toLowerCase();
+      downloadFiles(files, projectSlug + "-tokens").then(() => {
+        const label = wasBulk
+          ? `Exported ${files.length} file${files.length > 1 ? "s" : ""}`
+          : `Downloaded ${files.length > 1 ? files.length + " files" : files[0].path.split("/").pop()}`;
+        toast.success(label);
+        if (wasBulk) setQueue(new Set());
+      });
     },
-    [],
+    [appState.name, building],
   );
 
   const handleError = useCallback((message: string) => {
@@ -187,9 +198,8 @@ export function ExportSheet() {
   }, []);
 
   useFigmaBridge({
-    onProcessedData: handleProcessedData,
-    onExportBundle:  handleExportBundle,
-    onError:         handleError,
+    onExportBundle: handleExportBundle,
+    onError:        handleError,
   } satisfies BridgeCallbacks);
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -197,11 +207,7 @@ export function ExportSheet() {
   function handleSingleDownload(format: ExportFormat) {
     if (downloading) return;
     setDownloading(format);
-    sendToPlugin({
-      type:       "request-processed-data",
-      exportType: format,
-      state:      appState,
-    });
+    sendToPlugin({ type: "request-processed-data", exportType: format, state: appState });
   }
 
   function handleBulkExport() {

@@ -1,11 +1,8 @@
-/**
- * exportEng/fmtSCSS.js
- * SCSS — three files: scale.scss, tokens.scss, index.scss
- */
+import type { EngineResult, ExportConfig } from './types';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _splitTokenRef } from './helpers';
 
-var fmtSCSS = {
-
-  scale: function(result, config) {
+export const fmtSCSS = {
+  scale(result: EngineResult, config: ExportConfig): string {
     var lines = ["// " + (config.name || "tokens") + " — color scale variables", "// Do not edit manually.\n"];
     var scaleNames = Object.keys(result.scales || {});
     for (var ci = 0; ci < scaleNames.length; ci++) {
@@ -20,7 +17,6 @@ var fmtSCSS = {
         if (!entry || !entry.value) continue;
         lines.push("$" + _slug(cLabel) + "-" + _slug(_stepLabel(step, config)) + ": " + entry.value + ";");
       }
-      // scale map
       lines.push("$scale-" + _slug(cLabel) + ": (");
       for (var si2 = 0; si2 < steps.length; si2++) {
         var step2 = steps[si2];
@@ -33,7 +29,7 @@ var fmtSCSS = {
     return lines.join("\n");
   },
 
-  tokens: function(result, config) {
+  tokens(result: EngineResult, config: ExportConfig): string {
     var lines = ["// " + (config.name || "tokens") + " — semantic token maps", "@use 'sass:map';\n", "@forward 'scale';\n"];
     var themeKeys = Object.keys(result.tokens || {});
     for (var ti = 0; ti < themeKeys.length; ti++) {
@@ -60,14 +56,14 @@ var fmtSCSS = {
             var vLabel = _varLabel(varDefs[vi], config);
             var segs = _tokenSegments(cLabel, rLabel, vLabel, config);
             var key = segs.map(_slug).join("-");
-            var ref;
+            var ref: string;
             if (token.tokenRef) {
               var parts = _splitTokenRef(token.tokenRef);
               ref = "$" + _slug(parts.color) + "-" + _slug(parts.step);
             } else {
               ref = token.value;
             }
-            var note = token.isAdjusted ? " /" + "* ⚠ adjusted *" + "/" : "";
+            var note = token.isAdjusted ? " /* ⚠ adjusted */" : "";
             lines.push("  \"" + key + "\": " + ref + "," + note);
           }
         }
@@ -77,7 +73,7 @@ var fmtSCSS = {
     return lines.join("\n");
   },
 
-  index: function(result, config) {
+  index(result: EngineResult, config: ExportConfig): string {
     var themeKeys = Object.keys(result.tokens || {});
     var lines = [
       "// " + (config.name || "tokens") + " — theme output",
@@ -101,7 +97,7 @@ var fmtSCSS = {
         lines.push("[data-theme=\"" + theme + "\"] {\n  @include apply-theme(" + varName + ");\n}\n");
       }
     }
-    var darkKey = null;
+    var darkKey: string | null = null;
     for (var ti2 = 0; ti2 < themeKeys.length; ti2++) {
       if (themeKeys[ti2].toLowerCase() === "dark") { darkKey = themeKeys[ti2]; break; }
     }

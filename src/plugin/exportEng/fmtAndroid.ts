@@ -1,21 +1,19 @@
-/**
- * exportEng/fmtAndroid.js
- * Android XML — values/colors.xml per theme using standard resource qualifier pattern.
- * Light → res/values/colors.xml
- * Dark  → res/values-night/colors.xml
- * Additional themes → res/values-[theme]/colors.xml
- */
+import type { EngineResult, ExportConfig } from './types';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _snake, _hexComponents } from './helpers';
 
-var fmtAndroid = {
+function _toARGB(hex: string): string {
+  var rgb = _hexComponents(hex);
+  var toHex2 = function(n: number): string { var s = n.toString(16).toUpperCase(); return s.length === 1 ? "0" + s : s; };
+  return "#FF" + toHex2(rgb.r) + toHex2(rgb.g) + toHex2(rgb.b);
+}
 
-  file: function(result, config, themeName) {
+export const fmtAndroid = {
+  file(result: EngineResult, config: ExportConfig, themeName: string): string {
     var themeTokens = result.tokens && result.tokens[themeName];
-    var lines = [];
+    var lines: string[] = [];
     lines.push("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
     lines.push("<resources>");
     lines.push("");
-
-    // Scale colors
     var scaleNames = Object.keys(result.scales || {});
     if (scaleNames.length > 0) {
       lines.push("    <!-- Color Scales -->");
@@ -35,8 +33,6 @@ var fmtAndroid = {
       }
       lines.push("");
     }
-
-    // Semantic tokens
     if (themeTokens) {
       lines.push("    <!-- Semantic Tokens — " + themeName + " -->");
       var colorNames = Object.keys(themeTokens);
@@ -65,15 +61,7 @@ var fmtAndroid = {
       }
       lines.push("");
     }
-
     lines.push("</resources>");
     return lines.join("\n");
   },
 };
-
-// hex → #AARRGGBB (Android full format, opaque = FF prefix)
-function _toARGB(hex) {
-  var rgb = _hexComponents(hex);
-  var toHex2 = function(n) { var s = n.toString(16).toUpperCase(); return s.length === 1 ? "0" + s : s; };
-  return "#FF" + toHex2(rgb.r) + toHex2(rgb.g) + toHex2(rgb.b);
-}

@@ -57,6 +57,33 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
     localStorage.setItem('uiSize', JSON.stringify({ width: pm.width, height: pm.height }));
     return;
   }
+
+  if (pm.type === 'request-processed-data') {
+    import('../lib/colorEngine').then(({ variableMaker }) => {
+      const state = pm.state as Parameters<typeof variableMaker>[0];
+      const result = variableMaker(state);
+      window.postMessage({
+        pluginMessage: {
+          type: 'processed-data-response',
+          exportType: pm.exportType,
+          content: JSON.stringify({ scales: result.scales, tokens: result.tokens }, null, 2),
+        },
+      }, '*');
+    });
+    return;
+  }
+
+  if (pm.type === 'request-export-bundle') {
+    setTimeout(() => {
+      window.postMessage({
+        pluginMessage: {
+          type: 'export-bundle-response',
+          files: [],
+        },
+      }, '*');
+    }, 300);
+    return;
+  }
 }
 
 // Patch postMessage in standalone mode so outgoing messages are intercepted
@@ -209,7 +236,7 @@ export interface BridgeCallbacks {
   onFinish?: (tally: SyncTally, errors: string[] | null) => void;
   onMultiModeDisabled?: () => void;
   onProcessedData?: (format: string, content: string) => void;
-  onExportBundle?: (files: Array<{ name: string; content: string }>) => void;
+  onExportBundle?: (files: Array<{ path: string; content: string }>) => void;
   onError?: (message: string) => void;
   onWarning?: (message: string) => void;
 }

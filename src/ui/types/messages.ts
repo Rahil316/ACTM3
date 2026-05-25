@@ -159,7 +159,7 @@ export interface RenameData {
 }
 
 export interface ExportFile {
-  name: string;
+  path: string;
   content: string;
 }
 

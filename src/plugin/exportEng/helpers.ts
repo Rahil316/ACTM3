@@ -1,38 +1,46 @@
-/**
- * exportEng/helpers.js
- * Shared token-name resolution utilities used by all formatters.
- * Safe for both Figma sandbox (ES2019) and browser contexts.
- */
+import type { ExportConfig, EngineResult, RoleDef, VarDef, TokenEntry } from './types';
 
-function _colorLabel(colorName, config) {
+export type EachTokenCallback = (
+  theme: string,
+  colorName: string,
+  roleObj: RoleDef,
+  varDef: VarDef,
+  token: TokenEntry,
+  cLabel: string,
+  rLabel: string,
+  vLabel: string,
+  segs: string[],
+) => void;
+
+export function _colorLabel(colorName: string, config: ExportConfig): string {
   if (!config.useShorthandColors) return colorName;
-  for (var i = 0; i < config.colors.length; i++) {
-    if (config.colors[i].name === colorName && config.colors[i].shorthand)
-      return config.colors[i].shorthand;
+  for (var i = 0; i < (config.colors || []).length; i++) {
+    if (config.colors![i].name === colorName && config.colors![i].shorthand)
+      return config.colors![i].shorthand!;
   }
   return colorName;
 }
 
-function _roleLabel(roleObj, config) {
+export function _roleLabel(roleObj: RoleDef, config: ExportConfig): string {
   if (!config.useShorthandRoles) return roleObj.name;
   return (roleObj && roleObj.shorthand) ? roleObj.shorthand : roleObj.name;
 }
 
-function _varLabel(varDef, config) {
+export function _varLabel(varDef: VarDef, config: ExportConfig): string {
   if (!config.useShorthandVariations) return varDef.name;
   return (varDef && varDef.shorthand) ? varDef.shorthand : varDef.name;
 }
 
-function _stepLabel(stepName, config) {
+export function _stepLabel(stepName: string, config: ExportConfig): string {
   if (!config.useShorthandSteps) return stepName;
   var sh = config.scaleStepShorthands && config.scaleStepShorthands[stepName];
   return sh ? sh : stepName;
 }
 
-function _tokenSegments(colorLabel, roleLabel, varLabel, config) {
+export function _tokenSegments(colorLabel: string, roleLabel: string, varLabel: string, config: ExportConfig): string[] {
   var order = config.tokenNameSegments || ["color", "role", "variation"];
-  var parts = { color: colorLabel, role: roleLabel, variation: varLabel };
-  var out = [];
+  var parts: Record<string, string> = { color: colorLabel, role: roleLabel, variation: varLabel };
+  var out: string[] = [];
   for (var i = 0; i < order.length; i++) {
     var p = parts[order[i]];
     if (p) out.push(p);
@@ -40,52 +48,46 @@ function _tokenSegments(colorLabel, roleLabel, varLabel, config) {
   return out;
 }
 
-function _variationDefs(roleObj, config) {
+export function _variationDefs(roleObj: RoleDef, config: ExportConfig): VarDef[] {
   return (roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0)
     ? roleObj.customVariations
-    : config.variations;
+    : (config.variations || []);
 }
 
-// kebab-case slug — same rules as docGen.cssSlug
-function _slug(str) {
+export function _slug(str: string | null | undefined): string {
   if (!str) return "";
   return String(str).toLowerCase().trim()
     .replace(/[\s_]+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
 }
 
-// camelCase for Swift / RN identifiers
-function _camel(parts) {
+export function _camel(parts: string[]): string {
   return parts.map(function(p, i) {
     var s = _slug(p).replace(/-([a-z0-9])/g, function(_, c) { return c.toUpperCase(); });
     return i === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1);
   }).join("");
 }
 
-// snake_case for Android XML resource names
-function _snake(parts) {
+export function _snake(parts: string[]): string {
   return parts.map(function(p) { return _slug(p).replace(/-/g, "_"); }).join("_");
 }
 
-// hex → {r,g,b} components 0-255
-function _hexComponents(hex) {
+export function _hexComponents(hex: string): { r: number; g: number; b: number } {
   var h = hex.replace(/^#/, "");
   if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
   return {
     r: parseInt(h.substring(0, 2), 16),
     g: parseInt(h.substring(2, 4), 16),
-    b: parseInt(h.substring(4, 6), 16)
+    b: parseInt(h.substring(4, 6), 16),
   };
 }
 
-// tokenRef "ColorName-Step" → last-dash split
-function _splitTokenRef(ref) {
+export function _splitTokenRef(ref: string): { color: string; step: string } {
   var last = ref.lastIndexOf("-");
   return { color: ref.substring(0, last), step: ref.substring(last + 1) };
 }
 
-// Walk all tokens in all themes calling cb(theme, colorName, roleObj, varDef, token, colorLabel, roleLabel, varLabel, segments)
-function _eachToken(result, config, cb) {
+export function _eachToken(result: EngineResult, config: ExportConfig, cb: EachTokenCallback): void {
   var themeKeys = Object.keys(result.tokens || {});
   for (var ti = 0; ti < themeKeys.length; ti++) {
     var theme = themeKeys[ti];
@@ -99,7 +101,7 @@ function _eachToken(result, config, cb) {
       var roleIds = Object.keys(roles);
       for (var ri = 0; ri < roleIds.length; ri++) {
         var roleId = roleIds[ri];
-        var roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
+        var roleObj: RoleDef = (config.roles && config.roles[roleId]) || { name: roleId };
         var rLabel = _roleLabel(roleObj, config);
         var varDefs = _variationDefs(roleObj, config);
         var variations = roles[roleId];
