@@ -1,4 +1,7 @@
 {
-  "plugins": ["@huggingface/prettier-plugin-vertical-align"],
-  "alignInGroups": "always"
+  "singleQuote": true,
+  "semi": true,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "printWidth": 120
 }
