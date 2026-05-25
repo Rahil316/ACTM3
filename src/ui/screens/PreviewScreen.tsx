@@ -10,6 +10,7 @@ import { Button } from '../components/Button';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Badge, type BadgeVariant } from '../components/Badge';
 import { variableMaker, type EngineConfig, type EngineResult } from '../lib/colorEngine';
+import { SectionLabel } from '../components/typography';
 import type { AppState } from '../types/state';
 
 // ── Engine call ───────────────────────────────────────────────────────────────
@@ -422,9 +423,9 @@ function PreviewContent() {
     <div className="flex flex-col gap-3 p-3">
       {/* Toolbar */}
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">
+        <SectionLabel className="uppercase">
           {isScaleMode ? 'Token Preview' : 'Solved Colors'}
-        </p>
+        </SectionLabel>
         <div className="flex items-center gap-2">
           {computing && <span className="text-[10px] text-text-dim">Computing…</span>}
           <SegmentedControl
@@ -446,7 +447,7 @@ function PreviewContent() {
           }
           {showAlphaTints && (
             <div className="flex flex-col gap-1">
-              <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">Alpha Tints</p>
+              <SectionLabel className="uppercase">Alpha Tints</SectionLabel>
               <AlphaTintStrip colors={appState.colors} alphaValues={appState.alphaValues ?? ''} />
             </div>
           )}

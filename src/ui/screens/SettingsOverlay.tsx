@@ -26,7 +26,7 @@ import { SegmentedControl } from '../components/SegmentedControl';
 import { Input } from '../components/Input';
 import { Button, ActionButton } from '../components/Button';
 import { ListRow, ListHeader } from '../components/ListRow';
-import { SectionLabel } from '../components/typography';
+import { SectionLabel, HelperText } from '../components/typography';
 import type { SettingsTab, TokenNameSegment } from '../types/state';
 
 // ── Token segment drag pill ──────────────────────────────────────────────────
@@ -280,7 +280,7 @@ function TokensTab() {
 
         {/* Drag-reorderable name segment pills */}
         <div className="flex flex-col gap-1.5 pt-1">
-          <p className="text-[11px] font-medium text-text-muted">Name Format — drag to reorder</p>
+          <HelperText className="font-medium">Name Format — drag to reorder</HelperText>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -301,9 +301,9 @@ function TokensTab() {
           </DndContext>
 
           {/* Live preview */}
-          <p className="text-[11px] text-text-muted font-mono bg-bg-input rounded-[4px] px-2 py-1">
+          <HelperText className="font-mono bg-bg-input rounded-[4px] px-2 py-1">
             {namePreview}
-          </p>
+          </HelperText>
         </div>
       </SettingsCard>
 
@@ -380,7 +380,7 @@ function TokensTab() {
       {isScaleMode && (
         <SettingsCard>
           <SectionLabel>Step Labels</SectionLabel>
-          <p className="text-[11px] text-text-muted">Custom names for each step in the scale. Leave empty to use numbers.</p>
+          <HelperText>Custom names for each step in the scale. Leave empty to use numbers.</HelperText>
           {scaleStepNames.length > 0 && (
             <>
               <ListHeader columns={['Name', 'Short']} withDragHandle withRemoveButton />
@@ -442,7 +442,7 @@ function RolesTab() {
 
       <SettingsCard>
         <SectionLabel>Shared Variations</SectionLabel>
-        <p className="text-[11px] text-text-muted">Define the variation levels applied across all roles.</p>
+        <HelperText>Define the variation levels applied across all roles.</HelperText>
         {variations.length > 0 && (
           <>
             <ListHeader columns={['Name', 'Short']} withDragHandle withRemoveButton />
@@ -537,7 +537,7 @@ function PluginTab() {
         <SectionLabel>About</SectionLabel>
         <div className="space-y-1">
           <p className="text-[13px] font-medium text-text-primary">Token Wand</p>
-          <p className="text-[11px] text-text-muted">Build accessible, scalable color systems for Figma.</p>
+          <HelperText>Build accessible, scalable color systems for Figma.</HelperText>
         </div>
       </SettingsCard>
     </div>

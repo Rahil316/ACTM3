@@ -5,6 +5,7 @@ import { SettingsCard } from "../components/SettingsCard";
 import { Badge } from "../components/Badge";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PRESETS, type Preset } from "../lib/presets/presets";
+import { HelperText } from "../components/typography";
 import type { AppState } from "../types/state";
 
 // ── Preset shop ───────────────────────────────────────────────────────────────
@@ -33,7 +34,7 @@ function PresetShop() {
             <Badge key={tag} variant="muted" size="xs" pill>{tag}</Badge>
           ))}
         </div>
-        {preset.description && <p className="text-[11px] text-text-muted line-clamp-2">{preset.description}</p>}
+        {preset.description && <HelperText className="line-clamp-2">{preset.description}</HelperText>}
       </button>
     );
   }
@@ -64,7 +65,7 @@ function PresetShop() {
 
       <SettingsCard>
         <p className="text-[12px] font-semibold text-text-primary">Presets</p>
-        <p className="text-[11px] text-text-muted">Pre-built design system configurations. Loading a preset replaces your current setup.</p>
+        <HelperText>Pre-built design system configurations. Loading a preset replaces your current setup.</HelperText>
         <div className="flex flex-col gap-1.5 pt-1">{PRESETS.map((preset) => themeShopCard(preset, handlePresetClick))}</div>
       </SettingsCard>
     </>

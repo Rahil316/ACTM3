@@ -10,6 +10,7 @@ import { Badge } from '../components/Badge';
 import { LoadingOverlay, SuccessOverlay, ErrorOverlay, ValidationWarningOverlay } from '../components/ResultOverlay';
 import { sendToPlugin, type SyncScope, type SyncTally, type ExistingCollection, type RenameData, type CollectionCheckResultMessage } from '../types/messages';
 import { banner } from '../store/bannerStore';
+import { SectionLabel, HelperText } from '../components/typography';
 
 type RunPhase = 'config' | 'validation-warning' | 'loading' | 'success' | 'error';
 
@@ -137,13 +138,13 @@ export function RunDialog() {
             {/* Pending renames summary */}
             {hasRenames && (
               <SettingsCard>
-                <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide mb-2">Pending Renames</p>
-                <p className="text-[11px] text-text-muted mb-2">
+                <SectionLabel className="uppercase">Pending Renames</SectionLabel>
+                <HelperText className="mb-2">
                   {renames!.summary.scaleCount > 0 && `${renames!.summary.scaleCount} scale variable${renames!.summary.scaleCount > 1 ? 's' : ''}`}
                   {renames!.summary.scaleCount > 0 && renames!.summary.tokenCount > 0 && ', '}
                   {renames!.summary.tokenCount > 0 && `${renames!.summary.tokenCount} token variable${renames!.summary.tokenCount > 1 ? 's' : ''}`}
                   {' '}will be renamed in-place.
-                </p>
+                </HelperText>
                 {renameChanges.slice(0, 5).map((change, i) => (
                   <div key={i} className="flex items-center gap-1.5 py-0.5">
                     <span className="text-[11px] text-text-muted capitalize">{change.type}:</span>
@@ -153,9 +154,9 @@ export function RunDialog() {
                   </div>
                 ))}
                 {renameChanges.length > 5 && (
-                  <p className="text-[10px] text-text-muted mt-1">
+                  <HelperText className="text-[10px] mt-1">
                     +{renameChanges.length - 5} more
-                  </p>
+                  </HelperText>
                 )}
               </SettingsCard>
             )}
@@ -163,7 +164,7 @@ export function RunDialog() {
             {/* Existing collections summary */}
             {existingCollections.length > 0 && (
               <SettingsCard>
-                <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide mb-2">Existing Collections</p>
+                 <SectionLabel className="uppercase">Existing Collections</SectionLabel>
                 {existingCollections.map((col) => (
                   <div key={col.id} className="flex items-center justify-between py-1 border-b border-border-subtle last:border-0">
                     <span className="text-[12px] text-text-primary">{col.name}</span>
@@ -175,7 +176,7 @@ export function RunDialog() {
 
             {/* Config summary */}
             <SettingsCard>
-              <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide mb-2">Summary</p>
+              <SectionLabel className="uppercase">Summary</SectionLabel>
               <SmallRow
                 label="Colors"
                 control={<span className="text-[12px] text-text-primary font-semibold">{appState.colors.length}</span>}

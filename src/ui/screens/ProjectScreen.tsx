@@ -11,6 +11,7 @@ import { ColorInput } from "../components/ColorInput";
 import { Button, ActionButton } from "../components/Button";
 import { Badge } from "../components/Badge";
 import { ListHeader, ListRow } from "../components/ListRow";
+import { SectionLabel, HelperText } from "../components/typography";
 import type { AppState } from "../types/state";
 
 // ── Version save form ─────────────────────────────────────────────────────────
@@ -37,12 +38,11 @@ export function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
     <div className="flex flex-col gap-2 pt-2">
       <Input label="Version Name" size="lg" placeholder="e.g. v1.0 — Launch" value={name} onChange={(e) => setName(e.target.value)} />
       <Input label="Notes" size="lg" placeholder="Optional description…" value={desc} onChange={(e) => setDesc(e.target.value)} />
-      {reason && <p className="text-[11px] text-text-muted">{reason}</p>}
+      {reason && <HelperText>{reason}</HelperText>}
       <Button variant="primary" size="md" label="Save Version" onClick={handleSave} disabled={!name.trim() || !!reason} />
     </div>
   );
 }
-
 
 // ── JSON Import/Export ────────────────────────────────────────────────────────
 
@@ -82,7 +82,6 @@ export function ProjectScreen() {
   const removeTheme = useAppStore((s) => s.removeTheme);
 
   const [profileOpen, setProfileOpen] = useState(true);
-  const [themesOpen, setThemesOpen] = useState(true);
   const [versionsOpen, setVersionsOpen] = useState(true);
   const [saveFormOpen, setSaveFormOpen] = useState(false);
   const [confirmRestore, setConfirmRestore] = useState<string | null>(null);
@@ -173,14 +172,9 @@ export function ProjectScreen() {
             <Input label="Project Name" size="lg" value={appState.name} onChange={(e) => updateName(e.target.value)} />
             <Input label="Description" size="lg" placeholder="Optional…" value={appState.description} onChange={(e) => updateDesc(e.target.value)} />
           </div>
-        </SectionCollapsible>
-      </SettingsCard>
-
-      {/* Themes */}
-      <SettingsCard>
-        <SectionCollapsible open={themesOpen} onToggle={() => setThemesOpen((v) => !v)} label="Themes" badge={<Badge variant="muted" size="xs">{themes.length}</Badge>}>
           <div className="flex flex-col gap-1 pt-2">
-            <p className="text-[11px] text-text-muted mb-1">Each theme defines a background color used for contrast calculation.</p>
+            <HelperText className="mb-1">Theme Modes.</HelperText>
+            <HelperText className="mb-1">Each theme defines a background color used for contrast calculation.</HelperText>
             {themes.length > 0 && (
               <>
                 <ListHeader columns={["Name", "Background"]} withRemoveButton />
@@ -199,7 +193,7 @@ export function ProjectScreen() {
 
       {/* Quick actions */}
       <SettingsCard>
-        <p className="text-[11px] font-bold tracking-[0.6px] text-text-muted uppercase mb-2">Quick Actions</p>
+        <SectionLabel className="uppercase">Quick Actions</SectionLabel>
         <div className="flex gap-1.5">
           <Button variant="secondary" size="md" label="Export .wand" onClick={exportJson} className="w-full justify-start" />
           <Button variant="secondary" size="md" label="Import .wand" onClick={() => fileInputRef.current?.click()} className="w-full justify-start" />
@@ -208,7 +202,16 @@ export function ProjectScreen() {
 
       {/* Versions */}
       <SettingsCard>
-        <SectionCollapsible open={versionsOpen} onToggle={() => setVersionsOpen((v) => !v)} label="Versions" badge={<Badge variant="muted" size="xs">{versions.length}</Badge>}>
+        <SectionCollapsible
+          open={versionsOpen}
+          onToggle={() => setVersionsOpen((v) => !v)}
+          label="Versions"
+          badge={
+            <Badge variant="muted" size="xs">
+              {versions.length}
+            </Badge>
+          }
+        >
           <div className="flex flex-col gap-2 pt-2">
             {versions.length === 0 ? (
               <EmptyState icon="📦" title="No versions yet" description="Save a version to snapshot your current configuration." />

@@ -8,6 +8,7 @@ import { EmptyState } from "../components/EmptyState";
 import { Input } from "../components/Input";
 import { Button, ActionButton } from "../components/Button";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { HelperText } from "../components/typography";
 import type { Version } from "../types/state";
 
 // ── Save form ─────────────────────────────────────────────────────────────────
@@ -34,7 +35,7 @@ function SaveForm({ onSaved }: { onSaved: () => void }) {
     <div className="flex flex-col gap-2">
       <Input label="Version Name" size="lg" placeholder="e.g. v1.0 — Launch" value={name} onChange={(e) => setName(e.target.value)} />
       <Input label="Notes" size="lg" placeholder="Optional description…" value={desc} onChange={(e) => setDesc(e.target.value)} />
-      {reason && <p className="text-[11px] text-text-muted">{reason}</p>}
+      {reason && <HelperText>{reason}</HelperText>}
       <Button variant="primary" size="md" label="Save Version" onClick={handleSave} disabled={!name.trim() || !!reason} />
     </div>
   );

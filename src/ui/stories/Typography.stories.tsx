@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { SectionLabel, Caption, FieldLabel } from '../components/typography';
+import { SectionLabel, Caption, FieldLabel, HelperText } from '../components/typography';
 import { Button } from '../components/Button';
 import * as Icons from '../components/icons';
 
@@ -28,7 +28,8 @@ export const TypographyElements: StoryObj = {
 
       <div>
         <p className="text-[13px] font-medium mb-1">Standard Body Text</p>
-        <Caption>This is caption/hint text (11px, muted, leading-snug) for additional context.</Caption>
+        <Caption className="mb-2">This is caption/hint text (11px, dim, leading-snug) for additional context.</Caption>
+        <HelperText>This is helper/description text (11px, muted, leading-snug) for paragraphs and validation messages.</HelperText>
       </div>
     </div>
   ),

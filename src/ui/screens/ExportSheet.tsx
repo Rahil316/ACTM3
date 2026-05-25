@@ -10,6 +10,7 @@ import { Spinner } from '../components/Spinner';
 import { toast } from '../store/toastStore';
 import { banner } from '../store/bannerStore';
 import { sendToPlugin, type ExportFormat } from '../types/messages';
+import { HelperText } from '../components/typography';
 
 const EXPORT_FORMATS: { format: ExportFormat; label: string; description: string }[] = [
   { format: 'css',              label: 'CSS Variables',   description: 'Per-theme custom properties + :root scale' },
@@ -120,7 +121,7 @@ export function ExportSheet() {
               >
                 <div>
                   <p className="text-[13px] font-medium text-text-primary">{label}</p>
-                  <p className="text-[11px] text-text-muted">{description}</p>
+                  <HelperText>{description}</HelperText>
                 </div>
                 <div
                   className={[

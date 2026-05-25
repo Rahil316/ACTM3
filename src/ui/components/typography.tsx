@@ -30,3 +30,13 @@ export function FieldLabel({ children, htmlFor, className }: { children: ReactNo
     </label>
   );
 }
+
+// Small helper / description / info text.
+export function HelperText({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <p className={clsx('text-[11px] text-text-muted leading-snug', className)}>
+      {children}
+    </p>
+  );
+}
+
