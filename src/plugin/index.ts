@@ -6,12 +6,7 @@
 
 import { translateConfig, buildVariableRenameMap } from './config';
 import { VariableManager, savePluginConfig } from './figmaVars';
-
-// Import JS-based engine and formatters via side-effect globals.
-// esbuild bundles these as IIFE scripts whose global assignments become
-// available within the same bundle scope.
-import '../shared/clrUtils.js';
-import '../shared/clrEngine.js';
+import { variableMaker } from '../shared/clrEngine.js';
 import './docGen.js';
 import './exportEng/helpers.js';
 import './exportEng/fmtCSS.js';
@@ -24,9 +19,8 @@ import './exportEng/fmtAndroid.js';
 import './exportEng/fmtReactNative.js';
 import './exportEng/bundler.js';
 
-// These global functions/objects are declared in the imported JS files above.
+// These global functions/objects are declared in the JS files imported above (exportEng).
 // Declare them here so TypeScript knows they exist at runtime.
-declare function variableMaker(config: unknown): unknown;
 declare function buildExportBundle(
   result: unknown,
   config: unknown,

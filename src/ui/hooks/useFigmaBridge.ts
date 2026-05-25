@@ -217,7 +217,6 @@ export interface BridgeCallbacks {
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useFigmaBridge(callbacks: BridgeCallbacks = {}): void {
-  // Keep callbacks ref stable so the event listener never needs to re-register
   const cbRef = useRef(callbacks);
   cbRef.current = callbacks;
 
@@ -233,7 +232,24 @@ export function useFigmaBridge(callbacks: BridgeCallbacks = {}): void {
     };
 
     window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
+
+    // Auto-save appState to Figma plugin storage whenever it changes.
+    // Debounced so rapid edits (typing a color name letter-by-letter) don't
+    // flood the Figma sandbox with serialization work.
+    let saveTimer: ReturnType<typeof setTimeout> | null = null;
+    const unsubscribe = useAppStore.subscribe((state, prev) => {
+      if (state.appState === prev.appState) return;
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        parent.postMessage({ pluginMessage: { type: 'save-config', state: state.appState } }, '*');
+      }, 2000);
+    });
+
+    return () => {
+      window.removeEventListener('message', handler);
+      unsubscribe();
+      if (saveTimer) clearTimeout(saveTimer);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

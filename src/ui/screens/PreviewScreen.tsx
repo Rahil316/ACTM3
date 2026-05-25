@@ -24,7 +24,7 @@ function buildEngineConfig(appState: AppState): EngineConfig {
     })),
     themes: appState.themes.map((t) => ({ name: t.name, bg: t.bg })),
     scaleLength: appState.scaleLength,
-    scaleStepNames: appState.scaleStepNames?.map((s) => s.name) ?? null,
+    scaleStepNames: appState.scaleStepNames?.map((s) => s.name) ?? undefined,
     scaleAlgorithm: appState.scaleAlgorithm,
     pluginMode: appState.pluginMode,
     roles: appState.roles.map((r) => ({

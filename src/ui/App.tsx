@@ -15,7 +15,8 @@ import { RolesScreen } from "./screens/RolesScreen";
 import { SettingsOverlay } from "./screens/SettingsOverlay";
 import { PreviewScreen } from "./screens/PreviewScreen";
 import { RunDialog } from "./screens/RunDialog";
-import { ProjectScreen, QuickStart, SaveVersionOverlay } from "./screens/ProjectScreen";
+import { ProjectScreen, SaveVersionOverlay } from "./screens/ProjectScreen";
+import { QuickStart } from "./screens/QuickStart";
 import { ThemesScreen } from "./screens/ThemesScreen";
 import { SavedStatesScreen } from "./screens/SavedStatesScreen";
 import { ExportSheet } from "./screens/ExportSheet";
@@ -24,9 +25,9 @@ import type { AppState, SidebarTab } from "./types/state";
 
 const TABS: { value: SidebarTab; label: string }[] = [
   { value: "color-groups", label: "Colors" },
-  { value: "roles",        label: "Roles" },
-  { value: "project",      label: "Project" },
-  { value: "themes",       label: "Themes" },
+  { value: "roles", label: "Roles" },
+  { value: "project", label: "Project" },
+  { value: "themes", label: "Themes" },
   { value: "saved-states", label: "Saved" },
 ];
 
