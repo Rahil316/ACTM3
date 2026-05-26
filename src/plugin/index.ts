@@ -12,7 +12,7 @@ import { buildExportBundle } from './exportEng/bundler';
 
 // ── 1. UI INITIALIZATION ─────────────────────────────────────────────────────
 
-const UI = { WIDTH: 620, HEIGHT: 720, MIN_WIDTH: 440, MIN_HEIGHT: 480 };
+const UI = { WIDTH: 560, HEIGHT: 720, MIN_WIDTH: 560, MIN_HEIGHT: 520 };
 
 (async () => {
   let savedUiSize = { width: UI.WIDTH, height: UI.HEIGHT };

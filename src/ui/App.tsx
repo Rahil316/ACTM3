@@ -22,6 +22,7 @@ import { QuickStart } from "./screens/QuickStart";
 import { ThemesScreen } from "./screens/ThemesScreen";
 import { ThemeShopOverlay } from "./screens/ThemeShopOverlay";
 import { ExportSheet } from "./screens/ExportSheet";
+import { TestLabScreen } from "./screens/testLab";
 import { sendToPlugin } from "./types/messages";
 import type { AppState, SidebarTab } from "./types/state";
 
@@ -31,6 +32,7 @@ const TABS: { value: SidebarTab; label: string }[] = [
   { value: "color-groups", label: "Colors" },
   { value: "roles", label: "Roles" },
   { value: "project", label: "Project" },
+  { value: "test-lab" as SidebarTab, label: "Lab 🧪" },
 ];
 
 // ── Resize handle ─────────────────────────────────────────────────────────────
@@ -189,6 +191,7 @@ export default function App() {
         {activeTab === "roles" && <RolesScreen />}
         {activeTab === "project" && <ProjectScreen />}
         {activeTab === "themes" && <ThemesScreen />}
+        {(activeTab as string) === "test-lab" && <TestLabScreen />}
       </main>
 
       <ToastHub />

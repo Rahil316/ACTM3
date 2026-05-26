@@ -59,6 +59,7 @@ export interface Role {
   scaleAlgorithm?: ScaleAlgorithm;
   solverMode?: SolverMode;
   description?: string;
+  scopedColorIds?: string[] | null;
 }
 
 export interface Theme {

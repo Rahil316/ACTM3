@@ -16,10 +16,10 @@ export const SOLVER_MODE_OPTIONS: [string, string][] = [
 export const SCALE_ALGORITHM_OPTIONS = ["Natural", "Uniform", "Linear", "Expressive", "Symmetric", "OKLCH", "Material"] as const;
 
 export const UI_DIMS = {
-  defaultWidth: 440,
+  defaultWidth: 560,
   defaultHeight: 720,
-  minWidth: 440,
-  minHeight: 480,
+  minWidth: 560,
+  minHeight: 520,
   maxWidth: 1400,
   maxHeight: 1400,
 };
@@ -378,6 +378,7 @@ interface AppStoreState {
   addRoleVariation: (roleIdx: number) => void;
   removeRoleVariation: (roleIdx: number, varIdx: number) => void;
   toggleRoleCustomVariations: (roleIdx: number) => void;
+  setRoleScope: (roleIdx: number, colorIds: string[] | null) => void;
 
   // Shared variations — set / add / remove / move
   setVariation: (idx: number, field: string, value: string) => void;
@@ -659,6 +660,14 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
         role.variationTargets = [...(role.variationTargets ?? [])];
       }
       roles[roleIdx] = role;
+      return { appState: { ...s.appState, roles } };
+    });
+  },
+
+  setRoleScope: (roleIdx, colorIds) => {
+    set((s) => {
+      const roles = [...s.appState.roles];
+      roles[roleIdx] = { ...roles[roleIdx], scopedColorIds: colorIds };
       return { appState: { ...s.appState, roles } };
     });
   },
