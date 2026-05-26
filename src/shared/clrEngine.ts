@@ -23,6 +23,7 @@ export interface EngineColor {
   name: string;
   shorthand: string;
   value: string;
+  _id?: string;
   description?: string;
   scaleAlgorithm?: ScaleAlgorithm;
   solverMode?: SolverMode;
@@ -48,6 +49,7 @@ export interface EngineRole {
   customVariations?: EngineVariation[];
   solverMode?: SolverMode;
   scaleAlgorithm?: ScaleAlgorithm;
+  scopedColorIds?: string[] | null;
 }
 
 export interface EngineConfig {
@@ -333,6 +335,7 @@ function _solveDirectMode(
 
   for (let ri = 0; ri < config.roles.length; ri++) {
     const role = config.roles[ri];
+    if (role.scopedColorIds != null && !role.scopedColorIds.includes(color._id || color.name)) continue;
     const roleOutput: Record<number, TokenEntry> = (groupOutput[ri] = {});
     const solverMode = _getSolverMode(config, color, role);
     const variations =
@@ -377,6 +380,7 @@ function _processScaleMode(
 
   for (let ri = 0; ri < config.roles.length; ri++) {
     const role = config.roles[ri];
+    if (role.scopedColorIds != null && !role.scopedColorIds.includes(color._id || color.name)) continue;
     const roleOutput: Record<number, TokenEntry> = (groupOutput[ri] = {});
     const variations =
       role.customVariationList && role.customVariations && role.customVariations.length

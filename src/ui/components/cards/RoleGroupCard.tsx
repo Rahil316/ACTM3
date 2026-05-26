@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Settings, GripVertical, Trash2, Check, X } from 'lucide-react';
+import { Settings, Check, X } from 'lucide-react';
+import { CardToolbar } from '../CardToolbar';
 import { useAppStore } from '../../store/appStore';
 import { useLocalField } from '../../hooks/useLocalField';
 import { Input } from '../Input';
@@ -110,7 +111,7 @@ const VariationTable = React.memo(function VariationTable({
   const headers = useCustomVars ? ['#', 'Name', 'Short', 'Target', ''] : ['#', 'Variation', 'Target'];
 
   return (
-    <div className="overflow-hidden">
+    <div>
       <div
         className="grid px-2 py-1 bg-bg-app border-b border-border-base gap-1.5"
         style={{ gridTemplateColumns: cols }}
@@ -311,38 +312,21 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({
         </div>
       )}
 
-      {/* Floating hover toolbar */}
-      <div className="absolute left-1/2 -translate-x-1/2 -bottom-8 opacity-0 group-hover/card:opacity-100 transition-opacity z-10 pointer-events-none group-hover/card:pointer-events-auto">
-        <div className="flex items-center gap-0.5 bg-bg-card border border-border-base rounded-[8px] shadow-lg px-1 py-1">
-          {dragListeners && (
-            <button
-              className="w-6 h-6 rounded flex items-center justify-center text-text-dim hover:text-text-muted cursor-grab touch-none"
-              {...(dragAttributes as React.ButtonHTMLAttributes<HTMLButtonElement>)}
-              {...(dragListeners as React.ButtonHTMLAttributes<HTMLButtonElement>)}
-              title="Drag to reorder"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <GripVertical size={12} strokeWidth={1.75} />
-            </button>
-          )}
-          <button
-            className={['w-6 h-6 rounded flex items-center justify-center transition-colors cursor-pointer', scopedIds !== null ? 'text-accent bg-accent-subtle' : 'text-text-dim hover:text-text-muted hover:bg-bg-hover'].join(' ')}
-            onClick={() => setShowScopeSheet(true)}
-            title="Scope to colors"
-          >
-            <Settings size={11} strokeWidth={1.75} />
-          </button>
-          <div className="w-px h-4 bg-border-base mx-0.5" />
-          <button
-            className="w-6 h-6 rounded flex items-center justify-center text-text-dim hover:text-danger hover:bg-danger-subtle cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            onClick={() => removeRole(idx)}
-            disabled={roleCount <= 1}
-            title="Delete role"
-          >
-            <Trash2 size={11} strokeWidth={1.75} />
-          </button>
-        </div>
-      </div>
+      <CardToolbar
+        onDelete={() => removeRole(idx)}
+        deleteDisabled={roleCount <= 1}
+        deleteTitle="Delete role"
+        dragListeners={dragListeners}
+        dragAttributes={dragAttributes}
+      >
+        <button
+          className={['w-6 h-6 rounded flex items-center justify-center transition-colors cursor-pointer', scopedIds !== null ? 'text-accent bg-accent-subtle' : 'text-text-dim hover:text-text-muted hover:bg-bg-hover'].join(' ')}
+          onClick={() => setShowScopeSheet(true)}
+          title="Scope to colors"
+        >
+          <Settings size={11} strokeWidth={1.75} />
+        </button>
+      </CardToolbar>
 
       {showScopeSheet && (
         <RoleScopeSheet

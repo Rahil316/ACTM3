@@ -57,8 +57,10 @@ export function _variationDefs(roleObj: RoleDef, config: ExportConfig): VarDef[]
 export function _slug(str: string | null | undefined): string {
   if (!str) return "";
   return String(str).toLowerCase().trim()
-    .replace(/[\s_]+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
+    .replace(/[\s_/]+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 export function _camel(parts: string[]): string {

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import { useFigmaBridge } from "./hooks/useFigmaBridge";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -22,7 +22,6 @@ import { QuickStart } from "./screens/QuickStart";
 import { ThemesScreen } from "./screens/ThemesScreen";
 import { ThemeShopOverlay } from "./screens/ThemeShopOverlay";
 import { ExportSheet } from "./screens/ExportSheet";
-import { TestLabScreen } from "./screens/testLab";
 import { sendToPlugin } from "./types/messages";
 import type { AppState, SidebarTab } from "./types/state";
 
@@ -32,7 +31,6 @@ const TABS: { value: SidebarTab; label: string }[] = [
   { value: "color-groups", label: "Colors" },
   { value: "roles", label: "Roles" },
   { value: "project", label: "Project" },
-  { value: "test-lab" as SidebarTab, label: "Lab 🧪" },
 ];
 
 // ── Resize handle ─────────────────────────────────────────────────────────────
@@ -81,6 +79,7 @@ export default function App() {
 
   const loadState = useAppStore((s) => s.loadState);
   const saveBlocked = useAppStore((s) => s.versionSaveBlockedReason);
+  const appState = useAppStore((s) => s.appState);
 
   const importRef = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -117,7 +116,8 @@ export default function App() {
 
   useKeyboardShortcuts(importRef);
 
-  const saveBlockedReason = saveBlocked();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const saveBlockedReason = useMemo(() => saveBlocked(), [appState]);
 
   return (
     <div className="relative flex flex-col h-screen bg-bg-app text-text-primary font-sans text-xs overflow-hidden">
@@ -191,7 +191,6 @@ export default function App() {
         {activeTab === "roles" && <RolesScreen />}
         {activeTab === "project" && <ProjectScreen />}
         {activeTab === "themes" && <ThemesScreen />}
-        {(activeTab as string) === "test-lab" && <TestLabScreen />}
       </main>
 
       <ToastHub />

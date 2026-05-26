@@ -20,6 +20,7 @@ export function translateConfig(appState: any): any {
       name: g.name,
       shorthand: g.shorthand,
       value: g.value,
+      _id: g._id || undefined,
       solverMode: g.solverMode || 'natural',
       scaleAlgorithm: g.scaleAlgorithm || null,
       description: g.description || '',
@@ -127,6 +128,7 @@ function _mapRoles(appState: any, variations: any[]): any[] {
       role.customVariationList && role.customVariations && role.customVariations.length > 0
         ? role.customVariations.map((v: any) => Object.assign({}, v))
         : [],
+    scopedColorIds: role.scopedColorIds ?? null,
   }));
 }
 
