@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsx scripts/build-presets.ts && node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && node scripts/build-plugin.js",
+    "build:release": "tsx scripts/build-presets.ts --release && node -e \"require('fs').rmSync('dist-release',{recursive:true,force:true})\" && VITE_OUT_DIR=dist-release vite build && node scripts/build-plugin.js dist-release",
     "build:plugin": "node scripts/build-plugin.js",
     "watch": "node scripts/watch-plugin.js & vite build --watch",
     "test": "vitest run",
@@ -15,7 +16,6 @@
     "release": "node package.js",
     "release:patch": "node package.js patch",
     "release:flag": "node package.js flag",
-    "release:watch": "node watch-release.js",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

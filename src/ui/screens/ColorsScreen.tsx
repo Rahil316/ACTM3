@@ -97,22 +97,30 @@ function ColorSuggestSheet({ existingNames, onPick, onBlank, onClose }: ColorSug
 
 // ── Flat sortable card (used when no groups present) ─────────────────────────
 
-function SortableColorCard({ color, idx }: { color: Color; idx: number }) {
+function SortableColorCard({
+  color,
+  idx,
+  selected,
+  onToggleSelect,
+}: {
+  color: Color;
+  idx: number;
+  selected: boolean;
+  onToggleSelect: (id: string, meta: boolean) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: color._id });
 
   return (
     <div
       ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-        cursor: 'grab',
-      }}
-      {...attributes}
-      {...listeners}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+      onClick={(e) => { if (e.metaKey || e.ctrlKey) { e.stopPropagation(); onToggleSelect(color._id, true); } }}
     >
-      <ColorGroupCard color={color} idx={idx} />
+      <div
+        style={selected ? { borderRadius: 12, outline: '2px solid var(--accent)', outlineOffset: 2, boxShadow: '0 0 0 4px var(--accent-glow)' } : undefined}
+      >
+        <ColorGroupCard color={color} idx={idx} dragListeners={listeners as Record<string, unknown>} dragAttributes={attributes as unknown as Record<string, unknown>} />
+      </div>
     </div>
   );
 }
@@ -140,10 +148,15 @@ function ColorTree() {
     });
   }
 
-  // ⌘G — group selected into "Untitled"; ⌘⇧G — ungroup (strip prefix)
+  // ⌘G — group selected into "Untitled"; ⌘⇧G — ungroup (strip prefix); Esc — clear selection
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!containerRef.current?.contains(document.activeElement) && document.activeElement !== document.body) return;
+      if (e.key === 'Escape' && selectedIds.size > 0) {
+        e.preventDefault();
+        setSelectedIds(new Set());
+        return;
+      }
       if (!(e.metaKey || e.ctrlKey) || selectedIds.size === 0) return;
       if (e.key === 'g' && e.shiftKey) {
         e.preventDefault();
@@ -384,12 +397,42 @@ export function ColorsScreen() {
   const addColor = useAppStore((s) => s.addColor);
   const addColorWith = useAppStore((s) => s.addColorWith);
   const moveColor = useAppStore((s) => s.moveColor);
+  const setColor = useAppStore((s) => s.setColor);
 
   const [showSuggest, setShowSuggest] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const hasGroups = colors.some((c) => c.name.includes('/'));
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!containerRef.current?.contains(document.activeElement) && document.activeElement !== document.body) return;
+      if (e.key === 'Escape' && selectedIds.size > 0) { e.preventDefault(); setSelectedIds(new Set()); return; }
+      if (!(e.metaKey || e.ctrlKey) || selectedIds.size === 0) return;
+      if (e.key === 'g' && e.shiftKey) {
+        e.preventDefault();
+        colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', c.name.split('/').pop()!); });
+        setSelectedIds(new Set());
+      } else if (e.key === 'g' && !e.shiftKey) {
+        e.preventDefault();
+        colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', `Untitled/${c.name.split('/').pop()!}`); });
+        setSelectedIds(new Set());
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedIds, colors, setColor]);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -407,15 +450,12 @@ export function ColorsScreen() {
   const addBtn = <SplitActionButton label="+ Add Color" onAdd={addColor} onPick={() => setShowSuggest(true)} />;
 
   return (
-    <div className="flex flex-col gap-9 p-3 relative">
+    <div ref={containerRef} className="flex flex-col gap-3 p-3 relative">
       {showSuggest && (
         <ColorSuggestSheet
           existingNames={colors.map((c) => c.name)}
           onPick={handlePick}
-          onBlank={() => {
-            addColor();
-            setShowSuggest(false);
-          }}
+          onBlank={() => { addColor(); setShowSuggest(false); }}
           onClose={() => setShowSuggest(false)}
         />
       )}
@@ -436,10 +476,29 @@ export function ColorsScreen() {
           {addBtn}
           <SortableContext items={colors.map((c) => c._id)} strategy={verticalListSortingStrategy}>
             {colors.map((color, idx) => (
-              <SortableColorCard key={color._id} color={color} idx={idx} />
+              <SortableColorCard key={color._id} color={color} idx={idx} selected={selectedIds.has(color._id)} onToggleSelect={toggleSelect} />
             ))}
           </SortableContext>
         </DndContext>
+      )}
+      {selectedIds.size > 0 && !hasGroups && (
+        <MultiSelectToolbar
+          count={selectedIds.size}
+          onGroup={() => {
+            colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', `Untitled/${c.name.split('/').pop()!}`); });
+            setSelectedIds(new Set());
+          }}
+          onUngroup={() => {
+            colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', c.name.split('/').pop()!); });
+            setSelectedIds(new Set());
+          }}
+          onDelete={() => {
+            const idxs = colors.map((c, i) => selectedIds.has(c._id) ? i : -1).filter((i) => i >= 0).reverse();
+            idxs.forEach((i) => useAppStore.getState().removeColor(i));
+            setSelectedIds(new Set());
+          }}
+          onClear={() => setSelectedIds(new Set())}
+        />
       )}
     </div>
   );

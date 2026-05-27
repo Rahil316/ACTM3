@@ -193,6 +193,7 @@ function handleMessage(
     }
 
     case 'capabilities': {
+      useUiStore.getState().setMultiMode(msg.capabilities.multiMode);
       if (!msg.capabilities.multiMode) {
         banner.show({
           id: 'multi-mode-disabled',
@@ -263,19 +264,31 @@ export function useFigmaBridge(callbacks: BridgeCallbacks = {}): void {
     // Auto-save appState to Figma plugin storage whenever it changes.
     // Debounced so rapid edits (typing a color name letter-by-letter) don't
     // flood the Figma sandbox with serialization work.
+    // On cleanup (plugin close), the pending timer is flushed immediately so
+    // changes are never lost when the user closes before the debounce fires.
     let saveTimer: ReturnType<typeof setTimeout> | null = null;
+    let pendingState: ReturnType<typeof useAppStore.getState>['appState'] | null = null;
+
     const unsubscribe = useAppStore.subscribe((state, prev) => {
       if (state.appState === prev.appState) return;
+      pendingState = state.appState;
       if (saveTimer) clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         parent.postMessage({ pluginMessage: { type: 'save-config', state: state.appState } }, '*');
+        pendingState = null;
+        saveTimer = null;
       }, 2000);
     });
 
     return () => {
       window.removeEventListener('message', handler);
       unsubscribe();
-      if (saveTimer) clearTimeout(saveTimer);
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        if (pendingState) {
+          parent.postMessage({ pluginMessage: { type: 'save-config', state: pendingState } }, '*');
+        }
+      }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

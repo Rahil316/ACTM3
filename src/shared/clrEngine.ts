@@ -50,6 +50,10 @@ export interface EngineRole {
   solverMode?: SolverMode;
   scaleAlgorithm?: ScaleAlgorithm;
   scopedColorIds?: string[] | null;
+  localBg?: Record<string, string> | null;                        // theme-name → resolved hex (hex/color/fixed-token kinds)
+  localBgTokenRef?: string | null;                               // fixed token ref — resolved post-engine pass-1
+  localBgDynamicRef?: string | null;                             // dynamic token ref with [color] placeholder — resolved post-engine pass-1
+  localBgPerColor?: Record<string, Record<string, string>> | null; // colorName → { theme-name → hex } (dynamic token kind)
 }
 
 export interface EngineConfig {
@@ -331,11 +335,12 @@ function _solveDirectMode(
   errors: EngineErrors,
 ): void {
   const modeName = mode.name.toLowerCase();
-  const bgHex = mode.bg;
 
   for (let ri = 0; ri < config.roles.length; ri++) {
     const role = config.roles[ri];
     if (role.scopedColorIds != null && !role.scopedColorIds.includes(color._id || color.name)) continue;
+    const perColorBg = role.localBgPerColor?.[color.name] ?? role.localBgPerColor?.[color._id ?? ''];
+    const bgHex = (perColorBg && perColorBg[modeName]) ?? (role.localBg && role.localBg[modeName]) ?? mode.bg;
     const roleOutput: Record<number, TokenEntry> = (groupOutput[ri] = {});
     const solverMode = _getSolverMode(config, color, role);
     const variations =
@@ -374,13 +379,15 @@ function _processScaleMode(
   errors: EngineErrors,
 ): void {
   const modeName = mode.name.toLowerCase();
-  const isDark = (relLum(normalizeHex(mode.bg) || "#FFFFFF") ?? 1) < 0.4;
   const scale = scales[color.name];
   const stepNames = config.scaleStepNames || seriesMaker(config.scaleLength);
 
   for (let ri = 0; ri < config.roles.length; ri++) {
     const role = config.roles[ri];
     if (role.scopedColorIds != null && !role.scopedColorIds.includes(color._id || color.name)) continue;
+    const perColorBg = role.localBgPerColor?.[color.name] ?? role.localBgPerColor?.[color._id ?? ''];
+    const effectiveBg = (perColorBg && perColorBg[modeName]) ?? (role.localBg && role.localBg[modeName]) ?? mode.bg;
+    const isDark = (relLum(normalizeHex(effectiveBg) || "#FFFFFF") ?? 1) < 0.4;
     const roleOutput: Record<number, TokenEntry> = (groupOutput[ri] = {});
     const variations =
       role.customVariationList && role.customVariations && role.customVariations.length
@@ -390,7 +397,7 @@ function _processScaleMode(
     if (role.mappingMethod === "index") {
       _mapByIndex(color, role, variations, scale, stepNames, modeName, roleOutput);
     } else {
-      _mapByScaleContrast(color, role, variations, scale, stepNames, modeName, isDark, roleOutput, errors);
+      _mapByScaleContrast(color, role, variations, scale, stepNames, modeName, effectiveBg, isDark, roleOutput, errors);
     }
   }
 }
@@ -428,32 +435,42 @@ function _mapByScaleContrast(
   scale: Record<string | number, ScaleStep>,
   stepNames: (string | number)[],
   modeName: string,
+  effectiveBg: string,
   isDark: boolean,
   output: Record<number, TokenEntry>,
   errors: EngineErrors,
 ): void {
+  const useCustomBg = !!(role.localBg && role.localBg[modeName]);
+  const getContrast = (step: string | number): number =>
+    useCustomBg
+      ? (contrastRatio(scale[step].value, effectiveBg) ?? 0)
+      : (scale[step].contrast[modeName].ratio ?? 0);
+
   variations.forEach((_, vi) => {
     const target = parseFloat(String(role.variationTargets && role.variationTargets[vi])) || 4.5;
     let bestIdx = isDark ? stepNames.length - 1 : 0;
     let found = false;
     if (isDark) {
       for (let i = stepNames.length - 1; i >= 0; i--) {
-        if ((scale[stepNames[i]].contrast[modeName].ratio ?? 0) >= target) { bestIdx = i; found = true; break; }
+        if (getContrast(stepNames[i]) >= target) { bestIdx = i; found = true; break; }
       }
     } else {
       for (let i = 0; i < stepNames.length; i++) {
-        if ((scale[stepNames[i]].contrast[modeName].ratio ?? 0) >= target) { bestIdx = i; found = true; break; }
+        if (getContrast(stepNames[i]) >= target) { bestIdx = i; found = true; break; }
       }
     }
     if (!found) {
       let maxC = -1;
       stepNames.forEach((n, i) => {
-        const c = scale[n].contrast[modeName].ratio ?? 0;
+        const c = getContrast(n);
         if (c > maxC) { maxC = c; bestIdx = i; }
       });
       errors.warnings.push({ color: color.name, role: role.name, variation: String(vi), theme: modeName, warning: `Target contrast ${target} not achievable. Using closest (${maxC.toFixed(2)}).` });
     }
     const data = scale[stepNames[bestIdx]];
+    const achievedContrast = useCustomBg
+      ? (contrastRatio(data.value, effectiveBg) ?? 0)
+      : (data.contrast[modeName].ratio ?? 0);
     output[vi] = {
       tokenName: `${color.name}-${role.name}-${vi}`,
       color: color.name,
@@ -462,7 +479,7 @@ function _mapByScaleContrast(
       roleDescription: role.description || "",
       tokenRef: data.stepName,
       value: data.value,
-      contrast: { ratio: data.contrast[modeName].ratio, rating: data.contrast[modeName].rating },
+      contrast: { ratio: achievedContrast, rating: contrastRating(data.value, effectiveBg) },
       contrastTarget: target,
       isAdjusted: !found,
     };

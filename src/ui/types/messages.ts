@@ -22,7 +22,6 @@ export interface FinishMessage {
   type: 'finish';
   tally: SyncTally;
   errors: string[] | null;
-  result: unknown | null;
 }
 
 export interface CapabilitiesMessage {

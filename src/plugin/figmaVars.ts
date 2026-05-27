@@ -13,10 +13,17 @@ function hexToFigmaRgb(hex: string): { r: number; g: number; b: number } {
 }
 
 export function savePluginConfig(appState: AnyObj): void {
+  const serialized = JSON.stringify(appState);
+  // Write to both stores: clientStorage persists independently of document save
+  // state (survives close/reopen even on unsaved files); setPluginData keeps the
+  // state embedded in the document for portability when sharing .fig files.
+  figma.clientStorage.setAsync('tw_state', serialized).catch((e) => {
+    console.warn('savePluginConfig clientStorage failed:', e);
+  });
   try {
-    figma.root.setPluginData('tw_state', JSON.stringify(appState));
+    figma.root.setPluginData('tw_state', serialized);
   } catch (e) {
-    console.warn('savePluginConfig failed:', e);
+    console.warn('savePluginConfig setPluginData failed:', e);
   }
 }
 
@@ -233,7 +240,6 @@ export const VariableManager = {
       type: 'finish',
       tally: this.tally,
       errors: result ? result.errors : null,
-      result,
     });
   },
 

@@ -3,6 +3,7 @@ node_modules/
 
 # Build outputs — generated, do not edit directly.
 dist/
+dist-release/
 
 # Generated preset bundle — built from src/lib/presets/raw/*.js
 src/lib/presets/presets.json

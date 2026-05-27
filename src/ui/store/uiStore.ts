@@ -14,6 +14,9 @@ interface UiStoreState {
   colorDragSrcIdx: number | null;
   roleDragSrcIdx: number | null;
 
+  // Figma plan capabilities (set once on plugin startup)
+  multiMode: boolean;
+
   // Routing actions
   setActiveSidebarTab: (tab: SidebarTab) => void;
   openOverlay: (overlay: NonNullable<ActiveOverlay>) => void;
@@ -29,6 +32,9 @@ interface UiStoreState {
   // Drag actions
   setColorDragSrcIdx: (idx: number | null) => void;
   setRoleDragSrcIdx: (idx: number | null) => void;
+
+  // Capabilities actions
+  setMultiMode: (multiMode: boolean) => void;
 }
 
 export const VALID_SCALES = [0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5] as const;
@@ -48,6 +54,8 @@ export const useUiStore = create<UiStoreState>((set) => ({
 
   colorDragSrcIdx: null,
   roleDragSrcIdx: null,
+
+  multiMode: true,
 
   setActiveSidebarTab: (tab) => set({ activeSidebarTab: tab }),
 
@@ -80,4 +88,6 @@ export const useUiStore = create<UiStoreState>((set) => ({
 
   setColorDragSrcIdx: (idx) => set({ colorDragSrcIdx: idx }),
   setRoleDragSrcIdx: (idx) => set({ roleDragSrcIdx: idx }),
+
+  setMultiMode: (multiMode) => set({ multiMode }),
 }));

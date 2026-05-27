@@ -1570,6 +1570,1051 @@
     }
   },
   {
+    "id": "tw-scale-full",
+    "name": "TW Scale Full",
+    "badge": "TW",
+    "description": "Scale mode showcase. Every feature enabled: 15 nested colors, 9 roles with custom variations, status roles scoped to their color, alpha tints, scale collection, per-color algorithm.",
+    "tags": [
+      "Showcase",
+      "Scale",
+      "Full Featured",
+      "Light+Dark"
+    ],
+    "swatches": [
+      "0066FF",
+      "7C3AED",
+      "64748B",
+      "16A34A",
+      "DC2626",
+      "F43F5E",
+      "D946EF",
+      "0D9488"
+    ],
+    "config": {
+      "name": "TW Scale Full",
+      "pluginMode": "scale",
+      "scaleAlgorithm": "Natural",
+      "scaleLength": 25,
+      "useUniformAlgorithm": false,
+      "algorithmScopeLevel": "color",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "color",
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": false,
+      "useShorthandRoles": false,
+      "useShorthandVariations": false,
+      "useShorthandSteps": false,
+      "resolveTokensDirectly": false,
+      "includeSourceColors": true,
+      "sourceCollectionName": "palette/source",
+      "includeAlphaTints": true,
+      "alphaValues": "10, 20, 40, 60, 80",
+      "tokenGrouping": "color",
+      "includeColorScalesCollection": true,
+      "includeDescriptions": true,
+      "scaleCollectionName": "palette/scale",
+      "tokenCollectionName": "tokens",
+      "scaleStepNames": null,
+      "perRoleVariationOverride": true,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "default"
+        }
+      ],
+      "colors": [
+        {
+          "_id": "sc-bp",
+          "name": "Brand/Primary",
+          "shorthand": "bp",
+          "value": "0066FF",
+          "description": "Primary brand — vivid blue"
+        },
+        {
+          "_id": "sc-bs",
+          "name": "Brand/Secondary",
+          "shorthand": "bs",
+          "value": "7C3AED",
+          "description": "Secondary brand — violet"
+        },
+        {
+          "_id": "sc-bn",
+          "name": "Brand/Neutral",
+          "shorthand": "bn",
+          "value": "64748B",
+          "description": "Neutral slate — surfaces, borders, text"
+        },
+        {
+          "_id": "sc-ss",
+          "name": "Status/Success",
+          "shorthand": "ss",
+          "value": "16A34A",
+          "description": "Positive / confirm"
+        },
+        {
+          "_id": "sc-sw",
+          "name": "Status/Warning",
+          "shorthand": "sw",
+          "value": "D97706",
+          "description": "Caution / attention"
+        },
+        {
+          "_id": "sc-sd",
+          "name": "Status/Danger",
+          "shorthand": "sd",
+          "value": "DC2626",
+          "description": "Error / destructive"
+        },
+        {
+          "_id": "sc-si",
+          "name": "Status/Info",
+          "shorthand": "si",
+          "value": "0284C7",
+          "description": "Informational"
+        },
+        {
+          "_id": "sc-r",
+          "name": "Spare/Rose",
+          "shorthand": "ro",
+          "value": "F43F5E",
+          "description": "Rose — warm pink"
+        },
+        {
+          "_id": "sc-co",
+          "name": "Spare/Coral",
+          "shorthand": "cr",
+          "value": "F97316",
+          "description": "Coral — warm orange"
+        },
+        {
+          "_id": "sc-go",
+          "name": "Spare/Gold",
+          "shorthand": "gd",
+          "value": "EAB308",
+          "description": "Gold — warm yellow"
+        },
+        {
+          "_id": "sc-mi",
+          "name": "Spare/Mint",
+          "shorthand": "mn",
+          "value": "10B981",
+          "description": "Mint — cool green"
+        },
+        {
+          "_id": "sc-te",
+          "name": "Spare/Teal",
+          "shorthand": "tl",
+          "value": "0D9488",
+          "description": "Teal — blue-green"
+        },
+        {
+          "_id": "sc-in",
+          "name": "Spare/Indigo",
+          "shorthand": "ig",
+          "value": "6366F1",
+          "description": "Indigo — blue-violet"
+        },
+        {
+          "_id": "sc-fu",
+          "name": "Spare/Fuchsia",
+          "shorthand": "fu",
+          "value": "D946EF",
+          "description": "Fuchsia — vivid pink"
+        },
+        {
+          "_id": "sc-sa",
+          "name": "Spare/Sand",
+          "shorthand": "sa",
+          "value": "A8956A",
+          "description": "Sand — warm neutral"
+        }
+      ],
+      "roles": [
+        {
+          "name": "background",
+          "shorthand": "bg",
+          "minContrast": 1,
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "subtle",
+              "shorthand": "subtle"
+            },
+            {
+              "name": "soft",
+              "shorthand": "soft"
+            },
+            {
+              "name": "default",
+              "shorthand": "default"
+            },
+            {
+              "name": "raised",
+              "shorthand": "raised"
+            },
+            {
+              "name": "overlay",
+              "shorthand": "overlay"
+            }
+          ],
+          "variationTargets": [
+            1.05,
+            1.1,
+            1.2,
+            1.35,
+            1.6
+          ],
+          "description": "Page and section backgrounds · 5 depth steps"
+        },
+        {
+          "name": "surface",
+          "shorthand": "sf",
+          "minContrast": 1,
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "sunken",
+              "shorthand": "sunken"
+            },
+            {
+              "name": "default",
+              "shorthand": "default"
+            },
+            {
+              "name": "raised",
+              "shorthand": "raised"
+            },
+            {
+              "name": "elevated",
+              "shorthand": "elevated"
+            },
+            {
+              "name": "scrim",
+              "shorthand": "scrim"
+            }
+          ],
+          "variationTargets": [
+            1.03,
+            1.07,
+            1.15,
+            1.3,
+            14
+          ],
+          "description": "Surface elevation stack · sunken → card → popover → modal scrim"
+        },
+        {
+          "name": "fill",
+          "shorthand": "fi",
+          "minContrast": 1.3,
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "subtle",
+              "shorthand": "subtle"
+            },
+            {
+              "name": "tint",
+              "shorthand": "tint"
+            },
+            {
+              "name": "default",
+              "shorthand": "default"
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong"
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold"
+            }
+          ],
+          "variationTargets": [
+            1.5,
+            2.2,
+            4.5,
+            7,
+            12
+          ],
+          "description": "Colored fills · tint → AA → AAA · badges, chips, CTAs"
+        },
+        {
+          "name": "text",
+          "shorthand": "tx",
+          "minContrast": 2,
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "disabled",
+              "shorthand": "disabled"
+            },
+            {
+              "name": "muted",
+              "shorthand": "muted"
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle"
+            },
+            {
+              "name": "default",
+              "shorthand": "default"
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong"
+            }
+          ],
+          "variationTargets": [
+            2,
+            3,
+            4.5,
+            7,
+            11.5
+          ],
+          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA"
+        },
+        {
+          "name": "stroke",
+          "shorthand": "st",
+          "minContrast": 1.3,
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "ghost",
+              "shorthand": "ghost"
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle"
+            },
+            {
+              "name": "default",
+              "shorthand": "default"
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong"
+            },
+            {
+              "name": "focus",
+              "shorthand": "focus"
+            }
+          ],
+          "variationTargets": [
+            1.4,
+            1.8,
+            2.5,
+            3.5,
+            4.5
+          ],
+          "description": "Borders and dividers · hairline → focus ring"
+        },
+        {
+          "name": "status/success",
+          "shorthand": "ss",
+          "minContrast": 1,
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "bg",
+              "shorthand": "bg"
+            },
+            {
+              "name": "tint",
+              "shorthand": "ti"
+            },
+            {
+              "name": "fill",
+              "shorthand": "fi"
+            },
+            {
+              "name": "text",
+              "shorthand": "tx"
+            },
+            {
+              "name": "border",
+              "shorthand": "bo"
+            }
+          ],
+          "variationTargets": [
+            1.2,
+            1.8,
+            4.5,
+            4.5,
+            3
+          ],
+          "scopedColorIds": [
+            "sc-ss"
+          ],
+          "description": "Success channel · bg · tint · fill · text · border"
+        },
+        {
+          "name": "status/warning",
+          "shorthand": "sw",
+          "minContrast": 1,
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "bg",
+              "shorthand": "bg"
+            },
+            {
+              "name": "tint",
+              "shorthand": "ti"
+            },
+            {
+              "name": "fill",
+              "shorthand": "fi"
+            },
+            {
+              "name": "text",
+              "shorthand": "tx"
+            },
+            {
+              "name": "border",
+              "shorthand": "bo"
+            }
+          ],
+          "variationTargets": [
+            1.2,
+            1.8,
+            4.5,
+            4.5,
+            3
+          ],
+          "scopedColorIds": [
+            "sc-sw"
+          ],
+          "description": "Warning channel · bg · tint · fill · text · border"
+        },
+        {
+          "name": "status/danger",
+          "shorthand": "sd",
+          "minContrast": 1,
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "bg",
+              "shorthand": "bg"
+            },
+            {
+              "name": "tint",
+              "shorthand": "ti"
+            },
+            {
+              "name": "fill",
+              "shorthand": "fi"
+            },
+            {
+              "name": "text",
+              "shorthand": "tx"
+            },
+            {
+              "name": "border",
+              "shorthand": "bo"
+            }
+          ],
+          "variationTargets": [
+            1.2,
+            1.8,
+            4.5,
+            4.5,
+            3
+          ],
+          "scopedColorIds": [
+            "sc-sd"
+          ],
+          "description": "Danger / error channel · bg · tint · fill · text · border"
+        },
+        {
+          "name": "status/info",
+          "shorthand": "si",
+          "minContrast": 1,
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "bg",
+              "shorthand": "bg"
+            },
+            {
+              "name": "tint",
+              "shorthand": "ti"
+            },
+            {
+              "name": "fill",
+              "shorthand": "fi"
+            },
+            {
+              "name": "text",
+              "shorthand": "tx"
+            },
+            {
+              "name": "border",
+              "shorthand": "bo"
+            }
+          ],
+          "variationTargets": [
+            1.2,
+            1.8,
+            4.5,
+            4.5,
+            3
+          ],
+          "scopedColorIds": [
+            "sc-si"
+          ],
+          "description": "Info channel · bg · tint · fill · text · border"
+        }
+      ],
+      "themes": [
+        {
+          "name": "Light",
+          "bg": "FFFFFF"
+        },
+        {
+          "name": "Dark",
+          "bg": "0F172A"
+        }
+      ]
+    }
+  },
+  {
+    "id": "tw-direct-full",
+    "name": "TW Direct Full",
+    "badge": "TW",
+    "description": "Direct mode showcase. Every feature: 15 nested colors, localBg on on/fill (dynamic token ref per color), per-role solver overrides, alpha tints, 3 themes, scoped status roles.",
+    "tags": [
+      "Showcase",
+      "Direct",
+      "Full Featured",
+      "Multi-theme",
+      "localBg"
+    ],
+    "swatches": [
+      "0055E5",
+      "7C3AED",
+      "64748B",
+      "16A34A",
+      "DC2626",
+      "F43F5E",
+      "D946EF",
+      "0D9488"
+    ],
+    "config": {
+      "name": "TW Direct Full",
+      "pluginMode": "direct",
+      "scaleAlgorithm": "Natural",
+      "scaleLength": 25,
+      "useUniformAlgorithm": false,
+      "algorithmScopeLevel": "role",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "color",
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": false,
+      "useShorthandRoles": false,
+      "useShorthandVariations": false,
+      "useShorthandSteps": false,
+      "resolveTokensDirectly": true,
+      "includeSourceColors": true,
+      "sourceCollectionName": "palette/source",
+      "includeAlphaTints": true,
+      "alphaValues": "10, 20, 40, 60, 80",
+      "tokenGrouping": "color",
+      "includeColorScalesCollection": false,
+      "includeDescriptions": true,
+      "scaleCollectionName": "palette/scale",
+      "tokenCollectionName": "tokens",
+      "scaleStepNames": null,
+      "perRoleVariationOverride": true,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "default"
+        }
+      ],
+      "colors": [
+        {
+          "_id": "dc-bp",
+          "name": "Brand/Primary",
+          "shorthand": "bp",
+          "value": "0066FF",
+          "description": "Primary brand — vivid blue"
+        },
+        {
+          "_id": "dc-bs",
+          "name": "Brand/Secondary",
+          "shorthand": "bs",
+          "value": "7C3AED",
+          "description": "Secondary brand — violet"
+        },
+        {
+          "_id": "dc-bn",
+          "name": "Brand/Neutral",
+          "shorthand": "bn",
+          "value": "64748B",
+          "description": "Neutral slate — surfaces, borders, text"
+        },
+        {
+          "_id": "dc-ss",
+          "name": "Status/Success",
+          "shorthand": "ss",
+          "value": "16A34A",
+          "description": "Positive / confirm"
+        },
+        {
+          "_id": "dc-sw",
+          "name": "Status/Warning",
+          "shorthand": "sw",
+          "value": "D97706",
+          "description": "Caution / attention"
+        },
+        {
+          "_id": "dc-sd",
+          "name": "Status/Danger",
+          "shorthand": "sd",
+          "value": "DC2626",
+          "description": "Error / destructive"
+        },
+        {
+          "_id": "dc-si",
+          "name": "Status/Info",
+          "shorthand": "si",
+          "value": "0284C7",
+          "description": "Informational"
+        },
+        {
+          "_id": "dc-r",
+          "name": "Spare/Rose",
+          "shorthand": "ro",
+          "value": "F43F5E",
+          "description": "Rose — warm pink"
+        },
+        {
+          "_id": "dc-co",
+          "name": "Spare/Coral",
+          "shorthand": "cr",
+          "value": "F97316",
+          "description": "Coral — warm orange"
+        },
+        {
+          "_id": "dc-go",
+          "name": "Spare/Gold",
+          "shorthand": "gd",
+          "value": "EAB308",
+          "description": "Gold — warm yellow"
+        },
+        {
+          "_id": "dc-mi",
+          "name": "Spare/Mint",
+          "shorthand": "mn",
+          "value": "10B981",
+          "description": "Mint — cool green"
+        },
+        {
+          "_id": "dc-te",
+          "name": "Spare/Teal",
+          "shorthand": "tl",
+          "value": "0D9488",
+          "description": "Teal — blue-green"
+        },
+        {
+          "_id": "dc-in",
+          "name": "Spare/Indigo",
+          "shorthand": "ig",
+          "value": "6366F1",
+          "description": "Indigo — blue-violet"
+        },
+        {
+          "_id": "dc-fu",
+          "name": "Spare/Fuchsia",
+          "shorthand": "fu",
+          "value": "D946EF",
+          "description": "Fuchsia — vivid pink"
+        },
+        {
+          "_id": "dc-sa",
+          "name": "Spare/Sand",
+          "shorthand": "sa",
+          "value": "A8956A",
+          "description": "Sand — warm neutral"
+        }
+      ],
+      "roles": [
+        {
+          "name": "surface",
+          "shorthand": "sf",
+          "minContrast": 1,
+          "solverMode": "natural",
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "page",
+              "shorthand": "page"
+            },
+            {
+              "name": "card",
+              "shorthand": "card"
+            },
+            {
+              "name": "raised",
+              "shorthand": "raised"
+            },
+            {
+              "name": "overlay",
+              "shorthand": "overlay"
+            },
+            {
+              "name": "scrim",
+              "shorthand": "scrim"
+            }
+          ],
+          "variationTargets": [
+            1.03,
+            1.08,
+            1.18,
+            1.35,
+            14
+          ],
+          "description": "Surface elevation · page → card → popover → modal scrim"
+        },
+        {
+          "name": "fill",
+          "shorthand": "fi",
+          "minContrast": 1.3,
+          "solverMode": "natural",
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "subtle",
+              "shorthand": "subtle"
+            },
+            {
+              "name": "soft",
+              "shorthand": "soft"
+            },
+            {
+              "name": "default",
+              "shorthand": "default"
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong"
+            },
+            {
+              "name": "inverse",
+              "shorthand": "inverse"
+            }
+          ],
+          "variationTargets": [
+            1.5,
+            2.5,
+            4.5,
+            7,
+            14
+          ],
+          "description": "Solid fills · subtle tint → AA → AAA → inverse"
+        },
+        {
+          "name": "on/fill",
+          "shorthand": "onfi",
+          "minContrast": 2,
+          "solverMode": "luminance",
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "disabled",
+              "shorthand": "disabled"
+            },
+            {
+              "name": "muted",
+              "shorthand": "muted"
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle"
+            },
+            {
+              "name": "default",
+              "shorthand": "default"
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong"
+            }
+          ],
+          "variationTargets": [
+            2,
+            3,
+            4.5,
+            7,
+            11.5
+          ],
+          "localBg": {
+            "kind": "token",
+            "value": "[color]/fill/default",
+            "dynamic": true
+          },
+          "description": "Text / icon on fill · contrast vs fill/default per color · luminance solver"
+        },
+        {
+          "name": "text",
+          "shorthand": "tx",
+          "minContrast": 2,
+          "solverMode": "natural",
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "disabled",
+              "shorthand": "disabled"
+            },
+            {
+              "name": "muted",
+              "shorthand": "muted"
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle"
+            },
+            {
+              "name": "default",
+              "shorthand": "default"
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong"
+            }
+          ],
+          "variationTargets": [
+            2,
+            3,
+            4.5,
+            7,
+            11.5
+          ],
+          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA"
+        },
+        {
+          "name": "border",
+          "shorthand": "bo",
+          "minContrast": 1.3,
+          "solverMode": "natural",
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "ghost",
+              "shorthand": "ghost"
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle"
+            },
+            {
+              "name": "default",
+              "shorthand": "default"
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong"
+            },
+            {
+              "name": "focus",
+              "shorthand": "focus"
+            }
+          ],
+          "variationTargets": [
+            1.4,
+            1.8,
+            2.5,
+            3.5,
+            4.5
+          ],
+          "description": "Borders and dividers · hairline → focus ring"
+        },
+        {
+          "name": "status/success",
+          "shorthand": "ss",
+          "minContrast": 1,
+          "solverMode": "chroma-maximized",
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "bg",
+              "shorthand": "bg"
+            },
+            {
+              "name": "tint",
+              "shorthand": "ti"
+            },
+            {
+              "name": "fill",
+              "shorthand": "fi"
+            },
+            {
+              "name": "text",
+              "shorthand": "tx"
+            },
+            {
+              "name": "border",
+              "shorthand": "bo"
+            }
+          ],
+          "variationTargets": [
+            1.2,
+            1.8,
+            4.5,
+            4.5,
+            3
+          ],
+          "scopedColorIds": [
+            "dc-ss"
+          ],
+          "description": "Success channel · chroma-maximized · scoped to Status/Success"
+        },
+        {
+          "name": "status/warning",
+          "shorthand": "sw",
+          "minContrast": 1,
+          "solverMode": "chroma-maximized",
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "bg",
+              "shorthand": "bg"
+            },
+            {
+              "name": "tint",
+              "shorthand": "ti"
+            },
+            {
+              "name": "fill",
+              "shorthand": "fi"
+            },
+            {
+              "name": "text",
+              "shorthand": "tx"
+            },
+            {
+              "name": "border",
+              "shorthand": "bo"
+            }
+          ],
+          "variationTargets": [
+            1.2,
+            1.8,
+            4.5,
+            4.5,
+            3
+          ],
+          "scopedColorIds": [
+            "dc-sw"
+          ],
+          "description": "Warning channel · chroma-maximized · scoped to Status/Warning"
+        },
+        {
+          "name": "status/danger",
+          "shorthand": "sd",
+          "minContrast": 1,
+          "solverMode": "chroma-maximized",
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "bg",
+              "shorthand": "bg"
+            },
+            {
+              "name": "tint",
+              "shorthand": "ti"
+            },
+            {
+              "name": "fill",
+              "shorthand": "fi"
+            },
+            {
+              "name": "text",
+              "shorthand": "tx"
+            },
+            {
+              "name": "border",
+              "shorthand": "bo"
+            }
+          ],
+          "variationTargets": [
+            1.2,
+            1.8,
+            4.5,
+            4.5,
+            3
+          ],
+          "scopedColorIds": [
+            "dc-sd"
+          ],
+          "description": "Danger / error channel · chroma-maximized · scoped to Status/Danger"
+        },
+        {
+          "name": "status/info",
+          "shorthand": "si",
+          "minContrast": 1,
+          "solverMode": "chroma-maximized",
+          "customVariationList": true,
+          "customVariations": [
+            {
+              "name": "bg",
+              "shorthand": "bg"
+            },
+            {
+              "name": "tint",
+              "shorthand": "ti"
+            },
+            {
+              "name": "fill",
+              "shorthand": "fi"
+            },
+            {
+              "name": "text",
+              "shorthand": "tx"
+            },
+            {
+              "name": "border",
+              "shorthand": "bo"
+            }
+          ],
+          "variationTargets": [
+            1.2,
+            1.8,
+            4.5,
+            4.5,
+            3
+          ],
+          "scopedColorIds": [
+            "dc-si"
+          ],
+          "description": "Info channel · chroma-maximized · scoped to Status/Info"
+        }
+      ],
+      "themes": [
+        {
+          "name": "Light",
+          "bg": "FFFFFF"
+        },
+        {
+          "name": "Dark",
+          "bg": "111827"
+        },
+        {
+          "name": "Brand",
+          "bg": "0A1628"
+        }
+      ]
+    }
+  },
+  {
     "id": "material-3",
     "name": "Material Design 3",
     "badge": "M3",

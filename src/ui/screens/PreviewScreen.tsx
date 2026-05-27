@@ -2,16 +2,24 @@ import { useState, useEffect, useDeferredValue, useCallback } from 'react';
 import { useAppStore } from '../store/appStore';
 import { useUiStore } from '../store/uiStore';
 import { banner } from '../store/bannerStore';
-import { toast } from '../store/toastStore';
 import { SectionSpinner } from '../components/Spinner';
 import { EmptyState } from '../components/EmptyState';
 import { Modal, ModalHeader } from '../components/Modal';
 import { Button } from '../components/Button';
 import { SegmentedControl } from '../components/SegmentedControl';
-import { Badge, type BadgeVariant } from '../components/Badge';
-import { variableMaker, contrastRatio, type EngineConfig, type EngineResult } from '../lib/colorEngine';
+import { variableMaker, type EngineConfig, type EngineResult } from '../lib/colorEngine';
 import { CardTitle, MicroText } from '../components/typography';
 import type { AppState } from '../types/state';
+import {
+  RatingBadge,
+  TokenTile,
+  ScaleStepSlice,
+  SourceColorCard,
+  getInkMode,
+  inkColor,
+  normalizeHex,
+  copyText,
+} from '../components/preview';
 
 // ── Engine call ───────────────────────────────────────────────────────────────
 
@@ -57,143 +65,6 @@ function runEngine(appState: AppState): EngineResult | null {
   }
 }
 
-// ── Clipboard helper ──────────────────────────────────────────────────────────
-
-function copyText(text: string, label: string) {
-  navigator.clipboard.writeText(text).then(
-    () => toast.success(`Copied ${label}`),
-    () => toast.error('Copy failed'),
-  );
-}
-
-// ── Ink utilities ─────────────────────────────────────────────────────────────
-// ink = 'light' (white text) when bg is dark, 'dark' (black text) when bg is light
-
-function getInkMode(hex: string): 'light' | 'dark' {
-  const ratio = contrastRatio(hex, '#ffffff');
-  return (ratio ?? 0) >= 3 ? 'light' : 'dark';
-}
-
-function inkColor(mode: 'light' | 'dark', opacity = 1): string {
-  const base = mode === 'light' ? '255,255,255' : '0,0,0';
-  return opacity >= 1 ? `rgb(${base})` : `rgba(${base},${opacity})`;
-}
-
-function normalizeHex(raw: string): string {
-  const h = raw.replace(/^#/, '');
-  return (
-    '#' +
-    (h.length === 3
-      ? h
-          .split('')
-          .map((c) => c + c)
-          .join('')
-      : h
-    )
-      .toUpperCase()
-      .padEnd(6, '0')
-  );
-}
-
-// ── WCAG rating badge ─────────────────────────────────────────────────────────
-
-const RATING_VARIANT: Record<string, BadgeVariant> = {
-  AAA: 'success',
-  AA: 'accent',
-  'AA Large': 'warning',
-  Fail: 'danger',
-};
-
-function RatingBadge({ rating }: { rating: string }) {
-  return (
-    <Badge variant={RATING_VARIANT[rating] ?? 'danger'} size="xs">
-      {rating === 'AA Large' ? 'AA Lg' : rating}
-    </Badge>
-  );
-}
-
-// ── Token tile card ───────────────────────────────────────────────────────────
-// Upper zone (swatch, 72px) → click copies hex.
-// Lower footer zone → click copies token name.
-
-interface TokenTileProps {
-  hex: string;
-  ratio: number | null;
-  rating: string;
-  varLabel: string;
-  tokenName?: string;
-  ink: 'light' | 'dark';
-}
-
-function TokenTile({ hex, ratio, rating, varLabel, tokenName, ink }: TokenTileProps) {
-  const [swatchHovered, setSwatchHovered] = useState(false);
-  const swatchInk = getInkMode(hex.startsWith('#') ? hex : '#' + hex);
-  const swatchTextColor = inkColor(swatchInk);
-  const ratioStr = typeof ratio === 'number' ? ratio.toFixed(1) : '—';
-  const safeHex = hex.startsWith('#') ? hex : '#' + hex;
-
-  return (
-    <div className="flex flex-col min-w-0">
-      {/* Swatch zone — click copies hex */}
-      <div
-        className="relative h-[72px] rounded-t-[10px] p-1.5 flex flex-col justify-between cursor-pointer overflow-hidden transition-transform hover:scale-[1.03]"
-        style={{ backgroundColor: safeHex }}
-        onClick={() => copyText(safeHex, 'hex')}
-        title={`${safeHex.toUpperCase()} — click to copy hex`}
-        onMouseEnter={() => setSwatchHovered(true)}
-        onMouseLeave={() => setSwatchHovered(false)}
-      >
-        {/* Rating pill — top right */}
-        <div className="flex justify-end">
-          <RatingBadge rating={rating} />
-        </div>
-
-        {/* Contrast ratio hero — bottom left */}
-        <div className="flex items-baseline gap-px">
-          <span
-            className="text-[20px] font-extrabold leading-none tabular-nums"
-            style={{ color: swatchTextColor, textShadow: '0 1px 4px rgba(0,0,0,0.20)' }}
-          >
-            {ratioStr}
-          </span>
-          <span className="text-[10px] font-bold opacity-70 mb-px" style={{ color: swatchTextColor }}>
-            :1
-          </span>
-        </div>
-
-        {/* Hex overlay on hover */}
-        <div
-          className="absolute inset-0 flex items-center justify-center rounded-t-[10px] pointer-events-none transition-opacity"
-          style={{ background: 'rgba(0,0,0,0.18)', opacity: swatchHovered ? 1 : 0 }}
-        >
-          <span
-            className="text-[12px] font-bold font-mono tracking-widest"
-            style={{ color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
-          >
-            {safeHex.toUpperCase()}
-          </span>
-        </div>
-      </div>
-
-      {/* Footer zone — click copies token name */}
-      <div
-        className={`px-2 pb-2 pt-1.5 flex flex-col gap-0.5 rounded-b-[10px] border-t-0 transition-colors ${tokenName ? 'cursor-pointer' : ''}`}
-        style={{ border: `1px solid ${inkColor(ink, 0.1)}`, background: inkColor(ink, 0.04) }}
-        onClick={tokenName ? () => copyText(tokenName, 'token name') : undefined}
-        title={tokenName ? `${tokenName} — click to copy` : undefined}
-      >
-        <span className="text-[11px] font-semibold leading-snug truncate" style={{ color: inkColor(ink, 0.8) }}>
-          {varLabel}
-        </span>
-        {tokenName && (
-          <span className="text-[9px] leading-snug truncate tracking-[0.03em]" style={{ color: inkColor(ink, 0.4) }}>
-            {tokenName}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ── Color section (grid mode) ─────────────────────────────────────────────────
 
@@ -657,8 +528,6 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
     );
   }
 
-  const showAlphas = appState.includeAlphaTints && (appState.alphaValues ?? '').trim().length > 0;
-
   return (
     <div className="flex flex-col gap-4 p-3 pb-6">
       {groupBy === 'color'
@@ -762,48 +631,6 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
             );
           })}
 
-      {/* Source colors */}
-      <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: inkColor(ink, 0.1) }}>
-        <span className="text-[10px] font-bold tracking-[0.08em] uppercase" style={{ color: inkColor(ink, 0.45) }}>
-          Source
-        </span>
-        <div className="flex gap-2 flex-wrap">
-          {appState.colors.map((color) => {
-            const hex = normalizeHex(color.value);
-            return (
-              <div
-                key={color._id}
-                className="flex items-center gap-1.5 cursor-pointer"
-                onClick={() => copyText(hex, color.name)}
-                title={`${hex} — click to copy`}
-              >
-                <div
-                  className="w-5 h-5 rounded-[4px] shrink-0"
-                  style={{ background: hex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.15)}` }}
-                />
-                <span className="text-[10px] font-mono" style={{ color: inkColor(ink, 0.6) }}>
-                  {color.name}
-                </span>
-                <span className="text-[10px] font-mono" style={{ color: inkColor(ink, 0.35) }}>
-                  {hex}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Alpha tints */}
-      {showAlphas && (
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold tracking-[0.08em] uppercase" style={{ color: inkColor(ink, 0.45) }}>
-            Alpha
-          </span>
-          {appState.colors.map((color) => (
-            <AlphaTintRow key={color._id} color={color} alphaValues={appState.alphaValues ?? ''} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -947,7 +774,11 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
             </div>
 
             {appState.includeAlphaTints && (appState.alphaValues ?? '').trim() && (
-              <AlphaTintRow color={color} alphaValues={appState.alphaValues ?? ''} />
+              <SourceColorCard
+                color={color}
+                alphaValues={appState.alphaValues ?? ''}
+                showAlphas
+              />
             )}
           </div>
         );
@@ -956,102 +787,22 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
   );
 }
 
-// ── Scale step slice (expandable on hover) ────────────────────────────────────
 
-interface ScaleStepSliceProps {
-  stepName: string;
-  stepData: import('../../shared/clrEngine').ScaleStep;
-  themeKeys: string[];
-  colorName: string;
-}
+// ── Source collection panel ───────────────────────────────────────────────────
 
-function ScaleStepSlice({ stepName, stepData, themeKeys, colorName }: ScaleStepSliceProps) {
-  const [hovered, setHovered] = useState(false);
-  const contrastStr = themeKeys
-    .map((k) => {
-      const c = stepData.contrast?.[k];
-      return c ? `${k}: ${c.ratio}` : '';
-    })
-    .filter(Boolean)
-    .join(' · ');
+function SourcePanel({ appState }: { appState: AppState }) {
+  const showAlphas = appState.includeAlphaTints && (appState.alphaValues ?? '').trim().length > 0;
 
   return (
-    <div
-      className="relative h-full transition-all duration-150 cursor-pointer"
-      style={{
-        background: stepData.value,
-        flex: hovered ? 5.5 : 1,
-        borderRadius: hovered ? 8 : 0,
-        zIndex: hovered ? 10 : undefined,
-      }}
-      title={`${stepName} · ${stepData.value} — click to copy`}
-      onClick={() => copyText(stepData.value, `${colorName}/${stepName}`)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {hovered && (
-        <div
-          className="absolute px-2.5 inset-0 flex flex-col items-center justify-center gap-1.5 pointer-events-none"
-          style={{
-            color: inkColor(getInkMode(stepData.value.startsWith('#') ? stepData.value : '#' + stepData.value)),
-          }}
-        >
-          <span className="text-[10px] font-bold tracking-wider uppercase opacity-75 leading-none">
-            {stepName}
-          </span>
-          <span
-            className="text-[12px] font-mono font-bold px-2 py-0.5 rounded shadow-sm leading-none"
-            style={{
-              background: getInkMode(stepData.value.startsWith('#') ? stepData.value : '#' + stepData.value) === 'light'
-                ? 'rgba(0,0,0,0.06)'
-                : 'rgba(255,255,255,0.18)',
-            }}
-          >
-            {stepData.value.toUpperCase()}
-          </span>
-          {contrastStr && (
-            <span className="text-[10px] font-bold leading-none opacity-80 whitespace-nowrap">
-              {contrastStr}
-            </span>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Alpha tint row ────────────────────────────────────────────────────────────
-
-function AlphaTintRow({ color, alphaValues }: { color: AppState['colors'][0]; alphaValues: string }) {
-  const hex = normalizeHex(color.value);
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-
-  const alphas = alphaValues
-    .split(',')
-    .map((v) => parseInt(v.trim()))
-    .filter((v) => !isNaN(v) && v >= 0 && v <= 100);
-
-  if (!alphas.length) return null;
-
-  return (
-    <div className="flex gap-0.5 items-center">
-      <div className="w-16 shrink-0">
-        <MicroText className="text-text-muted truncate">{color.name} α</MicroText>
-      </div>
-      {alphas.map((alpha) => {
-        const rgba = `rgba(${r},${g},${b},${(alpha / 100).toFixed(2)})`;
-        return (
-          <div
-            key={alpha}
-            className="flex-1 h-6 rounded cursor-pointer"
-            style={{ background: rgba, boxShadow: 'inset 0 0 0 1px rgba(128,128,128,0.2)' }}
-            title={`${alpha}% — click to copy`}
-            onClick={() => copyText(rgba, `${alpha}% alpha`)}
-          />
-        );
-      })}
+    <div className="flex flex-col gap-5 p-3 pb-6">
+      {appState.colors.map((color) => (
+        <SourceColorCard
+          key={color._id}
+          color={color}
+          alphaValues={appState.alphaValues ?? ''}
+          showAlphas={showAlphas}
+        />
+      ))}
     </div>
   );
 }
@@ -1073,7 +824,7 @@ function reportAccessibilityWarnings(result: EngineResult, pluginMode: string): 
 
 // ── Preview content ───────────────────────────────────────────────────────────
 
-type TabId = 'scale' | `theme-${number}`;
+type TabId = 'scale' | `theme-${number}` | 'source';
 
 function PreviewContent() {
   const appState = useAppStore((s) => s.appState);
@@ -1127,6 +878,7 @@ function PreviewContent() {
       label: t.name,
       bg: normalizeHex(t.bg || '#FFFFFF'),
     })),
+    ...(appState.includeSourceColors ? [{ id: 'source' as TabId, label: 'Source' }] : []),
   ];
 
   const activeThemeMatch = activeTab.match(/^theme-(\d+)$/);
@@ -1134,6 +886,7 @@ function PreviewContent() {
   const activeTheme = activeThemeIdx >= 0 ? appState.themes[activeThemeIdx] : null;
   const panelBg = activeTheme ? normalizeHex(activeTheme.bg || '#FFFFFF') : undefined;
   const isScaleTab = activeTab === 'scale';
+  const isSourceTab = activeTab === 'source';
 
   function cycleTab(dir: 1 | -1) {
     const idx = tabs.findIndex((t) => t.id === activeTab);
@@ -1185,8 +938,8 @@ function PreviewContent() {
           })}
         </div>
 
-        {/* Toolbar — always visible */}
-        <div className="flex items-center gap-2">
+        {/* Toolbar — hidden on Source tab */}
+        <div className={`flex items-center gap-2 ${isSourceTab ? 'invisible pointer-events-none' : ''}`}>
           {computing && <MicroText className="text-text-dim">Computing…</MicroText>}
           <SegmentedControl
             segments={
@@ -1240,6 +993,7 @@ function PreviewContent() {
               viewMode={viewMode}
             />
           )}
+          {isSourceTab && <SourcePanel appState={appState} />}
         </div>
       ) : (
         <div className="flex-1 p-3">

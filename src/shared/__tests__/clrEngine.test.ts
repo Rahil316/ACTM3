@@ -620,3 +620,180 @@ describe('edge cases', () => {
     expect(unique.size).toBeGreaterThan(1);
   });
 });
+
+// ── localBg ───────────────────────────────────────────────────────────────────
+
+describe('localBg contrast override', () => {
+  it('hex kind: uses provided per-theme hex for contrast calculation', () => {
+    // Role with a black localBg — tokens should be light-on-dark, different from default
+    const rDefault = variableMaker(baseConfig({
+      pluginMode: 'direct',
+      roles: [{ name: 'Text', shorthand: 'tx', variationTargets: [4.5] }],
+      variations: [{ name: '1', shorthand: '1' }],
+    }));
+    const rWithBg = variableMaker(baseConfig({
+      pluginMode: 'direct',
+      roles: [{
+        name: 'Text',
+        shorthand: 'tx',
+        variationTargets: [4.5],
+        localBg: { light: '#000000' },
+      }],
+      variations: [{ name: '1', shorthand: '1' }],
+    }));
+    // localBg against black should produce a noticeably lighter token than against white
+    const defaultVal = tokens(rDefault)![0].value;
+    const bgVal = tokens(rWithBg)![0].value;
+    expect(bgVal).toMatch(/^#[0-9a-fA-F]{6}$/);
+    // They should differ (black bg vs white bg)
+    expect(bgVal).not.toBe(defaultVal);
+  });
+
+  it('hex kind with multiple themes: each theme uses its own bg', () => {
+    const r = variableMaker(baseConfig({
+      pluginMode: 'direct',
+      themes: [
+        { name: 'Light', bg: '#FFFFFF' },
+        { name: 'Dark', bg: '#1A1A1A' },
+      ],
+      roles: [{
+        name: 'Text',
+        shorthand: 'tx',
+        variationTargets: [4.5],
+        localBg: { light: '#FFFFFF', dark: '#000000' },
+      }],
+      variations: [{ name: '1', shorthand: '1' }],
+    }));
+    const lightToken = r.tokens['light']?.['Brand']?.[0]?.[0];
+    const darkToken = r.tokens['dark']?.['Brand']?.[0]?.[0];
+    expect(lightToken?.value).toMatch(/^#/);
+    expect(darkToken?.value).toMatch(/^#/);
+    // Dark bg (black) should produce a lighter token than light bg (white) for the same contrast
+    expect(lightToken?.value).not.toBe(darkToken?.value);
+  });
+
+  it('per-color localBg: different bg per color produces different tokens', () => {
+    const rBase = variableMaker(baseConfig({
+      pluginMode: 'direct',
+      colors: [
+        { name: 'Blue', shorthand: 'bl', value: '#2563EB', _id: 'c1' },
+        { name: 'Red', shorthand: 'rd', value: 'DC2626', _id: 'c2' },
+      ],
+      roles: [{
+        name: 'Text',
+        shorthand: 'tx',
+        variationTargets: [4.5],
+        localBgPerColor: {
+          Blue: { light: '#000000' },
+          Red: { light: '#FFFFFF' },
+        },
+      }],
+      variations: [{ name: '1', shorthand: '1' }],
+    }));
+    const blueToken = rBase.tokens['light']?.['Blue']?.[0]?.[0];
+    const redToken = rBase.tokens['light']?.['Red']?.[0]?.[0];
+    expect(blueToken?.value).toMatch(/^#/);
+    expect(redToken?.value).toMatch(/^#/);
+    // Different bg colors → different token values
+    expect(blueToken?.value).not.toBe(redToken?.value);
+  });
+});
+
+// ── scopedColorIds ────────────────────────────────────────────────────────────
+
+describe('scopedColorIds', () => {
+  it('null scopedColorIds: role applies to all colors', () => {
+    const r = variableMaker(baseConfig({
+      pluginMode: 'direct',
+      colors: [
+        { name: 'Blue', shorthand: 'bl', value: '#2563EB', _id: 'c1' },
+        { name: 'Red', shorthand: 'rd', value: 'DC2626', _id: 'c2' },
+      ],
+      roles: [{ name: 'Text', shorthand: 'tx', variationTargets: [4.5], scopedColorIds: null }],
+      variations: [{ name: '1', shorthand: '1' }],
+    }));
+    expect(r.tokens['light']?.['Blue']).toBeDefined();
+    expect(r.tokens['light']?.['Red']).toBeDefined();
+  });
+
+  it('empty scopedColorIds: role applies to no colors', () => {
+    const r = variableMaker(baseConfig({
+      pluginMode: 'direct',
+      colors: [
+        { name: 'Blue', shorthand: 'bl', value: '#2563EB', _id: 'c1' },
+        { name: 'Red', shorthand: 'rd', value: 'DC2626', _id: 'c2' },
+      ],
+      roles: [{ name: 'Text', shorthand: 'tx', variationTargets: [4.5], scopedColorIds: [] }],
+      variations: [{ name: '1', shorthand: '1' }],
+    }));
+    // Role should produce no tokens for any color
+    const blueRoleTokens = r.tokens['light']?.['Blue']?.[0];
+    const redRoleTokens = r.tokens['light']?.['Red']?.[0];
+    expect(blueRoleTokens).toBeUndefined();
+    expect(redRoleTokens).toBeUndefined();
+  });
+
+  it('specific scopedColorIds: role applies only to listed colors', () => {
+    const r = variableMaker(baseConfig({
+      pluginMode: 'direct',
+      colors: [
+        { name: 'Blue', shorthand: 'bl', value: '#2563EB', _id: 'c1' },
+        { name: 'Red', shorthand: 'rd', value: 'DC2626', _id: 'c2' },
+      ],
+      roles: [{ name: 'Text', shorthand: 'tx', variationTargets: [4.5], scopedColorIds: ['c1'] }],
+      variations: [{ name: '1', shorthand: '1' }],
+    }));
+    expect(r.tokens['light']?.['Blue']?.[0]).toBeDefined();
+    expect(r.tokens['light']?.['Red']?.[0]).toBeUndefined();
+  });
+});
+
+// ── index mapping mode ────────────────────────────────────────────────────────
+
+describe('index mapping mode', () => {
+  it('mappingMethod index: uses scale step at given index', () => {
+    const r = variableMaker(baseConfig({
+      pluginMode: 'scale',
+      roles: [{
+        name: 'Surface',
+        shorthand: 'sf',
+        variationTargets: [4.5],
+        mappingMethod: 'index',
+        indexTargets: [3],
+      }],
+      variations: [{ name: '1', shorthand: '1' }],
+    }));
+    const t = r.tokens['light']?.['Brand']?.[0]?.[0];
+    expect(t?.value).toMatch(/^#/);
+    // tokenRef should reference the scale step at index 3
+    expect(t?.tokenRef).toBeDefined();
+  });
+});
+
+// ── custom variations per role ────────────────────────────────────────────────
+
+describe('custom variations per role', () => {
+  it('customVariationList uses role custom variations instead of global', () => {
+    const r = variableMaker(baseConfig({
+      pluginMode: 'direct',
+      roles: [{
+        name: 'Text',
+        shorthand: 'tx',
+        variationTargets: [4.5, 7.0],
+        customVariationList: true,
+        customVariations: [
+          { name: 'on-bg', shorthand: 'ob' },
+          { name: 'on-surface', shorthand: 'os' },
+        ],
+      }],
+      variations: [
+        { name: '1', shorthand: '1' },
+        { name: '2', shorthand: '2' },
+        { name: '3', shorthand: '3' },
+      ],
+    }));
+    // Role has 2 custom variations → 2 token entries (not 3 global)
+    const roleTokens = r.tokens['light']?.['Brand']?.[0];
+    expect(Object.keys(roleTokens || {})).toHaveLength(2);
+  });
+});

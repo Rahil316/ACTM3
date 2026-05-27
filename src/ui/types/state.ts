@@ -47,6 +47,17 @@ export interface Color {
   solverMode?: SolverMode;
 }
 
+export type RoleLocalBgKind = "token" | "color" | "hex";
+
+export interface RoleLocalBg {
+  kind: RoleLocalBgKind;
+  // token/color: value is a string (token ref or color name)
+  // hex:         value is Record<themeName, hexString>
+  value: string | Record<string, string>;
+  // token kind only: if true, value contains [color] placeholder replaced per color at engine time
+  dynamic?: boolean;
+}
+
 export interface Role {
   _id: string;
   name: string;
@@ -60,6 +71,7 @@ export interface Role {
   solverMode?: SolverMode;
   description?: string;
   scopedColorIds?: string[] | null;
+  localBg?: RoleLocalBg | null;
 }
 
 export interface Theme {

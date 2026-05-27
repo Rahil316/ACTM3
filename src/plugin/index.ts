@@ -4,11 +4,19 @@
 // This file is bundled by esbuild into dist/scripts.js.
 // It runs in the Figma plugin sandbox (not the UI iframe).
 
-import { translateConfig, buildVariableRenameMap } from './config';
+import { translateConfig, buildVariableRenameMap, resolveTokenRefBgs } from './config';
 import { VariableManager, savePluginConfig } from './figmaVars';
 import { variableMaker } from '../shared/clrEngine.js';
 import { ExportFormatter } from './docGen';
 import { buildExportBundle } from './exportEng/bundler';
+
+function runEngine(config: any) {
+  const result = variableMaker(config);
+  if (resolveTokenRefBgs(config, result)) {
+    return variableMaker(config);
+  }
+  return result;
+}
 
 // ── 1. UI INITIALIZATION ─────────────────────────────────────────────────────
 
@@ -33,7 +41,7 @@ const UI = { WIDTH: 560, HEIGHT: 720, MIN_WIDTH: 560, MIN_HEIGHT: 520 };
   const capabilities = { multiMode: true };
   let probeCol: VariableCollection | null = null;
   try {
-    probeCol = figma.variables.createVariableCollection('__tw_probe__');
+    probeCol = figma.variables.createVariableCollection(`__tw_probe_${Math.random().toString(36).slice(2, 8)}__`);
     probeCol.addMode('probe2');
   } catch (e) {
     console.warn('Probe failed:', e);
@@ -57,11 +65,22 @@ const UI = { WIDTH: 560, HEIGHT: 720, MIN_WIDTH: 560, MIN_HEIGHT: 520 };
   }
 
   try {
-    const savedConfigStr = figma.root.getPluginData('tw_state');
+    // Prefer clientStorage — persists independently of document save state.
+    // Fall back to setPluginData for documents saved before this change.
+    let savedConfigStr: string | null = null;
+    try {
+      const fromClient = await figma.clientStorage.getAsync('tw_state');
+      if (typeof fromClient === 'string' && fromClient) savedConfigStr = fromClient;
+    } catch (e) {
+      console.warn('clientStorage load failed, trying setPluginData:', e);
+    }
+    if (!savedConfigStr) {
+      const fromDoc = figma.root.getPluginData('tw_state');
+      if (fromDoc) savedConfigStr = fromDoc;
+    }
     if (savedConfigStr) {
       figma.ui.postMessage({ type: 'load-config', state: JSON.parse(savedConfigStr) });
     } else {
-      // First launch — send empty state so UI shows quick-start
       figma.ui.postMessage({ type: 'load-config', state: null });
     }
   } catch (e) {
@@ -78,7 +97,7 @@ figma.ui.onmessage = async (msg: any) => {
     switch (msg.type) {
       case 'run-creator': {
         const config = translateConfig(msg.state);
-        const result = variableMaker(config);
+        const result = runEngine(config);
         await VariableManager.sync(
           result,
           config,
@@ -119,7 +138,7 @@ figma.ui.onmessage = async (msg: any) => {
 
       case 'request-processed-data': {
         const config = translateConfig(msg.state);
-        const result = variableMaker(config) as any;
+        const result = runEngine(config) as any;
         const et: string = msg.exportType;
 
         // Build files[] via bundler, then fill in docGen formats
@@ -141,7 +160,7 @@ figma.ui.onmessage = async (msg: any) => {
 
       case 'request-export-bundle': {
         const bConfig = translateConfig(msg.state);
-        const bResult = variableMaker(bConfig);
+        const bResult = runEngine(bConfig);
         const bFiles = buildExportBundle(bResult, bConfig, msg.formats || [], msg.state);
         figma.ui.postMessage({ type: 'export-bundle-response', files: bFiles });
         break;

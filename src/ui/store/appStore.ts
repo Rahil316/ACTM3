@@ -379,6 +379,7 @@ interface AppStoreState {
   removeRoleVariation: (roleIdx: number, varIdx: number) => void;
   toggleRoleCustomVariations: (roleIdx: number) => void;
   setRoleScope: (roleIdx: number, colorIds: string[] | null) => void;
+  setRoleLocalBg: (roleIdx: number, localBg: import('../types/state').RoleLocalBg | null) => void;
 
   // Shared variations — set / add / remove / move
   setVariation: (idx: number, field: string, value: string) => void;
@@ -668,6 +669,14 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     set((s) => {
       const roles = [...s.appState.roles];
       roles[roleIdx] = { ...roles[roleIdx], scopedColorIds: colorIds };
+      return { appState: { ...s.appState, roles } };
+    });
+  },
+
+  setRoleLocalBg: (roleIdx, localBg) => {
+    set((s) => {
+      const roles = [...s.appState.roles];
+      roles[roleIdx] = { ...roles[roleIdx], localBg };
       return { appState: { ...s.appState, roles } };
     });
   },

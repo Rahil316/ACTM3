@@ -1,11 +1,13 @@
 // Build script for the Figma plugin sandbox code (dist/scripts.js)
 // Uses esbuild to bundle src/plugin/index.ts → dist/scripts.js
+// Usage: node scripts/build-plugin.js [outDir]   (default: dist)
 const esbuild = require('esbuild');
 const path = require('path');
 const fs = require('fs');
 
 async function build() {
-  const outDir = path.resolve(__dirname, '../dist');
+  const outDirName = process.argv[2] || 'dist';
+  const outDir = path.resolve(__dirname, '..', outDirName);
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
   await esbuild.build({
@@ -21,13 +23,13 @@ async function build() {
     logLevel: 'info',
   });
 
-  console.log('✓ dist/scripts.js built');
+  console.log(`✓ ${outDirName}/scripts.js built`);
 
-  // Write a dist-local manifest.json with paths relative to dist/
+  // Write a manifest.json with paths relative to the output dir
   const rootManifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../manifest.json'), 'utf8'));
   const distManifest = { ...rootManifest, main: 'scripts.js', ui: 'ui.html' };
   fs.writeFileSync(path.resolve(outDir, 'manifest.json'), JSON.stringify(distManifest, null, 2));
-  console.log('✓ dist/manifest.json written');
+  console.log(`✓ ${outDirName}/manifest.json written`);
 }
 
 build().catch((e) => {

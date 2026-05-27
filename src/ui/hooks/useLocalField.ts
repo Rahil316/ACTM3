@@ -21,7 +21,12 @@ export function useLocalField(
   }
 
   function handleBlur(e: React.FocusEvent<HTMLInputElement>) {
-    if (e.target.value !== storeValue) onCommit(e.target.value);
+    const val = e.target.value.trim();
+    if (!val) {
+      setLocal(storeValue); // restore — empty name not allowed
+    } else if (val !== storeValue) {
+      onCommit(val);
+    }
   }
 
   return [local, handleChange, handleBlur];

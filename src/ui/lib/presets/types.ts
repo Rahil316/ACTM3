@@ -6,6 +6,7 @@ import type {
   TokenGrouping,
   TokenNameSegment,
   MappingMethod,
+  RoleLocalBg,
 } from '../../types/state';
 
 // ── Preset entity sub-types ───────────────────────────────────────────────────
@@ -27,6 +28,8 @@ export interface PresetRole {
   customVariations?: PresetVariation[];
   solverMode?: SolverMode;
   description?: string;
+  scopedColorIds?: string[] | null;
+  localBg?: RoleLocalBg | null;
 }
 
 export interface PresetColor {
@@ -80,6 +83,7 @@ export interface PresetConfig {
   tokenCollectionName?: string;
 
   scaleStepNames?: PresetScaleStepName[] | null;
+  perRoleVariationOverride?: boolean;
   variations?: PresetVariation[];
   colors?: PresetColor[];
   roles?: PresetRole[];

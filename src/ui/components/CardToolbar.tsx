@@ -1,5 +1,6 @@
-import React from "react";
-import { GripVertical, Trash2 } from "lucide-react";
+import React from 'react';
+import { GripVertical, Trash2 } from 'lucide-react';
+import { Button } from './Button';
 
 /**
  * Floating hover toolbar that appears below a card.
@@ -24,29 +25,31 @@ export function CardToolbar({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="absolute left-1/2 -translate-x-1/2 -bottom-8 opacity-0 group-hover/card:opacity-100 transition-opacity z-10 pointer-events-none group-hover/card:pointer-events-auto">
-      <div className="flex items-center gap-0.5 bg-bg-card border border-border-base rounded-[8px] shadow-lg px-1 py-1">
+    <div className="absolute -right-1 -top-3 opacity-0 group-hover/card:opacity-100 transition-opacity z-10 pointer-events-none group-hover/card:pointer-events-auto">
+      <div className="flex items-center gap-0.5 bg-bg-card border border-border-base rounded-[8px] shadow-lg p-0.5">
         {dragListeners && (
-          <button
-            className="w-6 h-6 rounded flex items-center justify-center text-text-dim hover:text-text-muted cursor-grab touch-none"
-            {...(dragAttributes as React.ButtonHTMLAttributes<HTMLButtonElement>)}
-            {...(dragListeners as React.ButtonHTMLAttributes<HTMLButtonElement>)}
+          <Button
+            variant="icon"
+            size="sm"
+            className="cursor-grab touch-none"
+            {...(dragAttributes as any)}
+            {...(dragListeners as any)}
             title="Drag to reorder"
             onClick={(e) => e.stopPropagation()}
-          >
-            <GripVertical size={12} strokeWidth={1.75} />
-          </button>
+            icon={<GripVertical size={12} strokeWidth={1.75} />}
+          />
         )}
+        {children && <div className="h-4 w-px bg-border-base mx-0.5" />}
         {children}
-        {children && <div className="w-px h-4 bg-border-base mx-0.5" />}
-        <button
-          className="w-6 h-6 rounded flex items-center justify-center text-text-dim hover:text-danger hover:bg-danger-subtle cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        <Button
+          variant="icon"
+          size="sm"
+          className="hover:text-danger hover:bg-danger-subtle"
           onClick={onDelete}
           disabled={deleteDisabled}
-          title={deleteTitle ?? "Delete"}
-        >
-          <Trash2 size={11} strokeWidth={1.75} />
-        </button>
+          title={deleteTitle ?? 'Delete'}
+          icon={<Trash2 size={11} strokeWidth={1.75} />}
+        />
       </div>
     </div>
   );
