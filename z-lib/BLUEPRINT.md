@@ -53,46 +53,46 @@ All user configuration lives in a single Zustand store (`appStore`).
 
 ```ts
 interface AppState {
-  name: string
-  description: string
-  versions: Version[]               // saved snapshots (no engine involvement)
+  name: string;
+  description: string;
+  versions: Version[]; // saved snapshots (no engine involvement)
 
   // Engine behaviour
-  pluginMode: 'scale' | 'direct'
-  scaleAlgorithm: ScaleAlgorithm    // global default
-  scaleLength: number               // number of steps in each palette ramp
-  useUniformAlgorithm: boolean      // if false: per-color or per-role algorithm overrides
-  algorithmScopeLevel: 'color' | 'role'
-  solverMode: SolverMode            // global default
+  pluginMode: 'scale' | 'direct';
+  scaleAlgorithm: ScaleAlgorithm; // global default
+  scaleLength: number; // number of steps in each palette ramp
+  useUniformAlgorithm: boolean; // if false: per-color or per-role algorithm overrides
+  algorithmScopeLevel: 'color' | 'role';
+  solverMode: SolverMode; // global default
 
   // Token naming
-  tokenNameSegments: ('color' | 'role' | 'variation')[]
-  useShorthandColors: boolean
-  useShorthandRoles: boolean
-  useShorthandVariations: boolean
-  useShorthandSteps: boolean
+  tokenNameSegments: ('color' | 'role' | 'variation')[];
+  useShorthandColors: boolean;
+  useShorthandRoles: boolean;
+  useShorthandVariations: boolean;
+  useShorthandSteps: boolean;
 
   // Output options
-  resolveTokensDirectly: boolean    // store hex in tokens instead of variable alias
-  includeSourceColors: boolean      // emit raw seed hex collection
-  sourceCollectionName: string
-  includeAlphaTints: boolean
-  alphaValues: string               // "10, 25, 50" — parsed to number[]
-  tokenGrouping: 'color' | 'role'   // legacy field; tokenNameSegments is used instead
-  includeColorScalesCollection: boolean
-  includeDescriptions: boolean
-  scaleCollectionName: string
-  tokenCollectionName: string
+  resolveTokensDirectly: boolean; // store hex in tokens instead of variable alias
+  includeSourceColors: boolean; // emit raw seed hex collection
+  sourceCollectionName: string;
+  includeAlphaTints: boolean;
+  alphaValues: string; // "10, 25, 50" — parsed to number[]
+  tokenGrouping: 'color' | 'role'; // legacy field; tokenNameSegments is used instead
+  includeColorScalesCollection: boolean;
+  includeDescriptions: boolean;
+  scaleCollectionName: string;
+  tokenCollectionName: string;
 
   // Entities
-  scaleStepNames: ScaleStepName[] | null   // null = numeric 1…N
-  variations: Variation[] | null           // global variation list
-  perRoleVariationOverride: boolean        // allow roles to override variations
-  colors: Color[]
-  roles: Role[]
-  themes: Theme[]
+  scaleStepNames: ScaleStepName[] | null; // null = numeric 1…N
+  variations: Variation[] | null; // global variation list
+  perRoleVariationOverride: boolean; // allow roles to override variations
+  colors: Color[];
+  roles: Role[];
+  themes: Theme[];
 
-  _presetId?: string
+  _presetId?: string;
 }
 ```
 
@@ -100,41 +100,41 @@ interface AppState {
 
 ```ts
 interface Color {
-  _id: string
-  name: string              // supports "/" nesting: "Brand/Primary"
-  shorthand: string
-  value: string             // hex without #
-  description: string
-  scaleAlgorithm?: ScaleAlgorithm   // per-color override (when useUniformAlgorithm=false)
-  solverMode?: SolverMode
+  _id: string;
+  name: string; // supports "/" nesting: "Brand/Primary"
+  shorthand: string;
+  value: string; // hex without #
+  description: string;
+  scaleAlgorithm?: ScaleAlgorithm; // per-color override (when useUniformAlgorithm=false)
+  solverMode?: SolverMode;
 }
 
 interface Role {
-  _id: string
-  name: string              // supports "/" nesting: "status/success"
-  shorthand: string
-  minContrast: number
-  mappingMethod: 'contrast' | 'index'
-  variationTargets: number[]         // one per variation — contrast ratio or step index
-  customVariationList: boolean
-  customVariations: Variation[]      // used when customVariationList=true
-  scaleAlgorithm?: ScaleAlgorithm
-  solverMode?: SolverMode
-  scopedColorIds?: string[] | null   // null = all colors; [] = no colors; [...] = specific ids
-  localBg?: RoleLocalBg | null
-  description?: string
+  _id: string;
+  name: string; // supports "/" nesting: "status/success"
+  shorthand: string;
+  minContrast: number;
+  mappingMethod: 'contrast' | 'index';
+  variationTargets: number[]; // one per variation — contrast ratio or step index
+  customVariationList: boolean;
+  customVariations: Variation[]; // used when customVariationList=true
+  scaleAlgorithm?: ScaleAlgorithm;
+  solverMode?: SolverMode;
+  scopedColorIds?: string[] | null; // null = all colors; [] = no colors; [...] = specific ids
+  localBg?: RoleLocalBg | null;
+  description?: string;
 }
 
 interface RoleLocalBg {
-  kind: 'token' | 'color' | 'hex'
-  value: string | Record<string, string>   // token/color: string; hex: { themeName: hexString }
-  dynamic?: boolean                        // token kind only: value contains [color] placeholder
+  kind: 'token' | 'color' | 'hex';
+  value: string | Record<string, string>; // token/color: string; hex: { themeName: hexString }
+  dynamic?: boolean; // token kind only: value contains [color] placeholder
 }
 
 interface Theme {
-  _id: string
-  name: string
-  bg: string    // hex without #
+  _id: string;
+  name: string;
+  bg: string; // hex without #
 }
 ```
 
@@ -232,6 +232,7 @@ for each color:
 ```
 
 **Scale algorithms:**
+
 - `Natural` — perceptually smooth, follows luminance curve
 - `Uniform` — mathematically even luminance steps
 - `Expressive` — pushes mid-tones for more chroma
@@ -275,6 +276,7 @@ for each role in config.roles:
 ```
 
 **Solver modes (direct):**
+
 - `natural` — adjusts lightness, preserves hue and chroma where possible
 - `saturated` — pushes chroma up while solving
 - `luminance` — pure luminance axis, desaturates
@@ -692,7 +694,7 @@ for each fmt in formats:
 
 ## 9. Run Dialog Flow (UI Side)
 
-Before the user hits "Apply to Figma", a preflight check runs.
+Before the user hits "Publish to Figma", a preflight check runs.
 
 ```
 user clicks "Run":
@@ -784,14 +786,14 @@ EngineResult (final)
 
 ## 13. Error Conditions
 
-| Condition | Handling |
-|---|---|
-| Free plan + multiple themes | `ensureMode` returns `null`; warning posted to UI; extra themes skipped |
-| `localBg` token ref cycle (A→B→A) | Tainted role detection; ref cleared; falls back to `theme.bg` |
-| `localBg` token ref not found in pass-1 | `resolveRef` returns null; role falls back to `theme.bg` |
-| Color not found for `localBg.kind='color'` | `_resolveLocalBg` returns null; engine uses `theme.bg` |
-| `minContrast` not achievable | Token still emitted at best available contrast; `isAdjusted=true`; notice added to `errors.notices` |
-| Variable create/rename fails | `tally.failed++`; error logged; other variables continue |
-| `scaleLength` < 1 | Clamped to 1 |
-| Duplicate theme names | `_deduplicateThemeNames` appends counter: "Dark 2" |
-| First launch (no saved state) | QuickStart overlay shown |
+| Condition                                  | Handling                                                                                            |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Free plan + multiple themes                | `ensureMode` returns `null`; warning posted to UI; extra themes skipped                             |
+| `localBg` token ref cycle (A→B→A)          | Tainted role detection; ref cleared; falls back to `theme.bg`                                       |
+| `localBg` token ref not found in pass-1    | `resolveRef` returns null; role falls back to `theme.bg`                                            |
+| Color not found for `localBg.kind='color'` | `_resolveLocalBg` returns null; engine uses `theme.bg`                                              |
+| `minContrast` not achievable               | Token still emitted at best available contrast; `isAdjusted=true`; notice added to `errors.notices` |
+| Variable create/rename fails               | `tally.failed++`; error logged; other variables continue                                            |
+| `scaleLength` < 1                          | Clamped to 1                                                                                        |
+| Duplicate theme names                      | `_deduplicateThemeNames` appends counter: "Dark 2"                                                  |
+| First launch (no saved state)              | QuickStart overlay shown                                                                            |

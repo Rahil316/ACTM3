@@ -8,7 +8,14 @@ import { SegmentedControl } from '../components/SegmentedControl';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 import { LoadingOverlay, SuccessOverlay, ErrorOverlay, ValidationWarningOverlay } from '../components/ResultOverlay';
-import { sendToPlugin, type SyncScope, type SyncTally, type ExistingCollection, type RenameData, type CollectionCheckResultMessage } from '../types/messages';
+import {
+  sendToPlugin,
+  type SyncScope,
+  type SyncTally,
+  type ExistingCollection,
+  type RenameData,
+  type CollectionCheckResultMessage,
+} from '../types/messages';
 import { banner } from '../store/bannerStore';
 import { toast } from '../store/toastStore';
 import { SectionLabel, HelperText, StatValue, Mono, MicroText, CardTitle } from '../components/typography';
@@ -16,26 +23,26 @@ import { SectionLabel, HelperText, StatValue, Mono, MicroText, CardTitle } from 
 type RunPhase = 'config' | 'validation-warning' | 'loading' | 'success' | 'error';
 
 const SCOPE_SEGMENTS = [
-  { value: 'all',    label: 'Everything' },
+  { value: 'all', label: 'Everything' },
   { value: 'groups', label: 'Scale Only' },
-  { value: 'roles',  label: 'Roles Only' },
+  { value: 'roles', label: 'Roles Only' },
 ];
 
 export function RunDialog() {
-  const isOpen       = useUiStore((s) => s.activeOverlay === 'run-dialog');
+  const isOpen = useUiStore((s) => s.activeOverlay === 'run-dialog');
   const closeOverlay = useUiStore((s) => s.closeOverlay);
-  const multiMode    = useUiStore((s) => s.multiMode);
-  const appState     = useAppStore((s) => s.appState);
-  const savedState   = useAppStore((s) => s.savedState);
-  const validate     = useAppStore((s) => s.validate);
+  const multiMode = useUiStore((s) => s.multiMode);
+  const appState = useAppStore((s) => s.appState);
+  const savedState = useAppStore((s) => s.savedState);
+  const validate = useAppStore((s) => s.validate);
 
-  const [phase, setPhase]         = useState<RunPhase>('config');
-  const [scope, setScope]         = useState<SyncScope>('all');
-  const [issues, setIssues]       = useState<string[]>([]);
-  const [tally, setTally]         = useState<SyncTally | null>(null);
-  const [errorMsg, setErrorMsg]   = useState<string>('');
+  const [phase, setPhase] = useState<RunPhase>('config');
+  const [scope, setScope] = useState<SyncScope>('all');
+  const [issues, setIssues] = useState<string[]>([]);
+  const [tally, setTally] = useState<SyncTally | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string>('');
   const [existingCollections, setExistingCollections] = useState<ExistingCollection[]>([]);
-  const [renames, setRenames]     = useState<RenameData | null>(null);
+  const [renames, setRenames] = useState<RenameData | null>(null);
 
   // Reset on open/close
   useEffect(() => {
@@ -47,22 +54,24 @@ export function RunDialog() {
       setRenames(null);
       sendToPlugin({ type: 'check-collections', state: appState, savedState: savedState ?? null });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const handleCollectionCheckResult = useCallback(
-    (msg: CollectionCheckResultMessage) => {
-      setExistingCollections(msg.existing ?? []);
-      setRenames(msg.renames ?? null);
-    },
-    [],
-  );
+  const handleCollectionCheckResult = useCallback((msg: CollectionCheckResultMessage) => {
+    setExistingCollections(msg.existing ?? []);
+    setRenames(msg.renames ?? null);
+  }, []);
 
   const handleFinish = useCallback((finishTally: SyncTally, errors: string[] | null) => {
     setTally(finishTally);
     setPhase('success');
     if (errors && errors.length > 0) {
-      banner.show({ id: 'run-errors', type: 'warning', title: 'Sync completed with errors', message: errors.join('\n') });
+      banner.show({
+        id: 'run-errors',
+        type: 'warning',
+        title: 'Sync completed with errors',
+        message: errors.join('\n'),
+      });
     }
   }, []);
 
@@ -112,12 +121,11 @@ export function RunDialog() {
       {phase === 'config' && (
         <>
           <ModalHeader
-            title="Apply to Figma"
+            title="Publish to Figma"
             subtitle="Generate or update color variables in your Figma file."
             actions={<Button variant="ghost" size="sm" label="Cancel" onClick={handleCancel} />}
           />
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-
             {/* Scope selector */}
             <SettingsCard>
               <SmallRow
@@ -137,10 +145,12 @@ export function RunDialog() {
               <SettingsCard>
                 <SectionLabel>Pending Renames</SectionLabel>
                 <HelperText className="mb-2">
-                  {renames!.summary.scaleCount > 0 && `${renames!.summary.scaleCount} scale variable${renames!.summary.scaleCount > 1 ? 's' : ''}`}
+                  {renames!.summary.scaleCount > 0 &&
+                    `${renames!.summary.scaleCount} scale variable${renames!.summary.scaleCount > 1 ? 's' : ''}`}
                   {renames!.summary.scaleCount > 0 && renames!.summary.tokenCount > 0 && ', '}
-                  {renames!.summary.tokenCount > 0 && `${renames!.summary.tokenCount} token variable${renames!.summary.tokenCount > 1 ? 's' : ''}`}
-                  {' '}will be renamed in-place.
+                  {renames!.summary.tokenCount > 0 &&
+                    `${renames!.summary.tokenCount} token variable${renames!.summary.tokenCount > 1 ? 's' : ''}`}{' '}
+                  will be renamed in-place.
                 </HelperText>
                 {renameChanges.slice(0, 5).map((change, i) => (
                   <div key={i} className="flex items-center gap-1.5 py-0.5">
@@ -150,20 +160,23 @@ export function RunDialog() {
                     <Mono className="text-accent">{change.to}</Mono>
                   </div>
                 ))}
-                {renameChanges.length > 5 && (
-                  <MicroText className="mt-1">+{renameChanges.length - 5} more</MicroText>
-                )}
+                {renameChanges.length > 5 && <MicroText className="mt-1">+{renameChanges.length - 5} more</MicroText>}
               </SettingsCard>
             )}
 
             {/* Existing collections summary */}
             {existingCollections.length > 0 && (
               <SettingsCard>
-                 <SectionLabel>Existing Collections</SectionLabel>
+                <SectionLabel>Existing Collections</SectionLabel>
                 {existingCollections.map((col) => (
-                  <div key={col.id} className="flex items-center justify-between py-1 border-b border-border-subtle last:border-0">
+                  <div
+                    key={col.id}
+                    className="flex items-center justify-between py-1 border-b border-border-subtle last:border-0"
+                  >
                     <CardTitle>{col.name}</CardTitle>
-                    <Badge variant="muted" size="xs">Update</Badge>
+                    <Badge variant="muted" size="xs">
+                      Update
+                    </Badge>
                   </div>
                 ))}
               </SettingsCard>
@@ -174,11 +187,20 @@ export function RunDialog() {
               <div className="rounded-[8px] border border-warning/40 bg-warning-subtle px-3 py-2.5 flex flex-col gap-1">
                 <span className="text-[11px] font-semibold text-warning">Only 1 theme will be applied</span>
                 <span className="text-[11px] text-text-muted">
-                  Your Figma plan supports only 1 mode per collection. Only <strong>{appState.themes[0]?.name}</strong> will be written.
+                  Your Figma plan supports only 1 mode per collection. Only <strong>{appState.themes[0]?.name}</strong>{' '}
+                  will be written.
                   {appState.themes.slice(1).length > 0 && (
-                    <> Skipped: {appState.themes.slice(1).map(t => t.name).join(', ')}.</>
-                  )}
-                  {' '}Upgrade to a paid Figma plan to apply all themes.
+                    <>
+                      {' '}
+                      Skipped:{' '}
+                      {appState.themes
+                        .slice(1)
+                        .map((t) => t.name)
+                        .join(', ')}
+                      .
+                    </>
+                  )}{' '}
+                  Upgrade to a paid Figma plan to apply all themes.
                 </span>
               </div>
             )}
@@ -186,9 +208,12 @@ export function RunDialog() {
             {/* resolveTokensDirectly in scale mode notice */}
             {appState.resolveTokensDirectly && appState.pluginMode === 'scale' && (
               <div className="rounded-[8px] border border-border-base bg-bg-input px-3 py-2.5 flex flex-col gap-1">
-                <span className="text-[11px] font-semibold text-text-primary">Scale collection will not be created</span>
+                <span className="text-[11px] font-semibold text-text-primary">
+                  Scale collection will not be created
+                </span>
                 <span className="text-[11px] text-text-muted">
-                  "Resolve Tokens Directly" is on — tokens store hex values directly instead of aliasing scale variables. No scale collection will be written to Figma.
+                  "Resolve Tokens Directly" is on — tokens store hex values directly instead of aliasing scale
+                  variables. No scale collection will be written to Figma.
                 </span>
               </div>
             )}
@@ -196,26 +221,11 @@ export function RunDialog() {
             {/* Config summary */}
             <SettingsCard>
               <SectionLabel>Summary</SectionLabel>
-              <SmallRow
-                label="Colors"
-                control={<StatValue>{appState.colors.length}</StatValue>}
-              />
-              <SmallRow
-                label="Roles"
-                control={<StatValue>{appState.roles.length}</StatValue>}
-              />
-              <SmallRow
-                label="Themes"
-                control={<StatValue>{appState.themes.length}</StatValue>}
-              />
-              <SmallRow
-                label="Variations"
-                control={<StatValue>{(appState.variations ?? []).length}</StatValue>}
-              />
-              <SmallRow
-                label="Mode"
-                control={<StatValue className="capitalize">{appState.pluginMode}</StatValue>}
-              />
+              <SmallRow label="Colors" control={<StatValue>{appState.colors.length}</StatValue>} />
+              <SmallRow label="Roles" control={<StatValue>{appState.roles.length}</StatValue>} />
+              <SmallRow label="Themes" control={<StatValue>{appState.themes.length}</StatValue>} />
+              <SmallRow label="Variations" control={<StatValue>{(appState.variations ?? []).length}</StatValue>} />
+              <SmallRow label="Mode" control={<StatValue className="capitalize">{appState.pluginMode}</StatValue>} />
             </SettingsCard>
           </div>
 
@@ -241,12 +251,7 @@ export function RunDialog() {
 
       {/* Validation warning */}
       {phase === 'validation-warning' && (
-        <ValidationWarningOverlay
-          open
-          issues={issues}
-          onBack={() => setPhase('config')}
-          onContinue={doRun}
-        />
+        <ValidationWarningOverlay open issues={issues} onBack={() => setPhase('config')} onContinue={doRun} />
       )}
 
       {/* Loading */}
