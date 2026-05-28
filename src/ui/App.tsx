@@ -125,7 +125,7 @@ export default function App() {
   const saveBlockedReason = useMemo(() => saveBlocked(), [appState]);
 
   return (
-    <div className="relative flex flex-col h-screen bg-bg-app text-text-primary font-sans text-xs overflow-hidden">
+    <div className="relative flex flex-col h-full bg-bg-app text-text-primary font-sans text-xs overflow-hidden">
       {/* Hidden file input for import */}
       <input ref={importRef} type="file" accept=".json,.wand" className="hidden" onChange={handleImportFile} />
 

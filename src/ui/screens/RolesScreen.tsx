@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useAppStore, deriveShorthand } from '../store/appStore';
+import { useAppStore, deriveShorthand, groupedName } from '../store/appStore';
 import { useUiStore } from '../store/uiStore';
 import { SuggestSheet, MenuRow } from '../components/MenuSheet';
 import { Badge } from '../components/Badge';
@@ -291,9 +291,10 @@ function RoleTree() {
         setSelectedIds(new Set());
       } else if (e.key === 'g' && !e.shiftKey) {
         e.preventDefault();
+        const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
         roles.forEach((r, idx) => {
           if (!selectedIds.has(r._id)) return;
-          setRole(idx, 'name', `Untitled/${r.name.split('/').pop()!}`);
+          setRole(idx, 'name', groupedName(r.name, selectedNames));
         });
         setSelectedIds(new Set());
       }
@@ -503,9 +504,10 @@ function RoleTree() {
         <MultiSelectToolbar
           count={selectedIds.size}
           onGroup={() => {
+            const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
             roles.forEach((r, i) => {
               if (!selectedIds.has(r._id)) return;
-              setRole(i, 'name', `Untitled/${r.name.split('/').pop()!}`);
+              setRole(i, 'name', groupedName(r.name, selectedNames));
             });
             setSelectedIds(new Set());
           }}
@@ -589,7 +591,8 @@ export function RolesScreen() {
         setSelectedIds(new Set());
       } else if (e.key === 'g' && !e.shiftKey) {
         e.preventDefault();
-        roles.forEach((r, i) => { if (selectedIds.has(r._id)) setRole(i, 'name', `Untitled/${r.name.split('/').pop()!}`); });
+        const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
+        roles.forEach((r, i) => { if (selectedIds.has(r._id)) setRole(i, 'name', groupedName(r.name, selectedNames)); });
         setSelectedIds(new Set());
       }
     }
@@ -648,7 +651,8 @@ export function RolesScreen() {
         <MultiSelectToolbar
           count={selectedIds.size}
           onGroup={() => {
-            roles.forEach((r, i) => { if (selectedIds.has(r._id)) setRole(i, 'name', `Untitled/${r.name.split('/').pop()!}`); });
+            const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
+            roles.forEach((r, i) => { if (selectedIds.has(r._id)) setRole(i, 'name', groupedName(r.name, selectedNames)); });
             setSelectedIds(new Set());
           }}
           onUngroup={() => {

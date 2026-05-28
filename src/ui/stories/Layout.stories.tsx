@@ -10,6 +10,7 @@ import { Input } from '../components/Input';
 import { Toggle } from '../components/Toggle';
 import { Button } from '../components/Button';
 import { Backdrop } from '../components/Backdrop';
+import { ScreenHeader } from '../components/ScreenHeader';
 
 const meta: Meta = {
   title: 'Components/Layout',
@@ -150,3 +151,31 @@ export const BottomSheet: StoryObj = {
     );
   },
 };
+
+export const ScreenHeaders: StoryObj = {
+  render: () => (
+    <div className="flex flex-col gap-4 p-4 bg-bg-app rounded-lg border border-border-base w-full max-w-md">
+      <div>
+        <p className="text-text-muted text-[10px] uppercase tracking-wider font-bold mb-2">Default Header</p>
+        <ScreenHeader
+          title="Color Scales"
+          subtitle="Generate color groups and variables"
+        />
+      </div>
+      <div>
+        <p className="text-text-muted text-[10px] uppercase tracking-wider font-bold mb-2">With Actions</p>
+        <ScreenHeader
+          title="Figma Export"
+          subtitle="Sync variables to your design file"
+          actions={
+            <>
+              <Button variant="secondary" size="md" label="Preview" />
+              <Button variant="primary" size="md" label="Export" />
+            </>
+          }
+        />
+      </div>
+    </div>
+  ),
+};
+

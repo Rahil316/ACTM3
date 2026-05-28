@@ -73,6 +73,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
         type="color"
         defaultValue={normalizeHex(initial) || '#000000'}
         id={idPrefix ? `${idPrefix}-picker` : undefined}
+        aria-label="Color picker"
         onChange={handlePickerChange}
         className={clsx('cursor-pointer h-full shrink-0 bg-transparent border-none rounded-none p-0.5', s.swatch)}
       />
@@ -81,6 +82,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
         type="text"
         defaultValue={initial}
         id={idPrefix ? `${idPrefix}-hex` : undefined}
+        aria-label="Hex color value"
         maxLength={6}
         onChange={handleHexChange}
         onBlur={handleHexBlur}

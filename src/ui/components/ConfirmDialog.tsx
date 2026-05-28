@@ -34,16 +34,16 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <ConfirmOverlay open={open} className={className}>
-      <div className="text-danger">
-        {icon ?? <IconAlertTriangle />}
-      </div>
-      <div className="space-y-2">
-        <ModalTitle>{title}</ModalTitle>
-        {body && <BodyText className="max-w-[260px]">{body}</BodyText>}
-      </div>
-      <div className={clsx('flex gap-3 w-full max-w-[280px]')}>
-        <Button variant="secondary" size="xl" label={cancelLabel} onClick={onCancel} className="flex-1" />
-        <Button variant={confirmVariant} size="xl" label={confirmLabel} onClick={onConfirm} className="flex-1" />
+      <div className="bg-bg-input rounded-xl p-6 flex flex-col items-center gap-6">
+        <div className="text-danger">{icon ?? <IconAlertTriangle />}</div>
+        <div className="space-y-2">
+          <ModalTitle>{title}</ModalTitle>
+          {body && <BodyText className="max-w-[260px]">{body}</BodyText>}
+        </div>
+        <div className={clsx('flex gap-3 w-full max-w-[280px]')}>
+          <Button variant="secondary" size="xl" label={cancelLabel} onClick={onCancel} className="flex-1" />
+          <Button variant={confirmVariant} size="xl" label={confirmLabel} onClick={onConfirm} className="flex-1" />
+        </div>
       </div>
     </ConfirmOverlay>
   );

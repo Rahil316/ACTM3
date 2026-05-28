@@ -7,6 +7,8 @@ import { useBannerStore } from '../store/bannerStore';
 import { useToastStore } from '../store/toastStore';
 import { LoadingOverlay, SuccessOverlay, ErrorOverlay, ValidationWarningOverlay } from '../components/ResultOverlay';
 import { Button } from '../components/Button';
+import { Callout } from '../components/Callout';
+
 
 const meta: Meta = {
   title: 'Components/Feedback',
@@ -160,3 +162,23 @@ export const Overlays: StoryObj = {
     );
   },
 };
+
+export const Callouts: StoryObj = {
+  render: () => (
+    <div className="flex flex-col gap-3 p-4 bg-bg-app rounded-lg border border-border-base w-full max-w-md">
+      <Callout variant="info" title="Information Callout">
+        Make sure you are on a Figma Professional plan or higher to load multiple theme modes.
+      </Callout>
+      <Callout variant="success" title="Success Callout">
+        Sync completed successfully! 24 variables were added to your collection.
+      </Callout>
+      <Callout variant="warning" title="Warning Callout">
+        "Brand/Text/Secondary" fails WCAG AAA targets under "Dark Theme" mode.
+      </Callout>
+      <Callout variant="danger" title="Danger Callout">
+        Authentication failed. Please log in to your Figma account and try again.
+      </Callout>
+    </div>
+  ),
+};
+

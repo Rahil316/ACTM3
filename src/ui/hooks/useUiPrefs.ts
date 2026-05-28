@@ -18,7 +18,10 @@ function detectFigmaTheme(): 'dark' | 'light' {
 
 function applyPrefsToDOM(scale: number, theme: UiTheme): void {
   document.documentElement.style.setProperty('--ui-scale', String(scale));
-  document.body.style.zoom = String(scale);
+  // Apply zoom on <html> so the browser collapses the layout size to match —
+  // zoom on <body> reserves the unscaled height, leaving empty space at the bottom.
+  document.documentElement.style.zoom = String(scale);
+  document.body.style.zoom = '';
   const resolved: 'dark' | 'light' = theme === 'figma' ? detectFigmaTheme() : theme;
   document.body.setAttribute('data-ui-theme', resolved);
 }

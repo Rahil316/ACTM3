@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useAppStore, deriveShorthand } from '../store/appStore';
+import { useAppStore, deriveShorthand, groupedName } from '../store/appStore';
 import { useUiStore } from '../store/uiStore';
 import { ColorGroupCard } from '../components/cards/ColorGroupCard';
 import { SplitActionButton } from '../components/Button';
@@ -201,9 +201,10 @@ function ColorTree() {
         setSelectedIds(new Set());
       } else if (e.key === 'g' && !e.shiftKey) {
         e.preventDefault();
+        const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
         colors.forEach((c, idx) => {
           if (!selectedIds.has(c._id)) return;
-          setColor(idx, 'name', `Untitled/${c.name.split('/').pop()!}`);
+          setColor(idx, 'name', groupedName(c.name, selectedNames));
         });
         setSelectedIds(new Set());
       }
@@ -425,9 +426,10 @@ function ColorTree() {
         <MultiSelectToolbar
           count={selectedIds.size}
           onGroup={() => {
+            const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
             colors.forEach((c, i) => {
               if (!selectedIds.has(c._id)) return;
-              setColor(i, 'name', `Untitled/${c.name.split('/').pop()!}`);
+              setColor(i, 'name', groupedName(c.name, selectedNames));
             });
             setSelectedIds(new Set());
           }}
@@ -511,7 +513,8 @@ export function ColorsScreen() {
         setSelectedIds(new Set());
       } else if (e.key === 'g' && !e.shiftKey) {
         e.preventDefault();
-        colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', `Untitled/${c.name.split('/').pop()!}`); });
+        const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
+        colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', groupedName(c.name, selectedNames)); });
         setSelectedIds(new Set());
       }
     }
@@ -570,7 +573,8 @@ export function ColorsScreen() {
         <MultiSelectToolbar
           count={selectedIds.size}
           onGroup={() => {
-            colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', `Untitled/${c.name.split('/').pop()!}`); });
+            const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
+            colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', groupedName(c.name, selectedNames)); });
             setSelectedIds(new Set());
           }}
           onUngroup={() => {

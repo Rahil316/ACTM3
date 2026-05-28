@@ -10,6 +10,9 @@
     "build:plugin":  "node scripts/build-plugin.js dist",
     "build:plugin:release": "node scripts/build-plugin.js dist-release --manifest",
 
+    "_comment_dev": "── Dev ──────────────────────────────────────────────────────────────",
+    "dev":           "VITE_DEV=true vite",
+
     "_comment_watch": "── Watch ────────────────────────────────────────────────────────────",
     "watch":         "node scripts/watch-plugin.js dist & node scripts/watch-ui.js",
     "watch:release": "node scripts/watch-plugin.js dist-release --manifest & node scripts/watch-ui.js --release",

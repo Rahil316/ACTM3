@@ -152,6 +152,27 @@ export function deriveShorthand(name: string): string {
   return w.slice(0, 2);
 }
 
+// Returns the new name for an item when grouping selected items together.
+// Finds the common group prefix of all selected names, then nests a new
+// "Untitled" subgroup within that prefix so items stay inside their parent group.
+// e.g. selected = ["Brand/Primary", "Brand/Accent"] → "Brand/Untitled/Primary"
+//      selected = ["Primary", "Accent"]              → "Untitled/Primary"
+export function groupedName(itemName: string, selectedNames: string[]): string {
+  const segs = selectedNames.map((n) => n.split('/').slice(0, -1));
+  // Find longest common prefix across all selected items' group paths
+  const minLen = Math.min(...segs.map((s) => s.length));
+  const common: string[] = [];
+  for (let i = 0; i < minLen; i++) {
+    const seg = segs[0][i];
+    if (segs.every((s) => s[i] === seg)) common.push(seg);
+    else break;
+  }
+  const leaf = itemName.split('/').pop()!;
+  return common.length > 0
+    ? `${common.join('/')}/Untitled/${leaf}`
+    : `Untitled/${leaf}`;
+}
+
 export function segmentDepth(str: string): number {
   if (!str || typeof str !== "string") return 1;
   return str.split("/").filter(Boolean).length;

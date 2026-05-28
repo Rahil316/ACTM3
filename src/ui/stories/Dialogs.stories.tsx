@@ -6,6 +6,7 @@ import { Dialogue } from '../components/Dialogue';
 import { Backdrop } from '../components/Backdrop';
 import { Button } from '../components/Button';
 import { IconSettings } from '../components/icons';
+import { FullscreenOverlay } from '../components/FullscreenOverlay';
 
 const meta: Meta = {
   title: 'Components/Dialogs',
@@ -21,9 +22,10 @@ export const AllDialogs: StoryObj = {
     const [dialogueStackedOpen, setDialogueStackedOpen] = useState(false);
     const [dialogueSheetOpen, setDialogueSheetOpen] = useState(false);
     const [backdropOpen, setBackdropOpen] = useState(false);
+    const [fullscreenOpen, setFullscreenOpen] = useState(false);
 
     return (
-      <div className="flex flex-col gap-3 p-4 max-w-sm bg-bg-app rounded-lg border border-border-base relative min-h-[360px] justify-center items-center">
+      <div className="flex flex-col gap-3 p-4 max-w-sm bg-bg-app rounded-lg border border-border-base relative min-h-[390px] justify-center items-center">
         <h4 className="text-text-muted text-[11px] uppercase tracking-wider font-bold mb-2">Dialogs & Overlays</h4>
 
         <Button variant="secondary" size="md" className="w-full" label="Open Modal Screen" onClick={() => setModalOpen(true)} />
@@ -32,6 +34,7 @@ export const AllDialogs: StoryObj = {
         <Button variant="secondary" size="md" className="w-full" label="Open Dialogue (Stacked)" onClick={() => setDialogueStackedOpen(true)} />
         <Button variant="secondary" size="md" className="w-full" label="Open Dialogue (Bottom Sheet)" onClick={() => setDialogueSheetOpen(true)} />
         <Button variant="secondary" size="md" className="w-full" label="Toggle Backdrop" onClick={() => setBackdropOpen(true)} />
+        <Button variant="secondary" size="md" className="w-full" label="Open Fullscreen Overlay" onClick={() => setFullscreenOpen(true)} />
 
         {/* Modal Overlay */}
         <Modal open={modalOpen}>
@@ -107,7 +110,23 @@ export const AllDialogs: StoryObj = {
             <Button variant="primary" size="sm" label="Click to close" onClick={() => setBackdropOpen(false)} />
           </div>
         )}
+
+        {/* Fullscreen Overlay */}
+        {fullscreenOpen && (
+          <FullscreenOverlay>
+            <ModalHeader
+              title="Fullscreen Theme Shop"
+              subtitle="Explore beautiful predefined themes and color combinations"
+              actions={<Button variant="primary" size="sm" label="Close" onClick={() => setFullscreenOpen(false)} />}
+            />
+            <div className="p-5 flex-1 overflow-y-auto flex flex-col items-center justify-center text-text-muted">
+              <p>This is a FullscreenOverlay component. It covers the entire layout context.</p>
+              <Button className="mt-4" variant="secondary" size="md" label="Close Overlay" onClick={() => setFullscreenOpen(false)} />
+            </div>
+          </FullscreenOverlay>
+        )}
       </div>
     );
   },
 };
+

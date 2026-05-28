@@ -89,11 +89,11 @@ export const dark: ThemeTokens = {
   text: {
     primary:   '#f0f0f0',
     secondary: '#c8c8c8',
-    muted:     '#8a8a8a',
+    muted:     '#919191',
     dim:       '#555555',
     disabled:  '#3d3d3d',
     inverse:   '#0d0d0d',
-    onAccent:  '#ffffff',
+    onAccent:  '#0d0d0d',
   },
   accent: {
     DEFAULT: '#18a0fb',
@@ -130,7 +130,7 @@ export const light: ThemeTokens = {
     base:   '#d0d4db',
     strong: '#b0b6c0',
     input:  '#c4c9d2',
-    focus:  '#18a0fb',
+    focus:  '#0869d4',
   },
   text: {
     primary:   '#111827',
@@ -142,10 +142,10 @@ export const light: ThemeTokens = {
     onAccent:  '#ffffff',
   },
   accent: {
-    DEFAULT: '#18a0fb',
-    hover:   '#0d8de8',
-    subtle:  'rgba(24,160,251,0.10)',
-    glow:    'rgba(24,160,251,0.20)',
+    DEFAULT: '#0869d4',
+    hover:   '#0758b8',
+    subtle:  'rgba(8,105,212,0.10)',
+    glow:    'rgba(8,105,212,0.20)',
   },
   status: {
     success:       '#16a34a',

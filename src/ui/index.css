@@ -17,6 +17,11 @@
     user-select: none;
   }
 
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+  }
+
   /* Re-enable selection where text input is expected */
   input, textarea {
     user-select: text;

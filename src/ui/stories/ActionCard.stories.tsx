@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { ActionCard } from '../components/ActionCard';
+import { SelectableCard } from '../components/SelectableCard';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 
@@ -58,3 +60,24 @@ export const LongTitle: Story = {
     meta: 'Meta text',
   },
 };
+
+export const InteractiveSelectableCard: StoryObj = {
+  render: () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [selected, setSelected] = useState(false);
+    return (
+      <div className="max-w-sm">
+        <SelectableCard selected={selected} onClick={() => setSelected(!selected)}>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="text-[12px] font-bold text-text-primary">Sunrise Theme Preset</span>
+            <Badge variant="success" size="xs" pill>Popular</Badge>
+          </div>
+          <p className="text-[11px] text-text-muted">
+            A beautiful high-contrast warm palette designed for dashboards and creative sites.
+          </p>
+        </SelectableCard>
+      </div>
+    );
+  },
+};
+
