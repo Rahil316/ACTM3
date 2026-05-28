@@ -45,7 +45,7 @@ export function ItemTitle({ children, className }: TypoProps) {
 
 /** Uppercase section divider in sidebars and settings panels (11px bold) */
 export function SectionLabel({ children, className }: TypoProps) {
-  return <p className={clsx("text-[11px] font-bold tracking-[0.6px] text-white", className)}>{children}</p>;
+  return <p className={clsx("text-[11px] font-bold tracking-[0.6px] text-text-secondary", className)}>{children}</p>;
 }
 
 /** Form group header or input group label — renders a <label> (11px bold uppercase) */
@@ -96,7 +96,7 @@ export function HelperText({ children, className }: TypoProps) {
 
 /** Small helper, validation or status text (11px muted snug) */
 export function LabelText({ children, className }: TypoProps) {
-  return <p className={clsx("text-[13px] text-white leading-snug", className)}>{children}</p>;
+  return <p className={clsx("text-[13px] text-text-primary leading-snug", className)}>{children}</p>;
 }
 
 /** Dim hint text beneath inputs or inside tooltips (11px dim snug) */

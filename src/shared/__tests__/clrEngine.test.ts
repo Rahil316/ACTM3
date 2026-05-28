@@ -167,7 +167,7 @@ describe('direct mode', () => {
     const r = variableMaker(baseConfig({ pluginMode: 'direct' }));
     const roleTokens = tokens(r)!;
     // On a white background, higher target → higher ratio → different value
-    expect(roleTokens[1].contrast.ratio).toBeGreaterThanOrEqual(roleTokens[0].contrast.ratio);
+    expect(roleTokens[1].contrast.ratio ?? 0).toBeGreaterThanOrEqual(roleTokens[0].contrast.ratio ?? 0);
   });
 
   it('produces no engine warnings in direct mode', () => {
@@ -757,9 +757,8 @@ describe('index mapping mode', () => {
       roles: [{
         name: 'Surface',
         shorthand: 'sf',
-        variationTargets: [4.5],
         mappingMethod: 'index',
-        indexTargets: [3],
+        variationTargets: [3],
       }],
       variations: [{ name: '1', shorthand: '1' }],
     }));

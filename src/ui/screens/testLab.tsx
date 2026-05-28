@@ -14,12 +14,14 @@ import {
 } from "@dnd-kit/sortable";
 import {
   Settings,
-  Check,
-  X,
   RefreshCw,
 } from "lucide-react";
-import { Sheet } from "../components/Sheet";
-import { SplitActionButton } from "../components/Button";
+import { SplitActionButton, Button } from "../components/Button";
+import { Checkbox } from "../components/Checkbox";
+import { SuggestSheet, MenuRow } from "../components/MenuSheet";
+import { ColorSwatch } from "../components/ColorSwatch";
+import { Badge } from "../components/Badge";
+import { FieldLabel } from "../components/typography";
 import { ColorGroupCard } from "../components/cards/ColorGroupCard";
 import { RoleGroupCard } from "../components/cards/RoleGroupCard";
 import { useAppStore } from "../store/appStore";
@@ -63,46 +65,19 @@ function ScopeSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-40" style={{ background: "var(--bg-scrim)" }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
-        <Sheet open className="overflow-y-auto">
-          <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">Scope to colors</span>
-            <button className="text-text-dim hover:text-text-primary cursor-pointer" onClick={onClose}><X size={13} /></button>
-          </div>
-
-          <button
-            onClick={toggleAll}
-            className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
-          >
-            <Checkbox checked={isAll} />
-            <span className="text-[12px] font-medium text-text-primary">All colors</span>
-          </button>
-
-          <div className="flex flex-col">
-            {MOCK_COLORS.map((c) => (
-              <button
-                key={c._id}
-                onClick={() => toggleColor(c._id)}
-                className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0"
-              >
-                <Checkbox checked={effectiveIds.includes(c._id)} />
-                <div className="w-5 h-5 rounded shrink-0 border border-black/10" style={{ background: c.hex }} />
-                <span className="text-[12px] text-text-primary">{c.name}</span>
-              </button>
-            ))}
-          </div>
-        </Sheet>
-      </div>
-    </div>
-  );
-}
-
-function Checkbox({ checked }: { checked: boolean }) {
-  return (
-    <div className={["w-4 h-4 rounded border flex items-center justify-center shrink-0", checked ? "bg-accent border-accent" : "border-border-strong bg-bg-input"].join(" ")}>
-      {checked && <Check size={10} strokeWidth={3} className="text-white" />}
-    </div>
+    <SuggestSheet label="Scope to colors" onClose={onClose}>
+      <MenuRow onClick={toggleAll}>
+        <Checkbox checked={isAll} />
+        <span className="text-[12px] font-medium text-text-primary">All colors</span>
+      </MenuRow>
+      {MOCK_COLORS.map((c) => (
+        <MenuRow key={c._id} onClick={() => toggleColor(c._id)}>
+          <Checkbox checked={effectiveIds.includes(c._id)} />
+          <ColorSwatch color={c.hex} size="sm" radius="sm" />
+          <span className="text-[12px] text-text-primary">{c.name}</span>
+        </MenuRow>
+      ))}
+    </SuggestSheet>
   );
 }
 
@@ -113,13 +88,13 @@ function SectionA() {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Section A — Role Scope Picker</p>
+      <FieldLabel>Section A — Role Scope Picker</FieldLabel>
 
       <div className="rounded-[10px] border border-border-base bg-bg-card px-3 py-2.5 flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
           <span className="flex-1 text-[12px] font-semibold text-text-primary">Background</span>
           {scopeLabel && (
-            <span className="text-[10px] font-semibold text-accent bg-accent-subtle border border-accent/30 rounded-full px-2 py-0.5">{scopeLabel}</span>
+            <Badge variant="accent" size="xs" pill>{scopeLabel}</Badge>
           )}
           <button
             onClick={() => setShowSheet(true)}
@@ -321,10 +296,9 @@ function ColorTree() {
     useAppStore.getState().addColorWith(`${fullPath}/New`, "#888888", "");
   }
 
-  const renderColorLeaf = useCallback((color: typeof committed[number], idx: number, selected: boolean, onToggleSel: (id: string, meta: boolean) => void) => (
+  const renderColorLeaf = useCallback((color: typeof committed[number], idx: number, selected: boolean, _multiDragCount: number, onToggleSel: (id: string, meta: boolean, shift?: boolean) => void) => (
     <SortableLeafWrapper key={color._id} id={color._id} selected={selected} onToggleSelect={onToggleSel}
       renderContent={() => (
-        /* draggable={false} prevents the card's own HTML5 drag from fighting dnd-kit */
         <div draggable={false} onDragStart={(e) => e.preventDefault()}>
           <ColorGroupCard color={color} idx={idx} />
         </div>
@@ -346,6 +320,7 @@ function ColorTree() {
             overGroupPath={overGroupPath}
             activeGroupPath={activeGroupPath}
             selectedIds={selectedIds}
+            multiDragCount={0}
             onToggleSelect={toggleSelect}
             onToggle={(p) => setCollapsed((prev) => ({ ...prev, [p]: !prev[p] }))}
             onRenameGroup={renameGroup}
@@ -378,6 +353,7 @@ function ColorTree() {
           onUngroup={() => { colors.forEach((c, i) => { if (!selectedIds.has(c._id)) return; setColor(i, "name", c.name.split("/").pop()!); }); setSelectedIds(new Set()); }}
           onDelete={() => { const idxs = colors.map((c, i) => selectedIds.has(c._id) ? i : -1).filter(i => i >= 0).reverse(); idxs.forEach(i => useAppStore.getState().removeColor(i)); setSelectedIds(new Set()); }}
           onClear={() => setSelectedIds(new Set())}
+          onSelectAll={() => setSelectedIds(new Set(colors.map((c) => c._id)))}
         />
       )}
     </div>
@@ -535,7 +511,7 @@ function RoleTree() {
     useAppStore.getState().addRoleWith(`${fullPath}/New`, "", 4.5, [500]);
   }
 
-  const renderRoleLeaf = useCallback((role: typeof committed[number], idx: number, selected: boolean, onToggleSel: (id: string, meta: boolean) => void) => (
+  const renderRoleLeaf = useCallback((role: typeof committed[number], idx: number, selected: boolean, _multiDragCount: number, onToggleSel: (id: string, meta: boolean, shift?: boolean) => void) => (
     <SortableLeafWrapper key={role._id} id={role._id} selected={selected} onToggleSelect={onToggleSel}
       renderContent={(listeners, attributes) => (
         /* pb-10 reserves space for the floating toolbar that sits below the card */
@@ -559,6 +535,7 @@ function RoleTree() {
             overGroupPath={overGroupPath}
             activeGroupPath={activeGroupPath}
             selectedIds={selectedIds}
+            multiDragCount={0}
             onToggleSelect={toggleSelect}
             onToggle={(p) => setCollapsed((prev) => ({ ...prev, [p]: !prev[p] }))}
             onRenameGroup={renameGroup}
@@ -591,6 +568,7 @@ function RoleTree() {
           onUngroup={() => { roles.forEach((r, i) => { if (!selectedIds.has(r._id)) return; setRole(i, "name", r.name.split("/").pop()!); }); setSelectedIds(new Set()); }}
           onDelete={() => { const idxs = roles.map((r, i) => selectedIds.has(r._id) ? i : -1).filter(i => i >= 0).reverse(); idxs.forEach(i => useAppStore.getState().removeRole(i)); setSelectedIds(new Set()); }}
           onClear={() => setSelectedIds(new Set())}
+          onSelectAll={() => setSelectedIds(new Set(roles.map((r) => r._id)))}
         />
       )}
     </div>
@@ -635,31 +613,23 @@ function ColorSuggestSheet({ existingNames, onPick, onBlank, onClose }: {
 }) {
   const available = SUGGESTED_COLORS.filter((c) => !existingNames.includes(c.name));
   return (
-    <div className="fixed inset-0 z-40" style={{ background: "var(--bg-scrim)" }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
-        <Sheet open className="overflow-y-auto">
-          <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">Suggested colors</span>
-            <button className="text-[11px] text-accent cursor-pointer hover:underline" onClick={onBlank}>+ Custom</button>
+    <SuggestSheet
+      label="Suggested colors"
+      linkLabel="+ Custom"
+      onLink={onBlank}
+      onClose={onClose}
+      empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions added.</div> : undefined}
+    >
+      {available.map((c) => (
+        <MenuRow key={c.name} onClick={() => onPick(c)}>
+          <ColorSwatch color={c.value} size="md" />
+          <div className="flex flex-col min-w-0">
+            <span className="text-[12px] font-semibold text-text-primary truncate">{c.name}</span>
+            <span className="text-[10px] text-text-muted font-mono">{c.value.toUpperCase()}</span>
           </div>
-          {available.length === 0 ? (
-            <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions added.</div>
-          ) : (
-            <div className="flex flex-col overflow-y-auto">
-              {available.map((c) => (
-                <button key={c.name} onClick={() => onPick(c)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer text-left border-b border-border-subtle last:border-0">
-                  <div className="w-7 h-7 rounded-[6px] shrink-0 border border-black/10" style={{ background: c.value }} />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[12px] font-semibold text-text-primary truncate">{c.name}</span>
-                    <span className="text-[10px] text-text-muted font-mono">{c.value.toUpperCase()}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </Sheet>
-      </div>
-    </div>
+        </MenuRow>
+      ))}
+    </SuggestSheet>
   );
 }
 
@@ -671,30 +641,22 @@ function RoleSuggestSheet({ existingNames, onPick, onBlank, onClose }: {
 }) {
   const available = SUGGESTED_ROLES.filter((r) => !existingNames.includes(r.name));
   return (
-    <div className="fixed inset-0 z-40" style={{ background: "var(--bg-scrim)" }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
-        <Sheet open className="overflow-y-auto">
-          <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">Suggested roles</span>
-            <button className="text-[11px] text-accent cursor-pointer hover:underline" onClick={onBlank}>+ Custom</button>
+    <SuggestSheet
+      label="Suggested roles"
+      linkLabel="+ Custom"
+      onLink={onBlank}
+      onClose={onClose}
+      empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions added.</div> : undefined}
+    >
+      {available.map((r) => (
+        <MenuRow key={r.name} onClick={() => onPick(r)}>
+          <div className="flex flex-col min-w-0">
+            <span className="text-[12px] font-semibold text-text-primary truncate">{r.name}</span>
+            <span className="text-[10px] text-text-muted">{r.minContrast}:1 min contrast · {r.variationTargets.length} vars</span>
           </div>
-          {available.length === 0 ? (
-            <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions added.</div>
-          ) : (
-            <div className="flex flex-col overflow-y-auto">
-              {available.map((r) => (
-                <button key={r.name} onClick={() => onPick(r)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer text-left border-b border-border-subtle last:border-0">
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[12px] font-semibold text-text-primary truncate">{r.name}</span>
-                    <span className="text-[10px] text-text-muted">{r.minContrast}:1 min contrast · {r.variationTargets.length} vars</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </Sheet>
-      </div>
-    </div>
+        </MenuRow>
+      ))}
+    </SuggestSheet>
   );
 }
 
@@ -731,16 +693,13 @@ function SectionB() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Section B — Tree with real cards</p>
-        <button onClick={loadDemo} className="flex items-center gap-1 text-[10px] text-accent hover:underline cursor-pointer">
-          <RefreshCw size={10} strokeWidth={2.5} />
-          {hasDemo ? "Reload demo data" : "Load demo data"}
-        </button>
+        <FieldLabel>Section B — Tree with real cards</FieldLabel>
+        <Button variant="underlined" size="xs" onClick={loadDemo} leftIcon={<RefreshCw size={10} strokeWidth={2.5} />} label={hasDemo ? "Reload demo data" : "Load demo data"} />
       </div>
 
       {colors.length > 0 && (
         <div className="flex flex-col gap-1">
-          <p className="text-[10px] font-semibold text-text-dim uppercase tracking-wide px-1">Colors</p>
+          <FieldLabel className="px-1">Colors</FieldLabel>
           <ColorTree />
         </div>
       )}
@@ -753,7 +712,7 @@ function SectionB() {
 
       {roles.length > 0 && (
         <div className="flex flex-col gap-1 mt-1">
-          <p className="text-[10px] font-semibold text-text-dim uppercase tracking-wide px-1">Roles</p>
+          <FieldLabel className="px-1">Roles</FieldLabel>
           <RoleTree />
         </div>
       )}

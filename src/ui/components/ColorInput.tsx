@@ -51,6 +51,17 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
     if (clean.length === 6) onUpdate(clean);
   };
 
+  const handleHexBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const clean = sanitizeHex(e.target.value);
+    // Expand 3-char shorthand (e.g. FFF → FFFFFF, A3C → AA33CC)
+    if (clean.length === 3) {
+      const expanded = clean.split('').map((c) => c + c).join('');
+      if (hexRef.current) hexRef.current.value = expanded;
+      if (pickerRef.current) pickerRef.current.value = '#' + expanded;
+      onUpdate(expanded);
+    }
+  };
+
   return (
     <div className={clsx(
       'flex items-center w-full bg-bg-input border border-border-input overflow-hidden',
@@ -72,6 +83,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
         id={idPrefix ? `${idPrefix}-hex` : undefined}
         maxLength={6}
         onChange={handleHexChange}
+        onBlur={handleHexBlur}
         className={clsx('w-full bg-transparent uppercase outline-none text-text-primary pr-2', s.text)}
       />
     </div>

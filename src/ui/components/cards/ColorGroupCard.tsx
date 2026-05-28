@@ -40,6 +40,9 @@ export const ColorGroupCard = React.memo(function ColorGroupCard({
   const [localShort, onShortChange, onShortBlur] = useLocalField(color.shorthand ?? '', (v) =>
     setColor(idx, 'shorthand', v),
   );
+  const [localDesc, onDescChange, onDescBlur] = useLocalField(color.description ?? '', (v) =>
+    setColor(idx, 'description', v),
+  );
 
   return (
     <div className="group/card relative bg-bg-card rounded-[12px] border border-border-base hover:border-border-strong p-3 space-y-2 transition-colors">
@@ -92,9 +95,10 @@ export const ColorGroupCard = React.memo(function ColorGroupCard({
       )}
       {includeDescriptions && (
         <Input
-          value={color.description ?? ''}
+          value={localDesc}
           placeholder="Optional…"
-          onChange={(e) => setColor(idx, 'description', e.target.value)}
+          onChange={onDescChange}
+          onBlur={onDescBlur}
           label="Description"
           size="lg"
         />

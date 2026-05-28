@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { variableMaker } from '../../lib/colorEngine';
-import { Settings, Check, X, ChevronDown } from 'lucide-react';
+import { Settings, X, ChevronDown } from 'lucide-react';
+import { Checkbox } from '../Checkbox';
 import type { Color, Theme, RoleLocalBg, RoleLocalBgKind, Role, Variation } from '../../types/state';
 import { CardToolbar } from '../CardToolbar';
 import { useAppStore } from '../../store/appStore';
@@ -168,12 +169,7 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
         onClick={toggleDynamic}
         className="flex items-center gap-2 cursor-pointer group"
       >
-        <div className={[
-          'w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors',
-          isDynamic ? 'bg-accent border-accent' : 'border-border-strong bg-bg-input',
-        ].join(' ')}>
-          {isDynamic && <Check size={10} strokeWidth={3} className="text-white" />}
-        </div>
+        <Checkbox checked={isDynamic} />
         <span className="text-[11px] text-text-muted group-hover:text-text-primary transition-colors">Per color</span>
       </button>
 
@@ -357,7 +353,7 @@ function RoleSettingsSheet({
             onClick={toggleAll}
             className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
           >
-            <ScopeCheckbox checked={isAll} />
+            <Checkbox checked={isAll} />
             <span className="text-[12px] font-medium text-text-primary">All colors</span>
           </button>
           <div className="flex flex-col border-b border-border-base">
@@ -367,7 +363,7 @@ function RoleSettingsSheet({
                 onClick={() => toggleColor(c._id)}
                 className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0"
               >
-                <ScopeCheckbox checked={effectiveIds.includes(c._id)} />
+                <Checkbox checked={effectiveIds.includes(c._id)} />
                 <div className="w-5 h-5 rounded shrink-0 border border-black/10" style={{ background: c.value }} />
                 <span className="text-[12px] text-text-primary">{c.name}</span>
               </button>
@@ -393,7 +389,7 @@ function RoleSettingsSheet({
                 className={[
                   'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer',
                   bgKind === opt.value
-                    ? 'bg-accent text-white border-accent'
+                    ? 'bg-accent text-text-on-accent border-accent'
                     : 'bg-bg-input text-text-muted border-border-base hover:border-border-strong',
                 ].join(' ')}
               >
@@ -410,7 +406,7 @@ function RoleSettingsSheet({
           <div className="px-4 py-3 border-t border-border-subtle shrink-0">
             <button
               onClick={applyChanges}
-              className="w-full py-2 rounded-[8px] bg-accent hover:bg-accent-hover text-white text-[12px] font-semibold transition-colors cursor-pointer"
+              className="w-full py-2 rounded-[8px] bg-accent hover:bg-accent-hover text-text-on-accent text-[12px] font-semibold transition-colors cursor-pointer"
             >
               Apply changes
             </button>
@@ -421,18 +417,6 @@ function RoleSettingsSheet({
   );
 }
 
-function ScopeCheckbox({ checked }: { checked: boolean }) {
-  return (
-    <div
-      className={[
-        'w-4 h-4 rounded border flex items-center justify-center shrink-0',
-        checked ? 'bg-accent border-accent' : 'border-border-strong bg-bg-input',
-      ].join(' ')}
-    >
-      {checked && <Check size={10} strokeWidth={3} className="text-white" />}
-    </div>
-  );
-}
 
 // ── Variation table ───────────────────────────────────────────────────────────
 // Extracted to module level so React doesn't treat it as a new component type

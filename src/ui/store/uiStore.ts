@@ -35,6 +35,12 @@ interface UiStoreState {
 
   // Capabilities actions
   setMultiMode: (multiMode: boolean) => void;
+
+  // Tree collapse state (persisted across tab switches)
+  colorGroupCollapsed: Record<string, boolean>;
+  roleGroupCollapsed: Record<string, boolean>;
+  setColorGroupCollapsed: (update: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
+  setRoleGroupCollapsed: (update: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
 }
 
 export const VALID_SCALES = [0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5] as const;
@@ -90,4 +96,9 @@ export const useUiStore = create<UiStoreState>((set) => ({
   setRoleDragSrcIdx: (idx) => set({ roleDragSrcIdx: idx }),
 
   setMultiMode: (multiMode) => set({ multiMode }),
+
+  colorGroupCollapsed: {},
+  roleGroupCollapsed: {},
+  setColorGroupCollapsed: (update) => set((s) => ({ colorGroupCollapsed: update(s.colorGroupCollapsed) })),
+  setRoleGroupCollapsed: (update) => set((s) => ({ roleGroupCollapsed: update(s.roleGroupCollapsed) })),
 }));

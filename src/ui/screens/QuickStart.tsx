@@ -5,6 +5,7 @@ import { toast } from "../store/toastStore";
 import { Button } from "../components/Button";
 import { PageTitle, BodyText, ItemTitle, Caption } from "../components/typography";
 import { Badge } from "../components/Badge";
+import { SelectableCard } from "../components/SelectableCard";
 import { CentredOverlay } from "../components/ResultOverlay";
 import { PRESETS, type Preset } from "../lib/presets/presets";
 import type { AppState } from "../types/state";
@@ -82,13 +83,13 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
       <BodyText className="max-w-[300px] text-center">Pick a design system to start from, or begin with a blank canvas.</BodyText>
       <div className="grid grid-cols-2 gap-2 w-full max-w-[360px]">
         {quickPresets.map((preset) => (
-          <button key={preset.id} onClick={() => loadPreset(preset)} className="text-left bg-bg-card border border-border-base rounded-[10px] p-3 hover:bg-bg-hover hover:border-accent transition-colors">
+          <SelectableCard key={preset.id} onClick={() => loadPreset(preset)}>
             <div className="flex items-center gap-1.5 mb-1">
               {preset.badge && <Badge variant="accent" size="xs" pill>{preset.badge}</Badge>}
               <ItemTitle className="truncate">{preset.name}</ItemTitle>
             </div>
             {preset.description && <Caption className="line-clamp-2">{preset.description}</Caption>}
-          </button>
+          </SelectableCard>
         ))}
       </div>
       <div className="flex gap-2 w-full max-w-[360px]">

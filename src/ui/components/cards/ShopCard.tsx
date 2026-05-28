@@ -29,7 +29,7 @@ export function ShopCard({ preset, isLoaded, onLoad }: ShopCardProps) {
               <span
                 className={clsx(
                   'text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded',
-                  isTW ? 'bg-accent text-white' : 'bg-bg-active text-text-muted',
+                  isTW ? 'bg-accent text-text-on-accent' : 'bg-bg-active text-text-muted',
                 )}
               >
                 {preset.badge}
@@ -49,7 +49,7 @@ export function ShopCard({ preset, isLoaded, onLoad }: ShopCardProps) {
             className={clsx(
               'shrink-0 h-7 px-3 rounded-[7px] text-[11px] font-semibold transition-colors cursor-pointer',
               isTW
-                ? 'bg-accent hover:opacity-90 text-white'
+                ? 'bg-accent hover:opacity-90 text-text-on-accent'
                 : 'bg-bg-input border border-border-base text-text-primary hover:bg-bg-hover',
             )}
           >

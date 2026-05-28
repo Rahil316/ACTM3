@@ -300,7 +300,7 @@ export function ExportSheet() {
                     className={[
                       "w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors cursor-pointer",
                       inQueue
-                        ? "bg-accent text-white hover:opacity-80"
+                        ? "bg-accent text-text-on-accent hover:opacity-80"
                         : "bg-bg-input border border-border-base text-text-muted hover:bg-bg-hover hover:text-text-primary",
                     ].join(" ")}
                   >

@@ -1,4 +1,4 @@
-import { useState, useEffect, useDeferredValue, useCallback } from 'react';
+import { useState, useEffect, useDeferredValue, useCallback, useMemo } from 'react';
 import { useAppStore } from '../store/appStore';
 import { useUiStore } from '../store/uiStore';
 import { banner } from '../store/bannerStore';
@@ -26,6 +26,7 @@ import {
 function buildEngineConfig(appState: AppState): EngineConfig {
   return {
     colors: appState.colors.map((c) => ({
+      _id: c._id,
       name: c.name,
       value: c.value,
       shorthand: c.shorthand ?? '',
@@ -48,6 +49,7 @@ function buildEngineConfig(appState: AppState): EngineConfig {
       customVariations: r.customVariations,
       solverMode: r.solverMode,
       description: r.description,
+      scopedColorIds: r.scopedColorIds,
     })),
     variations: (appState.variations ?? []).map((v) => ({ name: v.name, shorthand: v.shorthand })),
     useUniformAlgorithm: appState.useUniformAlgorithm,
@@ -516,7 +518,7 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
   }
 
   const colorEntries = Object.entries(themeTokens) as [string, Record<number, VarMap>][];
-  const byRole = groupBy === 'role' ? buildByRole() : null;
+  const byRole = useMemo(() => groupBy === 'role' ? buildByRole() : null, [groupBy, themeTokens]);
 
   if (colorEntries.length === 0) {
     return (
@@ -838,10 +840,12 @@ function PreviewContent() {
 
   const compute = useCallback((state: AppState) => {
     setComputing(true);
-    const r = runEngine(state);
-    setResult(r);
-    setComputing(false);
-    if (r) reportAccessibilityWarnings(r, state.pluginMode);
+    setTimeout(() => {
+      const r = runEngine(state);
+      setResult(r);
+      setComputing(false);
+      if (r) reportAccessibilityWarnings(r, state.pluginMode);
+    }, 0);
   }, []);
 
   useEffect(() => {

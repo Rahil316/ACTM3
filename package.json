@@ -4,20 +4,35 @@
   "description": "Token Wand — Color Token System for Figma",
   "main": "code.js",
   "scripts": {
-    "dev": "vite",
-    "build": "tsx scripts/build-presets.ts && node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && node scripts/build-plugin.js",
-    "build:release": "tsx scripts/build-presets.ts --release && node -e \"require('fs').rmSync('dist-release',{recursive:true,force:true})\" && VITE_OUT_DIR=dist-release vite build && node scripts/build-plugin.js dist-release",
-    "build:plugin": "node scripts/build-plugin.js",
-    "watch": "node scripts/watch-plugin.js & vite build --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "release": "node package.js",
+    "_comment_build": "── Build ────────────────────────────────────────────────────────────",
+    "build":         "tsx scripts/generateThemeCss.ts && tsx scripts/build-presets.ts && node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && node scripts/build-plugin.js dist",
+    "build:release": "tsx scripts/generateThemeCss.ts && tsx scripts/build-presets.ts --release && node -e \"require('fs').rmSync('dist-release',{recursive:true,force:true})\" && VITE_OUT_DIR=dist-release vite build && node scripts/build-plugin.js dist-release --manifest",
+    "build:plugin":  "node scripts/build-plugin.js dist",
+    "build:plugin:release": "node scripts/build-plugin.js dist-release --manifest",
+
+    "_comment_watch": "── Watch ────────────────────────────────────────────────────────────",
+    "watch":         "node scripts/watch-plugin.js dist & node scripts/watch-ui.js",
+    "watch:release": "node scripts/watch-plugin.js dist-release --manifest & node scripts/watch-ui.js --release",
+
+    "_comment_theme": "── Theme ────────────────────────────────────────────────────────────",
+    "theme:gen":     "tsx scripts/generateThemeCss.ts",
+
+    "_comment_qa": "── QA ───────────────────────────────────────────────────────────────",
+    "test":          "vitest run",
+    "test:watch":    "vitest",
+    "typecheck":     "tsc --noEmit",
+    "lint":          "eslint .",
+    "lint:fix":      "eslint . --fix",
+    "check":         "npm run typecheck && npm run lint && npm run test",
+
+    "_comment_release": "── Release ──────────────────────────────────────────────────────────",
+    "release":       "node package.js",
     "release:patch": "node package.js patch",
-    "release:flag": "node package.js flag",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "release:flag":  "node package.js flag",
+
+    "_comment_storybook": "── Storybook ────────────────────────────────────────────────────────",
+    "storybook":     "storybook dev -p 6006",
+    "build:storybook": "storybook build"
   },
   "author": "",
   "license": "",

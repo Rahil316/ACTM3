@@ -19,6 +19,7 @@ import {
 import { banner } from '../store/bannerStore';
 import { toast } from '../store/toastStore';
 import { SectionLabel, HelperText, StatValue, Mono, MicroText, CardTitle } from '../components/typography';
+import { Callout } from '../components/Callout';
 
 type RunPhase = 'config' | 'validation-warning' | 'loading' | 'success' | 'error';
 
@@ -184,38 +185,22 @@ export function RunDialog() {
 
             {/* Free-plan multi-mode warning */}
             {!multiMode && appState.themes.length > 1 && (
-              <div className="rounded-[8px] border border-warning/40 bg-warning-subtle px-3 py-2.5 flex flex-col gap-1">
-                <span className="text-[11px] font-semibold text-warning">Only 1 theme will be applied</span>
-                <span className="text-[11px] text-text-muted">
-                  Your Figma plan supports only 1 mode per collection. Only <strong>{appState.themes[0]?.name}</strong>{' '}
-                  will be written.
-                  {appState.themes.slice(1).length > 0 && (
-                    <>
-                      {' '}
-                      Skipped:{' '}
-                      {appState.themes
-                        .slice(1)
-                        .map((t) => t.name)
-                        .join(', ')}
-                      .
-                    </>
-                  )}{' '}
-                  Upgrade to a paid Figma plan to apply all themes.
-                </span>
-              </div>
+              <Callout variant="warning" title="Only 1 theme will be applied">
+                Your Figma plan supports only 1 mode per collection. Only <strong>{appState.themes[0]?.name}</strong>{' '}
+                will be written.
+                {appState.themes.slice(1).length > 0 && (
+                  <> Skipped: {appState.themes.slice(1).map((t) => t.name).join(', ')}.</>
+                )}{' '}
+                Upgrade to a paid Figma plan to apply all themes.
+              </Callout>
             )}
 
             {/* resolveTokensDirectly in scale mode notice */}
             {appState.resolveTokensDirectly && appState.pluginMode === 'scale' && (
-              <div className="rounded-[8px] border border-border-base bg-bg-input px-3 py-2.5 flex flex-col gap-1">
-                <span className="text-[11px] font-semibold text-text-primary">
-                  Scale collection will not be created
-                </span>
-                <span className="text-[11px] text-text-muted">
-                  "Resolve Tokens Directly" is on — tokens store hex values directly instead of aliasing scale
-                  variables. No scale collection will be written to Figma.
-                </span>
-              </div>
+              <Callout variant="info" title="Scale collection will not be created">
+                "Resolve Tokens Directly" is on — tokens store hex values directly instead of aliasing scale
+                variables. No scale collection will be written to Figma.
+              </Callout>
             )}
 
             {/* Config summary */}

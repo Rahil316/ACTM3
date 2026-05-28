@@ -1,133 +1,12 @@
+/* Design tokens — auto-generated from src/ui/theme/tokens.ts
+   To change a color: edit tokens.ts, then run: npx tsx scripts/generateThemeCss.ts */
+@import "./theme/theme.generated.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================================================
-   TOKEN WAND — DESIGN TOKENS
-   Three themes: figma (auto), dark, light.
-   Applied via  data-ui-theme="dark"  or  data-ui-theme="light"  on <body>.
-   "figma" theme in the store resolves to one of the two at runtime (useUiPrefs).
-
-   TOKEN GROUPS
-   ────────────────────────────────────────────────────────────────────────────
-   bg-*          Surface hierarchy    app → panel → card → input → hover → active
-   border-*      Border hierarchy     subtle → base → strong → focus
-   text-*        Text hierarchy       primary → secondary → muted → dim → disabled
-   accent-*      Brand blue           default → hover → subtle (tint bg) → glow
-   success-*     Green feedback       default → subtle
-   warning-*     Amber feedback       default → subtle
-   danger-*      Red / destructive    default → subtle
-   overlay-*     Modal / scrim        bg → scrim
-   ============================================================================ */
-
 @layer base {
-
-  /* ── DARK (default — matches Figma's default dark panel) ─────────────────── */
-  :root,
-  body[data-ui-theme="dark"] {
-
-    /* Surfaces */
-    --bg-app:     #0d0d0d;   /* outermost shell, behind everything */
-    --bg-panel:   #1a1a1a;   /* sidebar, header, large panels */
-    --bg-card:    #262626;   /* cards, sections, settings rows */
-    --bg-input:   #333333;   /* inputs, select triggers, secondary buttons */
-    --bg-hover:   #3d3d3d;   /* hover state on interactive surfaces */
-    --bg-active:  #4a4a4a;   /* pressed / active state */
-    --bg-overlay: #1a1a1aee; /* modal backdrop surface */
-    --bg-scrim:   rgba(0,0,0,0.6); /* darkening layer behind modals */
-
-    /* Borders */
-    --border-subtle: #2a2a2a; /* very faint dividers */
-    --border-base:   #3a3a3a; /* standard card/section borders */
-    --border-strong: #555555; /* emphasis borders, focused inputs before ring */
-    --border-input:  #444444; /* input field borders */
-    --border-focus:  #18a0fb; /* keyboard focus ring color */
-
-    /* Text */
-    --text-primary:   #f0f0f0; /* headings, values, important labels */
-    --text-secondary: #c8c8c8; /* body text, descriptions */
-    --text-muted:     #8a8a8a; /* hints, placeholders, secondary metadata */
-    --text-dim:       #555555; /* very quiet — disabled-adjacent text */
-    --text-disabled:  #3d3d3d; /* disabled label text */
-    --text-inverse:   #0d0d0d; /* text on light bg when in dark mode */
-    --text-on-accent: #ffffff; /* text sitting on accent-colored bg */
-
-    /* Accent — Figma blue */
-    --accent:        #18a0fb;
-    --accent-hover:  #0d8de8;
-    --accent-subtle: rgba(24, 160, 251, 0.12); /* tint bg for badges/chips */
-    --accent-glow:   rgba(24, 160, 251, 0.25); /* shadow / glow effects */
-
-    /* Success — green */
-    --success:        #22c55e;
-    --success-subtle: rgba(34, 197, 94, 0.12);
-
-    /* Warning — amber */
-    --warning:        #f59e0b;
-    --warning-subtle: rgba(245, 158, 11, 0.12);
-
-    /* Danger — red */
-    --danger:        #ef4444;
-    --danger-hover:  #dc2626;
-    --danger-subtle: rgba(239, 68, 68, 0.12);
-
-    /* Typography */
-    --font: Inter, "Inter", system-ui, -apple-system, sans-serif;
-    --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
-  }
-
-  /* ── LIGHT ───────────────────────────────────────────────────────────────── */
-  body[data-ui-theme="light"] {
-
-    /* Surfaces */
-    --bg-app:     #e8ebf0;   /* page background */
-    --bg-panel:   #f5f6f8;   /* sidebar, panels */
-    --bg-card:    #ffffff;   /* cards */
-    --bg-input:   #ffffff;   /* inputs */
-    --bg-hover:   #eef0f3;   /* hover */
-    --bg-active:  #e2e5ea;   /* pressed */
-    --bg-overlay: #ffffffee; /* modal surface */
-    --bg-scrim:   rgba(0,0,0,0.35);
-
-    /* Borders */
-    --border-subtle: #e2e5ea;
-    --border-base:   #d0d4db;
-    --border-strong: #b0b6c0;
-    --border-input:  #c4c9d2;
-    --border-focus:  #18a0fb;
-
-    /* Text */
-    --text-primary:   #111827;
-    --text-secondary: #374151;
-    --text-muted:     #6b7280;
-    --text-dim:       #9ca3af;
-    --text-disabled:  #d1d5db;
-    --text-inverse:   #f0f0f0;
-    --text-on-accent: #ffffff;
-
-    /* Accent */
-    --accent:        #18a0fb;
-    --accent-hover:  #0d8de8;
-    --accent-subtle: rgba(24, 160, 251, 0.10);
-    --accent-glow:   rgba(24, 160, 251, 0.20);
-
-    /* Success */
-    --success:        #16a34a;
-    --success-subtle: rgba(22, 163, 74, 0.10);
-
-    /* Warning */
-    --warning:        #d97706;
-    --warning-subtle: rgba(217, 119, 6, 0.10);
-
-    /* Danger */
-    --danger:        #dc2626;
-    --danger-hover:  #b91c1c;
-    --danger-subtle: rgba(220, 38, 38, 0.10);
-
-    /* Typography */
-    --font: Inter, "Inter", system-ui, -apple-system, sans-serif;
-    --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
-  }
 
   /* ── GLOBAL RESET ────────────────────────────────────────────────────────── */
   * {
@@ -135,6 +14,12 @@
     margin: 0;
     padding: 0;
     font-family: var(--font);
+    user-select: none;
+  }
+
+  /* Re-enable selection where text input is expected */
+  input, textarea {
+    user-select: text;
   }
 
   /* Thin scrollbar — matches Figma panel aesthetic */
@@ -164,7 +49,7 @@
   .toggle-pill.on { background: var(--accent); }
   .toggle-pill.on::after {
     transform: translateX(16px);
-    background: #fff;
+    background: var(--text-on-accent);
   }
 
 

@@ -10,11 +10,13 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useAppStore } from '../store/appStore';
+import { useAppStore, deriveShorthand } from '../store/appStore';
+import { useUiStore } from '../store/uiStore';
 import { ColorGroupCard } from '../components/cards/ColorGroupCard';
 import { SplitActionButton } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
-import { Sheet } from '../components/Sheet';
+import { SuggestSheet, MenuRow } from '../components/MenuSheet';
+import { ColorSwatch } from '../components/ColorSwatch';
 import type { Color } from '../types/state';
 import {
   buildTree,
@@ -56,42 +58,25 @@ interface ColorSuggestSheetProps {
 function ColorSuggestSheet({ existingNames, onPick, onBlank, onClose }: ColorSuggestSheetProps) {
   const available = SUGGESTED_COLORS.filter((s) => !existingNames.includes(s.name));
   return (
-    <div className="fixed inset-0 z-40" style={{ background: 'var(--bg-scrim)' }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
-        <Sheet open className="overflow-y-auto">
-          <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">Suggested colors</span>
-            <button className="text-[11px] text-accent cursor-pointer hover:underline" onClick={onBlank}>
-              + Custom
-            </button>
+    <SuggestSheet
+      label="Suggested colors"
+      linkLabel="+ Custom"
+      onLink={onBlank}
+      onClose={onClose}
+      empty={available.length === 0 ? (
+        <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions already added.</div>
+      ) : undefined}
+    >
+      {available.map((s) => (
+        <MenuRow key={s.name} onClick={() => onPick(s.name, s.value, s.shorthand)}>
+          <ColorSwatch color={s.value} size="md" />
+          <div className="flex flex-col min-w-0">
+            <span className="text-[12px] font-semibold text-text-primary truncate">{s.name}</span>
+            <span className="text-[10px] text-text-muted font-mono">{s.value.toUpperCase()} · {s.description}</span>
           </div>
-          {available.length === 0 ? (
-            <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions already added.</div>
-          ) : (
-            <div className="flex flex-col overflow-y-auto">
-              {available.map((s) => (
-                <button
-                  key={s.name}
-                  onClick={() => onPick(s.name, s.value, s.shorthand)}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer text-left border-b border-border-subtle last:border-0"
-                >
-                  <div
-                    className="w-7 h-7 rounded-[6px] shrink-0 border border-black/10"
-                    style={{ background: s.value }}
-                  />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[12px] font-semibold text-text-primary truncate">{s.name}</span>
-                    <span className="text-[10px] text-text-muted font-mono">
-                      {s.value.toUpperCase()} · {s.description}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </Sheet>
-      </div>
-    </div>
+        </MenuRow>
+      ))}
+    </SuggestSheet>
   );
 }
 
@@ -106,7 +91,7 @@ function SortableColorCard({
   color: Color;
   idx: number;
   selected: boolean;
-  onToggleSelect: (id: string, meta: boolean) => void;
+  onToggleSelect: (id: string, meta: boolean, shift?: boolean) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: color._id });
 
@@ -114,7 +99,7 @@ function SortableColorCard({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
-      onClick={(e) => { if (e.metaKey || e.ctrlKey) { e.stopPropagation(); onToggleSelect(color._id, true); } }}
+      onClick={(e) => { e.stopPropagation(); onToggleSelect(color._id, e.metaKey || e.ctrlKey, e.shiftKey); }}
     >
       <div
         style={selected ? { borderRadius: 12, outline: '2px solid var(--accent)', outlineOffset: 2, boxShadow: '0 0 0 4px var(--accent-glow)' } : undefined}
@@ -132,29 +117,78 @@ function ColorTree() {
   const moveColor = useAppStore((s) => s.moveColor);
   const setColor = useAppStore((s) => s.setColor);
   const [committed, flushCommitted] = useCommittedNames(colors);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const collapsed = useUiStore((s) => s.colorGroupCollapsed);
+  const setCollapsed = useUiStore((s) => s.setColorGroupCollapsed);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overGroupPath, setOverGroupPath] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const lastSelectedRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dndId = useId();
 
-  function toggleSelect(id: string, _meta: boolean) {
+  function getTreeOrderIds() {
+    function collectLeaves(nodes: TreeNode<(typeof committed)[number]>[]): string[] {
+      return nodes.flatMap((n) => n.kind === 'leaf' ? [n.item._id] : collectLeaves(n.children));
+    }
+    return collectLeaves(buildTree(committed));
+  }
+
+  function toggleSelect(id: string, meta: boolean, shift = false) {
+    if (!meta) {
+      // Plain click — clear all, select only this (Figma behaviour)
+      lastSelectedRef.current = id;
+      setSelectedIds(new Set([id]));
+      return;
+    }
+    if (shift && lastSelectedRef.current) {
+      // ⌘⇧+click — range select in visual tree order
+      const orderedIds = getTreeOrderIds();
+      const a = orderedIds.indexOf(lastSelectedRef.current);
+      const b = orderedIds.indexOf(id);
+      if (a !== -1 && b !== -1) {
+        const [lo, hi] = a < b ? [a, b] : [b, a];
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          for (let i = lo; i <= hi; i++) next.add(orderedIds[i]);
+          return next;
+        });
+        return;
+      }
+    }
+    // ⌘+click — toggle individual item
+    lastSelectedRef.current = id;
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   }
 
-  // ⌘G — group selected into "Untitled"; ⌘⇧G — ungroup (strip prefix); Esc — clear selection
+  function collapseAll() {
+    const tree = buildTree(committed);
+    function collectPaths(nodes: TreeNode<(typeof committed)[number]>[]): string[] {
+      return nodes.flatMap((n) => n.kind === 'group' ? [n.fullPath, ...collectPaths(n.children)] : []);
+    }
+    const paths = collectPaths(tree);
+    setCollapsed((prev) => {
+      const next = { ...prev };
+      paths.forEach((p) => { next[p] = true; });
+      return next;
+    });
+  }
+
+  // ⌘G — group selected; ⌘⇧G — ungroup; Esc — clear; Alt+L — collapse all
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!containerRef.current?.contains(document.activeElement) && document.activeElement !== document.body) return;
       if (e.key === 'Escape' && selectedIds.size > 0) {
         e.preventDefault();
         setSelectedIds(new Set());
+        return;
+      }
+      if (e.altKey && e.key === 'l') {
+        e.preventDefault();
+        collapseAll();
         return;
       }
       if (!(e.metaKey || e.ctrlKey) || selectedIds.size === 0) return;
@@ -176,7 +210,7 @@ function ColorTree() {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedIds, colors, setColor]);
+  }, [selectedIds, colors, setColor, committed]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const tree = useMemo(() => buildTree(committed), [committed]);
@@ -234,17 +268,21 @@ function ColorTree() {
       return;
     }
 
-    // leaf → group: rename prefix to target group
+    // leaf → group: move dragged item (+ all selected) into target group
     if (overId.startsWith('group::')) {
-      const fromIdx = colors.findIndex((c) => c._id === activeIdStr);
-      if (fromIdx < 0) return;
       const targetPath = overId.slice(7);
-      const localName = colors[fromIdx].name.split('/').pop()!;
-      setColor(fromIdx, 'name', `${targetPath}/${localName}`);
+      const idsToMove = selectedIds.has(activeIdStr) ? [...selectedIds] : [activeIdStr];
+      colors.forEach((c, idx) => {
+        if (!idsToMove.includes(c._id)) return;
+        const localName = c.name.split('/').pop()!;
+        setColor(idx, 'name', `${targetPath}/${localName}`);
+      });
+      setSelectedIds(new Set());
       return;
     }
 
-    // leaf → leaf: reorder within group, or move to different group
+    // leaf → leaf: single reorder or cross-group move
+    // Multi-select drag onto a leaf just moves the dragged item — don't bulk reorder
     if (!activeIdStr.startsWith('group::')) {
       const fromIdx = colors.findIndex((c) => c._id === activeIdStr);
       const toIdx = colors.findIndex((c) => c._id === overId);
@@ -252,10 +290,26 @@ function ColorTree() {
       const fromGroup = colors[fromIdx].name.split('/').slice(0, -1).join('/');
       const toGroup = colors[toIdx].name.split('/').slice(0, -1).join('/');
       if (fromGroup === toGroup) {
-        moveColor(fromIdx, toIdx);
+        // If multi-selected, move all selected to follow the dragged item
+        if (selectedIds.has(activeIdStr) && selectedIds.size > 1) {
+          const idsToMove = [...selectedIds].filter((id) => id !== activeIdStr);
+          idsToMove.forEach((id) => {
+            const idx = colors.findIndex((c) => c._id === id);
+            if (idx >= 0) setColor(idx, 'name', colors[idx].name);
+          });
+          moveColor(fromIdx, toIdx);
+        } else {
+          moveColor(fromIdx, toIdx);
+        }
       } else {
-        const localName = colors[fromIdx].name.split('/').pop()!;
-        setColor(fromIdx, 'name', toGroup ? `${toGroup}/${localName}` : localName);
+        // Cross-group: move dragged + all selected to the target group
+        const idsToMove = selectedIds.has(activeIdStr) ? [...selectedIds] : [activeIdStr];
+        colors.forEach((c, idx) => {
+          if (!idsToMove.includes(c._id)) return;
+          const localName = c.name.split('/').pop()!;
+          setColor(idx, 'name', toGroup ? `${toGroup}/${localName}` : localName);
+        });
+        setSelectedIds(new Set());
       }
     }
   }
@@ -288,7 +342,8 @@ function ColorTree() {
   }
 
   function addChild(fullPath: string) {
-    useAppStore.getState().addColorWith(`${fullPath}/New`, '#888888', '');
+    const prefixShort = fullPath.split('/').filter(Boolean).map((s) => deriveShorthand(s)).join('/');
+    useAppStore.getState().addColorWith(`${fullPath}/New`, '#888888', `${prefixShort}/${deriveShorthand('New')}`);
   }
 
   const renderColorLeaf = useCallback(
@@ -296,12 +351,14 @@ function ColorTree() {
       color: (typeof committed)[number],
       idx: number,
       selected: boolean,
-      onToggleSel: (id: string, meta: boolean) => void,
+      multiDragCount: number,
+      onToggleSel: (id: string, meta: boolean, shift?: boolean) => void,
     ) => (
       <SortableLeafWrapper
         key={color._id}
         id={color._id}
         selected={selected}
+        multiDragCount={multiDragCount}
         onToggleSelect={onToggleSel}
         renderContent={(listeners, attributes) => (
           <div draggable={false} onDragStart={(e) => e.preventDefault()}>
@@ -317,7 +374,7 @@ function ColorTree() {
   const activeGroupSegment = activeGroupPath?.split('/').pop();
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative" onClick={() => { if (selectedIds.size > 0) setSelectedIds(new Set()); }}>
       <DndContext
         id={dndId}
         sensors={sensors}
@@ -332,6 +389,7 @@ function ColorTree() {
             overGroupPath={overGroupPath}
             activeGroupPath={activeGroupPath}
             selectedIds={selectedIds}
+            multiDragCount={activeId && selectedIds.has(activeId) ? selectedIds.size : 0}
             onToggleSelect={toggleSelect}
             onToggle={(p) => setCollapsed((prev) => ({ ...prev, [p]: !prev[p] }))}
             onRenameGroup={renameGroup}
@@ -343,8 +401,13 @@ function ColorTree() {
         </SortableContext>
         <DragOverlay>
           {activeColor && (
-            <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary">
-              {activeColor.name}
+            <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary flex items-center gap-2">
+              {selectedIds.has(activeColor._id) && selectedIds.size > 1 && (
+                <span className="bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                  {selectedIds.size}
+                </span>
+              )}
+              {activeColor.name.split('/').pop()}
             </div>
           )}
           {activeGroupSegment && (
@@ -384,6 +447,7 @@ function ColorTree() {
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}
+          onSelectAll={() => setSelectedIds(new Set(colors.map((c) => c._id)))}
         />
       )}
     </div>
@@ -401,13 +465,34 @@ export function ColorsScreen() {
 
   const [showSuggest, setShowSuggest] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const lastSelectedRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const hasGroups = colors.some((c) => c.name.includes('/'));
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  function toggleSelect(id: string) {
+  function toggleSelect(id: string, meta = false, shift = false) {
+    if (!meta) {
+      lastSelectedRef.current = id;
+      setSelectedIds(new Set([id]));
+      return;
+    }
+    if (shift && lastSelectedRef.current) {
+      const flatIds = colors.map((c) => c._id);
+      const a = flatIds.indexOf(lastSelectedRef.current);
+      const b = flatIds.indexOf(id);
+      if (a !== -1 && b !== -1) {
+        const [lo, hi] = a < b ? [a, b] : [b, a];
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          for (let i = lo; i <= hi; i++) next.add(flatIds[i]);
+          return next;
+        });
+        return;
+      }
+    }
+    lastSelectedRef.current = id;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -450,7 +535,7 @@ export function ColorsScreen() {
   const addBtn = <SplitActionButton label="+ Add Color" onAdd={addColor} onPick={() => setShowSuggest(true)} />;
 
   return (
-    <div ref={containerRef} className="flex flex-col gap-3 p-3 relative">
+    <div ref={containerRef} className="flex flex-col gap-3 p-3 relative" onClick={() => { if (selectedIds.size > 0) setSelectedIds(new Set()); }}>
       {showSuggest && (
         <ColorSuggestSheet
           existingNames={colors.map((c) => c.name)}
@@ -498,6 +583,7 @@ export function ColorsScreen() {
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}
+          onSelectAll={() => setSelectedIds(new Set(colors.map((c) => c._id)))}
         />
       )}
     </div>

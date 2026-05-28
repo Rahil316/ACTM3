@@ -6,6 +6,7 @@ import { PRESETS } from '../lib/presets/presets';
 import { ShopCard } from '../components/cards/ShopCard';
 import { Button } from '../components/Button';
 import { IconChevronLeft } from '../components/icons';
+import { FullscreenOverlay } from '../components/FullscreenOverlay';
 import type { Preset } from '../lib/presets/types';
 import type { AppState } from '../types/state';
 
@@ -51,7 +52,7 @@ export function ThemeShopOverlay() {
   }
 
   return (
-    <div className="absolute inset-0 z-50 flex flex-col bg-bg-app">
+    <FullscreenOverlay>
       {/* Header */}
       <div className="shrink-0 flex items-center gap-3 px-3 py-3 border-b border-border-base bg-bg-app">
         <Button
@@ -99,6 +100,6 @@ export function ThemeShopOverlay() {
           </div>
         )}
       </div>
-    </div>
+    </FullscreenOverlay>
   );
 }

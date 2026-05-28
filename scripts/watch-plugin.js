@@ -1,13 +1,19 @@
-// Watch script for the Figma plugin sandbox code.
-// Uses esbuild's incremental watch API → rebuilds dist/scripts.js on every save.
+// Watches src/plugin/index.ts and rebuilds <outDir>/scripts.js on every save.
+// Usage: node scripts/watch-plugin.js [outDir] [--manifest]
+//   outDir     output directory name relative to project root  (default: dist)
+//   --manifest  write/update manifest.json on every rebuild (release watch only)
 const esbuild = require('esbuild');
 const path = require('path');
 const fs = require('fs');
 
-const outDir = path.resolve(__dirname, '../dist');
+const args = process.argv.slice(2);
+const outDirName = args.find(a => !a.startsWith('--')) || 'dist';
+const writeManifest = args.includes('--manifest');
+
+const outDir = path.resolve(__dirname, '..', outDirName);
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
-function writeManifest() {
+function emitManifest() {
   const rootManifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../manifest.json'), 'utf8'));
   const distManifest = { ...rootManifest, main: 'scripts.js', ui: 'ui.html' };
   fs.writeFileSync(path.resolve(outDir, 'manifest.json'), JSON.stringify(distManifest, null, 2));
@@ -27,20 +33,17 @@ async function watch() {
       setup(build) {
         build.onEnd((result) => {
           if (result.errors.length === 0) {
-            writeManifest();
-            console.log(`[plugin] rebuilt — ${new Date().toLocaleTimeString()}`);
+            if (writeManifest) emitManifest();
+            console.log(`[plugin] rebuilt → ${outDirName}  ${new Date().toLocaleTimeString()}`);
           }
         });
       },
     }],
   });
 
-  writeManifest();
+  if (writeManifest) emitManifest();
   await ctx.watch();
-  console.log('[plugin] watching src/plugin/**');
+  console.log(`[plugin] watching src/plugin/** → ${outDirName}${writeManifest ? ' (with manifest)' : ''}`);
 }
 
-watch().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+watch().catch((e) => { console.error(e); process.exit(1); });

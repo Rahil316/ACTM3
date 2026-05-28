@@ -136,9 +136,37 @@ export function normalizeSegment(str: string): string {
     .join("/");
 }
 
+export function deriveShorthand(name: string): string {
+  if (!name) return '';
+  const words = name.trim().split(/[\s_\-/]+/).filter(Boolean);
+  if (words.length >= 2) {
+    // Multi-word: initials, up to 4 chars
+    return words.map((w) => w[0]).join('').toLowerCase().slice(0, 4);
+  }
+  // Single word: first consonant + next consonant, else first 2 chars
+  const w = words[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (w.length <= 2) return w;
+  // Keep first char always, then find first consonant after it
+  const rest = w.slice(1).split('').filter((c) => /[bcdfghjklmnpqrstvwxyz]/.test(c));
+  if (rest.length >= 1) return w[0] + rest[0];
+  return w.slice(0, 2);
+}
+
 export function segmentDepth(str: string): number {
   if (!str || typeof str !== "string") return 1;
   return str.split("/").filter(Boolean).length;
+}
+
+// When a name gains or loses group segments (e.g. "Brand/Primary" vs "Primary"),
+// keep the shorthand in sync by deriving a shorthand for each group prefix segment
+// while preserving the leaf shorthand the user may have set.
+export function syncShorthandToName(name: string, shorthand: string): string {
+  const nameSegs = name.split('/').filter(Boolean);
+  const shortSegs = shorthand ? shorthand.split('/').filter(Boolean) : [];
+  if (nameSegs.length === shortSegs.length) return shorthand; // already in sync
+  const leafShort = shortSegs.length > 0 ? shortSegs[shortSegs.length - 1] : deriveShorthand(nameSegs[nameSegs.length - 1]);
+  const prefixShorts = nameSegs.slice(0, -1).map((seg) => deriveShorthand(seg));
+  return [...prefixShorts, leafShort].join('/');
 }
 
 // ── Hex helpers (kept here to avoid circular imports with color engine) ──────
@@ -471,7 +499,12 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       let val: string = value;
       if (key === "value") val = sanitizeHex(value);
       if (key === "name" || key === "shorthand") val = normalizeSegment(value);
-      colors[idx] = { ...colors[idx], [key]: val };
+      const updated: Color = { ...colors[idx], [key]: val };
+      if (key === "name") {
+        const currentShort = colors[idx].shorthand || '';
+        updated.shorthand = syncShorthandToName(val, currentShort);
+      }
+      colors[idx] = updated;
       return { appState: { ...s.appState, colors } };
     });
   },
@@ -486,7 +519,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
   addColorWith: (name, value, shorthand = '') => {
     set((s) => {
-      const color: Color = { _id: generateId(), name, shorthand, value: value.startsWith('#') ? value : `#${value}`, description: '' };
+      const color: Color = { _id: generateId(), name, shorthand: shorthand || deriveShorthand(name), value: value.startsWith('#') ? value : `#${value}`, description: '' };
       return { appState: { ...s.appState, colors: [...s.appState.colors, color] } };
     });
   },
@@ -549,6 +582,10 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
       if (key === "name" || key === "shorthand") {
         (role as Record<string, unknown>)[key] = normalizeSegment(value as string);
+        if (key === "name") {
+          const newName = normalizeSegment(value as string);
+          role.shorthand = syncShorthandToName(newName, roles[idx].shorthand || '');
+        }
       } else {
         (role as Record<string, unknown>)[key as string] = value;
       }
@@ -581,7 +618,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
       const role: Role = {
         _id: generateId(),
         name,
-        shorthand,
+        shorthand: shorthand || deriveShorthand(name),
         minContrast,
         mappingMethod: 'contrast',
         variationTargets,

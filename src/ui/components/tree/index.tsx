@@ -5,7 +5,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 // CSS is used in SortableLeafWrapper via CSS.Transform.toString
-import { ChevronRight, ChevronDown, GripVertical, Plus, FolderMinus, Trash2, Check, X } from 'lucide-react';
+import { ChevronRight, ChevronDown, GripVertical, Plus, FolderMinus, Trash2, Check, X, CheckSquare } from 'lucide-react';
 import { Button } from '../Button';
 
 // ── Tree types ────────────────────────────────────────────────────────────────
@@ -107,23 +107,26 @@ export function MultiSelectToolbar({
   onUngroup,
   onDelete,
   onClear,
+  onSelectAll,
 }: {
   count: number;
   onGroup: () => void;
   onUngroup: () => void;
   onDelete: () => void;
   onClear: () => void;
+  onSelectAll: () => void;
 }) {
   return createPortal(
     <div className="fixed bottom-4 inset-x-0 flex justify-center z-50 pointer-events-none">
       <div className="flex items-center gap-1 bg-bg-card border border-border-strong rounded-[10px] shadow-xl px-2 py-1.5 pointer-events-auto">
-        <span className="text-[10px] font-semibold text-text-muted tabular-nums px-1">{count} selected</span>
-        <div className="w-px h-4 bg-border-base mx-0.5" />
-        <Button variant="ghost" size="xs" label="Group" title="Group (⌘G)" leftIcon={<Plus size={11} strokeWidth={2} />} onClick={onGroup} className="text-text-secondary hover:text-text-primary" />
-        <Button variant="ghost" size="xs" label="Ungroup" title="Ungroup (⌘⇧G)" leftIcon={<FolderMinus size={11} strokeWidth={1.75} />} onClick={onUngroup} className="text-text-secondary hover:text-text-primary" />
-        <div className="w-px h-4 bg-border-base mx-0.5" />
-        <Button variant="ghost" size="xs" label="Delete" title="Delete selected" leftIcon={<Trash2 size={11} strokeWidth={1.75} />} onClick={onDelete} className="text-text-dim hover:text-danger hover:bg-danger-subtle" />
-        <Button variant="icon" size="xs" title="Clear selection (Esc)" icon={<X size={11} strokeWidth={2} />} onClick={onClear} className="ml-0.5" />
+        <span className="text-[10px] font-semibold text-text-primary tabular-nums px-1">{count} selected</span>
+        <div className="w-px h-4 bg-border-strong mx-0.5" />
+        <Button variant="ghost" size="xs" label="All" title="Select all (⌘A)" leftIcon={<CheckSquare size={11} strokeWidth={2} />} onClick={onSelectAll} className="text-text-primary hover:text-accent hover:bg-accent-subtle" />
+        <Button variant="ghost" size="xs" label="Group" title="Group (⌘G)" leftIcon={<Plus size={11} strokeWidth={2} />} onClick={onGroup} className="text-text-primary hover:text-accent hover:bg-accent-subtle" />
+        <Button variant="ghost" size="xs" label="Ungroup" title="Ungroup (⌘⇧G)" leftIcon={<FolderMinus size={11} strokeWidth={1.75} />} onClick={onUngroup} className="text-text-primary hover:text-text-primary hover:bg-bg-hover" />
+        <div className="w-px h-4 bg-border-strong mx-0.5" />
+        <Button variant="ghost" size="xs" label="Delete" title="Delete selected" leftIcon={<Trash2 size={11} strokeWidth={1.75} />} onClick={onDelete} className="text-text-primary hover:text-danger hover:bg-danger-subtle" />
+        <Button variant="icon" size="xs" title="Clear selection (Esc)" icon={<X size={11} strokeWidth={2} />} onClick={onClear} className="ml-0.5 text-text-primary" />
       </div>
     </div>,
     document.body,
@@ -238,7 +241,7 @@ export function DroppableGroupHeader({
       )}
 
       {/* Count pill */}
-      <span className="text-[10px] font-medium text-text-muted tabular-nums bg-bg-hover rounded-full px-1.5 py-0.5 shrink-0">
+      <span className="text-[10px] font-semibold tabular-nums bg-border-strong text-text-primary rounded-full px-1.5 py-0.5 shrink-0 group-hover/treegroup:bg-accent group-hover/treegroup:text-text-on-accent transition-colors">
         {leafCount}
       </span>
 
@@ -254,8 +257,8 @@ export function DroppableGroupHeader({
           </>
         ) : (
           <>
-            <Button variant="icon" size="sm" onClick={onAddChild} title="Add item in group" icon={<Plus size={12} strokeWidth={2} />} className="text-text-muted hover:text-accent hover:bg-accent-subtle" />
-            <Button variant="icon" size="sm" onClick={onUngroup} title="Ungroup (⌘⇧G)" icon={<FolderMinus size={12} strokeWidth={1.75} />} className="text-text-muted hover:text-text-primary hover:bg-bg-hover" />
+            <Button variant="icon" size="sm" onClick={onAddChild} title="Add item in group" icon={<Plus size={12} strokeWidth={2} />} className="opacity-60 hover:opacity-100 hover:text-accent hover:bg-accent-subtle text-text-primary" />
+            <Button variant="icon" size="sm" onClick={onUngroup} title="Ungroup (⌘⇧G)" icon={<FolderMinus size={12} strokeWidth={1.75} />} className="opacity-60 hover:opacity-100 hover:text-text-primary hover:bg-bg-hover text-text-primary" />
           </>
         )}
       </div>
@@ -265,21 +268,28 @@ export function DroppableGroupHeader({
 
 // ── SortableLeafWrapper ───────────────────────────────────────────────────────
 // ⌘+click toggles selection. Accent outline + glow when selected.
-// renderContent(listeners, attributes) pattern lets consumers pass dnd handles
-// into nested elements (e.g. a grip button inside RoleGroupCard's toolbar).
+// When selected, the whole card is draggable (not just the grip handle).
+// multiDragCount > 1 shows a badge on the drag ghost.
 
 export const SortableLeafWrapper = React.memo(function SortableLeafWrapper({
   id,
   selected,
+  multiDragCount,
   onToggleSelect,
   renderContent,
 }: {
   id: string;
   selected: boolean;
-  onToggleSelect: (id: string, meta: boolean) => void;
+  multiDragCount?: number;
+  onToggleSelect: (id: string, meta: boolean, shift?: boolean) => void;
   renderContent: (listeners: Record<string, unknown>, attributes: Record<string, unknown>) => React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  // When this card is selected, the whole wrapper becomes the drag handle.
+  // When not selected, pass listeners down to the grip inside the card.
+  const wrapperListeners = selected ? listeners : {};
+  const contentListeners = selected ? {} : listeners;
 
   return (
     <div
@@ -289,15 +299,15 @@ export const SortableLeafWrapper = React.memo(function SortableLeafWrapper({
         transition,
         opacity: isDragging ? 0.3 : 1,
       }}
+      {...(selected ? (attributes as any) : {})}
+      {...(wrapperListeners as any)}
       onClick={(e) => {
-        if (e.metaKey || e.ctrlKey) {
-          e.stopPropagation();
-          onToggleSelect(id, true);
-        }
+        e.stopPropagation();
+        onToggleSelect(id, e.metaKey || e.ctrlKey, e.shiftKey);
       }}
     >
       <div
-        className="flex-1 min-w-0"
+        className="relative flex-1 min-w-0"
         style={
           selected
             ? {
@@ -309,7 +319,13 @@ export const SortableLeafWrapper = React.memo(function SortableLeafWrapper({
             : undefined
         }
       >
-        {renderContent(listeners as Record<string, unknown>, attributes as unknown as Record<string, unknown>)}
+        {renderContent(contentListeners as Record<string, unknown>, selected ? {} : (attributes as unknown as Record<string, unknown>))}
+        {/* Multi-drag count badge — shown on the card being dragged */}
+        {isDragging && multiDragCount && multiDragCount > 1 && (
+          <div className="absolute -top-2 -right-2 bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md z-10">
+            {multiDragCount}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -325,6 +341,7 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
   overGroupPath,
   activeGroupPath,
   selectedIds,
+  multiDragCount,
   onToggleSelect,
   onToggle,
   onRenameGroup,
@@ -338,7 +355,8 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
   overGroupPath: string | null;
   activeGroupPath: string | null;
   selectedIds: Set<string>;
-  onToggleSelect: (id: string, meta: boolean) => void;
+  multiDragCount: number;
+  onToggleSelect: (id: string, meta: boolean, shift?: boolean) => void;
   onToggle: (path: string) => void;
   onRenameGroup: (fullPath: string, newSegment: string) => void;
   onAddChild: (fullPath: string) => void;
@@ -347,7 +365,8 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
     item: T,
     idx: number,
     selected: boolean,
-    onToggleSelect: (id: string, meta: boolean) => void,
+    multiDragCount: number,
+    onToggleSelect: (id: string, meta: boolean, shift?: boolean) => void,
   ) => React.ReactNode;
   depth: number;
 }) {
@@ -388,6 +407,7 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
                     overGroupPath={overGroupPath}
                     activeGroupPath={activeGroupPath}
                     selectedIds={selectedIds}
+                    multiDragCount={multiDragCount}
                     onToggleSelect={onToggleSelect}
                     onToggle={onToggle}
                     onRenameGroup={onRenameGroup}
@@ -403,7 +423,7 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
         }
         return (
           <div key={node.item._id}>
-            {renderLeaf(node.item, node.idx, selectedIds.has(node.item._id), onToggleSelect)}
+            {renderLeaf(node.item, node.idx, selectedIds.has(node.item._id), multiDragCount, onToggleSelect)}
           </div>
         );
       })}

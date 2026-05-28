@@ -3,6 +3,7 @@ import { useAppStore, makeBootstrapState, ensureIds, ensureVariations } from "..
 import { toast } from "../store/toastStore";
 import { SettingsCard } from "../components/SettingsCard";
 import { Badge } from "../components/Badge";
+import { SelectableCard } from "../components/SelectableCard";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PRESETS, type Preset } from "../lib/presets/presets";
 import { HelperText } from "../components/typography";
@@ -26,7 +27,7 @@ function PresetShop() {
   // Theme shop card design
   function themeShopCard(preset: Preset, handlePresetClick: (preset: Preset) => void) {
     return (
-      <button key={preset.id} onClick={() => handlePresetClick(preset)} className="w-full text-left bg-bg-card border border-border-base rounded-[10px] p-3 hover:bg-bg-hover transition-colors">
+      <SelectableCard key={preset.id} onClick={() => handlePresetClick(preset)}>
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
           {preset.badge && <Badge variant="accent" size="xs" pill>{preset.badge}</Badge>}
           <p className="text-[13px] font-semibold text-text-primary">{preset.name}</p>
@@ -35,7 +36,7 @@ function PresetShop() {
           ))}
         </div>
         {preset.description && <HelperText className="line-clamp-2">{preset.description}</HelperText>}
-      </button>
+      </SelectableCard>
     );
   }
 

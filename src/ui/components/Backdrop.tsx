@@ -14,7 +14,7 @@ export function Backdrop({ open, onClick, className }: BackdropProps) {
     <div
       onClick={onClick}
       className={clsx(
-        'absolute inset-0 bg-black/50 backdrop-blur-sm z-20',
+        'absolute inset-0 bg-bg-scrim backdrop-blur-sm z-20',
         className,
       )}
     />

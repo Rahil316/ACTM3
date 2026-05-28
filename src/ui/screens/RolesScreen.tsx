@@ -10,11 +10,13 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useAppStore } from '../store/appStore';
+import { useAppStore, deriveShorthand } from '../store/appStore';
+import { useUiStore } from '../store/uiStore';
+import { SuggestSheet, MenuRow } from '../components/MenuSheet';
+import { Badge } from '../components/Badge';
 import { RoleGroupCard } from '../components/cards/RoleGroupCard';
 import { SplitActionButton } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
-import { Sheet } from '../components/Sheet';
 import type { Role } from '../types/state';
 import {
   buildTree,
@@ -147,43 +149,27 @@ function contrastLabel(c: number) {
 function RoleSuggestSheet({ existingNames, onPick, onBlank, onClose }: RoleSuggestSheetProps) {
   const available = SUGGESTED_ROLES.filter((r) => !existingNames.includes(r.name));
   return (
-    <div className="fixed inset-0 z-40" style={{ background: 'var(--bg-scrim)' }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
-        <Sheet open className="overflow-y-auto">
-          <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">Suggested roles</span>
-            <button className="text-[11px] text-accent cursor-pointer hover:underline" onClick={onBlank}>
-              + Custom
-            </button>
+    <SuggestSheet
+      label="Suggested roles"
+      linkLabel="+ Custom"
+      onLink={onBlank}
+      onClose={onClose}
+      empty={available.length === 0 ? (
+        <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions already added.</div>
+      ) : undefined}
+    >
+      {available.map((r) => (
+        <MenuRow key={r.name} onClick={() => onPick(r)}>
+          <div className="shrink-0 w-10 text-center">
+            <Badge variant="outline" size="xs">{contrastLabel(r.minContrast)}</Badge>
           </div>
-          {available.length === 0 ? (
-            <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions already added.</div>
-          ) : (
-            <div className="flex flex-col overflow-y-auto">
-              {available.map((r) => (
-                <button
-                  key={r.name}
-                  onClick={() => onPick(r)}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer text-left border-b border-border-subtle last:border-0"
-                >
-                  <div className="shrink-0 w-10 text-center">
-                    <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-[4px] bg-bg-card border border-border-base text-text-muted uppercase">
-                      {contrastLabel(r.minContrast)}
-                    </span>
-                  </div>
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <span className="text-[12px] font-semibold text-text-primary truncate">{r.name}</span>
-                    <span className="text-[10px] text-text-muted">
-                      {r.description} · min {r.minContrast}:1
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </Sheet>
-      </div>
-    </div>
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="text-[12px] font-semibold text-text-primary truncate">{r.name}</span>
+            <span className="text-[10px] text-text-muted">{r.description} · min {r.minContrast}:1</span>
+          </div>
+        </MenuRow>
+      ))}
+    </SuggestSheet>
   );
 }
 
@@ -198,7 +184,7 @@ function SortableRoleCard({
   role: Role;
   idx: number;
   selected: boolean;
-  onToggleSelect: (id: string) => void;
+  onToggleSelect: (id: string, meta?: boolean, shift?: boolean) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: role._id });
 
@@ -206,7 +192,7 @@ function SortableRoleCard({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
-      onClick={(e) => { if (e.metaKey || e.ctrlKey) { e.stopPropagation(); onToggleSelect(role._id); } }}
+      onClick={(e) => { e.stopPropagation(); onToggleSelect(role._id, e.metaKey || e.ctrlKey, e.shiftKey); }}
     >
       <div
         style={selected ? { borderRadius: 12, outline: '2px solid var(--accent)', outlineOffset: 2, boxShadow: '0 0 0 4px var(--accent-glow)' } : undefined}
@@ -224,29 +210,75 @@ function RoleTree() {
   const moveRole = useAppStore((s) => s.moveRole);
   const setRole = useAppStore((s) => s.setRole);
   const [committed, flushCommitted] = useCommittedNames(roles);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const collapsed = useUiStore((s) => s.roleGroupCollapsed);
+  const setCollapsed = useUiStore((s) => s.setRoleGroupCollapsed);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overGroupPath, setOverGroupPath] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const lastSelectedRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dndId = useId();
 
-  function toggleSelect(id: string, _meta: boolean) {
+  function getTreeOrderIds() {
+    function collectLeaves(nodes: TreeNode<(typeof committed)[number]>[]): string[] {
+      return nodes.flatMap((n) => n.kind === 'leaf' ? [n.item._id] : collectLeaves(n.children));
+    }
+    return collectLeaves(buildTree(committed));
+  }
+
+  function toggleSelect(id: string, meta: boolean, shift = false) {
+    if (!meta) {
+      lastSelectedRef.current = id;
+      setSelectedIds(new Set([id]));
+      return;
+    }
+    if (shift && lastSelectedRef.current) {
+      const orderedIds = getTreeOrderIds();
+      const a = orderedIds.indexOf(lastSelectedRef.current);
+      const b = orderedIds.indexOf(id);
+      if (a !== -1 && b !== -1) {
+        const [lo, hi] = a < b ? [a, b] : [b, a];
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          for (let i = lo; i <= hi; i++) next.add(orderedIds[i]);
+          return next;
+        });
+        return;
+      }
+    }
+    lastSelectedRef.current = id;
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   }
 
-  // ⌘G — group selected; ⌘⇧G — ungroup; Esc — clear selection
+  function collapseAll() {
+    const tree = buildTree(committed);
+    function collectPaths(nodes: TreeNode<(typeof committed)[number]>[]): string[] {
+      return nodes.flatMap((n) => n.kind === 'group' ? [n.fullPath, ...collectPaths(n.children)] : []);
+    }
+    const paths = collectPaths(tree);
+    setCollapsed((prev) => {
+      const next = { ...prev };
+      paths.forEach((p) => { next[p] = true; });
+      return next;
+    });
+  }
+
+  // ⌘G — group selected; ⌘⇧G — ungroup; Esc — clear; Alt+L — collapse all
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!containerRef.current?.contains(document.activeElement) && document.activeElement !== document.body) return;
       if (e.key === 'Escape' && selectedIds.size > 0) {
         e.preventDefault();
         setSelectedIds(new Set());
+        return;
+      }
+      if (e.altKey && e.key === 'l') {
+        e.preventDefault();
+        collapseAll();
         return;
       }
       if (!(e.metaKey || e.ctrlKey) || selectedIds.size === 0) return;
@@ -268,7 +300,7 @@ function RoleTree() {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedIds, roles, setRole]);
+  }, [selectedIds, roles, setRole, committed]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const tree = useMemo(() => buildTree(committed), [committed]);
@@ -326,17 +358,20 @@ function RoleTree() {
       return;
     }
 
-    // leaf → group
+    // leaf → group: move dragged item (+ all selected) into target group
     if (overId.startsWith('group::')) {
-      const fromIdx = roles.findIndex((r) => r._id === activeIdStr);
-      if (fromIdx < 0) return;
       const targetPath = overId.slice(7);
-      const localName = roles[fromIdx].name.split('/').pop()!;
-      setRole(fromIdx, 'name', `${targetPath}/${localName}`);
+      const idsToMove = selectedIds.has(activeIdStr) ? [...selectedIds] : [activeIdStr];
+      roles.forEach((r, idx) => {
+        if (!idsToMove.includes(r._id)) return;
+        const localName = r.name.split('/').pop()!;
+        setRole(idx, 'name', `${targetPath}/${localName}`);
+      });
+      setSelectedIds(new Set());
       return;
     }
 
-    // leaf → leaf
+    // leaf → leaf: single reorder or cross-group move
     if (!activeIdStr.startsWith('group::')) {
       const fromIdx = roles.findIndex((r) => r._id === activeIdStr);
       const toIdx = roles.findIndex((r) => r._id === overId);
@@ -346,8 +381,13 @@ function RoleTree() {
       if (fromGroup === toGroup) {
         moveRole(fromIdx, toIdx);
       } else {
-        const localName = roles[fromIdx].name.split('/').pop()!;
-        setRole(fromIdx, 'name', toGroup ? `${toGroup}/${localName}` : localName);
+        const idsToMove = selectedIds.has(activeIdStr) ? [...selectedIds] : [activeIdStr];
+        roles.forEach((r, idx) => {
+          if (!idsToMove.includes(r._id)) return;
+          const localName = r.name.split('/').pop()!;
+          setRole(idx, 'name', toGroup ? `${toGroup}/${localName}` : localName);
+        });
+        setSelectedIds(new Set());
       }
     }
   }
@@ -380,7 +420,8 @@ function RoleTree() {
   }
 
   function addChild(fullPath: string) {
-    useAppStore.getState().addRoleWith(`${fullPath}/New`, '', 4.5, [500]);
+    const prefixShort = fullPath.split('/').filter(Boolean).map((s) => deriveShorthand(s)).join('/');
+    useAppStore.getState().addRoleWith(`${fullPath}/New`, `${prefixShort}/${deriveShorthand('New')}`, 4.5, [500]);
   }
 
   const renderRoleLeaf = useCallback(
@@ -388,12 +429,14 @@ function RoleTree() {
       role: (typeof committed)[number],
       idx: number,
       selected: boolean,
-      onToggleSel: (id: string, meta: boolean) => void,
+      multiDragCount: number,
+      onToggleSel: (id: string, meta: boolean, shift?: boolean) => void,
     ) => (
       <SortableLeafWrapper
         key={role._id}
         id={role._id}
         selected={selected}
+        multiDragCount={multiDragCount}
         onToggleSelect={onToggleSel}
         renderContent={(listeners, attributes) => (
           <div draggable={false} onDragStart={(e) => e.preventDefault()}>
@@ -409,7 +452,7 @@ function RoleTree() {
   const activeGroupSegment = activeGroupPath?.split('/').pop();
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative" onClick={() => { if (selectedIds.size > 0) setSelectedIds(new Set()); }}>
       <DndContext
         id={dndId}
         sensors={sensors}
@@ -424,6 +467,7 @@ function RoleTree() {
             overGroupPath={overGroupPath}
             activeGroupPath={activeGroupPath}
             selectedIds={selectedIds}
+            multiDragCount={activeId && selectedIds.has(activeId) ? selectedIds.size : 0}
             onToggleSelect={toggleSelect}
             onToggle={(p) => setCollapsed((prev) => ({ ...prev, [p]: !prev[p] }))}
             onRenameGroup={renameGroup}
@@ -435,8 +479,13 @@ function RoleTree() {
         </SortableContext>
         <DragOverlay>
           {activeRole && (
-            <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary">
-              {activeRole.name}
+            <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary flex items-center gap-2">
+              {selectedIds.has(activeRole._id) && selectedIds.size > 1 && (
+                <span className="bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                  {selectedIds.size}
+                </span>
+              )}
+              {activeRole.name.split('/').pop()}
             </div>
           )}
           {activeGroupSegment && (
@@ -476,6 +525,7 @@ function RoleTree() {
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}
+          onSelectAll={() => setSelectedIds(new Set(roles.map((r) => r._id)))}
         />
       )}
     </div>
@@ -493,13 +543,34 @@ export function RolesScreen() {
 
   const [showSuggest, setShowSuggest] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const lastSelectedRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const hasGroups = roles.some((r) => r.name.includes('/'));
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  function toggleSelect(id: string) {
+  function toggleSelect(id: string, meta = false, shift = false) {
+    if (!meta) {
+      lastSelectedRef.current = id;
+      setSelectedIds(new Set([id]));
+      return;
+    }
+    if (shift && lastSelectedRef.current) {
+      const flatIds = roles.map((r) => r._id);
+      const a = flatIds.indexOf(lastSelectedRef.current);
+      const b = flatIds.indexOf(id);
+      if (a !== -1 && b !== -1) {
+        const [lo, hi] = a < b ? [a, b] : [b, a];
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          for (let i = lo; i <= hi; i++) next.add(flatIds[i]);
+          return next;
+        });
+        return;
+      }
+    }
+    lastSelectedRef.current = id;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -542,7 +613,7 @@ export function RolesScreen() {
   const addBtn = <SplitActionButton label="+ Add Role" onAdd={addRole} onPick={() => setShowSuggest(true)} />;
 
   return (
-    <div ref={containerRef} className="flex flex-col gap-3 p-3 relative">
+    <div ref={containerRef} className="flex flex-col gap-3 p-3 relative" onClick={() => { if (selectedIds.size > 0) setSelectedIds(new Set()); }}>
       {showSuggest && (
         <RoleSuggestSheet
           existingNames={roles.map((r) => r.name)}
@@ -590,6 +661,7 @@ export function RolesScreen() {
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}
+          onSelectAll={() => setSelectedIds(new Set(roles.map((r) => r._id)))}
         />
       )}
     </div>
