@@ -12,6 +12,7 @@ import {
   sendToPlugin,
   type SyncScope,
   type SyncTally,
+  type SyncPreview,
   type ExistingCollection,
   type RenameData,
   type CollectionCheckResultMessage,
@@ -20,6 +21,8 @@ import { banner } from '../store/bannerStore';
 import { toast } from '../store/toastStore';
 import { SectionLabel, HelperText, StatValue, Mono, MicroText, CardTitle } from '../components/typography';
 import { Callout } from '../components/Callout';
+import { useSyncSession } from '../hooks/useSyncSession';
+import { ConflictList } from '../components/ConflictList';
 
 type RunPhase = 'config' | 'validation-warning' | 'loading' | 'success' | 'error';
 
@@ -44,6 +47,15 @@ export function RunDialog() {
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [existingCollections, setExistingCollections] = useState<ExistingCollection[]>([]);
   const [renames, setRenames] = useState<RenameData | null>(null);
+  const [syncPreview, setSyncPreview] = useState<SyncPreview | null>(null);
+  const [showAllRenames, setShowAllRenames] = useState(false);
+
+  const { conflicts, decisions, loadConflicts, setDecision, runSync } = useSyncSession(appState, savedState);
+
+  const skipScales =
+    appState.resolveTokensDirectly ||
+    appState.pluginMode === 'direct' ||
+    appState.includeColorScalesCollection === false;
 
   // Reset on open/close
   useEffect(() => {
@@ -53,15 +65,20 @@ export function RunDialog() {
       setErrorMsg('');
       setIssues([]);
       setRenames(null);
+      setSyncPreview(null);
+      setShowAllRenames(false);
+      setScope(skipScales ? 'roles' : 'all');
       sendToPlugin({ type: 'check-collections', state: appState, savedState: savedState ?? null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, skipScales]);
 
   const handleCollectionCheckResult = useCallback((msg: CollectionCheckResultMessage) => {
     setExistingCollections(msg.existing ?? []);
     setRenames(msg.renames ?? null);
-  }, []);
+    setSyncPreview(msg.syncPreview ?? null);
+    loadConflicts(msg.conflicts ?? []);
+  }, [loadConflicts]);
 
   const handleFinish = useCallback((finishTally: SyncTally, errors: string[] | null) => {
     setTally(finishTally);
@@ -100,7 +117,7 @@ export function RunDialog() {
 
   function doRun() {
     setPhase('loading');
-    sendToPlugin({ type: 'run-creator', state: appState, scope, savedState: savedState ?? null });
+    runSync(scope);
   }
 
   function handleCancel() {
@@ -115,6 +132,12 @@ export function RunDialog() {
 
   const renameChanges = renames?.summary?.changes ?? [];
   const hasRenames = renameChanges.length > 0;
+  const RENAME_PREVIEW_LIMIT = 5;
+  const visibleRenames = showAllRenames ? renameChanges : renameChanges.slice(0, RENAME_PREVIEW_LIMIT);
+  const hiddenRenameCount = renameChanges.length - RENAME_PREVIEW_LIMIT;
+
+  // Nothing to sync = no creates, updates, or renames detected
+  const nothingToSync = syncPreview !== null && syncPreview.total === 0;
 
   return (
     <Modal open layer="dialog">
@@ -126,22 +149,78 @@ export function RunDialog() {
             subtitle="Generate or update color variables in your Figma file."
             actions={<Button variant="ghost" size="sm" label="Cancel" onClick={handleCancel} />}
           />
-          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-            {/* Scope selector */}
-            <SettingsCard>
-              <SmallRow
-                label="Scope"
-                control={
-                  <SegmentedControl
-                    segments={SCOPE_SEGMENTS}
-                    value={scope}
-                    onChange={(v) => setScope(v as SyncScope)}
-                  />
-                }
-              />
-            </SettingsCard>
 
-            {/* Pending renames summary */}
+          {/* Scrollable body — min-h-0 prevents flex children from overflowing footer */}
+          <div className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3">
+
+            {/* Sync preview — what will change */}
+            {syncPreview !== null && (
+              <SettingsCard>
+                <SectionLabel>What Will Change</SectionLabel>
+                <div className="flex gap-3 mt-1 flex-wrap">
+                  {syncPreview.toCreate > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="success" size="xs">{syncPreview.toCreate} new</Badge>
+                    </div>
+                  )}
+                  {syncPreview.toUpdate > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="accent" size="xs">{syncPreview.toUpdate} updated</Badge>
+                    </div>
+                  )}
+                  {syncPreview.toRename > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="warning" size="xs">{syncPreview.toRename} renamed</Badge>
+                    </div>
+                  )}
+                  {nothingToSync && (
+                    <HelperText>Figma variables are already up to date.</HelperText>
+                  )}
+                </div>
+              </SettingsCard>
+            )}
+
+            {/* Scope selector */}
+            {!skipScales ? (
+              <SettingsCard>
+                <SmallRow
+                  label="Scope"
+                  control={
+                    <SegmentedControl
+                      segments={SCOPE_SEGMENTS}
+                      value={scope}
+                      onChange={(v) => setScope(v as SyncScope)}
+                    />
+                  }
+                />
+              </SettingsCard>
+            ) : (
+              <Callout variant="info" title="Direct Sync Enabled">
+                Color variables are synced directly. No scales collection will be created.
+              </Callout>
+            )}
+
+            {/* Name changes detected — these are changes YOU made in the plugin settings,
+                not changes made in Figma. Use bulk actions to apply or keep Figma names. */}
+            {conflicts.length > 0 && (
+              <SettingsCard>
+                <div className="flex items-center justify-between mb-1">
+                  <SectionLabel className="text-warning">Name Changes Detected</SectionLabel>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="xs" label="Keep All Figma"
+                      onClick={() => conflicts.forEach(c => setDecision(c.tokenRef, 'keep'))} />
+                    <Button variant="ghost" size="xs" label="Apply All"
+                      onClick={() => conflicts.forEach(c => setDecision(c.tokenRef, 'revert'))} />
+                  </div>
+                </div>
+                <HelperText className="mb-2">
+                  Your plugin settings have changed variable names. Choose whether to update Figma or keep existing names.
+                </HelperText>
+                <ConflictList conflicts={conflicts} decisions={decisions} onChange={setDecision} />
+              </SettingsCard>
+            )}
+
+            {/* Pending renames from savedState diff */}
             {hasRenames && (
               <SettingsCard>
                 <SectionLabel>Pending Renames</SectionLabel>
@@ -153,7 +232,7 @@ export function RunDialog() {
                     `${renames!.summary.tokenCount} token variable${renames!.summary.tokenCount > 1 ? 's' : ''}`}{' '}
                   will be renamed in-place.
                 </HelperText>
-                {renameChanges.slice(0, 5).map((change, i) => (
+                {visibleRenames.map((change, i) => (
                   <div key={i} className="flex items-center gap-1.5 py-0.5">
                     <MicroText className="capitalize">{change.type}:</MicroText>
                     <Mono>{change.from}</Mono>
@@ -161,11 +240,19 @@ export function RunDialog() {
                     <Mono className="text-accent">{change.to}</Mono>
                   </div>
                 ))}
-                {renameChanges.length > 5 && <MicroText className="mt-1">+{renameChanges.length - 5} more</MicroText>}
+                {!showAllRenames && hiddenRenameCount > 0 && (
+                  <button
+                    type="button"
+                    className="mt-1 text-[10px] text-accent hover:underline cursor-pointer"
+                    onClick={() => setShowAllRenames(true)}
+                  >
+                    +{hiddenRenameCount} more
+                  </button>
+                )}
               </SettingsCard>
             )}
 
-            {/* Existing collections summary */}
+            {/* Existing collections */}
             {existingCollections.length > 0 && (
               <SettingsCard>
                 <SectionLabel>Existing Collections</SectionLabel>
@@ -175,9 +262,7 @@ export function RunDialog() {
                     className="flex items-center justify-between py-1 border-b border-border-subtle last:border-0"
                   >
                     <CardTitle>{col.name}</CardTitle>
-                    <Badge variant="muted" size="xs">
-                      Update
-                    </Badge>
+                    <Badge variant="muted" size="xs">Update</Badge>
                   </div>
                 ))}
               </SettingsCard>
@@ -214,7 +299,7 @@ export function RunDialog() {
             </SettingsCard>
           </div>
 
-          {/* Footer */}
+          {/* Footer — always visible, never pushed off screen */}
           <div className="shrink-0 px-3 py-3 border-t border-border-base flex gap-2">
             <Button
               variant="secondary"
@@ -228,6 +313,8 @@ export function RunDialog() {
               size="xl"
               label="Create / Update Variables"
               onClick={handleConfirmRun}
+              disabled={nothingToSync}
+              title={nothingToSync ? 'All variables are already up to date in Figma' : undefined}
               className="flex-1"
             />
           </div>

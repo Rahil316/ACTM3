@@ -22,6 +22,14 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
           type: 'collection-check-result',
           existing: [],
           renames: { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } },
+          conflicts: [
+            {
+              tokenRef: 'token:primary/text/default',
+              figmaName: 'Primary/Text/Default-custom-name',
+              suggestedName: 'Primary/Text/Default',
+              type: 'token',
+            },
+          ],
         },
       }, '*');
     }, 50);
@@ -277,7 +285,7 @@ export function useFigmaBridge(callbacks: BridgeCallbacks = {}): void {
         parent.postMessage({ pluginMessage: { type: 'save-config', state: state.appState } }, '*');
         pendingState = null;
         saveTimer = null;
-      }, 2000);
+      }, 500);
     });
 
     return () => {

@@ -23,12 +23,12 @@ export const ExportFormatter = {
     lines.push('COLOR SCALES');
     const scaleEntries = Object.values(result.scales || {});
     const firstStep = scaleEntries.length ? Object.values(scaleEntries[0])[0] : null;
-    const contrastKeys = firstStep ? Object.keys((firstStep as Record<string, unknown>).contrast as Record<string, unknown> || {}) : [];
+    const contrastKeys = firstStep ? Object.keys((firstStep as any).contrast || {}) : [];
     const scaleHeader = ['Group', 'Step', 'Hex', ...contrastKeys.flatMap((k) => [k + ' Contrast', k + ' Rating'])].join(',');
     lines.push(scaleHeader);
     for (const [colorName, scale] of Object.entries(result.scales || {})) {
       for (const [step, entry] of Object.entries(scale)) {
-        const e = entry as Record<string, unknown>;
+        const e = entry as any;
         const contrast = e.contrast as Record<string, { ratio: unknown; rating: unknown }> | undefined;
         const contrastCols = contrastKeys.flatMap((k) => [
           csvField(contrast && contrast[k] ? contrast[k].ratio : ''),
@@ -55,7 +55,7 @@ export const ExportFormatter = {
           for (let i = 0; i < variationDefs.length; i++) {
             const token = variations[String(i)];
             if (!token) continue;
-            const t = token as Record<string, unknown>;
+            const t = token as any;
             const contrast = t.contrast as { ratio: unknown; rating: unknown } | undefined;
             const dispName = variationDefs[i].shorthand || variationDefs[i].name;
             lines.push(

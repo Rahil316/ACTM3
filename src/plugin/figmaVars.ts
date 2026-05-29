@@ -1,7 +1,8 @@
 // FIGMA VARIABLE API — CRUD
 // Ported from vanilla_archive/src/figma/figmaVars.js
 
-import { translateConfig, buildVariableRenameMap } from './config';
+import { buildVariableRenameMap } from './config';
+import { buildMetadataMap, findVariable } from './variableTracker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyObj = any;
@@ -14,12 +15,6 @@ function hexToFigmaRgb(hex: string): { r: number; g: number; b: number } {
 
 export function savePluginConfig(appState: AnyObj): void {
   const serialized = JSON.stringify(appState);
-  // Write to both stores: clientStorage persists independently of document save
-  // state (survives close/reopen even on unsaved files); setPluginData keeps the
-  // state embedded in the document for portability when sharing .fig files.
-  figma.clientStorage.setAsync('tw_state', serialized).catch((e) => {
-    console.warn('savePluginConfig clientStorage failed:', e);
-  });
   try {
     figma.root.setPluginData('tw_state', serialized);
   } catch (e) {
@@ -27,8 +22,36 @@ export function savePluginConfig(appState: AnyObj): void {
   }
 }
 
+function isDifferentValue(a: AnyObj, b: AnyObj, type: string): boolean {
+  if (a === undefined || a === null) return true;
+  if (b === undefined || b === null) return true;
+
+  const aIsAlias = typeof a === 'object' && a.type === 'VARIABLE_ALIAS';
+  const bIsAlias = typeof b === 'object' && b.type === 'VARIABLE_ALIAS';
+
+  if (aIsAlias || bIsAlias) {
+    if (aIsAlias && bIsAlias) {
+      return a.id !== b.id;
+    }
+    return true;
+  }
+
+  if (type === 'COLOR') {
+    const rDiff = Math.abs((a.r ?? 0) - (b.r ?? 0));
+    const gDiff = Math.abs((a.g ?? 0) - (b.g ?? 0));
+    const bDiff = Math.abs((a.b ?? 0) - (b.b ?? 0));
+    const aDiff = Math.abs((a.a ?? 1) - (b.a ?? 1));
+    return rDiff > 0.001 || gDiff > 0.001 || bDiff > 0.001 || aDiff > 0.001;
+  }
+  if (typeof a === 'object' && typeof b === 'object') {
+    return JSON.stringify(a) !== JSON.stringify(b);
+  }
+  return a !== b;
+}
+
 export const VariableManager = {
   tally: { created: 0, updated: 0, renamed: 0, failed: 0 },
+  mutations: new Map<string, 'created' | 'renamed' | 'updated'>(),
   cache: { variables: [] as Variable[], collections: [] as VariableCollection[] },
   scaleVarNameMap: {} as Record<string, string>,
 
@@ -54,14 +77,19 @@ export const VariableManager = {
           variable.name = newName;
           const confirmed = variable.name;
           occupiedNames.add(confirmed);
-          if (confirmed === newName) renamed++;
+          if (confirmed === newName) {
+            renamed++;
+            const ref = variable.getPluginData('tokenRef');
+            if (ref) {
+              this.mutations.set(ref, 'renamed');
+            }
+          }
         } catch (e) {
           console.warn('Rename failed for variable:', variable.name, e);
         }
       }
     }
 
-    this.tally.renamed += renamed;
     return renamed;
   },
 
@@ -71,8 +99,10 @@ export const VariableManager = {
     scope: 'all' | 'groups' | 'roles' = 'all',
     appState: AnyObj | null = null,
     savedAppState: AnyObj | null = null,
+    decisions: Record<string, 'keep' | 'revert'> = {},
   ): Promise<void> {
     this.tally = { created: 0, updated: 0, renamed: 0, failed: 0 };
+    this.mutations = new Map<string, 'created' | 'renamed' | 'updated'>();
     this.scaleVarNameMap = {};
     await this.refreshCache();
 
@@ -111,12 +141,6 @@ export const VariableManager = {
     const stepLabel = (name: string) =>
       useShortStep && stepShorthands[name] ? stepShorthands[name] : name;
 
-    for (const [colorName, scale] of Object.entries(result.scales as Record<string, AnyObj>)) {
-      for (const [step, entry] of Object.entries(scale as Record<string, AnyObj>)) {
-        this.scaleVarNameMap[entry.stepName] = `${colorLabel(colorName)}/${stepLabel(step)}`;
-      }
-    }
-
     const needsScaleCol =
       !skipScales && (scope === 'all' || scope === 'groups' || scope === 'roles');
     const scaleCol = needsScaleCol
@@ -131,10 +155,14 @@ export const VariableManager = {
     if (scaleCol && (scope === 'all' || scope === 'groups')) {
       const modeId = scaleCol.modes[0].modeId;
       const include = config.includeDescriptions !== false;
-      const allScaleVars: [string, string, string, string][] = [];
+      const scaleMetadataMap = buildMetadataMap(scaleCol, this.cache.variables, 'scale:');
+      const allScaleVars: [string, string, AnyObj, string, string][] = [];
 
       for (const [colorName, scale] of Object.entries(result.scales as Record<string, AnyObj>)) {
+        const colorObj = config.colors.find((c: AnyObj) => c.name === colorName);
+        const colorId = colorObj?._id || colorName;
         const cLabel = colorLabel(colorName);
+
         for (const [step, entry] of Object.entries(scale as Record<string, AnyObj>)) {
           const contrastNote = include
             ? `L:${entry.contrast.light?.ratio ?? '?'}(${entry.contrast.light?.rating ?? '?'}) D:${entry.contrast.dark?.ratio ?? '?'}(${entry.contrast.dark?.rating ?? '?'})`
@@ -144,10 +172,28 @@ export const VariableManager = {
             groupDesc && contrastNote
               ? `${groupDesc} | ${contrastNote}`
               : groupDesc || contrastNote;
-          allScaleVars.push([`${cLabel}/${stepLabel(step)}`, 'COLOR', entry.value, fullDesc]);
+
+          const tokenRef = `scale:${colorId}/${step}`;
+          const suggestedName = `${cLabel}/${stepLabel(step)}`;
+
+          allScaleVars.push([suggestedName, 'COLOR', entry.value, fullDesc, tokenRef]);
+
+          // Pre-populate actual names for reference mapping
+          const decision = decisions[tokenRef] || 'keep';
+          const variable = findVariable(scaleCol, tokenRef, suggestedName, scaleMetadataMap, this.cache.variables);
+          const actualName = (variable && decision === 'keep') ? variable.name : suggestedName;
+          this.scaleVarNameMap[entry.stepName] = actualName;
         }
       }
-      await this.upsertVariables(scaleCol, modeId, allScaleVars);
+      await this.upsertVariables(scaleCol, modeId, allScaleVars, scaleMetadataMap, decisions);
+    } else {
+      // If scale collection is not active, build mapping directly
+      for (const [colorName, scale] of Object.entries(result.scales as Record<string, AnyObj>)) {
+        const cLabel = colorLabel(colorName);
+        for (const [step, entry] of Object.entries(scale as Record<string, AnyObj>)) {
+          this.scaleVarNameMap[entry.stepName] = `${cLabel}/${stepLabel(step)}`;
+        }
+      }
     }
 
     // STAGE 2: Semantic Role Tokens → token collection
@@ -158,7 +204,9 @@ export const VariableManager = {
         await this.applyRenames(tokenCol, renameMap.tokens);
       }
 
+      const tokenMetadataMap = buildMetadataMap(tokenCol, this.cache.variables, 'token:');
       const skippedModes: string[] = [];
+
       for (const theme of Object.keys((result.tokens as AnyObj) || {})) {
         const modeId = this.ensureMode(tokenCol, theme);
         if (modeId === null) {
@@ -168,10 +216,14 @@ export const VariableManager = {
         for (const [colorName, roles] of Object.entries(
           (result.tokens as AnyObj)[theme] as Record<string, AnyObj>,
         )) {
+          const colorObj = config.colors.find((c: AnyObj) => c.name === colorName);
+          const colorId = colorObj?._id || colorName;
+          const cLabel = colorLabel(colorName);
+
           for (const [roleId, variations] of Object.entries(roles as Record<string, AnyObj>)) {
             const roleObj = (config.roles && config.roles[roleId]) || {};
+            const roleIdStr = roleObj._id || roleId;
             const rName = roleObj.name || roleId;
-            const cLabel = colorLabel(colorName);
             const rLabel = roleLabel(rName, parseInt(roleId, 10));
             const variationDefs =
               roleObj.customVariationList &&
@@ -179,12 +231,15 @@ export const VariableManager = {
               roleObj.customVariations.length > 0
                 ? roleObj.customVariations
                 : config.variations;
+
             const vars = (variationDefs as AnyObj[])
-              .map((varDef: AnyObj, i: number) => {
-                const token = (variations as AnyObj)[String(i)];
+              .map((varDef: AnyObj, vi: number) => {
+                const token = (variations as AnyObj)[String(vi)];
                 if (!token) return null;
+
+                const varIdStr = varDef._id || String(vi);
                 const dispName =
-                  useShortVar && varDef.shorthand ? varDef.shorthand : varDef.name || String(i);
+                  useShortVar && varDef.shorthand ? varDef.shorthand : varDef.name || String(vi);
                 const segParts: Record<string, string> = {
                   color: cLabel,
                   role: rLabel,
@@ -216,10 +271,13 @@ export const VariableManager = {
                 else if (roleDesc) fullDesc = roleDesc;
                 else if (themeNote) fullDesc = `${themeNote}${note}`;
 
-                return [figmaName, 'COLOR', value, fullDesc] as [string, string, AnyObj, string];
+                const tokenRef = `token:${colorId}/${roleIdStr}/${varIdStr}`;
+
+                return [figmaName, 'COLOR', value, fullDesc, tokenRef] as [string, string, AnyObj, string, string];
               })
-              .filter(Boolean) as [string, string, AnyObj, string][];
-            await this.upsertVariables(tokenCol, modeId, vars);
+              .filter(Boolean) as [string, string, AnyObj, string, string][];
+
+            await this.upsertVariables(tokenCol, modeId, vars, tokenMetadataMap, decisions);
           }
         }
       }
@@ -233,10 +291,16 @@ export const VariableManager = {
 
     // STAGE 3: Source Colors collection
     if (config.includeSourceColors) {
-      await this.syncGlobalColors(config);
+      await this.syncGlobalColors(config, decisions);
     }
 
     if (appState) savePluginConfig(appState);
+
+    for (const type of this.mutations.values()) {
+      if (type === 'created') this.tally.created++;
+      else if (type === 'renamed') this.tally.renamed++;
+      else if (type === 'updated') this.tally.updated++;
+    }
 
     figma.ui.postMessage({
       type: 'finish',
@@ -277,13 +341,15 @@ export const VariableManager = {
     }
   },
 
-  async syncGlobalColors(config: AnyObj): Promise<void> {
+  async syncGlobalColors(config: AnyObj, decisions: Record<string, 'keep' | 'revert'> = {}): Promise<void> {
     const colName = config.sourceCollectionName || '_constants';
     const col = await this.getOrCreateCollection(colName);
     const modeId = col.modes[0].modeId;
+    const sourceMetadataMap = buildMetadataMap(col, this.cache.variables, 'source:');
 
-    const vars: [string, string, string, string][] = [];
+    const vars: [string, string, AnyObj, string, string][] = [];
     for (const color of config.colors as AnyObj[]) {
+      const colorId = color._id || color.name;
       const hex = '#' + color.value.replace(/^#/, '').toUpperCase().padEnd(6, '0');
       const label =
         config.useShorthandColors && color.shorthand ? color.shorthand : color.name;
@@ -291,58 +357,102 @@ export const VariableManager = {
       const groupDesc = include
         ? color.description || 'Brand constant — raw hex, no theme processing'
         : '';
-      vars.push([`${label}/${label}`, 'COLOR', hex, groupDesc]);
+
+      const baseRef = `source:${colorId}`;
+      vars.push([`${label}/${label}`, 'COLOR', hex, groupDesc, baseRef]);
 
       if (config.includeAlphaTints && config.alphaValues.length > 0) {
         const rgb = hexToFigmaRgb(hex);
         for (const opacityInt of config.alphaValues as number[]) {
           const alpha = opacityInt / 100;
           const varName = `${label}/Opacities/${opacityInt}`;
-          try {
-            let variable = this.cache.variables.find(
-              (v) => v.name === varName && v.variableCollectionId === col.id,
-            );
-            if (!variable) {
-              variable = figma.variables.createVariable(varName, col, 'COLOR');
-              this.cache.variables.push(variable);
-              this.tally.created++;
-            } else {
-              this.tally.updated++;
-            }
-            variable.description = `${opacityInt}% opacity variant`;
-            variable.setValueForMode(modeId, { r: rgb.r, g: rgb.g, b: rgb.b, a: alpha });
-          } catch (_err) {
-            this.tally.failed++;
-          }
+          const alphaRef = `source:${colorId}/${opacityInt}`;
+          vars.push([
+            varName,
+            'COLOR',
+            { r: rgb.r, g: rgb.g, b: rgb.b, a: alpha },
+            `${opacityInt}% opacity variant`,
+            alphaRef,
+          ]);
         }
       }
     }
-    await this.upsertVariables(col, modeId, vars);
+    await this.upsertVariables(col, modeId, vars, sourceMetadataMap, decisions);
   },
 
   async upsertVariables(
     collection: VariableCollection,
     modeId: string,
-    vars: [string, string, AnyObj, string][],
+    vars: [string, string, AnyObj, string, string][],
+    metadataMap: Map<string, Variable>,
+    decisions: Record<string, 'keep' | 'revert'> = {},
   ): Promise<void> {
-    for (const [varName, varType, varValue, varDescription] of vars) {
+    for (const [varName, varType, varValue, varDescription, tokenRef] of vars) {
       try {
-        let variable = this.cache.variables.find(
-          (v) => v.name === varName && v.variableCollectionId === collection.id,
-        );
-        if (!variable) {
-          variable = figma.variables.createVariable(varName, collection, varType as VariableResolvedDataType);
-          this.cache.variables.push(variable);
-          this.tally.created++;
-        } else {
-          this.tally.updated++;
+        let variable = findVariable(collection, tokenRef, varName, metadataMap, this.cache.variables);
+
+        if (variable && variable.resolvedType !== varType) {
+          try {
+            variable.remove();
+            this.cache.variables = this.cache.variables.filter((v) => v.id !== variable!.id);
+            metadataMap.delete(tokenRef);
+          } catch (e) {
+            console.warn('Failed to remove mismatched type variable:', e);
+          }
+          variable = null;
         }
-        if (varDescription) variable.description = varDescription;
+
+        const decision = decisions[tokenRef] || 'keep';
+        const targetName = (variable && decision === 'keep') ? variable.name : varName;
+
+        if (!variable) {
+          variable = figma.variables.createVariable(targetName, collection, varType as VariableResolvedDataType);
+          variable.setPluginData('tokenRef', tokenRef);
+          this.cache.variables.push(variable);
+          metadataMap.set(tokenRef, variable);
+          this.mutations.set(tokenRef, 'created');
+        } else {
+          if (variable.name !== targetName) {
+            const occupied = this.cache.variables.some(
+              (v) => v.name === targetName && v.variableCollectionId === collection.id,
+            );
+            if (!occupied) {
+              variable.name = targetName;
+              const curr = this.mutations.get(tokenRef);
+              if (curr !== 'created') {
+                this.mutations.set(tokenRef, 'renamed');
+              }
+            }
+          }
+          if (variable.getPluginData('tokenRef') !== tokenRef) {
+            variable.setPluginData('tokenRef', tokenRef);
+          }
+        }
+
+        let isUpdated = false;
+
+        if (varDescription && variable.description !== varDescription) {
+          variable.description = varDescription;
+          isUpdated = true;
+        }
+
         if (varValue !== undefined && varValue !== null) {
+          let targetVal = varValue;
           if (varType === 'COLOR' && typeof varValue === 'string') {
-            variable.setValueForMode(modeId, hexToFigmaRgb(varValue));
-          } else {
-            variable.setValueForMode(modeId, varValue);
+            targetVal = hexToFigmaRgb(varValue);
+          }
+
+          const currentVal = variable.valuesByMode[modeId];
+          if (isDifferentValue(currentVal, targetVal, varType)) {
+            variable.setValueForMode(modeId, targetVal);
+            isUpdated = true;
+          }
+        }
+
+        if (isUpdated) {
+          const curr = this.mutations.get(tokenRef);
+          if (!curr) {
+            this.mutations.set(tokenRef, 'updated');
           }
         }
       } catch (_err) {

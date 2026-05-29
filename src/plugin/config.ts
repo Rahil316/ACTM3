@@ -113,6 +113,7 @@ function _parseVariations(appState: any): any[] {
 
 function _mapRoles(appState: any, variations: any[]): any[] {
   return (appState.roles || []).map((role: any) => ({
+    _id: role._id || undefined,
     name: role.name,
     shorthand: role.shorthand || role.name.substring(0, 2).toLowerCase(),
     minContrast: parseFloat(role.minContrast !== undefined ? role.minContrast : 4.5),

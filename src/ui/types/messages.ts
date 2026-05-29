@@ -12,10 +12,26 @@ export interface LoadUiPrefsMetaMessage {
   prefs: Partial<UiPrefs>;
 }
 
+export interface NameConflict {
+  tokenRef: string;
+  figmaName: string;
+  suggestedName: string;
+  type: 'token' | 'scale' | 'source';
+}
+
+export interface SyncPreview {
+  toCreate: number;
+  toUpdate: number;
+  toRename: number;
+  total: number;
+}
+
 export interface CollectionCheckResultMessage {
   type: 'collection-check-result';
   existing: ExistingCollection[];
   renames: RenameData;
+  conflicts?: NameConflict[];
+  syncPreview?: SyncPreview;
 }
 
 export interface FinishMessage {
@@ -68,6 +84,7 @@ export interface RunCreatorMessage {
   state: AppState;
   scope: SyncScope;
   savedState?: AppState | null;
+  decisions?: Record<string, 'keep' | 'revert'>;
 }
 
 export interface CheckCollectionsMessage {

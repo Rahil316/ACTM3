@@ -17,7 +17,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/ui/*"]
-    }
+    },
+    "types": ["@figma/plugin-typings", "node"]
   },
   "include": ["src/ui", "src/shared"],
   "references": [{ "path": "./tsconfig.node.json" }]

@@ -389,4 +389,16 @@ describe('buildVariableRenameMap', () => {
     // Old: Blue/primary/default → New: primary/Blue/default
     expect(map.tokens['Blue/primary/default']).toBe('primary/Blue/default');
   });
+
+  it('records a stepNames change in summary when scaleStepNames differ', () => {
+    const oldState = stateWithColor('Blue');
+    const newState = stateWithColor('Blue');
+    oldState.scaleStepNames = [{ name: 'a' }, { name: 'b' }, { name: 'c' }];
+    newState.scaleStepNames = [{ name: 'x' }, { name: 'y' }, { name: 'z' }];
+    const map = buildVariableRenameMap(oldState, newState);
+    const stepChange = map.summary.changes.find((c) => c.type === 'stepNames');
+    expect(stepChange).toBeDefined();
+    expect(stepChange!.from).toBe('a,b,c');
+    expect(stepChange!.to).toBe('x,y,z');
+  });
 });

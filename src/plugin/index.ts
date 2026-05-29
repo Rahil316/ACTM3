@@ -9,6 +9,7 @@ import { VariableManager, savePluginConfig } from './figmaVars';
 import { variableMaker } from '../shared/clrEngine.js';
 import { ExportFormatter } from './docGen';
 import { buildExportBundle } from './exportEng/bundler';
+import { analyzeNameConflicts, computeSyncPreview } from './variableTracker';
 
 function runEngine(config: any) {
   const result = variableMaker(config);
@@ -65,21 +66,9 @@ const UI = { WIDTH: 560, HEIGHT: 720, MIN_WIDTH: 560, MIN_HEIGHT: 520 };
   }
 
   try {
-    // Prefer clientStorage — persists independently of document save state.
-    // Fall back to setPluginData for documents saved before this change.
-    let savedConfigStr: string | null = null;
-    try {
-      const fromClient = await figma.clientStorage.getAsync('tw_state');
-      if (typeof fromClient === 'string' && fromClient) savedConfigStr = fromClient;
-    } catch (e) {
-      console.warn('clientStorage load failed, trying setPluginData:', e);
-    }
-    if (!savedConfigStr) {
-      const fromDoc = figma.root.getPluginData('tw_state');
-      if (fromDoc) savedConfigStr = fromDoc;
-    }
-    if (savedConfigStr) {
-      figma.ui.postMessage({ type: 'load-config', state: JSON.parse(savedConfigStr) });
+    const fromDoc = figma.root.getPluginData('tw_state');
+    if (fromDoc) {
+      figma.ui.postMessage({ type: 'load-config', state: JSON.parse(fromDoc) });
     } else {
       figma.ui.postMessage({ type: 'load-config', state: null });
     }
@@ -104,6 +93,7 @@ figma.ui.onmessage = async (msg: any) => {
           msg.scope || 'all',
           msg.state,
           msg.savedState || null,
+          msg.decisions || {},
         );
         break;
       }
@@ -112,7 +102,13 @@ figma.ui.onmessage = async (msg: any) => {
         const cols = await figma.variables.getLocalVariableCollectionsAsync();
         const scaleColName = msg.state?.scaleCollectionName || '_scale';
         const tokenColName = msg.state?.tokenCollectionName || 'color tokens';
-        const names = [scaleColName, tokenColName].filter(Boolean);
+        const sourceColName = msg.state?.sourceCollectionName || '_constants';
+
+        const scaleCol = cols.find((c) => c.name === scaleColName) || null;
+        const tokenCol = cols.find((c) => c.name === tokenColName) || null;
+        const sourceCol = cols.find((c) => c.name === sourceColName) || null;
+
+        const names = [scaleColName, tokenColName, sourceColName].filter(Boolean);
         const existing = cols
           .filter((c) => names.includes(c.name))
           .map((c) => ({ name: c.name, id: c.id }));
@@ -120,7 +116,21 @@ figma.ui.onmessage = async (msg: any) => {
           msg.savedState && msg.state
             ? buildVariableRenameMap(msg.savedState, msg.state)
             : { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } };
-        figma.ui.postMessage({ type: 'collection-check-result', existing, renames });
+
+        const config = translateConfig(msg.state);
+        const result = runEngine(config);
+        const localVars = await figma.variables.getLocalVariablesAsync();
+        const conflicts = analyzeNameConflicts(
+          result,
+          config,
+          localVars,
+          tokenCol,
+          scaleCol,
+          sourceCol,
+        );
+
+        const syncPreview = computeSyncPreview(result, config, localVars, cols);
+        figma.ui.postMessage({ type: 'collection-check-result', existing, renames, conflicts, syncPreview });
         break;
       }
 
