@@ -13,12 +13,12 @@ import {
   type SyncScope,
   type SyncTally,
   type SyncPreview,
+  type StructuralChange,
   type ExistingCollection,
   type RenameData,
   type CollectionCheckResultMessage,
 } from '../types/messages';
 import { banner } from '../store/bannerStore';
-import { toast } from '../store/toastStore';
 import { SectionLabel, HelperText, StatValue, Mono, MicroText, CardTitle } from '../components/typography';
 import { Callout } from '../components/Callout';
 import { useSyncSession } from '../hooks/useSyncSession';
@@ -36,6 +36,7 @@ export function RunDialog() {
   const isOpen = useUiStore((s) => s.activeOverlay === 'run-dialog');
   const closeOverlay = useUiStore((s) => s.closeOverlay);
   const multiMode = useUiStore((s) => s.multiMode);
+  const isPreviewSelected = useUiStore((s) => s.isPreviewSelected);
   const appState = useAppStore((s) => s.appState);
   const savedState = useAppStore((s) => s.savedState);
   const validate = useAppStore((s) => s.validate);
@@ -48,12 +49,13 @@ export function RunDialog() {
   const [existingCollections, setExistingCollections] = useState<ExistingCollection[]>([]);
   const [renames, setRenames] = useState<RenameData | null>(null);
   const [syncPreview, setSyncPreview] = useState<SyncPreview | null>(null);
+  const [structuralChanges, setStructuralChanges] = useState<StructuralChange[]>([]);
   const [showAllRenames, setShowAllRenames] = useState(false);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   const { conflicts, decisions, loadConflicts, setDecision, runSync } = useSyncSession(appState, savedState);
 
   const skipScales =
-    appState.resolveTokensDirectly ||
     appState.pluginMode === 'direct' ||
     appState.includeColorScalesCollection === false;
 
@@ -66,6 +68,7 @@ export function RunDialog() {
       setIssues([]);
       setRenames(null);
       setSyncPreview(null);
+      setStructuralChanges([]);
       setShowAllRenames(false);
       setScope(skipScales ? 'roles' : 'all');
       sendToPlugin({ type: 'check-collections', state: appState, savedState: savedState ?? null });
@@ -73,10 +76,15 @@ export function RunDialog() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, skipScales]);
 
+  const handlePreviewDone = useCallback(() => {
+    setIsPreviewLoading(false);
+  }, []);
+
   const handleCollectionCheckResult = useCallback((msg: CollectionCheckResultMessage) => {
     setExistingCollections(msg.existing ?? []);
     setRenames(msg.renames ?? null);
     setSyncPreview(msg.syncPreview ?? null);
+    setStructuralChanges(msg.structuralChanges ?? []);
     loadConflicts(msg.conflicts ?? []);
   }, [loadConflicts]);
 
@@ -102,6 +110,7 @@ export function RunDialog() {
     onCollectionCheckResult: handleCollectionCheckResult,
     onFinish: handleFinish,
     onError: handleError,
+    onPreviewDone: handlePreviewDone,
   };
   useFigmaBridge(callbacks);
 
@@ -136,6 +145,9 @@ export function RunDialog() {
   const visibleRenames = showAllRenames ? renameChanges : renameChanges.slice(0, RENAME_PREVIEW_LIMIT);
   const hiddenRenameCount = renameChanges.length - RENAME_PREVIEW_LIMIT;
 
+  // True while check-collections response hasn't arrived yet
+  const isChecking = syncPreview === null;
+
   // Nothing to sync = no creates, updates, or renames detected
   const nothingToSync = syncPreview !== null && syncPreview.total === 0;
 
@@ -153,32 +165,60 @@ export function RunDialog() {
           {/* Scrollable body — min-h-0 prevents flex children from overflowing footer */}
           <div className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3">
 
-            {/* Sync preview — what will change */}
-            {syncPreview !== null && (
-              <SettingsCard>
-                <SectionLabel>What Will Change</SectionLabel>
-                <div className="flex gap-3 mt-1 flex-wrap">
-                  {syncPreview.toCreate > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="success" size="xs">{syncPreview.toCreate} new</Badge>
-                    </div>
-                  )}
-                  {syncPreview.toUpdate > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="accent" size="xs">{syncPreview.toUpdate} updated</Badge>
-                    </div>
-                  )}
-                  {syncPreview.toRename > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="warning" size="xs">{syncPreview.toRename} renamed</Badge>
-                    </div>
-                  )}
-                  {nothingToSync && (
-                    <HelperText>Figma variables are already up to date.</HelperText>
-                  )}
+            {/* Sync preview — skeleton while checking, real content after */}
+            <SettingsCard>
+              {isChecking ? (
+                <div className="flex flex-col gap-2 py-0.5 animate-pulse">
+                  <div className="h-[10px] w-24 rounded bg-bg-hover" />
+                  <div className="flex gap-2 mt-1">
+                    <div className="h-[18px] w-14 rounded-full bg-bg-hover" />
+                    <div className="h-[18px] w-16 rounded-full bg-bg-hover" />
+                    <div className="h-[18px] w-14 rounded-full bg-bg-hover" />
+                  </div>
                 </div>
-              </SettingsCard>
-            )}
+              ) : (
+                <>
+                  <SectionLabel>What Will Change</SectionLabel>
+                  <div className="flex gap-3 mt-1 flex-wrap">
+                    {syncPreview!.toCreate > 0 && <Badge variant="success" size="xs">{syncPreview!.toCreate} new</Badge>}
+                    {syncPreview!.toUpdate > 0 && <Badge variant="accent" size="xs">{syncPreview!.toUpdate} updated</Badge>}
+                    {syncPreview!.toRename > 0 && <Badge variant="warning" size="xs">{syncPreview!.toRename} renamed</Badge>}
+                    {nothingToSync && <HelperText>Figma variables are already up to date.</HelperText>}
+                  </div>
+                </>
+              )}
+            </SettingsCard>
+
+            {/* Structural change warnings — shown once check completes */}
+            {!isChecking && structuralChanges.length > 0 && structuralChanges.map((sc) => {
+              const isOrphaning = !!sc.orphanedCollection ||
+                sc.kind === 'alpha-removed' || sc.kind === 'alpha-changed' || sc.kind === 'scale-shrunk';
+              return (
+                <Callout
+                  key={sc.kind}
+                  variant={isOrphaning ? 'warning' : 'info'}
+                  title={
+                    sc.kind === 'mode-direct-to-scale' ? 'Mode change: Direct → Scale' :
+                    sc.kind === 'mode-scale-to-direct' ? 'Mode change: Scale → Direct' :
+                    sc.kind === 'scale-shrunk' ? 'Scale length reduced' :
+                    sc.kind === 'scale-collection-renamed' ? 'Scale collection renamed' :
+                    sc.kind === 'token-collection-renamed' ? 'Token collection renamed' :
+                    sc.kind === 'source-collection-renamed' ? 'Source collection renamed' :
+                    sc.kind === 'source-removed' ? 'Source colors disabled' :
+                    sc.kind === 'alpha-removed' ? 'Alpha tints disabled' :
+                    sc.kind === 'alpha-changed' ? 'Alpha values changed' :
+                    'Scale collection disabled'
+                  }
+                >
+                  {sc.detail}
+                  {sc.orphanedCollection && (
+                    <span className="block mt-1 text-[10px] font-mono opacity-70">
+                      Orphaned: {sc.orphanedCollection}
+                    </span>
+                  )}
+                </Callout>
+              );
+            })}
 
             {/* Scope selector */}
             {!skipScales ? (
@@ -200,9 +240,8 @@ export function RunDialog() {
               </Callout>
             )}
 
-            {/* Name changes detected — these are changes YOU made in the plugin settings,
-                not changes made in Figma. Use bulk actions to apply or keep Figma names. */}
-            {conflicts.length > 0 && (
+            {/* Name changes — only render once check is done, and only if there are conflicts */}
+            {!isChecking && conflicts.length > 0 && (
               <SettingsCard>
                 <div className="flex items-center justify-between mb-1">
                   <SectionLabel className="text-warning">Name Changes Detected</SectionLabel>
@@ -220,8 +259,8 @@ export function RunDialog() {
               </SettingsCard>
             )}
 
-            {/* Pending renames from savedState diff */}
-            {hasRenames && (
+            {/* Pending renames from savedState diff — only after check */}
+            {!isChecking && hasRenames && (
               <SettingsCard>
                 <SectionLabel>Pending Renames</SectionLabel>
                 <HelperText className="mb-2">
@@ -252,8 +291,8 @@ export function RunDialog() {
               </SettingsCard>
             )}
 
-            {/* Existing collections */}
-            {existingCollections.length > 0 && (
+            {/* Existing collections — only render once check is done */}
+            {!isChecking && existingCollections.length > 0 && (
               <SettingsCard>
                 <SectionLabel>Existing Collections</SectionLabel>
                 {existingCollections.map((col) => (
@@ -280,13 +319,6 @@ export function RunDialog() {
               </Callout>
             )}
 
-            {/* resolveTokensDirectly in scale mode notice */}
-            {appState.resolveTokensDirectly && appState.pluginMode === 'scale' && (
-              <Callout variant="info" title="Scale collection will not be created">
-                "Resolve Tokens Directly" is on — tokens store hex values directly instead of aliasing scale
-                variables. No scale collection will be written to Figma.
-              </Callout>
-            )}
 
             {/* Config summary */}
             <SettingsCard>
@@ -304,8 +336,9 @@ export function RunDialog() {
             <Button
               variant="secondary"
               size="xl"
-              label="Preview in Canvas"
-              onClick={() => toast.success('Command received — preview coming soon.')}
+              label={isPreviewLoading ? 'Generating…' : isPreviewSelected ? 'Update Canvas Preview' : 'Preview in Canvas'}
+              disabled={isPreviewLoading}
+              onClick={() => { setIsPreviewLoading(true); sendToPlugin({ type: 'run-preview', state: appState }); }}
               className="flex-1"
             />
             <Button
@@ -313,8 +346,8 @@ export function RunDialog() {
               size="xl"
               label="Create / Update Variables"
               onClick={handleConfirmRun}
-              disabled={nothingToSync}
-              title={nothingToSync ? 'All variables are already up to date in Figma' : undefined}
+              disabled={isChecking || nothingToSync}
+              title={isChecking ? 'Checking Figma collections…' : nothingToSync ? 'All variables are already up to date in Figma' : undefined}
               className="flex-1"
             />
           </div>

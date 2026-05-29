@@ -279,6 +279,9 @@ function LocalBgHexInputs({ localBg, themes, onChange }: { localBg: RoleLocalBg 
 // ── Role Settings Sheet ───────────────────────────────────────────────────────
 // Defined at module level so React never remounts it as a "new" component type.
 
+const FILL_SCOPES: VariableScope[] = ['FRAME_FILL', 'SHAPE_FILL', 'TEXT_FILL'];
+const ALL_LEAF_SCOPES: VariableScope[] = ['FRAME_FILL', 'SHAPE_FILL', 'TEXT_FILL', 'STROKE_COLOR', 'EFFECT_COLOR'];
+
 function RoleSettingsSheet({
   roleIdx,
   onClose,
@@ -286,32 +289,36 @@ function RoleSettingsSheet({
   roleIdx: number;
   onClose: () => void;
 }) {
-  const colors       = useAppStore((s) => s.appState.colors);
-  const themes       = useAppStore((s) => s.appState.themes ?? []);
-  const role         = useAppStore((s) => s.appState.roles[roleIdx]);
-  const setRoleScope = useAppStore((s) => s.setRoleScope);
+  const colors         = useAppStore((s) => s.appState.colors);
+  const themes         = useAppStore((s) => s.appState.themes ?? []);
+  const role           = useAppStore((s) => s.appState.roles[roleIdx]);
+  const setRoleScope   = useAppStore((s) => s.setRoleScope);
   const setRoleLocalBg = useAppStore((s) => s.setRoleLocalBg);
+  const setRoleScopes  = useAppStore((s) => s.setRoleScopes);
 
-  // ── Draft state — only committed to store on "Apply changes" ──────────────
+  type Tab = 'colors' | 'contrast' | 'scope';
+  const [activeTab, setActiveTab] = useState<Tab>('colors');
+
+  // Draft state — only committed on Apply
   const [draftScopedIds, setDraftScopedIds] = useState<string[] | null>(role?.scopedColorIds ?? null);
-  const [draftLocalBg, setDraftLocalBg] = useState<RoleLocalBg | null>(role?.localBg ?? null);
+  const [draftLocalBg,   setDraftLocalBg]   = useState<RoleLocalBg | null>(role?.localBg ?? null);
+  const [draftScopes,    setDraftScopes]     = useState<VariableScope[] | null>(role?.scopes ?? null);
 
   const isAll = draftScopedIds === null;
   const effectiveIds: string[] = isAll ? colors.map((c) => c._id) : draftScopedIds;
-
   const bgKind: RoleLocalBgKind | 'none' = draftLocalBg?.kind ?? 'none';
 
-  function toggleAll() {
-    setDraftScopedIds(isAll ? [] : null);
-  }
+  // ── Color scope helpers ───────────────────────────────────────────────────
+  function toggleAll() { setDraftScopedIds(isAll ? [] : null); }
   function toggleColor(id: string) {
     const current: string[] = isAll ? colors.map((c) => c._id) : [...draftScopedIds!];
     const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
     setDraftScopedIds(next.length === colors.length ? null : next);
   }
 
+  // ── Local bg helpers ──────────────────────────────────────────────────────
   function setBgKind(kind: RoleLocalBgKind | 'none') {
-    if (kind === 'none') { setDraftLocalBg(null); return; }
+    if (kind === 'none')  { setDraftLocalBg(null); return; }
     if (kind === 'token') { setDraftLocalBg({ kind: 'token', value: '' }); return; }
     if (kind === 'color') { setDraftLocalBg({ kind: 'color', value: colors[0]?.name ?? '' }); return; }
     if (kind === 'hex') {
@@ -321,96 +328,215 @@ function RoleSettingsSheet({
     }
   }
 
+  // ── Variable scope helpers (Figma-style tree) ─────────────────────────────
+  // null = ALL_SCOPES (unrestricted). Otherwise explicit list.
+  const isAllScopes = draftScopes === null;
+  const activeScopes: VariableScope[] = draftScopes ?? ALL_LEAF_SCOPES;
+
+  function toggleAllScopes() {
+    setDraftScopes(isAllScopes ? [] : null);
+  }
+  function isScopeOn(s: VariableScope) {
+    return isAllScopes || activeScopes.includes(s);
+  }
+  function toggleScopeLeaf(s: VariableScope) {
+    const next = isScopeOn(s)
+      ? ALL_LEAF_SCOPES.filter((x) => x !== s)
+      : [...new Set([...activeScopes, s])];
+    setDraftScopes(next.length === ALL_LEAF_SCOPES.length ? null : next);
+  }
+  // Fill parent = on if all 3 children are on
+  const isFillOn = FILL_SCOPES.every((s) => isScopeOn(s));
+  function toggleFillGroup() {
+    if (isFillOn) {
+      // turn off all fill children
+      const next = ALL_LEAF_SCOPES.filter((s) => !FILL_SCOPES.includes(s))
+        .filter((s) => isScopeOn(s));
+      setDraftScopes(next.length === ALL_LEAF_SCOPES.length ? null : next.length === 0 ? [] : next);
+    } else {
+      // turn on all fill children, keep others as-is
+      const next = [...new Set([...activeScopes, ...FILL_SCOPES])];
+      setDraftScopes(next.length === ALL_LEAF_SCOPES.length ? null : next);
+    }
+  }
+
   function applyChanges() {
     setRoleScope(roleIdx, draftScopedIds);
     setRoleLocalBg(roleIdx, draftLocalBg);
+    setRoleScopes(roleIdx, draftScopes);
     onClose();
   }
 
+  const TABS: { id: Tab; label: string }[] = [
+    { id: 'colors',   label: 'Colors' },
+    { id: 'contrast', label: 'Contrast' },
+    { id: 'scope',    label: 'Scope' },
+  ];
+
   const kindOptions: { value: RoleLocalBgKind | 'none'; label: string }[] = [
-    { value: 'none', label: 'Theme BG' },
+    { value: 'none',  label: 'Theme BG' },
     { value: 'token', label: 'Token' },
     { value: 'color', label: 'Color' },
-    { value: 'hex', label: 'Hex' },
+    { value: 'hex',   label: 'Hex' },
   ];
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       <div className="absolute inset-0" style={{ background: 'var(--bg-scrim)' }} onClick={onClose} />
-      <div className="relative z-10 max-h-[90%] flex flex-col bg-bg-panel rounded-t-[16px] border-t border-border-base overflow-y-auto">
-          <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">Role Settings</span>
-            <button className="text-text-dim hover:text-text-primary cursor-pointer" onClick={onClose}>
-              <X size={13} />
-            </button>
-          </div>
+      <div className="relative z-10 h-[72%] flex flex-col bg-bg-panel rounded-t-[16px] border-t border-border-base">
 
-          {/* ── Color Scope ── */}
-          <div className="px-4 pt-3 pb-1">
-            <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Color Scope</span>
-          </div>
-          <button
-            onClick={toggleAll}
-            className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
-          >
-            <Checkbox checked={isAll} />
-            <span className="text-[12px] font-medium text-text-primary">All colors</span>
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
+          <span className="text-[12px] font-semibold text-text-primary">Role Settings</span>
+          <button className="text-text-dim hover:text-text-primary cursor-pointer" onClick={onClose}>
+            <X size={13} />
           </button>
-          <div className="flex flex-col border-b border-border-base">
-            {colors.map((c) => (
-              <button
-                key={c._id}
-                onClick={() => toggleColor(c._id)}
-                className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0"
-              >
-                <Checkbox checked={effectiveIds.includes(c._id)} />
-                <div className="w-5 h-5 rounded shrink-0 border border-black/10" style={{ background: c.value }} />
-                <span className="text-[12px] text-text-primary">{c.name}</span>
-              </button>
-            ))}
-          </div>
+        </div>
 
-          {/* ── Local Background ── */}
-          <div className="px-4 pt-3 pb-1">
-            <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Local Background</span>
-          </div>
-          <div className="px-4 pb-1">
-            <p className="text-[11px] text-text-dim">
-              Contrast calculated against this background instead of the global theme background.
-            </p>
-          </div>
-
-          {/* Kind selector */}
-          <div className="px-4 pb-3 flex gap-1.5 flex-wrap">
-            {kindOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setBgKind(opt.value)}
-                className={[
-                  'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer',
-                  bgKind === opt.value
-                    ? 'bg-accent text-text-on-accent border-accent'
-                    : 'bg-bg-input text-text-muted border-border-base hover:border-border-strong',
-                ].join(' ')}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          {bgKind === 'token' && <LocalBgTokenInput localBg={draftLocalBg} onChange={setDraftLocalBg} />}
-          {bgKind === 'color' && <LocalBgColorInput localBg={draftLocalBg} colors={colors} onChange={setDraftLocalBg} />}
-          {bgKind === 'hex'   && <LocalBgHexInputs  localBg={draftLocalBg} themes={themes}   onChange={setDraftLocalBg} />}
-
-          {/* ── Apply ── */}
-          <div className="px-4 py-3 border-t border-border-subtle shrink-0">
+        {/* Tab bar */}
+        <div className="flex border-b border-border-subtle shrink-0">
+          {TABS.map((tab) => (
             <button
-              onClick={applyChanges}
-              className="w-full py-2 rounded-[8px] bg-accent hover:bg-accent-hover text-text-on-accent text-[12px] font-semibold transition-colors cursor-pointer"
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={[
+                'flex-1 py-2.5 text-[11px] font-semibold transition-colors cursor-pointer',
+                activeTab === tab.id
+                  ? 'text-accent border-b-2 border-accent -mb-px'
+                  : 'text-text-muted hover:text-text-primary',
+              ].join(' ')}
             >
-              Apply changes
+              {tab.label}
             </button>
-          </div>
+          ))}
+        </div>
+
+        {/* Tab content — scrollable */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+
+          {/* ── Colors tab ── */}
+          {activeTab === 'colors' && (
+            <div className="flex flex-col">
+              <div className="px-4 py-2.5">
+                <p className="text-[11px] text-text-dim">Limit which colors generate tokens for this role.</p>
+              </div>
+              <button
+                onClick={toggleAll}
+                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
+              >
+                <Checkbox checked={isAll} />
+                <span className="text-[12px] font-medium text-text-primary">All colors</span>
+              </button>
+              {colors.map((c) => (
+                <button
+                  key={c._id}
+                  onClick={() => toggleColor(c._id)}
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0"
+                >
+                  <Checkbox checked={effectiveIds.includes(c._id)} />
+                  <div className="w-5 h-5 rounded shrink-0 border border-black/10" style={{ background: c.value }} />
+                  <span className="text-[12px] text-text-primary">{c.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* ── Contrast tab ── */}
+          {activeTab === 'contrast' && (
+            <div className="flex flex-col">
+              <div className="px-4 py-2.5">
+                <p className="text-[11px] text-text-dim">Solve contrast against a local background instead of the global theme background.</p>
+              </div>
+              <div className="px-4 pb-3 flex gap-1.5 flex-wrap border-b border-border-base">
+                {kindOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setBgKind(opt.value)}
+                    className={[
+                      'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer',
+                      bgKind === opt.value
+                        ? 'bg-accent text-text-on-accent border-accent'
+                        : 'bg-bg-input text-text-muted border-border-base hover:border-border-strong',
+                    ].join(' ')}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {bgKind === 'token' && <LocalBgTokenInput localBg={draftLocalBg} onChange={setDraftLocalBg} />}
+              {bgKind === 'color' && <LocalBgColorInput localBg={draftLocalBg} colors={colors} onChange={setDraftLocalBg} />}
+              {bgKind === 'hex'   && <LocalBgHexInputs  localBg={draftLocalBg} themes={themes}   onChange={setDraftLocalBg} />}
+            </div>
+          )}
+
+          {/* ── Scope tab — Figma-style tree ── */}
+          {activeTab === 'scope' && (
+            <div className="flex flex-col">
+              <div className="px-4 py-2.5">
+                <p className="text-[11px] text-text-dim">Restrict where this variable can be applied in Figma.</p>
+              </div>
+
+              {/* All scopes (top-level) */}
+              <button
+                onClick={toggleAllScopes}
+                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
+              >
+                <Checkbox checked={isAllScopes} />
+                <span className="text-[12px] font-medium text-text-primary">Show in all supported properties</span>
+              </button>
+
+              {/* Fill group */}
+              <button
+                onClick={toggleFillGroup}
+                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
+              >
+                <Checkbox checked={isFillOn} />
+                <span className="text-[12px] font-medium text-text-primary">Fill</span>
+              </button>
+              {/* Fill children — indented */}
+              {(['FRAME_FILL', 'SHAPE_FILL', 'TEXT_FILL'] as VariableScope[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => toggleScopeLeaf(s)}
+                  className="flex items-center gap-3 pl-10 pr-4 py-2 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
+                >
+                  <Checkbox checked={isScopeOn(s)} />
+                  <span className="text-[12px] text-text-primary">
+                    {s === 'FRAME_FILL' ? 'Frame' : s === 'SHAPE_FILL' ? 'Shape' : 'Text'}
+                  </span>
+                </button>
+              ))}
+
+              {/* Stroke */}
+              <button
+                onClick={() => toggleScopeLeaf('STROKE_COLOR')}
+                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
+              >
+                <Checkbox checked={isScopeOn('STROKE_COLOR')} />
+                <span className="text-[12px] font-medium text-text-primary">Stroke</span>
+              </button>
+
+              {/* Effects */}
+              <button
+                onClick={() => toggleScopeLeaf('EFFECT_COLOR')}
+                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0"
+              >
+                <Checkbox checked={isScopeOn('EFFECT_COLOR')} />
+                <span className="text-[12px] font-medium text-text-primary">Effects</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-border-subtle shrink-0">
+          <button
+            onClick={applyChanges}
+            className="w-full py-2 rounded-[8px] bg-accent hover:bg-accent-hover text-text-on-accent text-[12px] font-semibold transition-colors cursor-pointer"
+          >
+            Apply changes
+          </button>
+        </div>
       </div>
     </div>,
     document.body

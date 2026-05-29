@@ -775,7 +775,7 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
               ))}
             </div>
 
-            {appState.includeAlphaTints && (appState.alphaValues ?? '').trim() && (
+            {(appState.alphaValues ?? '').trim() && (
               <SourceColorCard
                 color={color}
                 alphaValues={appState.alphaValues ?? ''}
@@ -793,7 +793,7 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
 // ── Source collection panel ───────────────────────────────────────────────────
 
 function SourcePanel({ appState }: { appState: AppState }) {
-  const showAlphas = appState.includeAlphaTints && (appState.alphaValues ?? '').trim().length > 0;
+  const showAlphas = (appState.alphaValues ?? '').trim().length > 0;
 
   return (
     <div className="flex flex-col gap-5 p-3 pb-6">

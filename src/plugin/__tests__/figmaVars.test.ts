@@ -72,7 +72,6 @@ describe('VariableManagerSyncTally', () => {
     };
 
     const config = {
-      resolveTokensDirectly: true,
       pluginMode: 'direct',
       colors: [{ name: 'Primary', shorthand: 'pr', _id: 'c-primary' }],
       roles: [{ name: 'default', shorthand: 'df', _id: 'r-default' }],
@@ -129,7 +128,6 @@ describe('VariableManagerSyncTally', () => {
     };
 
     const config = {
-      resolveTokensDirectly: true,
       pluginMode: 'direct',
       colors: [{ name: 'Primary', shorthand: 'pr', _id: 'c-primary' }],
       roles: [{ name: 'default', shorthand: 'df', _id: 'r-default' }],
@@ -185,7 +183,6 @@ describe('VariableManagerSyncTally', () => {
     };
 
     const config = {
-      resolveTokensDirectly: true,
       pluginMode: 'direct',
       colors: [{ name: 'Primary', shorthand: 'pr', _id: 'c-primary' }],
       roles: [{ name: 'default', shorthand: 'df', _id: 'r-default' }],
@@ -254,7 +251,6 @@ describe('VariableManagerSyncTally', () => {
     };
 
     const config = {
-      resolveTokensDirectly: true,
       pluginMode: 'direct',
       colors: [{ name: 'Primary', shorthand: 'pr', _id: 'c-primary' }],
       roles: [{ name: 'default', shorthand: 'df', _id: 'r-default' }],
@@ -299,7 +295,6 @@ describe('VariableManagerSyncTally', () => {
     };
 
     const config = {
-      resolveTokensDirectly: true,
       pluginMode: 'direct',
       colors: [{ name: 'Primary', shorthand: 'pr', _id: 'c-primary' }],
       roles: [{ name: 'default', shorthand: 'df', _id: 'r-default' }],
@@ -366,7 +361,6 @@ describe('VariableManagerSyncTally', () => {
     };
 
     const config = {
-      resolveTokensDirectly: true,
       pluginMode: 'direct',
       colors: [{ name: 'Primary', shorthand: 'pr', _id: 'c-primary' }],
       roles: [{ name: 'default', shorthand: 'df', _id: 'r-default' }],
@@ -424,6 +418,7 @@ describe('isDifferentValue edge cases via upsert', () => {
       variableCollectionId: 'col-1',
       resolvedType: 'COLOR',
       description: '',
+      scopes: ['ALL_SCOPES'],
       valuesByMode: { 'mode-1': existingValue },
       getPluginData: vi.fn().mockImplementation((k: string) =>
         k === 'tokenRef' ? 'token:c-primary/r-default/v-default' : ''
@@ -438,7 +433,6 @@ describe('isDifferentValue edge cases via upsert', () => {
   }
 
   const baseConfig = {
-    resolveTokensDirectly: true,
     pluginMode: 'direct',
     includeDescriptions: false,  // suppress theme note so only value diffs trigger updates
     colors: [{ name: 'Primary', shorthand: 'pr', _id: 'c-primary' }],

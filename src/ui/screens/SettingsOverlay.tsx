@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -60,16 +60,13 @@ function TokensTab() {
     { value: "color", label: "Per Color" },
     { value: "role", label: "Per Role" },
   ] as const;
-  const groupingSegments = [
-    { value: "color", label: "Color first" },
-    { value: "role", label: "Role first" },
-  ] as const;
 
   const scaleStepNamesRaw = useAppStore((s) => s.appState.scaleStepNames);
   const scaleStepNames = scaleStepNamesRaw ?? [];
   const setScaleStepName = useAppStore((s) => s.setScaleStepName);
   const addScaleStepName = useAppStore((s) => s.addScaleStepName);
   const removeScaleStepName = useAppStore((s) => s.removeScaleStepName);
+  const [stepLabelsCollapsed, setStepLabelsCollapsed] = useState(true);
 
   const tokenNameSegments = appState.tokenNameSegments ?? ["color", "role", "variation"];
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -94,23 +91,50 @@ function TokensTab() {
     variation: exampleVariation,
   };
   const namePreview = tokenNameSegments.map((s) => segmentValues[s]).join(" / ");
+  function ModeSettings(isScale: boolean): JSX.Element {
+    return isScale ? (
+      <SettingsCard>
+        <SectionLabel>Color Algorithm</SectionLabel>
+        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={appState.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !appState.useUniformAlgorithm)} />} />
+        {appState.useUniformAlgorithm && <SmallRow label="Algorithm" control={<Select size="md" options={algoOptions} value={appState.scaleAlgorithm} onChange={(e) => setAppField("scaleAlgorithm", e.target.value as typeof appState.scaleAlgorithm)} />} />}
+        {!appState.useUniformAlgorithm && (
+          <PanelRow
+            label="Algorithm Scope"
+            description={appState.algorithmScopeLevel == "color" ? "Select Algorithm for each color." : "Select Algorithm for each role."}
+            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={appState.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />}
+          />
+        )}
+      </SettingsCard>
+    ) : (
+      <SettingsCard>
+        <SectionLabel>Color Algorithm</SectionLabel>
+        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={appState.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !appState.useUniformAlgorithm)} />} />
+        {appState.useUniformAlgorithm && (
+          <SmallRow
+            label="Solver Algorithm"
+            control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={appState.solverMode} onChange={(e) => setAppField("solverMode", e.target.value as typeof appState.solverMode)} />}
+          />
+        )}
+        {!appState.useUniformAlgorithm && (
+          <SmallRow
+            label="Algorithm Scope"
+            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={appState.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />}
+          />
+        )}
+      </SettingsCard>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">
       {/* Mode */}
       <SettingsCard>
-        {/* <SectionLabel>Plugin Mode</SectionLabel> */}
         <PanelRow
           label="Plugin Mode"
           description={isScaleMode ? "Generate a full color scale from a seed color." : "Solve token values directly against themes."}
           control={<SegmentedControl segments={modeSegments as unknown as { value: string; label: string }[]} value={pluginMode} onChange={(v) => setAppField("pluginMode", v as "scale" | "direct")} />}
         />
-      </SettingsCard>
-
-      {/* Scale settings */}
-      {isScaleMode && (
-        <SettingsCard>
-          <SectionLabel>Scale</SectionLabel>
+        {isScaleMode && (
           <SmallRow
             label="Scale Length"
             control={
@@ -129,63 +153,52 @@ function TokensTab() {
               />
             }
           />
-          <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={appState.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !appState.useUniformAlgorithm)} />} />
-          {appState.useUniformAlgorithm && <SmallRow label="Algorithm" control={<Select size="md" options={algoOptions} value={appState.scaleAlgorithm} onChange={(e) => setAppField("scaleAlgorithm", e.target.value as typeof appState.scaleAlgorithm)} />} />}
-          {!appState.useUniformAlgorithm && <SmallRow label="Algorithm Scope" control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={appState.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />} />}
-        </SettingsCard>
-      )}
+        )}
+      </SettingsCard>
 
-      {/* Direct mode solver */}
-      {!isScaleMode && (
-        <SettingsCard>
-          <SectionLabel>Solver</SectionLabel>
-          <PanelRow label="Uniform Solver" description="Apply the same solver to all colors." control={<Toggle on={appState.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !appState.useUniformAlgorithm)} />} />
-          {appState.useUniformAlgorithm && <SmallRow label="Solver Mode" control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={appState.solverMode} onChange={(e) => setAppField("solverMode", e.target.value as typeof appState.solverMode)} />} />}
-          {!appState.useUniformAlgorithm && <SmallRow label="Solver Scope" control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={appState.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />} />}
-        </SettingsCard>
-      )}
+      {/* Scale settings */}
+      {ModeSettings(isScaleMode)}
 
       {/* Token naming */}
       <SettingsCard>
-        <SectionLabel>Token Naming</SectionLabel>
-        <PanelRow label="Use Shorthand — Colors" control={<Toggle on={appState.useShorthandColors} onChange={() => setAppField("useShorthandColors", !appState.useShorthandColors)} />} />
-        <PanelRow label="Use Shorthand — Roles" control={<Toggle on={appState.useShorthandRoles} onChange={() => setAppField("useShorthandRoles", !appState.useShorthandRoles)} />} />
-        <PanelRow label="Use Shorthand — Variations" control={<Toggle on={appState.useShorthandVariations} onChange={() => setAppField("useShorthandVariations", !appState.useShorthandVariations)} />} />
-        <PanelRow label="Use Shorthand — Steps" control={<Toggle on={appState.useShorthandSteps} onChange={() => setAppField("useShorthandSteps", !appState.useShorthandSteps)} />} />
-        <PanelRow label="Resolve Tokens Directly" description="Link role tokens to scale values without aliases." control={<Toggle on={appState.resolveTokensDirectly} onChange={() => setAppField("resolveTokensDirectly", !appState.resolveTokensDirectly)} />} />
-        <PanelRow label="Include Descriptions" control={<Toggle on={appState.includeDescriptions} onChange={() => setAppField("includeDescriptions", !appState.includeDescriptions)} />} />
-      </SettingsCard>
-
-      {/* Variable structure */}
-      <SettingsCard>
-        <SectionLabel>Variable Structure</SectionLabel>
-        <SmallRow label="Grouping" control={<SegmentedControl segments={groupingSegments as unknown as { value: string; label: string }[]} value={appState.tokenGrouping} onChange={(v) => setAppField("tokenGrouping", v as "color" | "role")} />} />
-
+        <SectionLabel>Token Naming & Description</SectionLabel>
+        {/* Variable structure */}
         {/* Drag-reorderable name segment pills */}
-        <div className="flex flex-col gap-1.5 pt-1">
-          <HelperText className="font-medium">Name Format — drag to reorder</HelperText>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSegmentDragEnd}>
-            <SortableContext items={tokenNameSegments} strategy={horizontalListSortingStrategy}>
-              <div className="flex items-center gap-2">
-                {tokenNameSegments.map((seg, i) => (
-                  <div key={seg} className="flex items-center gap-1">
-                    <SortableSegmentPill id={seg} />
-                    {i < tokenNameSegments.length - 1 && <span className="text-[11px] text-text-dim">/</span>}
-                  </div>
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+        <div className="flex flex-col gap-2 pt-1">
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col items-start w-full">
+              <SectionLabel>Naming Structure</SectionLabel>
+              <HelperText className="font-medium">Drag to reorder the token name</HelperText>
+            </div>
+
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSegmentDragEnd}>
+              <SortableContext items={tokenNameSegments} strategy={horizontalListSortingStrategy}>
+                <div className="flex items-center gap-2">
+                  {tokenNameSegments.map((seg, i) => (
+                    <div key={seg} className="flex items-center gap-1">
+                      <SortableSegmentPill id={seg} />
+                      {i < tokenNameSegments.length - 1 && <span className="text-[11px] text-text-dim">/</span>}
+                    </div>
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </div>
 
           {/* Live preview */}
-          <HelperText className="font-mono bg-bg-input rounded-[4px] px-2 py-1">{namePreview}</HelperText>
+          <HelperText className="font-mono bg-bg-input rounded-[4px] p-2">{namePreview}</HelperText>
         </div>
+        <PanelRow label="Use Shorthand for Colors" control={<Toggle on={appState.useShorthandColors} onChange={() => setAppField("useShorthandColors", !appState.useShorthandColors)} />} />
+        <PanelRow label="Use Shorthand for Roles" control={<Toggle on={appState.useShorthandRoles} onChange={() => setAppField("useShorthandRoles", !appState.useShorthandRoles)} />} />
+        <PanelRow label="Use Shorthand for Variations" control={<Toggle on={appState.useShorthandVariations} onChange={() => setAppField("useShorthandVariations", !appState.useShorthandVariations)} />} />
+        <PanelRow label="Use Shorthand for Steps" control={<Toggle on={appState.useShorthandSteps} onChange={() => setAppField("useShorthandSteps", !appState.useShorthandSteps)} />} />
+        <PanelRow label="Include Descriptions" control={<Toggle on={appState.includeDescriptions} onChange={() => setAppField("includeDescriptions", !appState.includeDescriptions)} />} />
       </SettingsCard>
 
       {/* Collections */}
       <SettingsCard>
-        <SectionLabel>Collections</SectionLabel>
-        <SmallRow label="Token Collection" control={<Input size="md" value={appState.tokenCollectionName} onChange={(e) => setAppField("tokenCollectionName", e.target.value)} />} />
+        <SectionLabel>Figma Collections</SectionLabel>
+        <SmallRow label="Token Collection Name" control={<Input size="md" value={appState.tokenCollectionName} onChange={(e) => setAppField("tokenCollectionName", e.target.value)} />} />
         {isScaleMode && (
           <>
             <PanelRow label="Include Scale Collection" control={<Toggle on={appState.includeColorScalesCollection} onChange={() => setAppField("includeColorScalesCollection", !appState.includeColorScalesCollection)} />} />
@@ -193,28 +206,45 @@ function TokensTab() {
           </>
         )}
         <PanelRow label="Include Source Colors" description="Creates a separate collection for seed hex values." control={<Toggle on={appState.includeSourceColors} onChange={() => setAppField("includeSourceColors", !appState.includeSourceColors)} />} />
-        {appState.includeSourceColors && <SmallRow label="Source Collection Name" control={<Input size="md" value={appState.sourceCollectionName} onChange={(e) => setAppField("sourceCollectionName", e.target.value)} />} />}
-        <PanelRow label="Include Alpha Tints" control={<Toggle on={appState.includeAlphaTints} onChange={() => setAppField("includeAlphaTints", !appState.includeAlphaTints)} />} />
-        {appState.includeAlphaTints && <SmallRow label="Alpha Values" control={<Input size="lg" value={appState.alphaValues} placeholder="5, 10, 20, 50, 80" onChange={(e) => setAppField("alphaValues", e.target.value)} />} />}
+        {appState.includeSourceColors && (
+          <>
+            <SmallRow label="Source Collection Name" control={<Input size="md" value={appState.sourceCollectionName} onChange={(e) => setAppField("sourceCollectionName", e.target.value)} />} />
+            <SmallRow label="Alpha Tint Values (CSV %)" control={<Input size="lg" value={appState.alphaValues} placeholder="Leave empty to skip, e.g. 10, 25, 50, 75, 90" onChange={(e) => setAppField("alphaValues", e.target.value)} />} />
+          </>
+        )}
       </SettingsCard>
 
       {/* Step labels */}
       {isScaleMode && (
         <SettingsCard>
-          <SectionLabel>Step Labels</SectionLabel>
-          <HelperText>Custom names for each step in the scale. Leave empty to use numbers.</HelperText>
-          {scaleStepNames.length > 0 && (
+          <button
+            type="button"
+            className="flex items-center justify-between w-full text-left"
+            onClick={() => setStepLabelsCollapsed((c) => !c)}
+          >
+            <SectionLabel>Step Labels</SectionLabel>
+            <span className="text-text-muted text-[10px]">{stepLabelsCollapsed ? '▸' : '▾'}</span>
+          </button>
+          {!stepLabelsCollapsed && (
             <>
-              <ListHeader columns={["Name", "Short"]} withDragHandle withRemoveButton />
-              {scaleStepNames.map((step, i) => (
-                <ListRow key={i} onRemove={() => removeScaleStepName(i)} removeAriaLabel="Remove step label">
-                  <Input size="sm" value={step.name} placeholder="Step name" onChange={(e) => setScaleStepName(i, "name", e.target.value)} />
-                  <Input size="sm" value={step.shorthand} placeholder="Short" onChange={(e) => setScaleStepName(i, "shorthand", e.target.value)} />
-                </ListRow>
-              ))}
+              <HelperText className="mt-1">Names for each scale step. Always {appState.scaleLength} entries — leave blank to use step numbers.</HelperText>
+              {scaleStepNames.length === 0 && (
+                <ActionButton label={`+ Enable Step Labels`} onClick={addScaleStepName} />
+              )}
+              {scaleStepNames.length > 0 && (
+                <>
+                  <ListHeader columns={["Name", "Short"]} withRemoveButton />
+                  {scaleStepNames.map((step, i) => (
+                    <ListRow key={step._id} onRemove={() => removeScaleStepName(i)} removeAriaLabel="Clear step label">
+                      <Input size="sm" value={step.name} placeholder={`Step ${i + 1}`} onChange={(e) => setScaleStepName(i, "name", e.target.value)} />
+                      <Input size="sm" value={step.shorthand} placeholder="Short" onChange={(e) => setScaleStepName(i, "shorthand", e.target.value)} />
+                    </ListRow>
+                  ))}
+                  <ActionButton label="− Disable Step Labels" onClick={() => { for (let k = scaleStepNames.length - 1; k >= 0; k--) removeScaleStepName(k); }} />
+                </>
+              )}
             </>
           )}
-          <ActionButton label="+ Add Step Label" onClick={addScaleStepName} />
         </SettingsCard>
       )}
     </div>
@@ -236,7 +266,11 @@ function RolesTab() {
     <div className="flex flex-col gap-3">
       <SettingsCard>
         <SectionLabel>Role Defaults</SectionLabel>
-        <PanelRow label="Per-Role Variation Override" description="Allow each role to define its own variation list." control={<Toggle on={appState.perRoleVariationOverride} onChange={() => setAppField("perRoleVariationOverride", !appState.perRoleVariationOverride)} />} />
+        <PanelRow
+          label="Per-Role Variation Override"
+          description="Allow each role to define its own variation list."
+          control={<Toggle on={appState.perRoleVariationOverride} onChange={() => setAppField("perRoleVariationOverride", !appState.perRoleVariationOverride)} />}
+        />
       </SettingsCard>
 
       <SettingsCard>

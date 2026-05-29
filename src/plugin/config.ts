@@ -33,7 +33,6 @@ export function translateConfig(appState: any): any {
     roleStepNames,
     variations: variations.map((v: any) => Object.assign({}, v)),
     themes: _deduplicateThemeNames(themes),
-    resolveTokensDirectly: appState.resolveTokensDirectly || false,
     tokenGrouping: appState.tokenGrouping || 'color',
     tokenNameSegments: appState.tokenNameSegments || ['color', 'role', 'variation'],
     useShorthandColors: appState.useShorthandColors || false,
@@ -45,8 +44,7 @@ export function translateConfig(appState: any): any {
     sourceCollectionName: appState.sourceCollectionName || '_constants',
     scaleCollectionName: appState.scaleCollectionName || '_scale',
     tokenCollectionName: appState.tokenCollectionName || 'color tokens',
-    includeAlphaTints: appState.includeAlphaTints || false,
-    alphaValues: (appState.alphaValues || '10, 25, 50, 75, 90')
+    alphaValues: (appState.alphaValues || '')
       .split(',')
       .map((v: string) => Math.max(0, Math.min(100, parseInt(v.trim()))))
       .filter((v: number) => !isNaN(v)),
@@ -133,6 +131,7 @@ function _mapRoles(appState: any, variations: any[]): any[] {
     localBg: _resolveLocalBg(role, appState),
     localBgTokenRef: (role.localBg?.kind === 'token' && !role.localBg?.dynamic) ? String(role.localBg.value) : null,
     localBgDynamicRef: (role.localBg?.kind === 'token' && role.localBg?.dynamic) ? String(role.localBg.value) : null,
+    scopes: role.scopes || null,
   }));
 }
 
@@ -419,6 +418,90 @@ function _getSummaryChanges(
   const oldOrder = (oldCfg.tokenNameSegments || []).join(',');
   const newOrder = (newCfg.tokenNameSegments || []).join(',');
   if (oldOrder !== newOrder) changes.push({ type: 'grouping', from: oldOrder, to: newOrder });
+
+  return changes;
+}
+
+// ── Structural change detection ───────────────────────────────────────────────
+
+export type StructuralChangeKind =
+  | 'mode-direct-to-scale'
+  | 'mode-scale-to-direct'
+  | 'scale-shrunk'
+  | 'scale-collection-renamed'
+  | 'token-collection-renamed'
+  | 'source-collection-renamed'
+  | 'source-removed'
+  | 'alpha-removed'
+  | 'alpha-changed'
+  | 'scale-collection-removed';
+
+export interface StructuralChange {
+  kind: StructuralChangeKind;
+  detail: string;
+  oldValue?: string;
+  newValue?: string;
+  orphanedCollection?: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function detectStructuralChanges(savedState: any, newState: any): StructuralChange[] {
+  if (!savedState || !newState) return [];
+  const changes: StructuralChange[] = [];
+
+  const oldMode = savedState.pluginMode || 'scale';
+  const newMode = newState.pluginMode || 'scale';
+  if (oldMode !== newMode) {
+    if (oldMode === 'direct' && newMode === 'scale') {
+      changes.push({ kind: 'mode-direct-to-scale', detail: 'Mode changed Direct → Scale. A scale collection will be created and token variables will be updated to reference scale aliases.' });
+    } else {
+      changes.push({ kind: 'mode-scale-to-direct', detail: 'Mode changed Scale → Direct. The scale collection will become orphaned in Figma.', orphanedCollection: savedState.scaleCollectionName || '_scale' });
+    }
+  }
+
+  const oldLen = parseInt(savedState.scaleLength) || 23;
+  const newLen = parseInt(newState.scaleLength) || 23;
+  if (newLen < oldLen && newMode === 'scale') {
+    changes.push({ kind: 'scale-shrunk', detail: `Scale reduced ${oldLen} → ${newLen}. ${oldLen - newLen} scale step variable(s) will become orphaned.`, oldValue: String(oldLen), newValue: String(newLen) });
+  }
+
+  const oldScaleCol = savedState.scaleCollectionName || '_scale';
+  const newScaleCol = newState.scaleCollectionName || '_scale';
+  if (oldScaleCol !== newScaleCol) {
+    changes.push({ kind: 'scale-collection-renamed', detail: `Scale collection renamed "${oldScaleCol}" → "${newScaleCol}". The old collection will be left in Figma.`, oldValue: oldScaleCol, newValue: newScaleCol, orphanedCollection: oldScaleCol });
+  }
+
+  const oldTokenCol = savedState.tokenCollectionName || 'color tokens';
+  const newTokenCol = newState.tokenCollectionName || 'color tokens';
+  if (oldTokenCol !== newTokenCol) {
+    changes.push({ kind: 'token-collection-renamed', detail: `Token collection renamed "${oldTokenCol}" → "${newTokenCol}". The old collection will be left in Figma.`, oldValue: oldTokenCol, newValue: newTokenCol, orphanedCollection: oldTokenCol });
+  }
+
+  const oldSourceCol = savedState.sourceCollectionName || '_constants';
+  const newSourceCol = newState.sourceCollectionName || '_constants';
+  if (oldSourceCol !== newSourceCol && savedState.includeSourceColors) {
+    changes.push({ kind: 'source-collection-renamed', detail: `Source collection renamed "${oldSourceCol}" → "${newSourceCol}". The old collection will be left in Figma.`, oldValue: oldSourceCol, newValue: newSourceCol, orphanedCollection: oldSourceCol });
+  }
+
+  const hadScale = savedState.includeColorScalesCollection !== false;
+  const hasScale = newState.includeColorScalesCollection !== false;
+  if (hadScale && !hasScale) {
+    changes.push({ kind: 'scale-collection-removed', detail: 'Scale collection disabled. The existing scale collection will become orphaned.', orphanedCollection: oldScaleCol });
+  }
+
+  const hadSource = !!savedState.includeSourceColors;
+  const hasSource = !!newState.includeSourceColors;
+  if (hadSource && !hasSource) {
+    changes.push({ kind: 'source-removed', detail: 'Source colors disabled. The source constants collection will become orphaned.', orphanedCollection: oldSourceCol });
+  }
+
+  const oldAlpha = String(savedState.alphaValues || '').replace(/\s/g, '');
+  const newAlpha = String(newState.alphaValues || '').replace(/\s/g, '');
+  if (oldAlpha && !newAlpha) {
+    changes.push({ kind: 'alpha-removed', detail: 'Alpha tints disabled. Existing opacity variables will become orphaned.' });
+  } else if (oldAlpha && newAlpha && oldAlpha !== newAlpha) {
+    changes.push({ kind: 'alpha-changed', detail: 'Alpha values changed. Removed opacity steps will become orphaned variables.', oldValue: oldAlpha, newValue: newAlpha });
+  }
 
   return changes;
 }

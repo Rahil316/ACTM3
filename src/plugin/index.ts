@@ -4,12 +4,13 @@
 // This file is bundled by esbuild into dist/scripts.js.
 // It runs in the Figma plugin sandbox (not the UI iframe).
 
-import { translateConfig, buildVariableRenameMap, resolveTokenRefBgs } from './config';
-import { VariableManager, savePluginConfig } from './figmaVars';
+import { translateConfig, buildVariableRenameMap, resolveTokenRefBgs, detectStructuralChanges } from './config';
+import { VariableManager, saveUiState } from './figmaVars';
 import { variableMaker } from '../shared/clrEngine.js';
 import { ExportFormatter } from './docGen';
 import { buildExportBundle } from './exportEng/bundler';
 import { analyzeNameConflicts, computeSyncPreview } from './variableTracker';
+import { generateCanvasPreview } from './canvasPreview';
 
 function runEngine(config: any) {
   const result = variableMaker(config);
@@ -22,6 +23,7 @@ function runEngine(config: any) {
 // ── 1. UI INITIALIZATION ─────────────────────────────────────────────────────
 
 const UI = { WIDTH: 560, HEIGHT: 720, MIN_WIDTH: 560, MIN_HEIGHT: 520 };
+const capabilities = { multiMode: true };
 
 (async () => {
   let savedUiSize = { width: UI.WIDTH, height: UI.HEIGHT };
@@ -39,7 +41,6 @@ const UI = { WIDTH: 560, HEIGHT: 720, MIN_WIDTH: 560, MIN_HEIGHT: 520 };
 
   // Capability probe: the only reliable way to detect free-plan restrictions.
   // Free plans cannot add a second mode to a collection.
-  const capabilities = { multiMode: true };
   let probeCol: VariableCollection | null = null;
   try {
     probeCol = figma.variables.createVariableCollection(`__tw_probe_${Math.random().toString(36).slice(2, 8)}__`);
@@ -56,26 +57,6 @@ const UI = { WIDTH: 560, HEIGHT: 720, MIN_WIDTH: 560, MIN_HEIGHT: 520 };
       }
     }
   }
-  figma.ui.postMessage({ type: 'capabilities', capabilities });
-
-  try {
-    const meta = await figma.clientStorage.getAsync('uiPrefsMeta');
-    if (meta) figma.ui.postMessage({ type: 'load-ui-prefs-meta', prefs: meta });
-  } catch (e) {
-    console.warn('Failed to load uiPrefsMeta:', e);
-  }
-
-  try {
-    const fromDoc = figma.root.getPluginData('tw_state');
-    if (fromDoc) {
-      figma.ui.postMessage({ type: 'load-config', state: JSON.parse(fromDoc) });
-    } else {
-      figma.ui.postMessage({ type: 'load-config', state: null });
-    }
-  } catch (e) {
-    console.warn('Failed to load saved config:', e);
-    figma.ui.postMessage({ type: 'load-config', state: null });
-  }
 })();
 
 // ── 2. MESSAGE ROUTER ────────────────────────────────────────────────────────
@@ -84,6 +65,31 @@ const UI = { WIDTH: 560, HEIGHT: 720, MIN_WIDTH: 560, MIN_HEIGHT: 520 };
 figma.ui.onmessage = async (msg: any) => {
   try {
     switch (msg.type) {
+      case 'ui-ready': {
+        figma.ui.postMessage({ type: 'capabilities', capabilities });
+
+        try {
+          const meta = await figma.clientStorage.getAsync('uiPrefsMeta');
+          if (meta) figma.ui.postMessage({ type: 'load-ui-prefs-meta', prefs: meta });
+        } catch (e) {
+          console.warn('Failed to load uiPrefsMeta:', e);
+        }
+
+        try {
+          // tw_ui_state = last auto-saved UI state (what to restore into the editor)
+          // tw_state    = last successfully synced state (rename/diff baseline)
+          const uiRaw = figma.root.getPluginData('tw_ui_state') || figma.root.getPluginData('tw_state');
+          const syncedRaw = figma.root.getPluginData('tw_state');
+          const uiState = uiRaw ? JSON.parse(uiRaw) : null;
+          const syncedState = syncedRaw ? JSON.parse(syncedRaw) : null;
+          figma.ui.postMessage({ type: 'load-config', state: uiState, syncedState });
+        } catch (e) {
+          console.warn('Failed to load saved config:', e);
+          figma.ui.postMessage({ type: 'load-config', state: null });
+        }
+        break;
+      }
+
       case 'run-creator': {
         const config = translateConfig(msg.state);
         const result = runEngine(config);
@@ -95,6 +101,15 @@ figma.ui.onmessage = async (msg: any) => {
           msg.savedState || null,
           msg.decisions || {},
         );
+        break;
+      }
+
+      case 'run-preview': {
+        const config = translateConfig(msg.state);
+        const result = runEngine(config);
+        // Generate/update preview in canvas
+        await generateCanvasPreview(msg.state, result);
+        figma.ui.postMessage({ type: 'preview-done' });
         break;
       }
 
@@ -130,7 +145,14 @@ figma.ui.onmessage = async (msg: any) => {
         );
 
         const syncPreview = computeSyncPreview(result, config, localVars, cols);
-        figma.ui.postMessage({ type: 'collection-check-result', existing, renames, conflicts, syncPreview });
+        // Add savedState-diff renames (buildVariableRenameMap) into the preview count
+        const pendingRenames = renames.summary.scaleCount + renames.summary.tokenCount;
+        if (pendingRenames > 0) {
+          syncPreview.toRename += pendingRenames;
+          syncPreview.total += pendingRenames;
+        }
+        const structuralChanges = msg.savedState ? detectStructuralChanges(msg.savedState, msg.state) : [];
+        figma.ui.postMessage({ type: 'collection-check-result', existing, renames, conflicts, syncPreview, structuralChanges });
         break;
       }
 
@@ -177,7 +199,7 @@ figma.ui.onmessage = async (msg: any) => {
       }
 
       case 'save-config':
-        savePluginConfig(msg.state);
+        saveUiState(msg.state);
         break;
 
       case 'cancel':
@@ -190,3 +212,25 @@ figma.ui.onmessage = async (msg: any) => {
     figma.ui.postMessage({ type: 'error', message });
   }
 };
+
+// Selection change listener to detect preview node active selection
+figma.on('selectionchange', () => {
+  const selection = figma.currentPage.selection;
+  const isPreviewSelected = selection.some(node => {
+    let curr: SceneNode | null = node;
+    while (curr) {
+      if (curr.getPluginData && (
+        curr.getPluginData('previewRole') ||
+        curr.getPluginData('previewThemeId') ||
+        curr.getPluginData('previewColorId') ||
+        curr.getPluginData('previewScaleColorId') ||
+        curr.getPluginData('previewScaleStepId')
+      )) {
+        return true;
+      }
+      curr = curr.parent as SceneNode | null;
+    }
+    return false;
+  });
+  figma.ui.postMessage({ type: 'selection-change', isPreviewSelected });
+});

@@ -56,7 +56,6 @@ function makeAppState(overrides: Record<string, unknown> = {}) {
     tokenNameSegments: ['color', 'role', 'variation'],
     includeDescriptions: false,
     includeColorScalesCollection: true,
-    resolveTokensDirectly: false,
     ...overrides,
   };
 }

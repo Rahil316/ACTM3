@@ -51,6 +51,13 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
     return;
   }
 
+  if (pm.type === 'run-preview') {
+    setTimeout(() => {
+      window.postMessage({ pluginMessage: { type: 'preview-done' } }, '*');
+    }, 800);
+    return;
+  }
+
   if (pm.type === 'save-config') {
     localStorage.setItem('tw_state', JSON.stringify(pm.state));
     return;
@@ -165,7 +172,17 @@ function handleMessage(
         const merged = { ...JSON.parse(JSON.stringify(makeBootstrapState())), ...(msg.state as Partial<AppState>) } as AppState;
         ensureIds(merged);
         ensureVariations(merged);
-        setSavedState(merged);
+        // savedState = last synced baseline (for rename detection).
+        // Falls back to the UI state itself when no separate sync record exists
+        // (first run after this change, or fresh install).
+        if (msg.syncedState && Object.keys(msg.syncedState).length > 0) {
+          const syncedMerged = { ...JSON.parse(JSON.stringify(makeBootstrapState())), ...(msg.syncedState as Partial<AppState>) } as AppState;
+          ensureIds(syncedMerged);
+          ensureVariations(syncedMerged);
+          setSavedState(syncedMerged);
+        } else {
+          setSavedState(merged);
+        }
         loadState(merged);
       }
       break;
@@ -189,6 +206,11 @@ function handleMessage(
 
     case 'collection-check-result': {
       callbacks.onCollectionCheckResult?.(msg);
+      break;
+    }
+
+    case 'selection-change': {
+      useUiStore.getState().setIsPreviewSelected(msg.isPreviewSelected);
       break;
     }
 
@@ -224,6 +246,11 @@ function handleMessage(
       break;
     }
 
+    case 'preview-done': {
+      callbacks.onPreviewDone?.();
+      break;
+    }
+
     case 'error': {
       callbacks.onError?.(msg.message);
       break;
@@ -243,6 +270,7 @@ function handleMessage(
 export interface BridgeCallbacks {
   onCollectionCheckResult?: (msg: CollectionCheckResultMessage) => void;
   onFinish?: (tally: SyncTally, errors: string[] | null) => void;
+  onPreviewDone?: () => void;
   onMultiModeDisabled?: () => void;
   onProcessedData?: (format: string, content: string) => void;
   onExportBundle?: (files: Array<{ path: string; content: string }>) => void;
@@ -268,6 +296,10 @@ export function useFigmaBridge(callbacks: BridgeCallbacks = {}): void {
     };
 
     window.addEventListener('message', handler);
+
+    if (!isStandalone) {
+      parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
+    }
 
     // Auto-save appState to Figma plugin storage whenever it changes.
     // Debounced so rapid edits (typing a color name letter-by-letter) don't

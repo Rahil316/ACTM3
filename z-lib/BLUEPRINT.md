@@ -58,15 +58,15 @@ interface AppState {
   versions: Version[]; // saved snapshots (no engine involvement)
 
   // Engine behaviour
-  pluginMode: 'scale' | 'direct';
+  pluginMode: "scale" | "direct";
   scaleAlgorithm: ScaleAlgorithm; // global default
   scaleLength: number; // number of steps in each palette ramp
   useUniformAlgorithm: boolean; // if false: per-color or per-role algorithm overrides
-  algorithmScopeLevel: 'color' | 'role';
+  algorithmScopeLevel: "color" | "role";
   solverMode: SolverMode; // global default
 
   // Token naming
-  tokenNameSegments: ('color' | 'role' | 'variation')[];
+  tokenNameSegments: ("color" | "role" | "variation")[];
   useShorthandColors: boolean;
   useShorthandRoles: boolean;
   useShorthandVariations: boolean;
@@ -76,9 +76,8 @@ interface AppState {
   resolveTokensDirectly: boolean; // store hex in tokens instead of variable alias
   includeSourceColors: boolean; // emit raw seed hex collection
   sourceCollectionName: string;
-  includeAlphaTints: boolean;
   alphaValues: string; // "10, 25, 50" — parsed to number[]
-  tokenGrouping: 'color' | 'role'; // legacy field; tokenNameSegments is used instead
+  tokenGrouping: "color" | "role"; // legacy field; tokenNameSegments is used instead
   includeColorScalesCollection: boolean;
   includeDescriptions: boolean;
   scaleCollectionName: string;
@@ -114,7 +113,7 @@ interface Role {
   name: string; // supports "/" nesting: "status/success"
   shorthand: string;
   minContrast: number;
-  mappingMethod: 'contrast' | 'index';
+  mappingMethod: "contrast" | "index";
   variationTargets: number[]; // one per variation — contrast ratio or step index
   customVariationList: boolean;
   customVariations: Variation[]; // used when customVariationList=true
@@ -126,7 +125,7 @@ interface Role {
 }
 
 interface RoleLocalBg {
-  kind: 'token' | 'color' | 'hex';
+  kind: "token" | "color" | "hex";
   value: string | Record<string, string>; // token/color: string; hex: { themeName: hexString }
   dynamic?: boolean; // token kind only: value contains [color] placeholder
 }
@@ -574,7 +573,6 @@ VariableManager.sync(result, config, scope, appState, savedAppState):
     syncGlobalColors(config)
     // → creates/updates collection named config.sourceCollectionName
     // → one variable per color: colorLabel/colorLabel = raw hex
-    // → if includeAlphaTints: adds colorLabel/Opacities/10 … /90 (RGBA)
 
   savePluginConfig(appState)
   postMessage({ type: 'finish', tally, errors: result.errors, result })

@@ -9,7 +9,6 @@ function baseState() {
     pluginMode: 'scale',
     scaleLength: 11,
     scaleAlgorithm: 'Natural',
-    resolveTokensDirectly: false,
     tokenGrouping: 'color',
     tokenNameSegments: ['color', 'role', 'variation'],
     useShorthandColors: false,
@@ -17,7 +16,6 @@ function baseState() {
     useShorthandVariations: false,
     useShorthandSteps: false,
     includeSourceColors: false,
-    includeAlphaTints: false,
     alphaValues: '10, 25, 50',
     includeDescriptions: true,
     includeColorScalesCollection: true,
@@ -64,7 +62,6 @@ describe('translateConfig', () => {
     expect(cfg.name).toBe('test-project');
     expect(cfg.pluginMode).toBe('scale');
     expect(cfg.scaleLength).toBe(11);
-    expect(cfg.resolveTokensDirectly).toBe(false);
   });
 
   it('maps colors array correctly', () => {

@@ -133,10 +133,8 @@ const scaleShowcase: Preset = {
     useShorthandVariations: false,
     useShorthandSteps: false,
 
-    resolveTokensDirectly: false,
     includeSourceColors: true,
     sourceCollectionName: 'palette/source',
-    includeAlphaTints: true,
     alphaValues: '10, 20, 40, 60, 80',
     tokenGrouping: 'color',
     includeColorScalesCollection: true,
@@ -284,10 +282,8 @@ const directShowcase: Preset = {
     useShorthandVariations: false,
     useShorthandSteps: false,
 
-    resolveTokensDirectly: true,
     includeSourceColors: true,
     sourceCollectionName: 'palette/source',
-    includeAlphaTints: true,
     alphaValues: '10, 20, 40, 60, 80',
     tokenGrouping: 'color',
     includeColorScalesCollection: false,

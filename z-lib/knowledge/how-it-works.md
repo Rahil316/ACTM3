@@ -85,10 +85,7 @@ When a role has `customVariationList: true` and a non-empty `customVariations` a
 This path is taken in both `_processScaleMode` and `_solveDirectMode` via the same guard in `store.js`:
 
 ```js
-const roleVars =
-  role.customVariationList && role.customVariations && role.customVariations.length > 0
-    ? role.customVariations
-    : appState.variations;
+const roleVars = role.customVariationList && role.customVariations && role.customVariations.length > 0 ? role.customVariations : appState.variations;
 ```
 
 ---
@@ -164,7 +161,7 @@ Same result as Direct mode above — the `_scale` collection is suppressed even 
 
 2. **Token collection** (`color tokens` by default, name from `tokenCollectionName`) — writes one `COLOR` variable per color × role × variation × theme-mode. In Scale mode, values are Figma variable aliases pointing into stage 1. In Direct mode or when `resolveTokensDirectly` is true, values are raw hex.
 
-3. **Source colors collection** (name from `sourceCollectionName`, default `"_constants"`) — writes raw brand hex values as a separate single-mode collection. Enabled by `includeSourceColors: true`. Alpha tint variables (`Opacities/10`, `Opacities/25`, etc.) are also written here when `includeAlphaTints: true`.
+3. **Source colors collection** (name from `sourceCollectionName`, default `"_constants"`) — writes raw brand hex values as a separate single-mode collection. Enabled by `includeSourceColors: true`. Alpha tint variables (`Opacities/10`, `Opacities/25`, etc.) are also written here when the sting is not empty.
 
 ---
 

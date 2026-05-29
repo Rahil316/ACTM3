@@ -49,7 +49,7 @@
  *   support/[channel]/icon    4.0   status icon fill
  */
 
-import type { Preset } from '../types';
+import type { Preset } from "../types";
 
 const presets: Preset[] = [
   {
@@ -72,10 +72,8 @@ const presets: Preset[] = [
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      resolveTokensDirectly: false,
       includeSourceColors: false,
       sourceCollectionName: "global",
-      includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
       tokenGrouping: "color",
       includeColorScalesCollection: true,
@@ -86,20 +84,17 @@ const presets: Preset[] = [
       scaleStepNames: null,
 
       // Global variations — not used directly (all roles use customVariationList).
-      variations: [
-        { name: "default", shorthand: "default" },
-      ],
+      variations: [{ name: "default", shorthand: "default" }],
 
       colors: [
-        { name: "Interactive/Blue",  shorthand: "Interactive/Blue",  value: "0F62FE", description: "Carbon interactive blue — primary actions" },
-        { name: "Neutral/Gray",      shorthand: "Neutral/Gray",      value: "8D8D8D", description: "Carbon neutral gray — surfaces, borders, text" },
-        { name: "Support/Error",     shorthand: "Support/Error",     value: "DA1E28", description: "Carbon support error (red)" },
-        { name: "Support/Warning",   shorthand: "Support/Warning",   value: "F1C21B", description: "Carbon support warning (yellow)" },
-        { name: "Support/Success",   shorthand: "Support/Success",   value: "198038", description: "Carbon support success (green)" },
+        { name: "Interactive/Blue", shorthand: "Interactive/Blue", value: "0F62FE", description: "Carbon interactive blue — primary actions" },
+        { name: "Neutral/Gray", shorthand: "Neutral/Gray", value: "8D8D8D", description: "Carbon neutral gray — surfaces, borders, text" },
+        { name: "Support/Error", shorthand: "Support/Error", value: "DA1E28", description: "Carbon support error (red)" },
+        { name: "Support/Warning", shorthand: "Support/Warning", value: "F1C21B", description: "Carbon support warning (yellow)" },
+        { name: "Support/Success", shorthand: "Support/Success", value: "198038", description: "Carbon support success (green)" },
       ],
 
       roles: [
-
         // ── INTERACTIVE ─────────────────────────────────────────────────────────
         // Primary interactive fill: button, link, focus ring — 4 interaction states.
         {
@@ -108,9 +103,9 @@ const presets: Preset[] = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  }, // resting interactive fill
-            { name: "hover",    shorthand: "hover"    }, // hover (one stop darker)
-            { name: "active",   shorthand: "active"   }, // pressed / active
+            { name: "default", shorthand: "default" }, // resting interactive fill
+            { name: "hover", shorthand: "hover" }, // hover (one stop darker)
+            { name: "active", shorthand: "active" }, // pressed / active
             { name: "disabled", shorthand: "disabled" }, // disabled (muted)
           ],
           variationTargets: [4.0, 5.5, 7.5, 2.0],
@@ -158,10 +153,10 @@ const presets: Preset[] = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "primary",     shorthand: "primary"     }, // high-contrast body text
-            { name: "secondary",   shorthand: "secondary"   }, // supporting labels
+            { name: "primary", shorthand: "primary" }, // high-contrast body text
+            { name: "secondary", shorthand: "secondary" }, // supporting labels
             { name: "placeholder", shorthand: "placeholder" }, // input hints
-            { name: "on-color",    shorthand: "on-color"    }, // white text on dark fills
+            { name: "on-color", shorthand: "on-color" }, // white text on dark fills
           ],
           variationTargets: [11.0, 5.5, 4.0, 1.0],
           description: "Text token hierarchy · primary · secondary · placeholder · on-color",
@@ -190,8 +185,8 @@ const presets: Preset[] = [
           minContrast: 1.5,
           customVariationList: true,
           customVariations: [
-            { name: "subtle",      shorthand: "subtle"      }, // hairline divider
-            { name: "strong",      shorthand: "strong"      }, // form field border
+            { name: "subtle", shorthand: "subtle" }, // hairline divider
+            { name: "strong", shorthand: "strong" }, // form field border
             { name: "interactive", shorthand: "interactive" }, // focus ring / selection
           ],
           variationTargets: [1.8, 4.0, 5.5],
@@ -205,10 +200,10 @@ const presets: Preset[] = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "bg",     shorthand: "bg"     }, // error background tint
-            { name: "fg",     shorthand: "fg"     }, // error text / icon foreground
+            { name: "bg", shorthand: "bg" }, // error background tint
+            { name: "fg", shorthand: "fg" }, // error text / icon foreground
             { name: "border", shorthand: "border" }, // error field border
-            { name: "icon",   shorthand: "icon"   }, // error icon fill
+            { name: "icon", shorthand: "icon" }, // error icon fill
           ],
           variationTargets: [1.3, 5.5, 2.5, 4.0],
           description: "Error semantic token stack · bg · fg · border · icon",
@@ -221,10 +216,10 @@ const presets: Preset[] = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "bg",     shorthand: "bg"     },
-            { name: "fg",     shorthand: "fg"     },
+            { name: "bg", shorthand: "bg" },
+            { name: "fg", shorthand: "fg" },
             { name: "border", shorthand: "border" },
-            { name: "icon",   shorthand: "icon"   },
+            { name: "icon", shorthand: "icon" },
           ],
           variationTargets: [1.3, 5.5, 2.5, 4.0],
           description: "Warning semantic token stack · bg · fg · border · icon",
@@ -237,21 +232,20 @@ const presets: Preset[] = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "bg",     shorthand: "bg"     },
-            { name: "fg",     shorthand: "fg"     },
+            { name: "bg", shorthand: "bg" },
+            { name: "fg", shorthand: "fg" },
             { name: "border", shorthand: "border" },
-            { name: "icon",   shorthand: "icon"   },
+            { name: "icon", shorthand: "icon" },
           ],
           variationTargets: [1.3, 5.5, 2.5, 4.0],
           description: "Success semantic token stack · bg · fg · border · icon",
         },
-
       ],
 
       themes: [
-        { name: "White",    bg: "FFFFFF" },
-        { name: "Gray-10",  bg: "F4F4F4" },
-        { name: "Gray-90",  bg: "262626" },
+        { name: "White", bg: "FFFFFF" },
+        { name: "Gray-10", bg: "F4F4F4" },
+        { name: "Gray-90", bg: "262626" },
         { name: "Gray-100", bg: "161616" },
       ],
     },

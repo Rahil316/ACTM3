@@ -62,6 +62,7 @@ export function computeSyncPreview(
               Math.abs(g - (rgb.g ?? 0)) > 0.001 ||
               Math.abs(b - (rgb.b ?? 0)) > 0.001) {
             toUpdate++;
+            changed = true;
           }
         }
       }
@@ -124,7 +125,7 @@ export function computeSyncPreview(
     for (const color of config.colors) {
       const colorId = color._id || color.name;
       entries.push({ tokenRef: `source:${colorId}`, name: `${color.name}/${color.name}`, value: color.value });
-      if (config.includeAlphaTints && config.alphaValues) {
+      if (config.alphaValues?.length) {
         for (const opacity of config.alphaValues) {
           entries.push({ tokenRef: `source:${colorId}/${opacity}`, name: `${color.name}/Opacities/${opacity}`, value: color.value });
         }
@@ -335,7 +336,7 @@ export function analyzeNameConflicts(
       }
 
       // Alpha tint source constants
-      if (config.includeAlphaTints && config.alphaValues) {
+      if (config.alphaValues?.length) {
         for (const opacityInt of config.alphaValues) {
           const alphaRef = `source:${colorId}/${opacityInt}`;
           const alphaSuggested = `${label}/Opacities/${opacityInt}`;

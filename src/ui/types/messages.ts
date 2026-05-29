@@ -5,6 +5,7 @@ import type { AppState, UiPrefs } from './state';
 export interface LoadConfigMessage {
   type: 'load-config';
   state: Partial<AppState> | null;
+  syncedState?: Partial<AppState> | null;
 }
 
 export interface LoadUiPrefsMetaMessage {
@@ -26,18 +27,43 @@ export interface SyncPreview {
   total: number;
 }
 
+export type StructuralChangeKind =
+  | 'mode-direct-to-scale'
+  | 'mode-scale-to-direct'
+  | 'scale-shrunk'
+  | 'scale-collection-renamed'
+  | 'token-collection-renamed'
+  | 'source-collection-renamed'
+  | 'source-removed'
+  | 'alpha-removed'
+  | 'alpha-changed'
+  | 'scale-collection-removed';
+
+export interface StructuralChange {
+  kind: StructuralChangeKind;
+  detail: string;
+  oldValue?: string;
+  newValue?: string;
+  orphanedCollection?: string;
+}
+
 export interface CollectionCheckResultMessage {
   type: 'collection-check-result';
   existing: ExistingCollection[];
   renames: RenameData;
   conflicts?: NameConflict[];
   syncPreview?: SyncPreview;
+  structuralChanges?: StructuralChange[];
 }
 
 export interface FinishMessage {
   type: 'finish';
   tally: SyncTally;
   errors: string[] | null;
+}
+
+export interface PreviewDoneMessage {
+  type: 'preview-done';
 }
 
 export interface CapabilitiesMessage {
@@ -66,6 +92,11 @@ export interface WarningMessage {
   message: string;
 }
 
+export interface SelectionChangeMessage {
+  type: 'selection-change';
+  isPreviewSelected: boolean;
+}
+
 export type PluginToUiMessage =
   | LoadConfigMessage
   | LoadUiPrefsMetaMessage
@@ -75,7 +106,9 @@ export type PluginToUiMessage =
   | ProcessedDataResponseMessage
   | ExportBundleResponseMessage
   | ErrorMessage
-  | WarningMessage;
+  | WarningMessage
+  | SelectionChangeMessage
+  | PreviewDoneMessage;
 
 // ── UI → Plugin messages ─────────────────────────────────────────────────────
 
@@ -125,6 +158,15 @@ export interface CancelMessage {
   type: 'cancel';
 }
 
+export interface RunPreviewMessage {
+  type: 'run-preview';
+  state: AppState;
+}
+
+export interface UiReadyMessage {
+  type: 'ui-ready';
+}
+
 export type UiToPluginMessage =
   | RunCreatorMessage
   | CheckCollectionsMessage
@@ -133,7 +175,9 @@ export type UiToPluginMessage =
   | RequestProcessedDataMessage
   | RequestExportBundleMessage
   | SaveConfigMessage
-  | CancelMessage;
+  | CancelMessage
+  | RunPreviewMessage
+  | UiReadyMessage;
 
 // ── Supporting types ─────────────────────────────────────────────────────────
 
@@ -156,6 +200,7 @@ export interface SyncTally {
   created: number;
   updated: number;
   renamed: number;
+  removed: number;
   failed: number;
 }
 

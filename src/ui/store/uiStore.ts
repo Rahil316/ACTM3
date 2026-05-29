@@ -17,6 +17,9 @@ interface UiStoreState {
   // Figma plan capabilities (set once on plugin startup)
   multiMode: boolean;
 
+  // Selection/Preview state
+  isPreviewSelected: boolean;
+
   // Routing actions
   setActiveSidebarTab: (tab: SidebarTab) => void;
   openOverlay: (overlay: NonNullable<ActiveOverlay>) => void;
@@ -35,6 +38,9 @@ interface UiStoreState {
 
   // Capabilities actions
   setMultiMode: (multiMode: boolean) => void;
+
+  // Selection/Preview actions
+  setIsPreviewSelected: (isSelected: boolean) => void;
 
   // Tree collapse state (persisted across tab switches)
   colorGroupCollapsed: Record<string, boolean>;
@@ -62,6 +68,8 @@ export const useUiStore = create<UiStoreState>((set) => ({
   roleDragSrcIdx: null,
 
   multiMode: true,
+
+  isPreviewSelected: false,
 
   setActiveSidebarTab: (tab) => set({ activeSidebarTab: tab }),
 
@@ -96,6 +104,8 @@ export const useUiStore = create<UiStoreState>((set) => ({
   setRoleDragSrcIdx: (idx) => set({ roleDragSrcIdx: idx }),
 
   setMultiMode: (multiMode) => set({ multiMode }),
+
+  setIsPreviewSelected: (isPreviewSelected) => set({ isPreviewSelected }),
 
   colorGroupCollapsed: {},
   roleGroupCollapsed: {},

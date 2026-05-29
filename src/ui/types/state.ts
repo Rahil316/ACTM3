@@ -1,26 +1,14 @@
 // ── Core entity types ────────────────────────────────────────────────────────
 
-export type PluginMode = 'scale' | 'direct';
-export type MappingMethod = 'contrast' | 'index';
-export type AlgorithmScopeLevel = 'color' | 'role';
-export type TokenGrouping = 'color' | 'role';
-export type TokenNameSegment = 'color' | 'role' | 'variation';
+export type PluginMode = "scale" | "direct";
+export type MappingMethod = "contrast" | "index";
+export type AlgorithmScopeLevel = "color" | "role";
+export type TokenGrouping = "color" | "role";
+export type TokenNameSegment = "color" | "role" | "variation";
 
-export type ScaleAlgorithm =
-  | 'Natural'
-  | 'Uniform'
-  | 'Expressive'
-  | 'Symmetric'
-  | 'OKLCH'
-  | 'Material'
-  | 'Linear';
+export type ScaleAlgorithm = "Natural" | "Uniform" | "Expressive" | "Symmetric" | "OKLCH" | "Material" | "Linear";
 
-export type SolverMode =
-  | 'natural'
-  | 'saturated'
-  | 'luminance'
-  | 'hue-locked'
-  | 'chroma-maximized';
+export type SolverMode = "natural" | "saturated" | "luminance" | "hue-locked" | "chroma-maximized";
 
 // ── Entity shapes ────────────────────────────────────────────────────────────
 
@@ -72,6 +60,7 @@ export interface Role {
   description?: string;
   scopedColorIds?: string[] | null;
   localBg?: RoleLocalBg | null;
+  scopes?: VariableScope[];
 }
 
 export interface Theme {
@@ -85,7 +74,7 @@ export interface Version {
   name: string;
   description: string;
   createdAt: number;
-  state: Omit<AppState, 'versions'>;
+  state: Omit<AppState, "versions">;
 }
 
 // ── Root app state ───────────────────────────────────────────────────────────
@@ -108,10 +97,8 @@ export interface AppState {
   useShorthandVariations: boolean;
   useShorthandSteps: boolean;
 
-  resolveTokensDirectly: boolean;
   includeSourceColors: boolean;
   sourceCollectionName: string;
-  includeAlphaTints: boolean;
   alphaValues: string;
   tokenGrouping: TokenGrouping;
   includeColorScalesCollection: boolean;
@@ -132,8 +119,8 @@ export interface AppState {
 
 // ── UI preferences ───────────────────────────────────────────────────────────
 
-export type UiTheme = 'figma' | 'dark' | 'light';
-export type UiLanguage = 'en' | 'es' | 'hi';
+export type UiTheme = "figma" | "dark" | "light";
+export type UiLanguage = "en" | "es" | "hi";
 
 export interface UiPrefs {
   scale: number;
@@ -143,18 +130,9 @@ export interface UiPrefs {
 
 // ── UI routing ───────────────────────────────────────────────────────────────
 
-export type SidebarTab = 'color-groups' | 'roles' | 'project' | 'themes' | 'saved-states';
-export type ActiveOverlay =
-  | null
-  | 'settings'
-  | 'preview'
-  | 'run-dialog'
-  | 'save-version'
-  | 'quick-start'
-  | 'design-lab'
-  | 'export-sheet'
-  | 'theme-shop';
-export type SettingsTab = 'tokens' | 'roles' | 'plugin';
+export type SidebarTab = "color-groups" | "roles" | "project" | "themes" | "saved-states";
+export type ActiveOverlay = null | "settings" | "preview" | "run-dialog" | "save-version" | "quick-start" | "design-lab" | "export-sheet" | "theme-shop";
+export type SettingsTab = "tokens" | "roles" | "plugin";
 
 // ── Validation ───────────────────────────────────────────────────────────────
 

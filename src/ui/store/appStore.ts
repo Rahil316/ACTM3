@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AppState, Color, Role, Theme, Variation, ScaleStepName, ValidationIssues, MappingMethod } from "../types/state";
+import type { AppState, Color, Role, Theme, Variation, ValidationIssues, MappingMethod } from "../types/state";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -241,11 +241,9 @@ export function makeBootstrapState(): AppState {
     useShorthandRoles: false,
     useShorthandVariations: false,
     useShorthandSteps: false,
-    resolveTokensDirectly: false,
     includeSourceColors: false,
     sourceCollectionName: "_constants",
-    includeAlphaTints: false,
-    alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
+    alphaValues: "",
     tokenGrouping: "color",
     includeColorScalesCollection: true,
     includeDescriptions: false,
@@ -305,7 +303,6 @@ export function computeHash(state: AppState): string {
     useShorthandVariations: state.useShorthandVariations,
     useShorthandSteps: state.useShorthandSteps,
     tokenNameSegments: state.tokenNameSegments,
-    resolveTokensDirectly: state.resolveTokensDirectly,
   });
 }
 
@@ -429,6 +426,7 @@ interface AppStoreState {
   toggleRoleCustomVariations: (roleIdx: number) => void;
   setRoleScope: (roleIdx: number, colorIds: string[] | null) => void;
   setRoleLocalBg: (roleIdx: number, localBg: import('../types/state').RoleLocalBg | null) => void;
+  setRoleScopes: (roleIdx: number, scopes: VariableScope[] | null) => void;
 
   // Shared variations — set / add / remove / move
   setVariation: (idx: number, field: string, value: string) => void;
@@ -498,7 +496,19 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
   // ── Global field setter ──
 
   setAppField: (key, value) => {
-    set((s) => ({ appState: { ...s.appState, [key]: value } }));
+    set((s) => {
+      const next: AppState = { ...s.appState, [key]: value };
+      if (key === 'scaleLength' && s.appState.scaleStepNames) {
+        const len = Math.max(1, parseInt(value as string) || 23);
+        const existing = s.appState.scaleStepNames;
+        if (existing.length !== len) {
+          const padded = [...existing];
+          while (padded.length < len) padded.push({ _id: generateId(), name: '', shorthand: '' });
+          next.scaleStepNames = padded.slice(0, len);
+        }
+      }
+      return { appState: next };
+    });
   },
 
   // ── Project ──
@@ -739,6 +749,14 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
     });
   },
 
+  setRoleScopes: (roleIdx, scopes) => {
+    set((s) => {
+      const roles = [...s.appState.roles];
+      roles[roleIdx] = { ...roles[roleIdx], scopes: scopes ?? undefined };
+      return { appState: { ...s.appState, roles } };
+    });
+  },
+
   // ── Shared variations ──
 
   setVariation: (idx, field, value) => {
@@ -802,16 +820,20 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
   addScaleStepName: () => {
     set((s) => {
-      const newStep: ScaleStepName = { _id: generateId(), name: "", shorthand: "" };
-      const steps = [...(s.appState.scaleStepNames ?? []), newStep];
-      return { appState: { ...s.appState, scaleStepNames: steps } };
+      const len = Math.max(1, parseInt(s.appState.scaleLength as unknown as string) || 23);
+      const existing = s.appState.scaleStepNames ?? [];
+      const steps = [...existing];
+      while (steps.length < len) steps.push({ _id: generateId(), name: '', shorthand: '' });
+      return { appState: { ...s.appState, scaleStepNames: steps.slice(0, len) } };
     });
   },
 
   removeScaleStepName: (idx) => {
     set((s) => {
-      const steps = (s.appState.scaleStepNames ?? []).filter((_, i) => i !== idx);
-      return { appState: { ...s.appState, scaleStepNames: steps.length ? steps : null } };
+      const steps = [...(s.appState.scaleStepNames ?? [])];
+      if (steps[idx]) steps[idx] = { ...steps[idx], name: '', shorthand: '' };
+      const allEmpty = steps.every((s) => !s.name && !s.shorthand);
+      return { appState: { ...s.appState, scaleStepNames: allEmpty ? null : steps } };
     });
   },
 

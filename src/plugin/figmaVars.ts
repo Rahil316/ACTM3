@@ -1,7 +1,7 @@
 // FIGMA VARIABLE API — CRUD
 // Ported from vanilla_archive/src/figma/figmaVars.js
 
-import { buildVariableRenameMap } from './config';
+import { buildVariableRenameMap, detectStructuralChanges, type StructuralChange } from './config';
 import { buildMetadataMap, findVariable } from './variableTracker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,12 +13,25 @@ function hexToFigmaRgb(hex: string): { r: number; g: number; b: number } {
   return { r: ((n >> 16) & 0xff) / 255, g: ((n >> 8) & 0xff) / 255, b: (n & 0xff) / 255 };
 }
 
+// Saves the last-successfully-synced state — used as the rename baseline on next open.
+// Only called after a successful sync, NOT from the auto-save subscriber.
 export function savePluginConfig(appState: AnyObj): void {
   const serialized = JSON.stringify(appState);
   try {
     figma.root.setPluginData('tw_state', serialized);
   } catch (e) {
     console.warn('savePluginConfig setPluginData failed:', e);
+  }
+}
+
+// Saves the current UI state for restore-on-reopen. Separate key so it never
+// overwrites the sync baseline that rename detection depends on.
+export function saveUiState(appState: AnyObj): void {
+  const serialized = JSON.stringify(appState);
+  try {
+    figma.root.setPluginData('tw_ui_state', serialized);
+  } catch (e) {
+    console.warn('saveUiState setPluginData failed:', e);
   }
 }
 
@@ -50,7 +63,7 @@ function isDifferentValue(a: AnyObj, b: AnyObj, type: string): boolean {
 }
 
 export const VariableManager = {
-  tally: { created: 0, updated: 0, renamed: 0, failed: 0 },
+  tally: { created: 0, updated: 0, renamed: 0, removed: 0, failed: 0 },
   mutations: new Map<string, 'created' | 'renamed' | 'updated'>(),
   cache: { variables: [] as Variable[], collections: [] as VariableCollection[] },
   scaleVarNameMap: {} as Record<string, string>,
@@ -101,7 +114,7 @@ export const VariableManager = {
     savedAppState: AnyObj | null = null,
     decisions: Record<string, 'keep' | 'revert'> = {},
   ): Promise<void> {
-    this.tally = { created: 0, updated: 0, renamed: 0, failed: 0 };
+    this.tally = { created: 0, updated: 0, renamed: 0, removed: 0, failed: 0 };
     this.mutations = new Map<string, 'created' | 'renamed' | 'updated'>();
     this.scaleVarNameMap = {};
     await this.refreshCache();
@@ -113,10 +126,12 @@ export const VariableManager = {
 
     const scaleCollectionName = (appState && appState.scaleCollectionName) || '_scale';
     const tokenColName = (appState && appState.tokenCollectionName) || 'color tokens';
+
+    const scaleColExists = this.cache.collections.some((c: VariableCollection) => c.name === scaleCollectionName);
     const skipScales =
-      config.resolveTokensDirectly ||
       config.pluginMode === 'direct' ||
-      config.includeColorScalesCollection === false;
+      config.includeColorScalesCollection === false ||
+      (!scaleColExists && scope !== 'all' && scope !== 'groups');
     const tokenNameOrder: string[] =
       config.tokenNameSegments ||
       (config.tokenGrouping === 'role'
@@ -273,9 +288,9 @@ export const VariableManager = {
 
                 const tokenRef = `token:${colorId}/${roleIdStr}/${varIdStr}`;
 
-                return [figmaName, 'COLOR', value, fullDesc, tokenRef] as [string, string, AnyObj, string, string];
+                return [figmaName, 'COLOR', value, fullDesc, tokenRef, roleObj.scopes] as [string, string, AnyObj, string, string, VariableScope[]?];
               })
-              .filter(Boolean) as [string, string, AnyObj, string, string][];
+              .filter(Boolean) as [string, string, AnyObj, string, string, VariableScope[]?][];
 
             await this.upsertVariables(tokenCol, modeId, vars, tokenMetadataMap, decisions);
           }
@@ -300,6 +315,14 @@ export const VariableManager = {
       if (type === 'created') this.tally.created++;
       else if (type === 'renamed') this.tally.renamed++;
       else if (type === 'updated') this.tally.updated++;
+    }
+
+    // STAGE 4: Purge orphans from structural setting changes
+    if (appState && savedAppState) {
+      const structuralChanges = detectStructuralChanges(savedAppState, appState);
+      if (structuralChanges.length > 0) {
+        this.tally.removed += await this.purgeOrphanedVars(appState, savedAppState, structuralChanges);
+      }
     }
 
     figma.ui.postMessage({
@@ -361,7 +384,7 @@ export const VariableManager = {
       const baseRef = `source:${colorId}`;
       vars.push([`${label}/${label}`, 'COLOR', hex, groupDesc, baseRef]);
 
-      if (config.includeAlphaTints && config.alphaValues.length > 0) {
+      if (config.alphaValues.length > 0) {
         const rgb = hexToFigmaRgb(hex);
         for (const opacityInt of config.alphaValues as number[]) {
           const alpha = opacityInt / 100;
@@ -380,14 +403,148 @@ export const VariableManager = {
     await this.upsertVariables(col, modeId, vars, sourceMetadataMap, decisions);
   },
 
+  // Removes variables and collections that became orphaned due to structural setting changes.
+  // Returns the count of removed variables.
+  async purgeOrphanedVars(
+    newAppState: AnyObj,
+    savedAppState: AnyObj,
+    changes: StructuralChange[],
+  ): Promise<number> {
+    let removed = 0;
+
+    const removeCollection = async (name: string) => {
+      const col = this.cache.collections.find((c: VariableCollection) => c.name === name);
+      if (!col) return;
+      const colVars = this.cache.variables.filter((v: Variable) => v.variableCollectionId === col.id);
+      for (const v of colVars) {
+        try { v.remove(); removed++; } catch (e) { console.warn('purge: failed to remove variable', v.name, e); }
+      }
+      try { col.remove(); } catch (e) { console.warn('purge: failed to remove collection', name, e); }
+      this.cache.collections = this.cache.collections.filter((c: VariableCollection) => c.id !== col.id);
+      this.cache.variables = this.cache.variables.filter((v: Variable) => v.variableCollectionId !== col.id);
+    };
+
+    for (const change of changes) {
+      switch (change.kind) {
+
+        // Scale collection no longer needed — remove it entirely
+        case 'mode-scale-to-direct':
+        case 'scale-collection-removed': {
+          const colName = savedAppState.scaleCollectionName || '_scale';
+          await removeCollection(colName);
+          break;
+        }
+
+        // Source collection no longer needed
+        case 'source-removed': {
+          const colName = savedAppState.sourceCollectionName || '_constants';
+          await removeCollection(colName);
+          break;
+        }
+
+        // Collection renamed — remove old collection (new one will be created on sync)
+        case 'scale-collection-renamed':
+        case 'token-collection-renamed':
+        case 'source-collection-renamed': {
+          if (change.orphanedCollection) {
+            await removeCollection(change.orphanedCollection);
+          }
+          break;
+        }
+
+        // Scale shrunk — remove orphaned step variables (steps beyond newLen)
+        case 'scale-shrunk': {
+          const oldLen = parseInt(savedAppState.scaleLength) || 23;
+          const newLen = parseInt(newAppState.scaleLength) || 23;
+          const scaleColName = newAppState.scaleCollectionName || '_scale';
+          const scaleCol = this.cache.collections.find((c: VariableCollection) => c.name === scaleColName);
+          if (scaleCol) {
+            // Build the step names for the OLD scale
+            const oldSteps = new Set(
+              Array.from({ length: oldLen }, (_, i) => String(i + 1))
+            );
+            const newSteps = new Set(
+              Array.from({ length: newLen }, (_, i) => String(i + 1))
+            );
+            const orphanedSteps = [...oldSteps].filter((s) => !newSteps.has(s));
+            const scaleVars = this.cache.variables.filter((v: Variable) => v.variableCollectionId === scaleCol.id);
+            for (const v of scaleVars) {
+              const ref = v.getPluginData('tokenRef');
+              if (!ref) continue;
+              // ref format: scale:{colorId}/{step}
+              const step = ref.split('/').pop();
+              if (step && orphanedSteps.includes(step)) {
+                try { v.remove(); removed++; } catch (e) { console.warn('purge: failed to remove scale step', v.name, e); }
+              }
+            }
+          }
+          break;
+        }
+
+        // Alpha tints removed — remove all alpha variables from source collection
+        case 'alpha-removed': {
+          const sourceColName = newAppState.sourceCollectionName || '_constants';
+          const sourceCol = this.cache.collections.find((c: VariableCollection) => c.name === sourceColName);
+          if (sourceCol) {
+            const sourceVars = this.cache.variables.filter((v: Variable) => v.variableCollectionId === sourceCol.id);
+            for (const v of sourceVars) {
+              const ref = v.getPluginData('tokenRef');
+              // Alpha vars have refs like source:{colorId}/{opacity}
+              if (ref && ref.startsWith('source:') && ref.split('/').length === 3) {
+                try { v.remove(); removed++; } catch (e) { console.warn('purge: failed to remove alpha var', v.name, e); }
+              }
+            }
+          }
+          break;
+        }
+
+        // Alpha values changed — remove steps that no longer exist
+        case 'alpha-changed': {
+          const sourceColName = newAppState.sourceCollectionName || '_constants';
+          const sourceCol = this.cache.collections.find((c: VariableCollection) => c.name === sourceColName);
+          if (sourceCol) {
+            const newAlphas = new Set(
+              (newAppState.alphaValues || '')
+                .split(',')
+                .map((s: string) => s.trim())
+                .filter(Boolean)
+            );
+            const sourceVars = this.cache.variables.filter((v: Variable) => v.variableCollectionId === sourceCol.id);
+            for (const v of sourceVars) {
+              const ref = v.getPluginData('tokenRef');
+              if (!ref || !ref.startsWith('source:')) continue;
+              const parts = ref.split('/');
+              if (parts.length !== 3) continue; // not an alpha var
+              const opacity = parts[2];
+              if (!newAlphas.has(opacity)) {
+                try { v.remove(); removed++; } catch (e) { console.warn('purge: failed to remove alpha var', v.name, e); }
+              }
+            }
+          }
+          break;
+        }
+
+        // mode-direct-to-scale and resolve-tokens-changed: no orphans to remove,
+        // existing variables get updated in-place during normal sync
+        default:
+          break;
+      }
+    }
+
+    // Refresh cache after removals
+    if (removed > 0) await this.refreshCache();
+
+    return removed;
+  },
+
   async upsertVariables(
     collection: VariableCollection,
     modeId: string,
-    vars: [string, string, AnyObj, string, string][],
+    vars: [string, string, AnyObj, string, string, VariableScope[]?][],
     metadataMap: Map<string, Variable>,
     decisions: Record<string, 'keep' | 'revert'> = {},
   ): Promise<void> {
-    for (const [varName, varType, varValue, varDescription, tokenRef] of vars) {
+    for (const [varName, varType, varValue, varDescription, tokenRef, targetScopes] of vars) {
       try {
         let variable = findVariable(collection, tokenRef, varName, metadataMap, this.cache.variables);
 
@@ -405,9 +562,13 @@ export const VariableManager = {
         const decision = decisions[tokenRef] || 'keep';
         const targetName = (variable && decision === 'keep') ? variable.name : varName;
 
+        let isUpdated = false;
+
         if (!variable) {
           variable = figma.variables.createVariable(targetName, collection, varType as VariableResolvedDataType);
           variable.setPluginData('tokenRef', tokenRef);
+          // Always explicitly set scopes — default to ALL_SCOPES so every property panel shows the variable
+          variable.scopes = (targetScopes && targetScopes.length > 0) ? targetScopes : ['ALL_SCOPES'];
           this.cache.variables.push(variable);
           metadataMap.set(tokenRef, variable);
           this.mutations.set(tokenRef, 'created');
@@ -429,7 +590,15 @@ export const VariableManager = {
           }
         }
 
-        let isUpdated = false;
+        {
+          const desiredScopes: VariableScope[] = (targetScopes && targetScopes.length > 0) ? targetScopes : ['ALL_SCOPES'];
+          const currScopes = variable.scopes || [];
+          const same = currScopes.length === desiredScopes.length && desiredScopes.every((s) => currScopes.includes(s));
+          if (!same) {
+            variable.scopes = desiredScopes;
+            isUpdated = true;
+          }
+        }
 
         if (varDescription && variable.description !== varDescription) {
           variable.description = varDescription;

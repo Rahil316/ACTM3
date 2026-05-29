@@ -72,10 +72,8 @@ export interface PresetConfig {
   useShorthandVariations?: boolean;
   useShorthandSteps?: boolean;
 
-  resolveTokensDirectly?: boolean;
   includeSourceColors?: boolean;
   sourceCollectionName?: string;
-  includeAlphaTints?: boolean;
   alphaValues?: string;
   includeColorScalesCollection?: boolean;
   includeDescriptions?: boolean;

@@ -364,7 +364,6 @@ describe('analyzeNameConflicts', () => {
     const sourceConfig = {
       ...config,
       includeSourceColors: true,
-      includeAlphaTints: true,
       alphaValues: [50],
       colors: [{ name: 'Primary', shorthand: 'pr', _id: 'c-primary' }]
     };

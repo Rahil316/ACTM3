@@ -135,7 +135,7 @@ export const Overlays: StoryObj = {
 
         <SuccessOverlay
           open={activeOverlay === 'success'}
-          tally={{ created: 24, updated: 8, renamed: 2, failed: 0 }}
+          tally={{ created: 24, updated: 8, renamed: 2, removed: 0, failed: 0 }}
           onDismiss={() => setActiveOverlay('none')}
         />
 

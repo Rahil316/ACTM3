@@ -3,7 +3,7 @@
 // Funk (chroma-maximized, bold creative).
 // variationTargets = WCAG contrast ratios (1.0 – 21.0).
 
-import type { Preset } from '../types';
+import type { Preset } from "../types";
 
 const presets: Preset[] = [
   // ── TW Regular ──────────────────────────────────────────────────────────────
@@ -13,8 +13,7 @@ const presets: Preset[] = [
     id: "regular-wand",
     name: "Regular Wand",
     badge: "TW",
-    description:
-      "Clean professional system. Full semantic layer stack — backgrounds, surfaces, borders, fills, text. Swap the seed colors and ship.",
+    description: "Clean professional system. Full semantic layer stack — backgrounds, surfaces, borders, fills, text. Swap the seed colors and ship.",
     tags: ["Professional", "Tonal", "Light+Dark"],
     config: {
       name: "Regular Wand",
@@ -28,10 +27,8 @@ const presets: Preset[] = [
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      resolveTokensDirectly: false,
       includeSourceColors: true,
       sourceCollectionName: "global",
-      includeAlphaTints: false,
       alphaValues: "10, 25, 50, 75, 90",
       includeColorScalesCollection: true,
       includeDescriptions: false,
@@ -168,8 +165,7 @@ const presets: Preset[] = [
     id: "tw-pro",
     name: "TW Pro",
     badge: "TW",
-    description:
-      "Full system. Direct mode, global brand constants + alpha tints, 3 themes. Per-role semantic variation groups for Surface, Text, Status, Outline, and Inverse.",
+    description: "Full system. Direct mode, global brand constants + alpha tints, 3 themes. Per-role semantic variation groups for Surface, Text, Status, Outline, and Inverse.",
     tags: ["Comprehensive", "Adaptive", "Multi-theme"],
     config: {
       name: "TW Pro",
@@ -183,10 +179,8 @@ const presets: Preset[] = [
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      resolveTokensDirectly: false,
       includeSourceColors: true,
       sourceCollectionName: "brand",
-      includeAlphaTints: true,
       alphaValues: "10, 20, 40, 60, 80, 90",
       includeColorScalesCollection: false,
       includeDescriptions: true,
@@ -385,8 +379,7 @@ const presets: Preset[] = [
     id: "tw-funk",
     name: "TW Funk",
     badge: "TW",
-    description:
-      "Maximum chroma at every contrast level. High-energy variation names, 3 vivid themes. Built for bold creative products.",
+    description: "Maximum chroma at every contrast level. High-energy variation names, 3 vivid themes. Built for bold creative products.",
     tags: ["Bold", "Vivid", "Adaptive"],
     config: {
       name: "TW Funk",
@@ -400,10 +393,8 @@ const presets: Preset[] = [
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      resolveTokensDirectly: false,
       includeSourceColors: true,
       sourceCollectionName: "electric",
-      includeAlphaTints: false,
       alphaValues: "10, 25, 50, 75, 90",
       includeColorScalesCollection: false,
       includeDescriptions: false,
@@ -547,18 +538,9 @@ const presets: Preset[] = [
     id: "tw-native",
     name: "TW Native",
     badge: "TW",
-    description:
-      "Token Wand's native system. Palette (7 colors) → Role (what the color does) → Variation (state within that role). Path: Brand/button/hover, Neutral/text/base, Danger/fill/disabled.",
+    description: "Token Wand's native system. Palette (7 colors) → Role (what the color does) → Variation (state within that role). Path: Brand/button/hover, Neutral/text/base, Danger/fill/disabled.",
     tags: ["Native", "Semantic", "Light+Dark", "Starter"],
-    swatches: [
-      "0066FF",
-      "7C3AED",
-      "6B7280",
-      "16A34A",
-      "D97706",
-      "DC2626",
-      "0284C7",
-    ],
+    swatches: ["0066FF", "7C3AED", "6B7280", "16A34A", "D97706", "DC2626", "0284C7"],
     config: {
       name: "TW Native",
       pluginMode: "scale",
@@ -572,10 +554,8 @@ const presets: Preset[] = [
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      resolveTokensDirectly: false,
       includeSourceColors: true,
       sourceCollectionName: "palette/source",
-      includeAlphaTints: true,
       alphaValues: "10, 20, 40, 60, 80, 90",
       tokenGrouping: "color",
       includeColorScalesCollection: true,
@@ -649,8 +629,7 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong" }, // stronger section divider
           ],
           variationTargets: [1.05, 1.15, 1.3],
-          description:
-            "Background fills · subtle wash · default section · strong divider",
+          description: "Background fills · subtle wash · default section · strong divider",
         },
 
         // ── SURFACE ───────────────────────────────────────────────────────────
@@ -668,8 +647,7 @@ const presets: Preset[] = [
             { name: "overlay", shorthand: "overlay" }, // modal / sheet / drawer
           ],
           variationTargets: [1.05, 1.0, 1.08, 1.15],
-          description:
-            "Surface elevation · sunken · card · raised · modal overlay",
+          description: "Surface elevation · sunken · card · raised · modal overlay",
         },
 
         // ── FILL ──────────────────────────────────────────────────────────────
@@ -703,8 +681,7 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled" }, // disabled label
           ],
           variationTargets: [7.0, 4.5, 3.0, 2.0],
-          description:
-            "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
+          description: "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
         },
 
         // ── STROKE ────────────────────────────────────────────────────────────
@@ -720,8 +697,7 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong" }, // focus ring / emphasis outline
           ],
           variationTargets: [1.5, 2.5, 4.0],
-          description:
-            "Borders and dividers · subtle hairline · UI border · focus ring",
+          description: "Borders and dividers · subtle hairline · UI border · focus ring",
         },
 
         // ── ICON ──────────────────────────────────────────────────────────────
@@ -737,8 +713,7 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled" }, // disabled icon
           ],
           variationTargets: [4.5, 3.0, 2.0],
-          description:
-            "Icon fills · default (AA) · subtle (AA-large) · disabled",
+          description: "Icon fills · default (AA) · subtle (AA-large) · disabled",
         },
 
         // ── BUTTON ────────────────────────────────────────────────────────────
@@ -756,8 +731,7 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled" }, // below action threshold
           ],
           variationTargets: [4.5, 5.5, 6.5, 7.0, 2.0],
-          description:
-            "Button fills · 5 interaction states · default → hover → active → selected → disabled",
+          description: "Button fills · 5 interaction states · default → hover → active → selected → disabled",
         },
 
         // ── LINK ──────────────────────────────────────────────────────────────
@@ -807,24 +781,13 @@ const presets: Preset[] = [
   // rather than the muted tints a tonal ramp produces.
   //
   // includeSourceColors: true  → raw hex values in "palette/source"
-  // includeAlphaTints: true    → opacity variants at 10/20/40/60/80/90%
-  // resolveTokensDirectly: true → tokens store hex values, not variable aliases
   {
     id: "tw-native-direct",
     name: "TW Native Direct",
     badge: "TW",
-    description:
-      "TW Native in direct mode. Same palette → role → variation architecture but tokens are solved straight from the seed color — richer, more saturated. No tonal ramp collection.",
+    description: "TW Native in direct mode. Same palette → role → variation architecture but tokens are solved straight from the seed color — richer, more saturated. No tonal ramp collection.",
     tags: ["Native", "Direct", "Vivid", "Light+Dark"],
-    swatches: [
-      "0066FF",
-      "7C3AED",
-      "6B7280",
-      "16A34A",
-      "D97706",
-      "DC2626",
-      "0284C7",
-    ],
+    swatches: ["0066FF", "7C3AED", "6B7280", "16A34A", "D97706", "DC2626", "0284C7"],
     config: {
       name: "TW Native Direct",
       pluginMode: "direct",
@@ -838,10 +801,8 @@ const presets: Preset[] = [
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      resolveTokensDirectly: true,
       includeSourceColors: true,
       sourceCollectionName: "palette/source",
-      includeAlphaTints: true,
       alphaValues: "10, 20, 40, 60, 80, 90",
       tokenGrouping: "color",
       includeColorScalesCollection: false,
@@ -913,8 +874,7 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong" },
           ],
           variationTargets: [1.05, 1.15, 1.3],
-          description:
-            "Background fills · subtle wash · default section · strong divider",
+          description: "Background fills · subtle wash · default section · strong divider",
         },
 
         // ── SURFACE ───────────────────────────────────────────────────────────
@@ -930,8 +890,7 @@ const presets: Preset[] = [
             { name: "overlay", shorthand: "overlay" },
           ],
           variationTargets: [1.05, 1.0, 1.08, 1.15],
-          description:
-            "Surface elevation · sunken · card · raised · modal overlay",
+          description: "Surface elevation · sunken · card · raised · modal overlay",
         },
 
         // ── FILL ──────────────────────────────────────────────────────────────
@@ -962,8 +921,7 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled" },
           ],
           variationTargets: [7.0, 4.5, 3.0, 2.0],
-          description:
-            "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
+          description: "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
         },
 
         // ── STROKE ────────────────────────────────────────────────────────────
@@ -978,8 +936,7 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong" },
           ],
           variationTargets: [1.5, 2.5, 4.0],
-          description:
-            "Borders and dividers · subtle hairline · UI border · focus ring",
+          description: "Borders and dividers · subtle hairline · UI border · focus ring",
         },
 
         // ── ICON ──────────────────────────────────────────────────────────────
@@ -994,8 +951,7 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled" },
           ],
           variationTargets: [4.5, 3.0, 2.0],
-          description:
-            "Icon fills · default (AA) · subtle (AA-large) · disabled",
+          description: "Icon fills · default (AA) · subtle (AA-large) · disabled",
         },
 
         // ── BUTTON ────────────────────────────────────────────────────────────

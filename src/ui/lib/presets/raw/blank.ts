@@ -1,12 +1,11 @@
-import type { Preset } from '../types';
+import type { Preset } from "../types";
 
 const presets: Preset[] = [
   {
     id: "blank-slate",
     name: "Blank Slate",
     badge: "Blank",
-    description:
-      "The fastest start. Two colors, three roles, five named variations. Swap the seed colors and you have a working system in under a minute.",
+    description: "The fastest start. Two colors, three roles, five named variations. Swap the seed colors and you have a working system in under a minute.",
     tags: ["starter", "minimal", "blank", "simple", "beginner"],
     swatches: ["3B82F6", "94A3B8"],
     config: {
@@ -22,10 +21,8 @@ const presets: Preset[] = [
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      resolveTokensDirectly: false,
       includeSourceColors: false,
       sourceCollectionName: "global",
-      includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
       tokenGrouping: "color",
       includeColorScalesCollection: true,

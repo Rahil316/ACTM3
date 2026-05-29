@@ -52,7 +52,7 @@
  *   status/magic/fg               5.5   elevated for AI brand expression
  */
 
-import type { Preset } from '../types';
+import type { Preset } from "../types";
 
 const presets: Preset[] = [
   {
@@ -75,10 +75,8 @@ const presets: Preset[] = [
       useShorthandRoles: false,
       useShorthandVariations: false,
       useShorthandSteps: false,
-      resolveTokensDirectly: false,
       includeSourceColors: false,
       sourceCollectionName: "global",
-      includeAlphaTints: false,
       alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
       tokenGrouping: "color",
       includeColorScalesCollection: false,
@@ -89,21 +87,18 @@ const presets: Preset[] = [
       scaleStepNames: null,
 
       // Global variations — not used directly (all roles use customVariationList).
-      variations: [
-        { name: "default", shorthand: "default" },
-      ],
+      variations: [{ name: "default", shorthand: "default" }],
 
       colors: [
-        { name: "Brand",    shorthand: "Brand",    value: "303ADE", description: "Polaris brand blue — primary actions" },
-        { name: "Neutral",  shorthand: "Neutral",  value: "8C9196", description: "Polaris neutral gray — surfaces and UI chrome" },
-        { name: "Success",  shorthand: "Success",  value: "007B5E", description: "Polaris success green" },
-        { name: "Caution",  shorthand: "Caution",  value: "916A00", description: "Polaris caution yellow-brown" },
+        { name: "Brand", shorthand: "Brand", value: "303ADE", description: "Polaris brand blue — primary actions" },
+        { name: "Neutral", shorthand: "Neutral", value: "8C9196", description: "Polaris neutral gray — surfaces and UI chrome" },
+        { name: "Success", shorthand: "Success", value: "007B5E", description: "Polaris success green" },
+        { name: "Caution", shorthand: "Caution", value: "916A00", description: "Polaris caution yellow-brown" },
         { name: "Critical", shorthand: "Critical", value: "CC1515", description: "Polaris critical red — errors, destructive actions" },
-        { name: "Magic",    shorthand: "Magic",    value: "7B2EA8", description: "Polaris magic purple — AI / Shopify Intelligence" },
+        { name: "Magic", shorthand: "Magic", value: "7B2EA8", description: "Polaris magic purple — AI / Shopify Intelligence" },
       ],
 
       roles: [
-
         // ── BACKGROUND ──────────────────────────────────────────────────────────
         // Page canvas, subdued sections, and hover state on page background.
         {
@@ -114,7 +109,7 @@ const presets: Preset[] = [
           customVariations: [
             { name: "default", shorthand: "default" }, // page background (near-white/near-black)
             { name: "subdued", shorthand: "subdued" }, // subdued page section
-            { name: "hover",   shorthand: "hover"   }, // hover state on background
+            { name: "hover", shorthand: "hover" }, // hover state on background
           ],
           variationTargets: [1.0, 1.15, 1.3],
           description: "Page and section background fills · default · subdued · hover",
@@ -129,7 +124,7 @@ const presets: Preset[] = [
           customVariationList: true,
           customVariations: [
             { name: "default", shorthand: "default" }, // card / popover
-            { name: "raised",  shorthand: "raised"  }, // elevated card (dragging state)
+            { name: "raised", shorthand: "raised" }, // elevated card (dragging state)
             { name: "overlay", shorthand: "overlay" }, // modal / sheet
             { name: "subdued", shorthand: "subdued" }, // deemphasized panel
           ],
@@ -145,8 +140,8 @@ const presets: Preset[] = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  }, // body text (AAA)
-            { name: "subdued",  shorthand: "subdued"  }, // secondary / helper text (AA)
+            { name: "default", shorthand: "default" }, // body text (AAA)
+            { name: "subdued", shorthand: "subdued" }, // secondary / helper text (AA)
             { name: "critical", shorthand: "critical" }, // error / destructive text
             { name: "disabled", shorthand: "disabled" }, // disabled label
           ],
@@ -162,8 +157,8 @@ const presets: Preset[] = [
           minContrast: 1.5,
           customVariationList: true,
           customVariations: [
-            { name: "default",     shorthand: "default"     }, // standard UI border
-            { name: "subdued",     shorthand: "subdued"     }, // divider / subtle border
+            { name: "default", shorthand: "default" }, // standard UI border
+            { name: "subdued", shorthand: "subdued" }, // divider / subtle border
             { name: "interactive", shorthand: "interactive" }, // focus ring
           ],
           variationTargets: [2.0, 1.5, 3.0],
@@ -178,8 +173,8 @@ const presets: Preset[] = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  }, // standard icon
-            { name: "subdued",  shorthand: "subdued"  }, // muted / secondary icon
+            { name: "default", shorthand: "default" }, // standard icon
+            { name: "subdued", shorthand: "subdued" }, // muted / secondary icon
             { name: "critical", shorthand: "critical" }, // error icon
             { name: "disabled", shorthand: "disabled" }, // disabled icon
           ],
@@ -195,9 +190,9 @@ const presets: Preset[] = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  }, // resting CTA fill
-            { name: "hover",    shorthand: "hover"    }, // hover
-            { name: "pressed",  shorthand: "pressed"  }, // pressed / active
+            { name: "default", shorthand: "default" }, // resting CTA fill
+            { name: "hover", shorthand: "hover" }, // hover
+            { name: "pressed", shorthand: "pressed" }, // pressed / active
             { name: "selected", shorthand: "selected" }, // selected / checked
             { name: "disabled", shorthand: "disabled" }, // disabled
           ],
@@ -213,9 +208,9 @@ const presets: Preset[] = [
           minContrast: 2.0,
           customVariationList: true,
           customVariations: [
-            { name: "default",  shorthand: "default"  },
-            { name: "hover",    shorthand: "hover"    },
-            { name: "pressed",  shorthand: "pressed"  },
+            { name: "default", shorthand: "default" },
+            { name: "hover", shorthand: "hover" },
+            { name: "pressed", shorthand: "pressed" },
             { name: "selected", shorthand: "selected" },
             { name: "disabled", shorthand: "disabled" },
           ],
@@ -230,10 +225,10 @@ const presets: Preset[] = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "bg/subtle",  shorthand: "bg/subtle"  }, // tinted success background
+            { name: "bg/subtle", shorthand: "bg/subtle" }, // tinted success background
             { name: "bg/default", shorthand: "bg/default" }, // stronger success fill
-            { name: "fg",         shorthand: "fg"         }, // success text / icon
-            { name: "border",     shorthand: "border"     }, // success field border
+            { name: "fg", shorthand: "fg" }, // success text / icon
+            { name: "border", shorthand: "border" }, // success field border
           ],
           variationTargets: [1.3, 1.8, 4.5, 2.5],
           description: "Success feedback channel · bg/subtle · bg/default · fg · border",
@@ -246,10 +241,10 @@ const presets: Preset[] = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "bg/subtle",  shorthand: "bg/subtle"  },
+            { name: "bg/subtle", shorthand: "bg/subtle" },
             { name: "bg/default", shorthand: "bg/default" },
-            { name: "fg",         shorthand: "fg"         },
-            { name: "border",     shorthand: "border"     },
+            { name: "fg", shorthand: "fg" },
+            { name: "border", shorthand: "border" },
           ],
           variationTargets: [1.3, 1.8, 4.5, 2.5],
           description: "Caution / warning feedback channel · bg/subtle · bg/default · fg · border",
@@ -262,10 +257,10 @@ const presets: Preset[] = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "bg/subtle",  shorthand: "bg/subtle"  },
+            { name: "bg/subtle", shorthand: "bg/subtle" },
             { name: "bg/default", shorthand: "bg/default" },
-            { name: "fg",         shorthand: "fg"         },
-            { name: "border",     shorthand: "border"     },
+            { name: "fg", shorthand: "fg" },
+            { name: "border", shorthand: "border" },
           ],
           variationTargets: [1.3, 1.8, 4.5, 2.5],
           description: "Critical / error feedback channel · bg/subtle · bg/default · fg · border",
@@ -278,10 +273,10 @@ const presets: Preset[] = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "bg/subtle",  shorthand: "bg/subtle"  },
+            { name: "bg/subtle", shorthand: "bg/subtle" },
             { name: "bg/default", shorthand: "bg/default" },
-            { name: "fg",         shorthand: "fg"         },
-            { name: "border",     shorthand: "border"     },
+            { name: "fg", shorthand: "fg" },
+            { name: "border", shorthand: "border" },
           ],
           variationTargets: [1.3, 1.8, 4.5, 2.5],
           description: "Informational feedback channel · bg/subtle · bg/default · fg · border",
@@ -295,20 +290,19 @@ const presets: Preset[] = [
           minContrast: 1.0,
           customVariationList: true,
           customVariations: [
-            { name: "bg/subtle",  shorthand: "bg/subtle"  },
+            { name: "bg/subtle", shorthand: "bg/subtle" },
             { name: "bg/default", shorthand: "bg/default" },
-            { name: "fg",         shorthand: "fg"         },
-            { name: "border",     shorthand: "border"     },
+            { name: "fg", shorthand: "fg" },
+            { name: "border", shorthand: "border" },
           ],
           variationTargets: [1.3, 1.8, 5.5, 2.5],
           description: "Magic (Shopify AI) feedback channel · elevated FG contrast for brand expression",
         },
-
       ],
 
       themes: [
-        { name: "Light",   bg: "FAFBFB" },
-        { name: "Dark",    bg: "1A1A1A" },
+        { name: "Light", bg: "FAFBFB" },
+        { name: "Dark", bg: "1A1A1A" },
         { name: "Inverse", bg: "1A1F36" },
       ],
     },

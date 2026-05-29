@@ -44,6 +44,7 @@ export function SuccessOverlay({ open, tally, onDismiss }: SuccessOverlayProps) 
     ['Created', tally.created, ''],
     ['Updated', tally.updated, ''],
     ...(tally.renamed > 0 ? [['Renamed', tally.renamed, 'text-accent'] as TallyRow] : []),
+    ...(tally.removed > 0 ? [['Removed', tally.removed, 'text-muted']  as TallyRow] : []),
     ...(tally.failed  > 0 ? [['Failed',  tally.failed,  'text-danger'] as TallyRow] : []),
   ] : [];
 
