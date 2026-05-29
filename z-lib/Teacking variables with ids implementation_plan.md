@@ -393,7 +393,10 @@ export function ConflictList({ conflicts, decisions, onChange }: ConflictListPro
 ### 3. [useFigmaBridge.ts](file:///Users/mac/Documents/Plugin/Git/ACTM/src/ui/hooks/useFigmaBridge.ts)
 * In standalone mock handler for `check-collections`, mock a name conflict (e.g. `token:primary/text/default`) to verify layout/interactivity in offline mode.
 
-### 4. [figmaVars.ts](file:///Users/mac/Documents/Plugin/Git/ACTM/src/plugin/figmaVars.ts)
+### 4. [eslint.config.mjs](file:///Users/mac/Documents/Plugin/Git/ACTM/eslint.config.mjs)
+* Import `eslint-plugin-figma-plugins`, apply it to `src/plugin/**/*.ts`, and set parser options project files map to support type-aware parsing. Ignore build-release directories and config files to fix globals errors.
+
+### 5. [figmaVars.ts](file:///Users/mac/Documents/Plugin/Git/ACTM/src/plugin/figmaVars.ts)
 * Update `upsertVariables` to accept decisions.
 * Integrate `findVariable` to match variables by `tokenRef` metadata (primary) or by expected name (fallback/legacy).
 * Write the `tokenRef` metadata back to Figma variables via `setPluginData('tokenRef', ...)`.
