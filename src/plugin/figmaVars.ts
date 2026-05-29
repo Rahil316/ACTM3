@@ -94,6 +94,7 @@ export const VariableManager = {
         : ['color', 'role', 'variation']);
     const useShortColor: boolean = config.useShorthandColors || false;
     const useShortRole: boolean = config.useShorthandRoles || false;
+    const useShortVar: boolean = config.useShorthandVariations || false;
     const useShortStep: boolean = config.useShorthandSteps || false;
     const stepShorthands: Record<string, string> = config.scaleStepShorthands || {};
 
@@ -182,7 +183,8 @@ export const VariableManager = {
               .map((varDef: AnyObj, i: number) => {
                 const token = (variations as AnyObj)[String(i)];
                 if (!token) return null;
-                const dispName = varDef.shorthand || varDef.name;
+                const dispName =
+                  useShortVar && varDef.shorthand ? varDef.shorthand : varDef.name || String(i);
                 const segParts: Record<string, string> = {
                   color: cLabel,
                   role: rLabel,

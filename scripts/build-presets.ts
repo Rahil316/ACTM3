@@ -17,6 +17,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import wandPresets      from '../src/ui/lib/presets/raw/wand';
+import nclarityPresets  from '../src/ui/lib/presets/raw/nclarity';
 import showcasePresets  from '../src/ui/lib/presets/raw/showcase';
 import testPresets      from '../src/ui/lib/presets/raw/test';
 import materialPresets  from '../src/ui/lib/presets/raw/material';
@@ -35,6 +36,7 @@ const isRelease = process.argv.includes('--release');
 
 const all = [
   ...wandPresets,
+  ...nclarityPresets,
   ...showcasePresets,
   ...(isRelease ? [] : testPresets),
   ...materialPresets,
@@ -49,6 +51,7 @@ const all = [
 
 for (const [name, arr] of [
   ['wand',      wandPresets],
+  ['nclarity',  nclarityPresets],
   ['showcase',  showcasePresets],
   ...(!isRelease ? [['test', testPresets] as [string, unknown[]]] : []),
   ['material',  materialPresets],
