@@ -52,9 +52,34 @@ export const fmtCSS = {
     }
     lines.push("}");
     if (themeName.toLowerCase() === "dark") {
-      lines.push("\n@media (prefers-color-scheme: dark) {");
-      lines.push("  :root:not([data-theme]) {");
-      lines.push("  }\n}");
+      // OS-level dark mode fallback: repeat the same declarations inside the media query
+      var mediaLines = ["\n@media (prefers-color-scheme: dark) {", "  :root:not([data-theme]) {"];
+      var darkTokens = result.tokens && result.tokens[themeName];
+      if (darkTokens) {
+        var dcNames = Object.keys(darkTokens);
+        for (var dci = 0; dci < dcNames.length; dci++) {
+          var dcName = dcNames[dci];
+          var dcLabel = _colorLabel(dcName, config);
+          var dRoles = darkTokens[dcName];
+          var dRoleIds = Object.keys(dRoles);
+          for (var dri = 0; dri < dRoleIds.length; dri++) {
+            var dRoleId = dRoleIds[dri];
+            var dRoleObj = (config.roles && config.roles[dRoleId]) || { name: dRoleId };
+            var dRLabel = _roleLabel(dRoleObj, config);
+            var dVarDefs = _variationDefs(dRoleObj, config);
+            var dVariations = dRoles[dRoleId];
+            for (var dvi = 0; dvi < dVarDefs.length; dvi++) {
+              var dToken = dVariations[String(dvi)];
+              if (!dToken) continue;
+              var dVLabel = _varLabel(dVarDefs[dvi], config);
+              var dSegs = _tokenSegments(dcLabel, dRLabel, dVLabel, config);
+              mediaLines.push("    --" + dSegs.map(_slug).join("-") + ": " + dToken.value + ";");
+            }
+          }
+        }
+      }
+      mediaLines.push("  }\n}");
+      lines.push(mediaLines.join("\n"));
     }
     return lines.join("\n");
   },

@@ -134,11 +134,18 @@ async function downloadFiles(files: Array<{ path: string; content: string }>, zi
   if (files.length === 1) {
     // Single file — direct download using the path as filename
     const f = files[0];
-    const filename = f.path.includes("/") ? f.path.split("/").pop()! : f.path;
+    const filename = f.path.split("/").pop() ?? f.path;
     downloadBlob(f.content, filename);
   } else {
     // Multiple files — zip them preserving directory structure
-    const JSZip = (await import("jszip")).default;
+    let JSZipModule;
+    try {
+      JSZipModule = await import("jszip");
+    } catch {
+      toast.error("Failed to load export library");
+      return;
+    }
+    const JSZip = JSZipModule.default;
     const zip = new JSZip();
     for (const f of files) {
       zip.file(f.path, f.content);

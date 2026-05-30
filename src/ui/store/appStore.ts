@@ -289,21 +289,10 @@ export function ensureVariations(state: AppState): void {
 // ── Dirty hash ───────────────────────────────────────────────────────────────
 
 export function computeHash(state: AppState): string {
-  return JSON.stringify({
-    colors: state.colors.map((c) => ({ name: c.name, shorthand: c.shorthand, value: normalizeHex(c.value || ""), _id: c._id })),
-    roles: state.roles,
-    themes: state.themes,
-    variations: state.variations,
-    scaleLength: state.scaleLength,
-    scaleAlgorithm: state.scaleAlgorithm,
-    pluginMode: state.pluginMode,
-    scaleStepNames: state.scaleStepNames,
-    useShorthandColors: state.useShorthandColors,
-    useShorthandRoles: state.useShorthandRoles,
-    useShorthandVariations: state.useShorthandVariations,
-    useShorthandSteps: state.useShorthandSteps,
-    tokenNameSegments: state.tokenNameSegments,
-  });
+  // Normalize color values so #FFF and #ffffff hash identically
+  const colors = state.colors.map((c) => ({ ...c, value: normalizeHex(c.value || "") }));
+  const { versions: _versions, ...rest } = state;
+  return JSON.stringify({ ...rest, colors });
 }
 
 // ── Validation ───────────────────────────────────────────────────────────────

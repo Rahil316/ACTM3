@@ -219,6 +219,27 @@ function RoleTree() {
   const containerRef = useRef<HTMLDivElement>(null);
   const dndId = useId();
 
+  const handleGroup = useCallback(() => {
+    const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
+    roles.forEach((r, i) => { if (selectedIds.has(r._id)) setRole(i, 'name', groupedName(r.name, selectedNames)); });
+    setSelectedIds(new Set());
+  }, [roles, selectedIds, setRole]);
+
+  const handleUngroup = useCallback(() => {
+    roles.forEach((r, i) => { if (selectedIds.has(r._id)) setRole(i, 'name', r.name.split('/').pop()!); });
+    setSelectedIds(new Set());
+  }, [roles, selectedIds, setRole]);
+
+  const handleDelete = useCallback(() => {
+    const idxs = roles.map((r, i) => (selectedIds.has(r._id) ? i : -1)).filter((i) => i >= 0).reverse();
+    idxs.forEach((i) => useAppStore.getState().removeRole(i));
+    setSelectedIds(new Set());
+  }, [roles, selectedIds]);
+
+  const handleClear = useCallback(() => setSelectedIds(new Set()), []);
+
+  const handleSelectAll = useCallback(() => setSelectedIds(new Set(roles.map((r) => r._id))), [roles]);
+
   function getTreeOrderIds() {
     function collectLeaves(nodes: TreeNode<(typeof committed)[number]>[]): string[] {
       return nodes.flatMap((n) => n.kind === 'leaf' ? [n.item._id] : collectLeaves(n.children));
@@ -503,31 +524,11 @@ function RoleTree() {
       {selectedIds.size > 0 && (
         <MultiSelectToolbar
           count={selectedIds.size}
-          onGroup={() => {
-            const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
-            roles.forEach((r, i) => {
-              if (!selectedIds.has(r._id)) return;
-              setRole(i, 'name', groupedName(r.name, selectedNames));
-            });
-            setSelectedIds(new Set());
-          }}
-          onUngroup={() => {
-            roles.forEach((r, i) => {
-              if (!selectedIds.has(r._id)) return;
-              setRole(i, 'name', r.name.split('/').pop()!);
-            });
-            setSelectedIds(new Set());
-          }}
-          onDelete={() => {
-            const idxs = roles
-              .map((r, i) => (selectedIds.has(r._id) ? i : -1))
-              .filter((i) => i >= 0)
-              .reverse();
-            idxs.forEach((i) => useAppStore.getState().removeRole(i));
-            setSelectedIds(new Set());
-          }}
-          onClear={() => setSelectedIds(new Set())}
-          onSelectAll={() => setSelectedIds(new Set(roles.map((r) => r._id)))}
+          onGroup={handleGroup}
+          onUngroup={handleUngroup}
+          onDelete={handleDelete}
+          onClear={handleClear}
+          onSelectAll={handleSelectAll}
         />
       )}
     </div>

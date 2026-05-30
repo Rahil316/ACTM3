@@ -126,6 +126,27 @@ function ColorTree() {
   const containerRef = useRef<HTMLDivElement>(null);
   const dndId = useId();
 
+  const handleGroup = useCallback(() => {
+    const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
+    colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', groupedName(c.name, selectedNames)); });
+    setSelectedIds(new Set());
+  }, [colors, selectedIds, setColor]);
+
+  const handleUngroup = useCallback(() => {
+    colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', c.name.split('/').pop()!); });
+    setSelectedIds(new Set());
+  }, [colors, selectedIds, setColor]);
+
+  const handleDelete = useCallback(() => {
+    const idxs = colors.map((c, i) => (selectedIds.has(c._id) ? i : -1)).filter((i) => i >= 0).reverse();
+    idxs.forEach((i) => useAppStore.getState().removeColor(i));
+    setSelectedIds(new Set());
+  }, [colors, selectedIds]);
+
+  const handleClear = useCallback(() => setSelectedIds(new Set()), []);
+
+  const handleSelectAll = useCallback(() => setSelectedIds(new Set(colors.map((c) => c._id))), [colors]);
+
   function getTreeOrderIds() {
     function collectLeaves(nodes: TreeNode<(typeof committed)[number]>[]): string[] {
       return nodes.flatMap((n) => n.kind === 'leaf' ? [n.item._id] : collectLeaves(n.children));
@@ -425,31 +446,11 @@ function ColorTree() {
       {selectedIds.size > 0 && (
         <MultiSelectToolbar
           count={selectedIds.size}
-          onGroup={() => {
-            const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
-            colors.forEach((c, i) => {
-              if (!selectedIds.has(c._id)) return;
-              setColor(i, 'name', groupedName(c.name, selectedNames));
-            });
-            setSelectedIds(new Set());
-          }}
-          onUngroup={() => {
-            colors.forEach((c, i) => {
-              if (!selectedIds.has(c._id)) return;
-              setColor(i, 'name', c.name.split('/').pop()!);
-            });
-            setSelectedIds(new Set());
-          }}
-          onDelete={() => {
-            const idxs = colors
-              .map((c, i) => (selectedIds.has(c._id) ? i : -1))
-              .filter((i) => i >= 0)
-              .reverse();
-            idxs.forEach((i) => useAppStore.getState().removeColor(i));
-            setSelectedIds(new Set());
-          }}
-          onClear={() => setSelectedIds(new Set())}
-          onSelectAll={() => setSelectedIds(new Set(colors.map((c) => c._id)))}
+          onGroup={handleGroup}
+          onUngroup={handleUngroup}
+          onDelete={handleDelete}
+          onClear={handleClear}
+          onSelectAll={handleSelectAll}
         />
       )}
     </div>
@@ -471,6 +472,27 @@ export function ColorsScreen() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const hasGroups = colors.some((c) => c.name.includes('/'));
+
+  const handleGroup = useCallback(() => {
+    const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
+    colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', groupedName(c.name, selectedNames)); });
+    setSelectedIds(new Set());
+  }, [colors, selectedIds, setColor]);
+
+  const handleUngroup = useCallback(() => {
+    colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', c.name.split('/').pop()!); });
+    setSelectedIds(new Set());
+  }, [colors, selectedIds, setColor]);
+
+  const handleDelete = useCallback(() => {
+    const idxs = colors.map((c, i) => (selectedIds.has(c._id) ? i : -1)).filter((i) => i >= 0).reverse();
+    idxs.forEach((i) => useAppStore.getState().removeColor(i));
+    setSelectedIds(new Set());
+  }, [colors, selectedIds]);
+
+  const handleClear = useCallback(() => setSelectedIds(new Set()), []);
+
+  const handleSelectAll = useCallback(() => setSelectedIds(new Set(colors.map((c) => c._id))), [colors]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -572,22 +594,11 @@ export function ColorsScreen() {
       {selectedIds.size > 0 && !hasGroups && (
         <MultiSelectToolbar
           count={selectedIds.size}
-          onGroup={() => {
-            const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
-            colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', groupedName(c.name, selectedNames)); });
-            setSelectedIds(new Set());
-          }}
-          onUngroup={() => {
-            colors.forEach((c, i) => { if (selectedIds.has(c._id)) setColor(i, 'name', c.name.split('/').pop()!); });
-            setSelectedIds(new Set());
-          }}
-          onDelete={() => {
-            const idxs = colors.map((c, i) => selectedIds.has(c._id) ? i : -1).filter((i) => i >= 0).reverse();
-            idxs.forEach((i) => useAppStore.getState().removeColor(i));
-            setSelectedIds(new Set());
-          }}
-          onClear={() => setSelectedIds(new Set())}
-          onSelectAll={() => setSelectedIds(new Set(colors.map((c) => c._id)))}
+          onGroup={handleGroup}
+          onUngroup={handleUngroup}
+          onDelete={handleDelete}
+          onClear={handleClear}
+          onSelectAll={handleSelectAll}
         />
       )}
     </div>

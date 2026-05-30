@@ -223,13 +223,12 @@ const TONAL_SCALE_ALGO: Record<ScaleAlgorithm, AlgoFn> = {
   },
 };
 
-export function scaleMaker(hexIn: string, scaleLength: number, scaleAlgo?: ScaleAlgorithm): string[] {
+export function scaleMaker(hexIn: string, scaleLength: number, scaleAlgo?: ScaleAlgorithm): string[] | null {
   const algo: ScaleAlgorithm = scaleAlgo || "Natural";
   const hue = hexToHue(hexIn);
   const satu = hexToSat(hexIn);
   if (hue === null || satu === null) {
-    console.warn("scaleMaker: invalid hex input", hexIn, "— returning black scale");
-    return Array(scaleLength).fill("#000000");
+    return null;
   }
   const N = scaleLength;
   const C_max = (21 * N) / (N + 1);
@@ -266,7 +265,7 @@ export function variableMaker(config: EngineConfig): EngineResult {
 
   const scales: ScaleCollection =
     config.pluginMode !== "direct"
-      ? _generateScales(colors, scaleLength, config.scaleAlgorithm, config.scaleStepNames, themes, config.useUniformAlgorithm ?? false)
+      ? _generateScales(colors, scaleLength, config.scaleAlgorithm, config.scaleStepNames, themes, config.useUniformAlgorithm ?? false, errors)
       : Object.create(null);
 
   const tokens: EngineResult["tokens"] = {};
@@ -293,6 +292,7 @@ function _generateScales(
   stepNames: (string | number)[] | undefined,
   themes: EngineTheme[],
   useUniformAlgorithm: boolean,
+  errors: EngineErrors,
 ): ScaleCollection {
   const collection: ScaleCollection = Object.create(null);
   const names = stepNames || seriesMaker(scaleLength);
@@ -300,6 +300,10 @@ function _generateScales(
   for (const color of colors) {
     const colorAlgo = !useUniformAlgorithm && color.scaleAlgorithm ? color.scaleAlgorithm : scaleAlgo;
     const scaleData = scaleMaker(color.value, scaleLength, colorAlgo);
+    if (scaleData === null) {
+      errors.critical.push(`Color "${color.name}" has an invalid hex value "${color.value}" — scale generation aborted for this color.`);
+      continue;
+    }
     const scale: Record<string | number, ScaleStep> = Object.create(null);
     collection[color.name] = scale;
     for (let i = 0; i < scaleLength; i++) {

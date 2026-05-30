@@ -143,7 +143,7 @@ export function RunDialog() {
   const hasRenames = renameChanges.length > 0;
   const RENAME_PREVIEW_LIMIT = 5;
   const visibleRenames = showAllRenames ? renameChanges : renameChanges.slice(0, RENAME_PREVIEW_LIMIT);
-  const hiddenRenameCount = renameChanges.length - RENAME_PREVIEW_LIMIT;
+  const hiddenRenameCount = Math.max(0, renameChanges.length - RENAME_PREVIEW_LIMIT);
 
   // True while check-collections response hasn't arrived yet
   const isChecking = syncPreview === null;

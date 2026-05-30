@@ -61,13 +61,13 @@ describe('buildMetadataMap', () => {
     expect(v2.getPluginData('tokenRef')).toBe(''); // cleared!
   });
 
-  it('prunes metadata with mismatched prefixes', () => {
+  it('skips variables with mismatched prefixes without erasing metadata', () => {
     const col = createMockCollection('col-1', 'Tokens');
     const v1 = createMockVariable('v-1', 'color/primary', 'col-1', 'COLOR', { tokenRef: 'scale:primary' });
 
     const map = buildMetadataMap(col, [v1], 'token:');
     expect(map.size).toBe(0);
-    expect(v1.getPluginData('tokenRef')).toBe(''); // cleared!
+    expect(v1.getPluginData('tokenRef')).toBe('scale:primary'); // preserved — not erased
   });
 });
 

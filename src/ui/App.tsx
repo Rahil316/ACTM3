@@ -81,6 +81,7 @@ export default function App() {
   const activeTab = useUiStore((s) => s.activeSidebarTab);
   const setActiveTab = useUiStore((s) => s.setActiveSidebarTab);
   const openOverlay = useUiStore((s) => s.openOverlay);
+  const activeOverlay = useUiStore((s) => s.activeOverlay);
 
   const loadState = useAppStore((s) => s.loadState);
   const saveBlocked = useAppStore((s) => s.versionSaveBlockedReason);
@@ -111,7 +112,6 @@ export default function App() {
       }
     };
     reader.readAsText(file);
-    e.target.value = '';
   }
 
   function handleReset() {
@@ -143,14 +143,14 @@ export default function App() {
         onCancel={() => setConfirmReset(false)}
       />
 
-      {/* Overlays — rendered outside the scroll area so they cover the full UI */}
-      <ThemeShopOverlay />
-      <SettingsOverlay />
-      <PreviewScreen />
-      <RunDialog />
-      <ExportSheet />
-      <SaveVersionOverlay />
-      <QuickStart onClose={() => {}} />
+      {/* Overlays — conditionally mounted so closed overlays don't subscribe to the store */}
+      {activeOverlay === 'theme-shop' && <ThemeShopOverlay />}
+      {activeOverlay === 'settings' && <SettingsOverlay />}
+      {activeOverlay === 'preview' && <PreviewScreen />}
+      {activeOverlay === 'run-dialog' && <RunDialog />}
+      {(activeOverlay === 'export-sheet' || activeOverlay === 'design-lab') && <ExportSheet />}
+      {activeOverlay === 'save-version' && <SaveVersionOverlay />}
+      {activeOverlay === 'quick-start' && <QuickStart onClose={() => {}} />}
 
       {/* ── Header ── */}
       <header className="shrink-0 px-3 py-2 flex items-center justify-between border-b border-border-base bg-bg-app sticky top-0 z-10">
@@ -228,7 +228,7 @@ export default function App() {
             size="sm"
             square
             icon={<Upload size={14} strokeWidth={1.75} />}
-            onClick={() => importRef.current?.click()}
+            onClick={() => { if (importRef.current) { importRef.current.value = ''; importRef.current.click(); } }}
             title="Import .wand / JSON  (Alt+I)"
             aria-label="Import .wand / JSON"
           />

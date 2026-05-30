@@ -39,10 +39,21 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
   const hexRef = useRef<HTMLInputElement>(null);
   const pickerRef = useRef<HTMLInputElement>(null);
 
+  // Buffer picker drags — update the hex text immediately for visual feedback,
+  // but only commit to the store on pointerup to avoid ~60 store writes/sec.
+  const pendingPickerHex = useRef<string | null>(null);
+
   const handlePickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const clean = e.target.value.replace('#', '').toUpperCase();
     if (hexRef.current) hexRef.current.value = clean;
-    onUpdate(clean);
+    pendingPickerHex.current = clean;
+  };
+
+  const handlePickerPointerUp = () => {
+    if (pendingPickerHex.current !== null) {
+      onUpdate(pendingPickerHex.current);
+      pendingPickerHex.current = null;
+    }
   };
 
   const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +86,8 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
         id={idPrefix ? `${idPrefix}-picker` : undefined}
         aria-label="Color picker"
         onChange={handlePickerChange}
+        onPointerUp={handlePickerPointerUp}
+        onBlur={handlePickerPointerUp}
         className={clsx('cursor-pointer h-full shrink-0 bg-transparent border-none rounded-none p-0.5', s.swatch)}
       />
       <input

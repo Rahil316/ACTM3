@@ -156,9 +156,9 @@ export function buildMetadataMap(
   for (const variable of colVars) {
     const ref = variable.getPluginData('tokenRef');
     if (ref) {
-      // Safeguard: Collection mismatch check
+      // Safeguard: Collection mismatch — skip without erasing (erasure is irreversible)
       if (expectedPrefix && !ref.startsWith(expectedPrefix)) {
-        variable.setPluginData('tokenRef', '');
+        console.warn(`[TokenWand] Variable "${variable.name}" has ref "${ref}" in wrong collection (expected ${expectedPrefix}) — skipping`);
         continue;
       }
 
