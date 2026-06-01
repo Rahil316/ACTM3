@@ -21,6 +21,9 @@ import { SaveVersionOverlay } from './screens/SaveVersionOverlay';
 import { QuickStart } from './screens/QuickStart';
 import { ThemesScreen } from './screens/ThemesScreen';
 import { ThemeShopOverlay } from './screens/ThemeShopOverlay';
+import { CanvasPreviewDevOverlay } from './screens/CanvasPreviewDevOverlay';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const __RELEASE__: boolean;
 import { ExportSheet } from './screens/ExportSheet';
 import { sendToPlugin } from './types/messages';
 import type { AppState, SidebarTab } from './types/state';
@@ -151,6 +154,7 @@ export default function App() {
       {(activeOverlay === 'export-sheet' || activeOverlay === 'design-lab') && <ExportSheet />}
       {activeOverlay === 'save-version' && <SaveVersionOverlay />}
       {activeOverlay === 'quick-start' && <QuickStart onClose={() => {}} />}
+      {!__RELEASE__ && activeOverlay === 'canvas-preview-dev' && <CanvasPreviewDevOverlay />}
 
       {/* ── Header ── */}
       <header className="shrink-0 px-3 py-2 flex items-center justify-between border-b border-border-base bg-bg-app sticky top-0 z-10">

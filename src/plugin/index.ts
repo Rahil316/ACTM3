@@ -10,7 +10,7 @@ import { variableMaker } from '../shared/clrEngine.js';
 import { ExportFormatter } from './docGen';
 import { buildExportBundle } from './exportEng/bundler';
 import { analyzeNameConflicts, computeSyncPreview } from './variableTracker';
-import { generateCanvasPreview } from './canvasPreview';
+import { generateCanvasPreview, markPreviewInterrupted, wasPreviewInterrupted, clearPreviewInterrupted } from './canvasPreview';
 
 function runEngine(config: any) {
   const result = variableMaker(config);
@@ -87,6 +87,11 @@ figma.ui.onmessage = async (msg: any) => {
           console.warn('Failed to load saved config:', e);
           figma.ui.postMessage({ type: 'load-config', state: null });
         }
+
+        // Notify UI if a previous preview run was interrupted mid-write
+        if (wasPreviewInterrupted()) {
+          figma.ui.postMessage({ type: 'preview-interrupted' });
+        }
         break;
       }
 
@@ -107,8 +112,12 @@ figma.ui.onmessage = async (msg: any) => {
       case 'run-preview': {
         const config = translateConfig(msg.state);
         const result = runEngine(config);
-        // Generate/update preview in canvas
-        await generateCanvasPreview(msg.state, result);
+        previewRunning = true;
+        try {
+          await generateCanvasPreview(msg.state, result);
+        } finally {
+          previewRunning = false;
+        }
         figma.ui.postMessage({ type: 'preview-done' });
         break;
       }
@@ -212,6 +221,16 @@ figma.ui.onmessage = async (msg: any) => {
     figma.ui.postMessage({ type: 'error', message });
   }
 };
+
+// Track whether a preview render is currently in flight so the close handler
+// knows whether to persist the interrupted flag.
+let previewRunning = false;
+
+// If the plugin is closed mid-render, write the interrupted flag so the next
+// open can warn the user and force a re-render of the affected sections.
+figma.on('close', () => {
+  if (previewRunning) markPreviewInterrupted();
+});
 
 // Selection change listener to detect preview node active selection
 figma.on('selectionchange', () => {

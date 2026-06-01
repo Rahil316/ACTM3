@@ -1,6 +1,8 @@
 // CONFIG TRANSLATOR: Converts appState (UI format) into the format expected by variableMaker.
 // Ported from vanilla_archive/src/shared/config.js
 
+import { translateLocalBg } from '../shared/localBgTranslate';
+
 const _FALLBACK_VARIATION_TARGETS = [1.5, 3.0, 4.5, 7.0, 12.0];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,110 +130,16 @@ function _mapRoles(appState: any, variations: any[]): any[] {
         ? role.customVariations.map((v: any) => Object.assign({}, v))
         : [],
     scopedColorIds: role.scopedColorIds ?? null,
-    localBg: _resolveLocalBg(role, appState),
-    localBgTokenRef: (role.localBg?.kind === 'token' && !role.localBg?.dynamic) ? String(role.localBg.value) : null,
-    localBgDynamicRef: (role.localBg?.kind === 'token' && role.localBg?.dynamic) ? String(role.localBg.value) : null,
+    ...translateLocalBg(role.localBg, appState.colors || [], appState.themes || []),
     scopes: role.scopes || null,
   }));
 }
 
-function _resolveLocalBg(role: any, appState: any): Record<string, string> | null {
-  if (!role.localBg) return null;
-  if (role.localBg.kind === 'hex') return role.localBg.value as Record<string, string>;
-  if (role.localBg.kind === 'color') {
-    const color = (appState.colors || []).find((c: any) => c.name === role.localBg.value);
-    if (!color) return null;
-    return Object.fromEntries(
-      (appState.themes || []).map((t: any) => [t.name.toLowerCase(), color.value as string])
-    );
-  }
-  return null; // token kind — resolved post-engine
-}
-
 // ── TOKEN-REF LOCAL BG RESOLUTION ────────────────────────────────────────────
+// Moved to src/shared/resolveLocalBg.ts so the UI can also use it.
+// Re-exported here so existing plugin imports are unchanged.
+export { resolveTokenRefBgs } from '../shared/resolveLocalBg';
 
-/**
- * After a first engine pass, resolve any roles with localBgTokenRef by looking
- * up the token value in the result. Mutates config.roles[*].localBg in place.
- * Returns true if any refs were resolved (caller should re-run the engine).
- *
- * Cycle protection: a token produced by a role that itself has a localBgTokenRef
- * is "tainted" — any role pointing to a tainted token gets its ref cleared
- * (falls back to theme.bg) to break the A→B→A loop.
- */
-export function resolveTokenRefBgs(config: any, result: any): boolean {
-  const roles: any[] = config.roles || [];
-  const themes: string[] = (config.themes || []).map((t: any) => String(t.name).toLowerCase());
-
-  // Collect role names that themselves have a token ref — their tokens are tainted
-  const taintedRoleNames = new Set<string>(
-    roles.filter((r: any) => r.localBgTokenRef).map((r: any) => String(r.name).toLowerCase())
-  );
-
-  function slugify(s: string) { return s.toLowerCase().replace(/[\s/]+/g, '-'); }
-
-  // For a given ref string, find { theme → token } across all result tokens.
-  // Returns null for any theme where the token is produced by a tainted role (cycle).
-  function resolveRef(ref: string): Record<string, string> | null {
-    const refSlug = slugify(ref);
-    const resolved: Record<string, string> = {};
-    let cycle = false;
-    for (const theme of themes) {
-      const themeTokens = result?.tokens?.[theme];
-      if (!themeTokens) continue;
-      outer: for (const colorTokens of Object.values(themeTokens) as any[]) {
-        for (const roleTokens of Object.values(colorTokens) as any[]) {
-          for (const token of Object.values(roleTokens) as any[]) {
-            const nameSlug = slugify(token.tokenName || '');
-            if (nameSlug === refSlug || nameSlug.endsWith('-' + refSlug) || refSlug.endsWith('-' + nameSlug)) {
-              if (taintedRoleNames.has(slugify(token.role || ''))) {
-                cycle = true;
-              }
-              resolved[theme] = token.value;
-              break outer;
-            }
-          }
-        }
-      }
-    }
-    if (cycle) return null;
-    return Object.keys(resolved).length > 0 ? resolved : null;
-  }
-
-  let anyResolved = false;
-
-  // Resolve fixed token refs (one bg map for all colors)
-  for (const role of roles) {
-    if (!role.localBgTokenRef) continue;
-    const resolved = resolveRef(role.localBgTokenRef);
-    if (resolved) {
-      role.localBg = resolved;
-      anyResolved = true;
-    }
-    role.localBgTokenRef = null;
-  }
-
-  // Resolve dynamic token refs ([color] placeholder — one bg map per color)
-  const colorNames: string[] = (config.colors || []).map((c: any) => String(c.name));
-  for (const role of roles) {
-    if (!role.localBgDynamicRef) continue;
-    const template: string = role.localBgDynamicRef;
-    // Build per-color localBg: colorName → { theme → hex }
-    const perColor: Record<string, Record<string, string>> = {};
-    for (const colorName of colorNames) {
-      const ref = template.replace(/\[color\]/gi, colorName);
-      const resolved = resolveRef(ref);
-      if (resolved) perColor[colorName] = resolved;
-    }
-    if (Object.keys(perColor).length > 0) {
-      role.localBgPerColor = perColor;
-      anyResolved = true;
-    }
-    role.localBgDynamicRef = null;
-  }
-
-  return anyResolved;
-}
 
 // ── RENAME MAP ────────────────────────────────────────────────────────────────
 

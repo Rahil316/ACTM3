@@ -1,19 +1,19 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { variableMaker } from '../../lib/colorEngine';
-import { Settings, X, ChevronDown } from 'lucide-react';
-import { Checkbox } from '../Checkbox';
-import type { Color, Theme, RoleLocalBg, RoleLocalBgKind, Role, Variation } from '../../types/state';
-import { CardToolbar } from '../CardToolbar';
-import { useAppStore } from '../../store/appStore';
-import { useLocalField } from '../../hooks/useLocalField';
-import { Input } from '../Input';
-import { Button } from '../Button';
-import { Badge } from '../Badge';
-import { Collapsible } from '../Collapsible';
-import { Select } from '../Select';
-import { usePersistedToggle } from '../../hooks/usePersistedToggle';
-import { SOLVER_MODE_OPTIONS } from '../../store/appStore';
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { variableMaker } from "../../lib/colorEngine";
+import { Settings, X, ChevronDown } from "lucide-react";
+import { Checkbox } from "../Checkbox";
+import type { Color, Theme, RoleLocalBg, RoleLocalBgKind, Role, Variation } from "../../types/state";
+import { CardToolbar } from "../CardToolbar";
+import { useAppStore } from "../../store/appStore";
+import { useLocalField } from "../../hooks/useLocalField";
+import { Input } from "../Input";
+import { Button } from "../Button";
+import { Badge } from "../Badge";
+import { Collapsible } from "../Collapsible";
+import { Select } from "../Select";
+import { usePersistedToggle } from "../../hooks/usePersistedToggle";
+import { SOLVER_MODE_OPTIONS } from "../../store/appStore";
 
 interface RoleGroupCardProps {
   role: Role;
@@ -28,15 +28,7 @@ interface RoleGroupCardProps {
 
 const DROPDOWN_MAX_H = 192; // px — max-h-48
 
-function FloatingDropdown({
-  anchorRef,
-  open,
-  children,
-}: {
-  anchorRef: React.RefObject<HTMLElement | null>;
-  open: boolean;
-  children: React.ReactNode;
-}) {
+function FloatingDropdown({ anchorRef, open, children }: { anchorRef: React.RefObject<HTMLElement | null>; open: boolean; children: React.ReactNode }) {
   const [style, setStyle] = useState<React.CSSProperties>({});
 
   useEffect(() => {
@@ -49,30 +41,25 @@ function FloatingDropdown({
       const spaceAbove = rect.top;
       const openAbove = spaceBelow < DROPDOWN_MAX_H + 8 && spaceAbove > spaceBelow;
       setStyle({
-        position: 'fixed',
+        position: "fixed",
         left: rect.left,
         width: rect.width,
         zIndex: 9999,
-        ...(openAbove
-          ? { bottom: window.innerHeight - rect.top + 4, top: 'auto' }
-          : { top: rect.bottom + 4, bottom: 'auto' }),
+        ...(openAbove ? { bottom: window.innerHeight - rect.top + 4, top: "auto" } : { top: rect.bottom + 4, bottom: "auto" }),
       });
     }
     position();
-    window.addEventListener('scroll', position, true);
-    window.addEventListener('resize', position);
+    window.addEventListener("scroll", position, true);
+    window.addEventListener("resize", position);
     return () => {
-      window.removeEventListener('scroll', position, true);
-      window.removeEventListener('resize', position);
+      window.removeEventListener("scroll", position, true);
+      window.removeEventListener("resize", position);
     };
   }, [open, anchorRef]);
 
   if (!open) return null;
   return createPortal(
-    <div
-      className="bg-bg-card border border-border-base rounded-[8px] shadow-xl overflow-y-auto"
-      style={{ ...style, maxHeight: DROPDOWN_MAX_H }}
-    >
+    <div className="bg-bg-card border border-border-base rounded-[8px] shadow-xl overflow-y-auto" style={{ ...style, maxHeight: DROPDOWN_MAX_H }}>
       {children}
     </div>,
     document.body,
@@ -81,10 +68,17 @@ function FloatingDropdown({
 
 // ── Local background sub-inputs ───────────────────────────────────────────────
 
+// Parse "[color]/RoleName/VarName" back into { role, variation } parts
+function parseDynamicRef(value: string): { role: string; variation: string } {
+  const withoutColor = value.replace(/^\[color\]\//i, "");
+  const parts = withoutColor.split("/");
+  return { role: parts[0] ?? "", variation: parts[1] ?? "" };
+}
+
 function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null; onChange: (bg: RoleLocalBg | null) => void }) {
   const appState = useAppStore((s) => s.appState);
-  const isDynamic = !!(localBg?.dynamic);
-  const storeVal = typeof localBg?.value === 'string' ? localBg.value : '';
+  const isDynamic = !!localBg?.dynamic;
+  const storeVal = typeof localBg?.value === "string" ? localBg.value : "";
   const [query, setQuery] = useState(storeVal);
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -96,26 +90,58 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
     setQuery(storeVal);
   }
 
-  // When dynamic, produce token list using a placeholder color name so suggestions
-  // show the [color]-stripped suffix (e.g. "fill/base" instead of "gray/fill/base")
-  const PLACEHOLDER_COLOR = appState.colors[0]?.name ?? '__color__';
+  // ── Dynamic mode: Role + Variation dropdowns ──────────────────────────────
+  // Local state so picking a role doesn't reset while variation is still unset.
+  // Initialise from the stored value so existing refs show correctly on open.
+  const parsed = parseDynamicRef(storeVal);
+  const [selRole, setSelRole] = useState(parsed.role);
+  const [selVariation, setSelVariation] = useState(parsed.variation);
+
+  // Keep local state in sync if the stored value changes externally
+  const prevDynamicRef = useRef(storeVal);
+  if (isDynamic && prevDynamicRef.current !== storeVal) {
+    prevDynamicRef.current = storeVal;
+    const p = parseDynamicRef(storeVal);
+    setSelRole(p.role);
+    setSelVariation(p.variation);
+  }
+
+  function handleRoleChange(role: string) {
+    setSelRole(role);
+    setSelVariation(""); // reset variation when role changes
+    // don't commit yet — wait until variation is also picked
+  }
+
+  function handleVariationChange(variation: string) {
+    setSelVariation(variation);
+    if (selRole && variation) {
+      onChange({ kind: "token", value: `[color]/${selRole}/${variation}`, dynamic: true });
+    }
+  }
+
+  // ── Static mode: freetext search ─────────────────────────────────────────
+  const PLACEHOLDER_COLOR = appState.colors[0]?.name ?? "__color__";
 
   const allTokenNames = useMemo(() => {
+    if (isDynamic) return [];
     try {
       const result = variableMaker({
         colors: appState.colors.map((c) => ({ name: c.name, shorthand: c.shorthand, value: c.value, _id: c._id })),
         themes: (appState.themes ?? []).map((t) => ({ name: t.name, bg: t.bg })),
         roles: (appState.roles ?? []).map((r) => ({
-          name: r.name, shorthand: r.shorthand,
-          variationTargets: r.variationTargets, mappingMethod: r.mappingMethod,
-          customVariationList: r.customVariationList, customVariations: r.customVariations,
+          name: r.name,
+          shorthand: r.shorthand,
+          variationTargets: r.variationTargets,
+          mappingMethod: r.mappingMethod,
+          customVariationList: r.customVariationList,
+          customVariations: r.customVariations,
         })),
         variations: appState.variations ?? [],
         scaleLength: appState.scaleLength ?? 11,
-        pluginMode: appState.pluginMode ?? 'scale',
-        scaleAlgorithm: appState.scaleAlgorithm ?? 'Natural',
-        tokenGrouping: 'color',
-        tokenNameSegments: ['color', 'role', 'variation'],
+        pluginMode: appState.pluginMode ?? "scale",
+        scaleAlgorithm: appState.scaleAlgorithm ?? "Natural",
+        tokenGrouping: "color",
+        tokenNameSegments: ["color", "role", "variation"],
       } as Parameters<typeof variableMaker>[0]);
       const names = new Set<string>();
       for (const themeTokens of Object.values(result.tokens ?? {})) {
@@ -123,17 +149,7 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
           for (const roleTokens of Object.values(colorTokens as object)) {
             for (const token of Object.values(roleTokens as object)) {
               const name = (token as any).tokenName;
-              if (!name) continue;
-              if (isDynamic) {
-                // Strip the leading "<colorName>/" prefix so suggestions show color-agnostic paths
-                const colorPrefix = PLACEHOLDER_COLOR.toLowerCase() + '/';
-                const stripped = name.toLowerCase().startsWith(colorPrefix)
-                  ? name.slice(PLACEHOLDER_COLOR.length + 1)
-                  : name;
-                names.add(stripped);
-              } else {
-                names.add(name);
-              }
+              if (name) names.add(name);
             }
           }
         }
@@ -151,86 +167,130 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
 
   function select(name: string) {
     setQuery(name);
-    onChange({ kind: 'token', value: name, dynamic: isDynamic });
+    onChange({ kind: "token", value: name, dynamic: false });
     setOpen(false);
   }
 
   function toggleDynamic() {
     const next = !isDynamic;
-    // Clear the value when switching modes — token names have different shapes
-    onChange({ kind: 'token', value: '', dynamic: next });
-    setQuery('');
+    onChange({ kind: "token", value: "", dynamic: next });
+    setQuery("");
   }
 
+  // Build role options from appState (exclude self — can't bg against own output)
+  const roleOptions = appState.roles.map((r) => r.name);
+
+  // Build variation options for the selected role
+  const variationOptions = useMemo(() => {
+    const r = appState.roles.find((r) => r.name === selRole);
+    const vars = r?.customVariationList && r.customVariations?.length ? r.customVariations : (appState.variations ?? []);
+    return vars.map((v) => v.name);
+  }, [appState.roles, appState.variations, selRole]);
+
   return (
-    <div className="px-4 pb-3 space-y-2">
+    <div className="p-4 space-y-2">
       {/* Per-color toggle */}
-      <button
-        onClick={toggleDynamic}
-        className="flex items-center gap-2 cursor-pointer group"
-      >
+      <button onClick={toggleDynamic} className="flex items-center gap-2 cursor-pointer group">
         <Checkbox checked={isDynamic} />
         <span className="text-[11px] text-text-muted group-hover:text-text-primary transition-colors">Per color</span>
       </button>
 
-      {/* Input row */}
-      <div className="space-y-1">
-        <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Token ref</label>
-        <div className="relative flex items-center">
-          {isDynamic && (
-            <span className="absolute left-2 text-[11px] font-mono text-accent select-none pointer-events-none">
-              [color]/
-            </span>
-          )}
-          <input
-            ref={inputRef}
-            className={[
-              'w-full bg-bg-input border border-border-base rounded-[6px] py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent',
-              isDynamic ? 'pl-[62px] pr-2' : 'px-2',
-            ].join(' ')}
-            placeholder={isDynamic ? 'fill/base…' : 'Search tokens…'}
-            value={query}
-            onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
-            onFocus={() => setOpen(true)}
-            onBlur={() => setTimeout(() => setOpen(false), 150)}
-          />
-          <FloatingDropdown anchorRef={inputRef} open={open && filtered.length > 0}>
-            {filtered.map((name) => (
-              <button
-                key={name}
-                className={[
-                  'w-full text-left px-3 py-1.5 text-[11px] font-mono hover:bg-bg-hover transition-colors',
-                  name === storeVal ? 'text-accent' : 'text-text-primary',
-                ].join(' ')}
-                onMouseDown={(e) => { e.preventDefault(); select(name); }}
+      {isDynamic ? (
+        /* ── Dynamic: Role + Variation selects ── */
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="space-y-1 w-full">
+              <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Role</label>
+              <select value={selRole} onChange={(e) => handleRoleChange(e.target.value)} className="w-full bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent">
+                <option value="">— select role —</option>
+                {roleOptions.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1 w-full">
+              <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Variation</label>
+              <select
+                value={selVariation}
+                onChange={(e) => handleVariationChange(e.target.value)}
+                disabled={!selRole}
+                className="w-full bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent disabled:opacity-40"
               >
-                {isDynamic ? <><span className="text-accent">[color]/</span>{name}</> : name}
-              </button>
-            ))}
-          </FloatingDropdown>
+                <option value="">— select variation —</option>
+                {variationOptions.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div>
+            {selRole && selVariation && (
+              <p className="text-[10px] font-mono text-accent">
+                [color]/{selRole}/{selVariation}
+              </p>
+            )}
+            <p className="text-[10px] text-text-dim">Resolved per color — bg is the selected role/variation of the same color.</p>
+          </div>
         </div>
-        <p className="text-[10px] text-text-dim">
-          {isDynamic
-            ? 'Resolved per color — e.g. gray/fill/base for gray, blue/fill/base for blue.'
-            : 'Same token used as bg for all colors.'}
-        </p>
-      </div>
+      ) : (
+        /* ── Static: freetext token search ── */
+        <div className="space-y-1">
+          <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Token ref</label>
+          <div className="relative flex items-center">
+            <input
+              ref={inputRef}
+              className="w-full bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent"
+              placeholder="Search tokens…"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setOpen(true);
+              }}
+              onFocus={() => setOpen(true)}
+              onBlur={() => setTimeout(() => setOpen(false), 150)}
+            />
+            <FloatingDropdown anchorRef={inputRef} open={open && filtered.length > 0}>
+              {filtered.map((name) => (
+                <button
+                  key={name}
+                  className={["w-full text-left px-3 py-1.5 text-[11px] font-mono hover:bg-bg-hover transition-colors", name === storeVal ? "text-accent" : "text-text-primary"].join(" ")}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    select(name);
+                  }}
+                >
+                  {name}
+                </button>
+              ))}
+            </FloatingDropdown>
+          </div>
+          <p className="text-[10px] text-text-dim">Same token used as bg for all colors.</p>
+        </div>
+      )}
     </div>
   );
 }
 
 function LocalBgColorInput({ localBg, colors, onChange }: { localBg: RoleLocalBg | null; colors: Color[]; onChange: (bg: RoleLocalBg | null) => void }) {
-  const val = typeof localBg?.value === 'string' ? localBg.value : (colors[0]?.name ?? '');
+  const val = typeof localBg?.value === "string" ? localBg.value : (colors[0]?.name ?? "");
   return (
-    <div className="px-4 pb-3 space-y-1">
+    <div className="p-4 space-y-1">
       <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Color</label>
       <div className="relative">
         <select
           className="w-full appearance-none bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent pr-6"
           value={val}
-          onChange={(e) => onChange({ kind: 'color', value: e.target.value })}
+          onChange={(e) => onChange({ kind: "color", value: e.target.value })}
         >
-          {colors.map((c) => <option key={c._id} value={c.name}>{c.name}</option>)}
+          {colors.map((c) => (
+            <option key={c._id} value={c.name}>
+              {c.name}
+            </option>
+          ))}
         </select>
         <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-dim pointer-events-none" />
       </div>
@@ -243,34 +303,20 @@ function LocalBgHexInput({ themeKey, themeName, value, onCommit }: { themeKey: s
   return (
     <div className="flex items-center gap-2">
       <span className="text-[11px] text-text-muted w-14 shrink-0">{themeName}</span>
-      <input
-        className="flex-1 bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent font-mono"
-        placeholder="#ffffff"
-        value={local}
-        onChange={handleChange}
-        onBlur={handleBlur}
-      />
+      <input className="flex-1 bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent font-mono" placeholder="#ffffff" value={local} onChange={handleChange} onBlur={handleBlur} />
     </div>
   );
 }
 
 function LocalBgHexInputs({ localBg, themes, onChange }: { localBg: RoleLocalBg | null; themes: Theme[]; onChange: (bg: RoleLocalBg | null) => void }) {
-  const hexMap = (typeof localBg?.value === 'object' && localBg?.value !== null)
-    ? (localBg.value as Record<string, string>)
-    : {};
+  const hexMap = typeof localBg?.value === "object" && localBg?.value !== null ? (localBg.value as Record<string, string>) : {};
   function commitKey(key: string, val: string) {
-    onChange({ kind: 'hex', value: { ...hexMap, [key]: val } });
+    onChange({ kind: "hex", value: { ...hexMap, [key]: val } });
   }
   return (
-    <div className="px-4 pb-3 space-y-2">
+    <div className="p-4 space-y-2">
       {themes.map((t) => (
-        <LocalBgHexInput
-          key={t._id}
-          themeKey={t.name.toLowerCase()}
-          themeName={t.name}
-          value={hexMap[t.name.toLowerCase()] ?? ''}
-          onCommit={commitKey}
-        />
+        <LocalBgHexInput key={t._id} themeKey={t.name.toLowerCase()} themeName={t.name} value={hexMap[t.name.toLowerCase()] ?? ""} onCommit={commitKey} />
       ))}
     </div>
   );
@@ -279,37 +325,33 @@ function LocalBgHexInputs({ localBg, themes, onChange }: { localBg: RoleLocalBg 
 // ── Role Settings Sheet ───────────────────────────────────────────────────────
 // Defined at module level so React never remounts it as a "new" component type.
 
-const FILL_SCOPES: VariableScope[] = ['FRAME_FILL', 'SHAPE_FILL', 'TEXT_FILL'];
-const ALL_LEAF_SCOPES: VariableScope[] = ['FRAME_FILL', 'SHAPE_FILL', 'TEXT_FILL', 'STROKE_COLOR', 'EFFECT_COLOR'];
+const FILL_SCOPES: VariableScope[] = ["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL"];
+const ALL_LEAF_SCOPES: VariableScope[] = ["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL", "STROKE_COLOR", "EFFECT_COLOR"];
 
-function RoleSettingsSheet({
-  roleIdx,
-  onClose,
-}: {
-  roleIdx: number;
-  onClose: () => void;
-}) {
-  const colors         = useAppStore((s) => s.appState.colors);
-  const themes         = useAppStore((s) => s.appState.themes ?? []);
-  const role           = useAppStore((s) => s.appState.roles[roleIdx]);
-  const setRoleScope   = useAppStore((s) => s.setRoleScope);
+function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClose: () => void }) {
+  const colors = useAppStore((s) => s.appState.colors);
+  const themes = useAppStore((s) => s.appState.themes ?? []);
+  const role = useAppStore((s) => s.appState.roles[roleIdx]);
+  const setRoleScope = useAppStore((s) => s.setRoleScope);
   const setRoleLocalBg = useAppStore((s) => s.setRoleLocalBg);
-  const setRoleScopes  = useAppStore((s) => s.setRoleScopes);
+  const setRoleScopes = useAppStore((s) => s.setRoleScopes);
 
-  type Tab = 'colors' | 'contrast' | 'scope';
-  const [activeTab, setActiveTab] = useState<Tab>('colors');
+  type Tab = "colors" | "contrast" | "scope";
+  const [activeTab, setActiveTab] = useState<Tab>("colors");
 
   // Draft state — only committed on Apply
   const [draftScopedIds, setDraftScopedIds] = useState<string[] | null>(role?.scopedColorIds ?? null);
-  const [draftLocalBg,   setDraftLocalBg]   = useState<RoleLocalBg | null>(role?.localBg ?? null);
-  const [draftScopes,    setDraftScopes]     = useState<VariableScope[] | null>(role?.scopes ?? null);
+  const [draftLocalBg, setDraftLocalBg] = useState<RoleLocalBg | null>(role?.localBg ?? null);
+  const [draftScopes, setDraftScopes] = useState<VariableScope[] | null>(role?.scopes ?? null);
 
   const isAll = draftScopedIds === null;
   const effectiveIds: string[] = isAll ? colors.map((c) => c._id) : draftScopedIds;
-  const bgKind: RoleLocalBgKind | 'none' = draftLocalBg?.kind ?? 'none';
+  const bgKind: RoleLocalBgKind | "none" = draftLocalBg?.kind ?? "none";
 
   // ── Color scope helpers ───────────────────────────────────────────────────
-  function toggleAll() { setDraftScopedIds(isAll ? [] : null); }
+  function toggleAll() {
+    setDraftScopedIds(isAll ? [] : null);
+  }
   function toggleColor(id: string) {
     const current: string[] = isAll ? colors.map((c) => c._id) : [...draftScopedIds!];
     const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
@@ -317,14 +359,25 @@ function RoleSettingsSheet({
   }
 
   // ── Local bg helpers ──────────────────────────────────────────────────────
-  function setBgKind(kind: RoleLocalBgKind | 'none') {
-    if (kind === 'none')  { setDraftLocalBg(null); return; }
-    if (kind === 'token') { setDraftLocalBg({ kind: 'token', value: '' }); return; }
-    if (kind === 'color') { setDraftLocalBg({ kind: 'color', value: colors[0]?.name ?? '' }); return; }
-    if (kind === 'hex') {
+  function setBgKind(kind: RoleLocalBgKind | "none") {
+    if (kind === "none") {
+      setDraftLocalBg(null);
+      return;
+    }
+    if (kind === "token") {
+      setDraftLocalBg({ kind: "token", value: "" });
+      return;
+    }
+    if (kind === "color") {
+      setDraftLocalBg({ kind: "color", value: colors[0]?.name ?? "" });
+      return;
+    }
+    if (kind === "hex") {
       const map: Record<string, string> = {};
-      (themes || []).forEach((t) => { map[t.name.toLowerCase()] = '#ffffff'; });
-      setDraftLocalBg({ kind: 'hex', value: map });
+      (themes || []).forEach((t) => {
+        map[t.name.toLowerCase()] = "#ffffff";
+      });
+      setDraftLocalBg({ kind: "hex", value: map });
     }
   }
 
@@ -340,9 +393,7 @@ function RoleSettingsSheet({
     return isAllScopes || activeScopes.includes(s);
   }
   function toggleScopeLeaf(s: VariableScope) {
-    const next = isScopeOn(s)
-      ? ALL_LEAF_SCOPES.filter((x) => x !== s)
-      : [...new Set([...activeScopes, s])];
+    const next = isScopeOn(s) ? ALL_LEAF_SCOPES.filter((x) => x !== s) : [...new Set([...activeScopes, s])];
     setDraftScopes(next.length === ALL_LEAF_SCOPES.length ? null : next);
   }
   // Fill parent = on if all 3 children are on
@@ -350,8 +401,7 @@ function RoleSettingsSheet({
   function toggleFillGroup() {
     if (isFillOn) {
       // turn off all fill children
-      const next = ALL_LEAF_SCOPES.filter((s) => !FILL_SCOPES.includes(s))
-        .filter((s) => isScopeOn(s));
+      const next = ALL_LEAF_SCOPES.filter((s) => !FILL_SCOPES.includes(s)).filter((s) => isScopeOn(s));
       setDraftScopes(next.length === ALL_LEAF_SCOPES.length ? null : next.length === 0 ? [] : next);
     } else {
       // turn on all fill children, keep others as-is
@@ -368,23 +418,22 @@ function RoleSettingsSheet({
   }
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: 'colors',   label: 'Colors' },
-    { id: 'contrast', label: 'Contrast' },
-    { id: 'scope',    label: 'Scope' },
+    { id: "colors", label: "Colors" },
+    { id: "contrast", label: "Contrast" },
+    { id: "scope", label: "Scope" },
   ];
 
-  const kindOptions: { value: RoleLocalBgKind | 'none'; label: string }[] = [
-    { value: 'none',  label: 'Theme BG' },
-    { value: 'token', label: 'Token' },
-    { value: 'color', label: 'Color' },
-    { value: 'hex',   label: 'Hex' },
+  const kindOptions: { value: RoleLocalBgKind | "none"; label: string }[] = [
+    { value: "none", label: "Theme BG" },
+    { value: "token", label: "Token" },
+    { value: "color", label: "Color" },
+    { value: "hex", label: "Hex" },
   ];
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
-      <div className="absolute inset-0" style={{ background: 'var(--bg-scrim)' }} onClick={onClose} />
+      <div className="absolute inset-0" style={{ background: "var(--bg-scrim)" }} onClick={onClose} />
       <div className="relative z-10 h-[72%] flex flex-col bg-bg-panel rounded-t-[16px] border-t border-border-base">
-
         {/* Header */}
         <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
           <span className="text-[12px] font-semibold text-text-primary">Role Settings</span>
@@ -399,12 +448,7 @@ function RoleSettingsSheet({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={[
-                'flex-1 py-2.5 text-[11px] font-semibold transition-colors cursor-pointer',
-                activeTab === tab.id
-                  ? 'text-accent border-b-2 border-accent -mb-px'
-                  : 'text-text-muted hover:text-text-primary',
-              ].join(' ')}
+              className={["flex-1 py-2.5 text-[11px] font-semibold transition-colors cursor-pointer", activeTab === tab.id ? "text-accent border-b-2 border-accent -mb-px" : "text-text-muted hover:text-text-primary"].join(" ")}
             >
               {tab.label}
             </button>
@@ -413,26 +457,18 @@ function RoleSettingsSheet({
 
         {/* Tab content — scrollable */}
         <div className="flex-1 overflow-y-auto min-h-0">
-
           {/* ── Colors tab ── */}
-          {activeTab === 'colors' && (
+          {activeTab === "colors" && (
             <div className="flex flex-col">
               <div className="px-4 py-2.5">
                 <p className="text-[11px] text-text-dim">Limit which colors generate tokens for this role.</p>
               </div>
-              <button
-                onClick={toggleAll}
-                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
-              >
+              <button onClick={toggleAll} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
                 <Checkbox checked={isAll} />
                 <span className="text-[12px] font-medium text-text-primary">All colors</span>
               </button>
               {colors.map((c) => (
-                <button
-                  key={c._id}
-                  onClick={() => toggleColor(c._id)}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0"
-                >
+                <button key={c._id} onClick={() => toggleColor(c._id)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0">
                   <Checkbox checked={effectiveIds.includes(c._id)} />
                   <div className="w-5 h-5 rounded shrink-0 border border-black/10" style={{ background: c.value }} />
                   <span className="text-[12px] text-text-primary">{c.name}</span>
@@ -442,7 +478,7 @@ function RoleSettingsSheet({
           )}
 
           {/* ── Contrast tab ── */}
-          {activeTab === 'contrast' && (
+          {activeTab === "contrast" && (
             <div className="flex flex-col">
               <div className="px-4 py-2.5">
                 <p className="text-[11px] text-text-dim">Solve contrast against a local background instead of the global theme background.</p>
@@ -453,75 +489,55 @@ function RoleSettingsSheet({
                     key={opt.value}
                     onClick={() => setBgKind(opt.value)}
                     className={[
-                      'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer',
-                      bgKind === opt.value
-                        ? 'bg-accent text-text-on-accent border-accent'
-                        : 'bg-bg-input text-text-muted border-border-base hover:border-border-strong',
-                    ].join(' ')}
+                      "px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer",
+                      bgKind === opt.value ? "bg-accent text-text-on-accent border-accent" : "bg-bg-input text-text-muted border-border-base hover:border-border-strong",
+                    ].join(" ")}
                   >
                     {opt.label}
                   </button>
                 ))}
               </div>
-              {bgKind === 'token' && <LocalBgTokenInput localBg={draftLocalBg} onChange={setDraftLocalBg} />}
-              {bgKind === 'color' && <LocalBgColorInput localBg={draftLocalBg} colors={colors} onChange={setDraftLocalBg} />}
-              {bgKind === 'hex'   && <LocalBgHexInputs  localBg={draftLocalBg} themes={themes}   onChange={setDraftLocalBg} />}
+              {bgKind === "token" && <LocalBgTokenInput localBg={draftLocalBg} onChange={setDraftLocalBg} />}
+              {bgKind === "color" && <LocalBgColorInput localBg={draftLocalBg} colors={colors} onChange={setDraftLocalBg} />}
+              {bgKind === "hex" && <LocalBgHexInputs localBg={draftLocalBg} themes={themes} onChange={setDraftLocalBg} />}
             </div>
           )}
 
           {/* ── Scope tab — Figma-style tree ── */}
-          {activeTab === 'scope' && (
+          {activeTab === "scope" && (
             <div className="flex flex-col">
               <div className="px-4 py-2.5">
                 <p className="text-[11px] text-text-dim">Restrict where this variable can be applied in Figma.</p>
               </div>
 
               {/* All scopes (top-level) */}
-              <button
-                onClick={toggleAllScopes}
-                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
-              >
+              <button onClick={toggleAllScopes} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
                 <Checkbox checked={isAllScopes} />
                 <span className="text-[12px] font-medium text-text-primary">Show in all supported properties</span>
               </button>
 
               {/* Fill group */}
-              <button
-                onClick={toggleFillGroup}
-                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
-              >
+              <button onClick={toggleFillGroup} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
                 <Checkbox checked={isFillOn} />
                 <span className="text-[12px] font-medium text-text-primary">Fill</span>
               </button>
               {/* Fill children — indented */}
-              {(['FRAME_FILL', 'SHAPE_FILL', 'TEXT_FILL'] as VariableScope[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => toggleScopeLeaf(s)}
-                  className="flex items-center gap-3 pl-10 pr-4 py-2 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
-                >
+              {(["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL"] as VariableScope[]).map((s) => (
+                <button key={s} onClick={() => toggleScopeLeaf(s)} className="flex items-center gap-3 pl-10 pr-4 py-2 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
                   <Checkbox checked={isScopeOn(s)} />
-                  <span className="text-[12px] text-text-primary">
-                    {s === 'FRAME_FILL' ? 'Frame' : s === 'SHAPE_FILL' ? 'Shape' : 'Text'}
-                  </span>
+                  <span className="text-[12px] text-text-primary">{s === "FRAME_FILL" ? "Frame" : s === "SHAPE_FILL" ? "Shape" : "Text"}</span>
                 </button>
               ))}
 
               {/* Stroke */}
-              <button
-                onClick={() => toggleScopeLeaf('STROKE_COLOR')}
-                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle"
-              >
-                <Checkbox checked={isScopeOn('STROKE_COLOR')} />
+              <button onClick={() => toggleScopeLeaf("STROKE_COLOR")} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
+                <Checkbox checked={isScopeOn("STROKE_COLOR")} />
                 <span className="text-[12px] font-medium text-text-primary">Stroke</span>
               </button>
 
               {/* Effects */}
-              <button
-                onClick={() => toggleScopeLeaf('EFFECT_COLOR')}
-                className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0"
-              >
-                <Checkbox checked={isScopeOn('EFFECT_COLOR')} />
+              <button onClick={() => toggleScopeLeaf("EFFECT_COLOR")} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0">
+                <Checkbox checked={isScopeOn("EFFECT_COLOR")} />
                 <span className="text-[12px] font-medium text-text-primary">Effects</span>
               </button>
             </div>
@@ -530,19 +546,15 @@ function RoleSettingsSheet({
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-border-subtle shrink-0">
-          <button
-            onClick={applyChanges}
-            className="w-full py-2 rounded-[8px] bg-accent hover:bg-accent-hover text-text-on-accent text-[12px] font-semibold transition-colors cursor-pointer"
-          >
+          <button onClick={applyChanges} className="w-full py-2 rounded-[8px] bg-accent hover:bg-accent-hover text-text-on-accent text-[12px] font-semibold transition-colors cursor-pointer">
             Apply changes
           </button>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
-
 
 // ── Variation table ───────────────────────────────────────────────────────────
 // Extracted to module level so React doesn't treat it as a new component type
@@ -560,26 +572,13 @@ interface VariationTableProps {
   removeRoleVariation: (roleIdx: number, varIdx: number) => void;
 }
 
-const VariationTable = React.memo(function VariationTable({
-  vars,
-  useCustomVars,
-  role,
-  idx,
-  scaleLength,
-  setRole,
-  setRoleVariation,
-  addRoleVariation,
-  removeRoleVariation,
-}: VariationTableProps) {
-  const cols = useCustomVars ? '16px 1fr 56px 88px 24px' : '16px 1fr 88px';
-  const headers = useCustomVars ? ['#', 'Name', 'Short', 'Target', ''] : ['#', 'Variation', 'Target'];
+const VariationTable = React.memo(function VariationTable({ vars, useCustomVars, role, idx, scaleLength, setRole, setRoleVariation, addRoleVariation, removeRoleVariation }: VariationTableProps) {
+  const cols = useCustomVars ? "16px 1fr 56px 88px 24px" : "16px 1fr 88px";
+  const headers = useCustomVars ? ["#", "Name", "Short", "Target", ""] : ["#", "Variation", "Target"];
 
   return (
     <div>
-      <div
-        className="grid px-2 py-1 bg-bg-app border-b border-border-base gap-1.5"
-        style={{ gridTemplateColumns: cols }}
-      >
+      <div className="grid px-2 py-1 bg-bg-app border-b border-border-base gap-1.5" style={{ gridTemplateColumns: cols }}>
         {headers.map((h) => (
           <span key={h} className="text-[10px] font-bold text-text-muted">
             {h}
@@ -590,72 +589,38 @@ const VariationTable = React.memo(function VariationTable({
       {vars.map((v, vi) => {
         const target = (role.variationTargets ?? [])[vi] ?? 4.5;
         return (
-          <div
-            key={v._id ?? vi}
-            className={[
-              'grid px-2 py-1 items-center gap-1.5',
-              vi < vars.length - 1 ? 'border-b border-border-subtle' : '',
-              vi % 2 ? 'bg-bg-app' : '',
-            ].join(' ')}
-            style={{ gridTemplateColumns: cols }}
-          >
+          <div key={v._id ?? vi} className={["grid px-2 py-1 items-center gap-1.5", vi < vars.length - 1 ? "border-b border-border-subtle" : "", vi % 2 ? "bg-bg-app" : ""].join(" ")} style={{ gridTemplateColumns: cols }}>
             <span className="text-[10px] text-text-muted tabular-nums">{vi + 1}</span>
 
             {useCustomVars ? (
-              <Input
-                size="table"
-                value={v.name ?? ''}
-                onChange={(e) => setRoleVariation(idx, vi, 'name', e.target.value)}
-              />
+              <Input size="table" value={v.name ?? ""} onChange={(e) => setRoleVariation(idx, vi, "name", e.target.value)} />
             ) : (
               <span className="text-[11px] px-1.5 text-text-muted truncate">
                 {v.name}
-                {v.shorthand ? ` (${v.shorthand})` : ''}
+                {v.shorthand ? ` (${v.shorthand})` : ""}
               </span>
             )}
 
-            {useCustomVars && (
-              <Input
-                size="table"
-                value={v.shorthand ?? ''}
-                onChange={(e) => setRoleVariation(idx, vi, 'shorthand', e.target.value)}
-              />
-            )}
+            {useCustomVars && <Input size="table" value={v.shorthand ?? ""} onChange={(e) => setRoleVariation(idx, vi, "shorthand", e.target.value)} />}
 
             <Input
               size="table"
               type="number"
               value={String(target)}
-              min={role.mappingMethod === 'index' ? '0' : '1'}
-              max={role.mappingMethod === 'index' ? String(scaleLength - 1) : '21'}
+              min={role.mappingMethod === "index" ? "0" : "1"}
+              max={role.mappingMethod === "index" ? String(scaleLength - 1) : "21"}
               step="0.1"
               onChange={(e) => setRole(idx, `variationTarget:${vi}`, e.target.value)}
             />
 
-            {useCustomVars && (
-              <Button
-                variant="ghost"
-                size="xs"
-                square
-                label="−"
-                disabled={vars.length <= 1}
-                onClick={() => removeRoleVariation(idx, vi)}
-                className="hover:text-danger hover:bg-danger-subtle"
-              />
-            )}
+            {useCustomVars && <Button variant="ghost" size="xs" square label="−" disabled={vars.length <= 1} onClick={() => removeRoleVariation(idx, vi)} className="hover:text-danger hover:bg-danger-subtle" />}
           </div>
         );
       })}
 
       {useCustomVars && (
         <div className="flex px-2 py-1.5 border-t border-border-subtle">
-          <Button
-            variant="ghost"
-            size="sm"
-            label="+ Add variation"
-            onClick={() => addRoleVariation(idx)}
-            className="text-accent hover:text-accent hover:bg-accent-subtle"
-          />
+          <Button variant="ghost" size="sm" label="+ Add variation" onClick={() => addRoleVariation(idx)} className="text-accent hover:text-accent hover:bg-accent-subtle" />
         </div>
       )}
     </div>
@@ -664,12 +629,7 @@ const VariationTable = React.memo(function VariationTable({
 
 // ── Card ──────────────────────────────────────────────────────────────────────
 
-export const RoleGroupCard = React.memo(function RoleGroupCard({
-  role,
-  idx,
-  dragListeners,
-  dragAttributes,
-}: RoleGroupCardProps) {
+export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, dragListeners, dragAttributes }: RoleGroupCardProps) {
   const [open, toggleOpen] = usePersistedToggle(`role_${role._id}`, false);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
 
@@ -693,65 +653,41 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({
   const useCustomVars = role.customVariationList;
   const vars: Variation[] = useCustomVars ? (role.customVariations ?? []) : sharedVariations;
 
-  const showSolverRow = pluginMode === 'direct' && !useUniformAlgo && algoScope === 'role';
+  const showSolverRow = pluginMode === "direct" && !useUniformAlgo && algoScope === "role";
   const solverOptions = SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }));
 
   const canOverride = !!perRoleOverride;
   const scopeBadge = (
     <Badge
-      variant={useCustomVars ? 'accent' : 'default'}
+      variant={useCustomVars ? "accent" : "default"}
       onClick={canOverride ? () => toggleRoleCustomVars(idx) : undefined}
       disabled={!canOverride}
-      title={
-        !canOverride
-          ? 'Enable Role-specific Variations in Settings → Roles to override per role'
-          : useCustomVars
-            ? 'Click to use global variations'
-            : 'Click to use role-specific variations'
-      }
+      title={!canOverride ? "Enable Role-specific Variations in Settings → Roles to override per role" : useCustomVars ? "Click to use global variations" : "Click to use role-specific variations"}
     >
-      {useCustomVars ? 'Role' : 'Global'}
+      {useCustomVars ? "Role" : "Global"}
     </Badge>
   );
 
   const scopedIds = role.scopedColorIds ?? null;
-  const scopeLabel = scopedIds !== null
-    ? (scopedIds.length === 0 ? 'No colors' : `${scopedIds.length} colors`)
-    : null;
+  const scopeLabel = scopedIds !== null ? (scopedIds.length === 0 ? "No colors" : `${scopedIds.length} colors`) : null;
   const hasLocalBg = !!role.localBg;
+  const localBgLabel = hasLocalBg ? (role.localBg!.kind === "token" ? (role.localBg!.dynamic ? "BG: dynamic" : "BG: token") : role.localBg!.kind === "color" ? "BG: color" : "BG: hex") : null;
 
-  const [localName, onNameChange, onNameBlur] = useLocalField(role.name, (v) => setRole(idx, 'name', v));
-  const [localShort, onShortChange, onShortBlur] = useLocalField(role.shorthand ?? '', (v) =>
-    setRole(idx, 'shorthand', v),
-  );
+  const [localName, onNameChange, onNameBlur] = useLocalField(role.name, (v) => setRole(idx, "name", v));
+  const [localShort, onShortChange, onShortBlur] = useLocalField(role.shorthand ?? "", (v) => setRole(idx, "shorthand", v));
 
   return (
     <div className="group/card relative bg-bg-card rounded-[12px] border border-border-base hover:border-border-strong p-3 space-y-2 transition-colors">
       {/* Name row */}
       <div className="grid gap-2 items-end grid-cols-[1fr_148px]">
-        <Input
-          id={`role-${role._id}-name`}
-          value={localName}
-          onChange={onNameChange}
-          onBlur={onNameBlur}
-          label="Name"
-          size="xl"
-        />
-        <Input
-          id={`role-${role._id}-short`}
-          value={localShort}
-          onChange={onShortChange}
-          onBlur={onShortBlur}
-          label="Short"
-          size="xl"
-        />
+        <Input id={`role-${role._id}-name`} value={localName} onChange={onNameChange} onBlur={onNameBlur} label="Name" size="xl" />
+        <Input id={`role-${role._id}-short`} value={localShort} onChange={onShortChange} onBlur={onShortBlur} label="Short" size="xl" />
       </div>
 
-      {scopeLabel && (
-        <div className="flex">
-          <span className="text-[10px] font-semibold text-accent bg-accent-subtle border border-accent/30 rounded-full px-2 py-0.5">
-            {scopeLabel}
-          </span>
+      {(scopeLabel || localBgLabel) && (
+        <div className="flex gap-1.5 flex-wrap">
+          {scopeLabel && <span className="text-[10px] font-semibold text-accent bg-accent-subtle border border-accent/30 rounded-full px-2 py-0.5">{scopeLabel}</span>}
+          {localBgLabel && <span className="text-[10px] font-semibold text-accent bg-accent-subtle border border-accent/30 rounded-full px-2 py-0.5">{localBgLabel}</span>}
         </div>
       )}
 
@@ -766,57 +702,28 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({
         }
       >
         <div className="py-2">
-          <VariationTable
-            vars={vars}
-            useCustomVars={useCustomVars}
-            role={role}
-            idx={idx}
-            scaleLength={scaleLength}
-            setRole={setRole}
-            setRoleVariation={setRoleVariation}
-            addRoleVariation={addRoleVariation}
-            removeRoleVariation={removeRoleVariation}
-          />
+          <VariationTable vars={vars} useCustomVars={useCustomVars} role={role} idx={idx} scaleLength={scaleLength} setRole={setRole} setRoleVariation={setRoleVariation} addRoleVariation={addRoleVariation} removeRoleVariation={removeRoleVariation} />
         </div>
       </Collapsible>
 
       {showSolverRow && (
         <div className="space-y-1 mt-2 pt-2 border-t border-border-base">
-          <Select
-            label="Solver"
-            size="lg"
-            options={solverOptions}
-            value={role.solverMode ?? 'natural'}
-            onChange={(e) => setRole(idx, 'solverMode', e.target.value)}
-          />
+          <Select label="Solver" size="lg" options={solverOptions} value={role.solverMode ?? "natural"} onChange={(e) => setRole(idx, "solverMode", e.target.value)} />
         </div>
       )}
 
-      <CardToolbar
-        onDelete={() => removeRole(idx)}
-        deleteDisabled={roleCount <= 1}
-        deleteTitle="Delete role"
-        dragListeners={dragListeners}
-        dragAttributes={dragAttributes}
-      >
+      <CardToolbar onDelete={() => removeRole(idx)} deleteDisabled={roleCount <= 1} deleteTitle="Delete role" dragListeners={dragListeners} dragAttributes={dragAttributes}>
         <Button
           variant="icon"
           size="sm"
-          className={scopedIds !== null || hasLocalBg
-            ? 'text-accent bg-accent-subtle hover:text-accent-hover hover:bg-accent-subtle/80'
-            : undefined}
+          className={scopedIds !== null || hasLocalBg ? "text-accent bg-accent-subtle hover:text-accent-hover hover:bg-accent-subtle/80" : undefined}
           onClick={() => setShowSettingsSheet(true)}
           title="Role settings"
           icon={<Settings size={11} strokeWidth={1.75} />}
         />
       </CardToolbar>
 
-      {showSettingsSheet && (
-        <RoleSettingsSheet
-          roleIdx={idx}
-          onClose={() => setShowSettingsSheet(false)}
-        />
-      )}
+      {showSettingsSheet && <RoleSettingsSheet roleIdx={idx} onClose={() => setShowSettingsSheet(false)} />}
     </div>
   );
 });

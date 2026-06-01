@@ -9,6 +9,7 @@ const fs = require('fs');
 const args = process.argv.slice(2);
 const outDirName = args.find(a => !a.startsWith('--')) || 'dist';
 const writeManifest = args.includes('--manifest');
+const isRelease = writeManifest;
 
 const outDir = path.resolve(__dirname, '..', outDirName);
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
@@ -28,6 +29,8 @@ async function watch() {
     platform: 'browser',
     format: 'iife',
     external: [],
+    ...(isRelease && { drop: ['debugger'], pure: ['console.log'] }),
+    define: { __RELEASE__: String(isRelease) },
     plugins: [{
       name: 'on-rebuild',
       setup(build) {

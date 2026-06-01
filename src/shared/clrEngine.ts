@@ -354,12 +354,12 @@ function _solveDirectMode(
     const targets = role.variationTargets || variations.map((_, i) => [1.5, 3, 4.5, 7, 12][i] || 1.5 + i * 1.5);
 
     targets.forEach((targetContrast, vi) => {
-      const variation = String(vi);
+      const variation = variations[vi]?.name ?? String(vi);
       const solved = solveColorForContrast(color.value, targetContrast, bgHex, solverMode);
       if (solved.warning) errors.warnings.push({ color: color.name, role: role.name, variation, theme: modeName, warning: solved.warning });
       if (solved.chromaReduced) errors.notices.push({ color: color.name, role: role.name, variation, theme: modeName, notice: "Chroma reduced to fit gamut." });
       roleOutput[vi] = {
-        tokenName: `${color.name}-${role.name}-${variation}`,
+        tokenName: `${color.name}/${role.name}/${variation}`,
         color: color.name,
         role: role.name,
         variation,
@@ -419,11 +419,12 @@ function _mapByIndex(
   variations.forEach((_, vi) => {
     const idx = Math.max(0, Math.min(stepNames.length - 1, parseInt(String(targets[vi]), 10) || 0));
     const data = scale[stepNames[idx]];
+    const variation = variations[vi]?.name ?? String(vi);
     output[vi] = {
-      tokenName: `${color.name}-${role.name}-${vi}`,
+      tokenName: `${color.name}-${role.name}-${variation}`,
       color: color.name,
       role: role.name,
-      variation: String(vi),
+      variation,
       roleDescription: role.description || "",
       tokenRef: data.stepName,
       value: data.value,
@@ -444,13 +445,13 @@ function _mapByScaleContrast(
   output: Record<number, TokenEntry>,
   errors: EngineErrors,
 ): void {
-  const useCustomBg = !!(role.localBg && role.localBg[modeName]);
+  // effectiveBg is already resolved: localBgPerColor > localBg > theme.bg.
+  // Always contrast against it — no flag needed.
   const getContrast = (step: string | number): number =>
-    useCustomBg
-      ? (contrastRatio(scale[step].value, effectiveBg) ?? 0)
-      : (scale[step].contrast[modeName].ratio ?? 0);
+    contrastRatio(scale[step].value, effectiveBg) ?? 0;
 
   variations.forEach((_, vi) => {
+    const variation = variations[vi]?.name ?? String(vi);
     const target = parseFloat(String(role.variationTargets && role.variationTargets[vi])) || 4.5;
     let bestIdx = isDark ? stepNames.length - 1 : 0;
     let found = false;
@@ -469,17 +470,15 @@ function _mapByScaleContrast(
         const c = getContrast(n);
         if (c > maxC) { maxC = c; bestIdx = i; }
       });
-      errors.warnings.push({ color: color.name, role: role.name, variation: String(vi), theme: modeName, warning: `Target contrast ${target} not achievable. Using closest (${maxC.toFixed(2)}).` });
+      errors.warnings.push({ color: color.name, role: role.name, variation, theme: modeName, warning: `Target contrast ${target} not achievable. Using closest (${maxC.toFixed(2)}).` });
     }
     const data = scale[stepNames[bestIdx]];
-    const achievedContrast = useCustomBg
-      ? (contrastRatio(data.value, effectiveBg) ?? 0)
-      : (data.contrast[modeName].ratio ?? 0);
+    const achievedContrast = contrastRatio(data.value, effectiveBg) ?? 0;
     output[vi] = {
-      tokenName: `${color.name}-${role.name}-${vi}`,
+      tokenName: `${color.name}-${role.name}-${variation}`,
       color: color.name,
       role: role.name,
-      variation: String(vi),
+      variation,
       roleDescription: role.description || "",
       tokenRef: data.stepName,
       value: data.value,

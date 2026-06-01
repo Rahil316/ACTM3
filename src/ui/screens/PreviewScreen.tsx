@@ -7,7 +7,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Modal, ModalHeader } from '../components/Modal';
 import { Button } from '../components/Button';
 import { SegmentedControl } from '../components/SegmentedControl';
-import { variableMaker, type EngineConfig, type EngineResult } from '../lib/colorEngine';
+import { variableMaker, resolveTokenRefBgs, translateLocalBg, type EngineConfig, type EngineResult } from '../lib/colorEngine';
 import { CardTitle, MicroText } from '../components/typography';
 import type { AppState } from '../types/state';
 import {
@@ -39,18 +39,24 @@ function buildEngineConfig(appState: AppState): EngineConfig {
     scaleStepNames: appState.scaleStepNames?.map((s) => s.name) ?? undefined,
     scaleAlgorithm: appState.scaleAlgorithm,
     pluginMode: appState.pluginMode,
-    roles: appState.roles.map((r) => ({
-      name: r.name,
-      shorthand: r.shorthand ?? '',
-      mappingMethod: r.mappingMethod,
-      minContrast: r.minContrast,
-      variationTargets: r.variationTargets,
-      customVariationList: r.customVariationList,
-      customVariations: r.customVariations,
-      solverMode: r.solverMode,
-      description: r.description,
-      scopedColorIds: r.scopedColorIds,
-    })),
+    roles: appState.roles.map((r) => {
+      const { localBg, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, appState.colors, appState.themes);
+      return {
+        name: r.name,
+        shorthand: r.shorthand ?? '',
+        mappingMethod: r.mappingMethod,
+        minContrast: r.minContrast,
+        variationTargets: r.variationTargets,
+        customVariationList: r.customVariationList,
+        customVariations: r.customVariations,
+        solverMode: r.solverMode,
+        description: r.description,
+        scopedColorIds: r.scopedColorIds,
+        localBg,
+        localBgTokenRef,
+        localBgDynamicRef,
+      };
+    }),
     variations: (appState.variations ?? []).map((v) => ({ name: v.name, shorthand: v.shorthand })),
     useUniformAlgorithm: appState.useUniformAlgorithm,
     algorithmScopeLevel: appState.algorithmScopeLevel,
@@ -61,7 +67,11 @@ function buildEngineConfig(appState: AppState): EngineConfig {
 function runEngine(appState: AppState): EngineResult | null {
   if (!appState.colors.length || !appState.roles.length || !appState.themes.length) return null;
   try {
-    return variableMaker(buildEngineConfig(appState));
+    const config = buildEngineConfig(appState);
+    const pass1  = variableMaker(config);
+    // Two-pass: resolve token-kind localBg refs from pass-1 output, re-run if needed
+    if (resolveTokenRefBgs(config, pass1)) return variableMaker(config);
+    return pass1;
   } catch {
     return null;
   }
@@ -834,9 +844,17 @@ function PreviewContent() {
 
   const [result, setResult] = useState<EngineResult | null>(null);
   const [computing, setComputing] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabId>('scale');
-  const [groupBy, setGroupBy] = useState<GroupBy>('color');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  function usePersistedString<T extends string>(key: string, def: T): [T, (v: T) => void] {
+    const [val, setVal] = useState<T>(() => {
+      try { return (localStorage.getItem(key) as T) ?? def; } catch { return def; }
+    });
+    function set(v: T) { setVal(v); try { localStorage.setItem(key, v); } catch { /* ignore */ } }
+    return [val, set];
+  }
+
+  const [activeTab, setActiveTab] = usePersistedString<TabId>('preview_activeTab', 'scale');
+  const [groupBy, setGroupBy] = usePersistedString<GroupBy>('preview_groupBy', 'color');
+  const [viewMode, setViewMode] = usePersistedString<ViewMode>('preview_viewMode', 'grid');
 
   const compute = useCallback((state: AppState) => {
     setComputing(true);

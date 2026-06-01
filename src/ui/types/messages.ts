@@ -66,6 +66,10 @@ export interface PreviewDoneMessage {
   type: 'preview-done';
 }
 
+export interface PreviewInterruptedMessage {
+  type: 'preview-interrupted';
+}
+
 export interface CapabilitiesMessage {
   type: 'capabilities';
   capabilities: { multiMode: boolean };
@@ -108,7 +112,8 @@ export type PluginToUiMessage =
   | ErrorMessage
   | WarningMessage
   | SelectionChangeMessage
-  | PreviewDoneMessage;
+  | PreviewDoneMessage
+  | PreviewInterruptedMessage;
 
 // ── UI → Plugin messages ─────────────────────────────────────────────────────
 

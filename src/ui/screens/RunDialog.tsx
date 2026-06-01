@@ -52,6 +52,7 @@ export function RunDialog() {
   const [structuralChanges, setStructuralChanges] = useState<StructuralChange[]>([]);
   const [showAllRenames, setShowAllRenames] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [previewWasInterrupted, setPreviewWasInterrupted] = useState(false);
 
   const { conflicts, decisions, loadConflicts, setDecision, runSync } = useSyncSession(appState, savedState);
 
@@ -78,6 +79,10 @@ export function RunDialog() {
 
   const handlePreviewDone = useCallback(() => {
     setIsPreviewLoading(false);
+  }, []);
+
+  const handlePreviewInterrupted = useCallback(() => {
+    setPreviewWasInterrupted(true);
   }, []);
 
   const handleCollectionCheckResult = useCallback((msg: CollectionCheckResultMessage) => {
@@ -111,6 +116,7 @@ export function RunDialog() {
     onFinish: handleFinish,
     onError: handleError,
     onPreviewDone: handlePreviewDone,
+    onPreviewInterrupted: handlePreviewInterrupted,
   };
   useFigmaBridge(callbacks);
 
@@ -331,14 +337,39 @@ export function RunDialog() {
             </SettingsCard>
           </div>
 
+          {/* Interrupted warning banner */}
+          {previewWasInterrupted && (
+            <div className="mx-3 mt-2 px-3 py-2 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-start gap-2">
+              <span className="text-amber-400 text-xs mt-px shrink-0">⚠</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-amber-300 font-medium">Previous preview was interrupted</p>
+                <p className="text-[10px] text-amber-400/70 mt-0.5">The plugin was closed mid-render. Re-run preview to restore the canvas.</p>
+              </div>
+              <button
+                onClick={() => setPreviewWasInterrupted(false)}
+                className="text-amber-500/50 hover:text-amber-400 text-xs shrink-0 cursor-pointer"
+              >✕</button>
+            </div>
+          )}
+
           {/* Footer — always visible, never pushed off screen */}
-          <div className="shrink-0 px-3 py-3 border-t border-border-base flex gap-2">
+          <div className="shrink-0 px-3 py-3 border-t border-border-base flex gap-2 relative">
+            {/* Blocking overlay while preview is generating — prevents accidental close */}
+            {isPreviewLoading && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 bg-bg-app/80 backdrop-blur-sm rounded">
+                <svg className="animate-spin w-3.5 h-3.5 text-accent shrink-0" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                <span className="text-xs text-text-muted">Generating preview — do not close</span>
+              </div>
+            )}
             <Button
               variant="secondary"
               size="xl"
               label={isPreviewLoading ? 'Generating…' : isPreviewSelected ? 'Update Canvas Preview' : 'Preview in Canvas'}
               disabled={isPreviewLoading}
-              onClick={() => { setIsPreviewLoading(true); sendToPlugin({ type: 'run-preview', state: appState }); }}
+              onClick={() => { setPreviewWasInterrupted(false); setIsPreviewLoading(true); sendToPlugin({ type: 'run-preview', state: appState }); }}
               className="flex-1"
             />
             <Button

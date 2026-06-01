@@ -74,9 +74,17 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
   }
 
   if (pm.type === 'request-processed-data') {
-    import('../lib/colorEngine').then(({ variableMaker }) => {
-      const state = pm.state as Parameters<typeof variableMaker>[0];
-      const result = variableMaker(state);
+    import('../lib/colorEngine').then(({ variableMaker, resolveTokenRefBgs, translateLocalBg }) => {
+      const appState = pm.state as any;
+      const config = {
+        ...appState,
+        roles: (appState.roles ?? []).map((r: any) => ({
+          ...r,
+          ...translateLocalBg(r.localBg, appState.colors ?? [], appState.themes ?? []),
+        })),
+      } as Parameters<typeof variableMaker>[0];
+      const pass1 = variableMaker(config);
+      const result = resolveTokenRefBgs(config, pass1) ? variableMaker(config) : pass1;
       window.postMessage({
         pluginMessage: {
           type: 'processed-data-response',
@@ -251,6 +259,11 @@ function handleMessage(
       break;
     }
 
+    case 'preview-interrupted': {
+      callbacks.onPreviewInterrupted?.();
+      break;
+    }
+
     case 'error': {
       callbacks.onError?.(msg.message);
       break;
@@ -271,6 +284,7 @@ export interface BridgeCallbacks {
   onCollectionCheckResult?: (msg: CollectionCheckResultMessage) => void;
   onFinish?: (tally: SyncTally, errors: string[] | null) => void;
   onPreviewDone?: () => void;
+  onPreviewInterrupted?: () => void;
   onMultiModeDisabled?: () => void;
   onProcessedData?: (format: string, content: string) => void;
   onExportBundle?: (files: Array<{ path: string; content: string }>) => void;

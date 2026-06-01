@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const __RELEASE__: boolean;
 import { useUiStore } from '../store/uiStore';
 import { useAppStore } from '../store/appStore';
 import { toast } from '../store/toastStore';
@@ -37,7 +39,11 @@ export function useKeyboardShortcuts(importRef: React.RefObject<HTMLInputElement
         case 'Digit1':     e.preventDefault(); setActiveTab('color-groups');     break;
         case 'Digit2':     e.preventDefault(); setActiveTab('roles');            break;
         case 'Digit3':     e.preventDefault(); setActiveTab('themes');           break;
-        case 'KeyP':       e.preventDefault(); openOverlay('preview');           break;
+        case 'KeyP':
+          e.preventDefault();
+          if (e.shiftKey && !__RELEASE__) openOverlay('canvas-preview-dev');
+          else if (!e.shiftKey) openOverlay('preview');
+          break;
         case 'KeyK':       e.preventDefault(); openOverlay('settings');          break;
         case 'KeyE':       e.preventDefault(); openOverlay('design-lab');        break;
         case 'KeyI':       e.preventDefault(); importRef.current?.click();       break;

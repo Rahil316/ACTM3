@@ -131,7 +131,7 @@ export interface UiPrefs {
 // ── UI routing ───────────────────────────────────────────────────────────────
 
 export type SidebarTab = "color-groups" | "roles" | "project" | "themes" | "saved-states";
-export type ActiveOverlay = null | "settings" | "preview" | "run-dialog" | "save-version" | "quick-start" | "design-lab" | "export-sheet" | "theme-shop";
+export type ActiveOverlay = null | "settings" | "preview" | "run-dialog" | "save-version" | "quick-start" | "design-lab" | "export-sheet" | "theme-shop" | "canvas-preview-dev";
 export type SettingsTab = "tokens" | "roles" | "plugin";
 
 // ── Validation ───────────────────────────────────────────────────────────────

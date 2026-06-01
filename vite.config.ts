@@ -2,12 +2,17 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
-const isDev = process.env.VITE_DEV === 'true';
-const outDir = process.env.VITE_OUT_DIR ? `../../${process.env.VITE_OUT_DIR}` : '../../dist';
+const isDev     = process.env.VITE_DEV === 'true';
+const isRelease = process.env.VITE_OUT_DIR === 'dist-release';
+const outDir    = process.env.VITE_OUT_DIR ? `../../${process.env.VITE_OUT_DIR}` : '../../dist';
 
 export default defineConfig({
   plugins: isDev ? [react()] : [react(), viteSingleFile()],
   root: 'src/ui',
+  // Inject __RELEASE__ so tree-shaking removes dev-only code in release builds
+  define: {
+    __RELEASE__: isRelease,
+  },
   server: {
     port: 3000,
     open: '/ui.html',
@@ -20,6 +25,15 @@ export default defineConfig({
     cssCodeSplit: false,
     rollupOptions: {
       input: 'src/ui/ui.html',
+      // Drop all console.log calls (not warn/error) in release
+      ...(isRelease && {
+        plugins: [{
+          name: 'drop-console-log',
+          renderChunk(code: string) {
+            return code.replace(/console\.log\s*\([^)]*\)\s*;?/g, '');
+          },
+        }],
+      }),
     },
   },
   test: {

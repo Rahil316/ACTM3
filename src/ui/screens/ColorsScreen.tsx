@@ -156,7 +156,8 @@ function ColorTree() {
 
   function toggleSelect(id: string, meta: boolean, shift = false) {
     if (!meta) {
-      // Plain click — clear all, select only this (Figma behaviour)
+      if (selectedIds.size === 0) return; // plain click — don't enter selection mode
+      // Some items selected — collapse to just this one
       lastSelectedRef.current = id;
       setSelectedIds(new Set([id]));
       return;
@@ -176,7 +177,7 @@ function ColorTree() {
         return;
       }
     }
-    // ⌘+click — toggle individual item
+    // ⌘+click — toggle individual item (enters multi-select mode)
     lastSelectedRef.current = id;
     setSelectedIds((prev) => {
       const next = new Set(prev);

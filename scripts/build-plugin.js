@@ -10,6 +10,7 @@ async function build() {
   const args = process.argv.slice(2);
   const outDirName = args.find(a => !a.startsWith('--')) || 'dist';
   const writeManifest = args.includes('--manifest');
+  const isRelease = writeManifest; // --manifest is only passed for release builds
 
   const outDir = path.resolve(__dirname, '..', outDirName);
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
@@ -23,6 +24,11 @@ async function build() {
     format: 'iife',
     external: [],
     logLevel: 'info',
+    // Drop console.log (not warn/error) in release builds
+    ...(isRelease && { drop: ['debugger'], pure: ['console.log'] }),
+    define: {
+      __RELEASE__: String(isRelease),
+    },
   });
 
   console.log(`✓ ${outDirName}/scripts.js built`);

@@ -67,6 +67,7 @@ function TokensTab() {
   const addScaleStepName = useAppStore((s) => s.addScaleStepName);
   const removeScaleStepName = useAppStore((s) => s.removeScaleStepName);
   const [stepLabelsCollapsed, setStepLabelsCollapsed] = useState(true);
+  const [scaleLengthDraft, setScaleLengthDraft] = useState<string>(String(appState.scaleLength));
 
   const tokenNameSegments = appState.tokenNameSegments ?? ["color", "role", "variation"];
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -141,14 +142,19 @@ function TokensTab() {
               <Input
                 size="sm"
                 type="number"
-                value={String(appState.scaleLength)}
+                value={scaleLengthDraft}
                 min="5"
                 max="100"
                 step="1"
                 width={undefined}
                 onChange={(e) => {
+                  setScaleLengthDraft(e.target.value);
                   const v = parseInt(e.target.value);
                   if (!isNaN(v) && v >= 5 && v <= 100) setAppField("scaleLength", v);
+                }}
+                onBlur={() => {
+                  const v = parseInt(scaleLengthDraft);
+                  if (isNaN(v) || v < 5 || v > 100) setScaleLengthDraft(String(appState.scaleLength));
                 }}
               />
             }
@@ -237,7 +243,7 @@ function TokensTab() {
                   {scaleStepNames.map((step, i) => (
                     <ListRow key={step._id} onRemove={() => removeScaleStepName(i)} removeAriaLabel="Clear step label">
                       <Input size="sm" value={step.name} placeholder={`Step ${i + 1}`} onChange={(e) => setScaleStepName(i, "name", e.target.value)} />
-                      <Input size="sm" value={step.shorthand} placeholder="Short" onChange={(e) => setScaleStepName(i, "shorthand", e.target.value)} />
+                      <Input size="sm" value={step.shorthand ?? ""} placeholder="Short" onChange={(e) => setScaleStepName(i, "shorthand", e.target.value)} />
                     </ListRow>
                   ))}
                   <ActionButton label="− Disable Step Labels" onClick={() => { for (let k = scaleStepNames.length - 1; k >= 0; k--) removeScaleStepName(k); }} />
@@ -281,7 +287,7 @@ function RolesTab() {
             <ListHeader columns={["Name", "Short"]} withDragHandle withRemoveButton />
             {variations.map((v, i) => (
               <ListRow key={v._id} onRemove={() => removeVariation(i)} removeDisabled={variations.length <= 1} removeAriaLabel="Remove variation">
-                <Input size="sm" value={v.name} placeholder="Name" onChange={(e) => setVariation(i, "name", e.target.value)} />
+                <Input size="sm" value={v.name ?? ""} placeholder="Name" onChange={(e) => setVariation(i, "name", e.target.value)} />
                 <Input size="sm" value={v.shorthand ?? ""} placeholder="Short" onChange={(e) => setVariation(i, "shorthand", e.target.value)} />
               </ListRow>
             ))}
