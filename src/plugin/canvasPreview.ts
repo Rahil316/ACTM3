@@ -67,18 +67,18 @@ export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): 
     result = variableMaker(cfg);
   }
 
-  // 1. Destroy existing preview page and recreate fresh
-  const existingPage = figma.root.children.find((p) => p.getPluginData("previewPage") === "1") as PageNode | undefined;
-  if (existingPage) {
-    try {
-      existingPage.remove();
-    } catch {
-      /* ignore */
+  // 1. Reuse existing preview page, or create it fresh on first run
+  let previewPage = figma.root.children.find((p) => p.getPluginData("previewPage") === "1") as PageNode | undefined;
+  if (previewPage) {
+    // Clear all existing children so we rebuild in-place
+    for (const child of [...previewPage.children]) {
+      try { child.remove(); } catch { /* ignore */ }
     }
+  } else {
+    previewPage = figma.createPage();
+    previewPage.name = "✦ Token Preview";
+    previewPage.setPluginData("previewPage", "1");
   }
-  const previewPage = figma.createPage();
-  previewPage.name = "✦ Token Preview";
-  previewPage.setPluginData("previewPage", "1");
 
   await figma.setCurrentPageAsync(previewPage);
 
