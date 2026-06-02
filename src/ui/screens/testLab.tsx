@@ -1,21 +1,7 @@
 import { useState, useId, useEffect, useRef, useCallback, useMemo } from "react";
-import {
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  DragOverlay,
-  type DragStartEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import {
-  Settings,
-  RefreshCw,
-} from "lucide-react";
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, type DragStartEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { Settings, RefreshCw } from "lucide-react";
 import { SplitActionButton, Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
 import { SuggestSheet, MenuRow } from "../components/MenuSheet";
@@ -25,38 +11,25 @@ import { FieldLabel } from "../components/typography";
 import { ColorGroupCard } from "../components/cards/ColorGroupCard";
 import { RoleGroupCard } from "../components/cards/RoleGroupCard";
 import { useAppStore } from "../store/appStore";
-import {
-  buildTree,
-  useCommittedNames,
-  SortableLeafWrapper,
-  TreeRenderer,
-  MultiSelectToolbar,
-  type TreeNode,
-} from "../components/tree";
+import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components/tree";
 
 // ── Section A — Role Scope Picker ─────────────────────────────────────────────
 
 const MOCK_COLORS = [
   { _id: "c1", name: "Brand/Primary", hex: "#0066FF" },
-  { _id: "c2", name: "Brand/Accent",  hex: "#8B5CF6" },
-  { _id: "c3", name: "Neutral/Gray",  hex: "#6B7280" },
-  { _id: "c4", name: "Neutral/Warm",  hex: "#78716C" },
-  { _id: "c5", name: "Color/Sky",     hex: "#0EA5E9" },
+  { _id: "c2", name: "Brand/Accent", hex: "#8B5CF6" },
+  { _id: "c3", name: "Neutral/Gray", hex: "#6B7280" },
+  { _id: "c4", name: "Neutral/Warm", hex: "#78716C" },
+  { _id: "c5", name: "Color/Sky", hex: "#0EA5E9" },
 ];
 
-function ScopeSheet({
-  scopedIds,
-  onChange,
-  onClose,
-}: {
-  scopedIds: string[] | null;
-  onChange: (ids: string[] | null) => void;
-  onClose: () => void;
-}) {
+function ScopeSheet({ scopedIds, onChange, onClose }: { scopedIds: string[] | null; onChange: (ids: string[] | null) => void; onClose: () => void }) {
   const isAll = scopedIds === null;
   const effectiveIds = isAll ? MOCK_COLORS.map((c) => c._id) : scopedIds;
 
-  function toggleAll() { onChange(null); }
+  function toggleAll() {
+    onChange(null);
+  }
 
   function toggleColor(id: string) {
     const current = isAll ? MOCK_COLORS.map((c) => c._id) : [...scopedIds];
@@ -94,7 +67,9 @@ function SectionA() {
         <div className="flex items-center gap-2">
           <span className="flex-1 text-[12px] font-semibold text-text-primary">Background</span>
           {scopeLabel && (
-            <Badge variant="accent" size="xs" pill>{scopeLabel}</Badge>
+            <Badge variant="accent" size="xs" pill>
+              {scopeLabel}
+            </Badge>
           )}
           <button
             onClick={() => setShowSheet(true)}
@@ -105,7 +80,11 @@ function SectionA() {
           </button>
         </div>
         <p className="text-[10px] text-text-muted">
-          {scopedIds === null ? "Applied to all colors" : `Applied to: ${MOCK_COLORS.filter((c) => scopedIds.includes(c._id)).map((c) => c.name).join(", ")}`}
+          {scopedIds === null
+            ? "Applied to all colors"
+            : `Applied to: ${MOCK_COLORS.filter((c) => scopedIds.includes(c._id))
+                .map((c) => c.name)
+                .join(", ")}`}
         </p>
       </div>
 
@@ -117,39 +96,39 @@ function SectionA() {
 // ── Section B — Tree with real cards ─────────────────────────────────────────
 
 const DEMO_COLORS = [
-  { name: "Brand/Primary",        value: "#0066FF", shorthand: "bp" },
-  { name: "Brand/Accent",         value: "#8B5CF6", shorthand: "ba" },
-  { name: "Brand/Sub/Tint",       value: "#BFDBFE", shorthand: "bt" },
-  { name: "Neutral/Gray",         value: "#6B7280", shorthand: "ng" },
-  { name: "Neutral/Warm",         value: "#78716C", shorthand: "nw" },
-  { name: "Solo",                 value: "#F59E0B", shorthand: "sl" },
+  { name: "Brand/Primary", value: "#0066FF", shorthand: "bp" },
+  { name: "Brand/Accent", value: "#8B5CF6", shorthand: "ba" },
+  { name: "Brand/Sub/Tint", value: "#BFDBFE", shorthand: "bt" },
+  { name: "Neutral/Gray", value: "#6B7280", shorthand: "ng" },
+  { name: "Neutral/Warm", value: "#78716C", shorthand: "nw" },
+  { name: "Solo", value: "#F59E0B", shorthand: "sl" },
 ];
 
 const DEMO_ROLES = [
-  { name: "Surface/Default",  shorthand: "sd", minContrast: 4.5, variationTargets: [300, 500, 700] },
-  { name: "Surface/Subtle",   shorthand: "ss", minContrast: 2.0, variationTargets: [100, 200] },
-  { name: "Text/Primary",     shorthand: "tp", minContrast: 7.0, variationTargets: [800, 900] },
-  { name: "Text/Secondary",   shorthand: "ts", minContrast: 4.5, variationTargets: [600, 700] },
-  { name: "Standalone",       shorthand: "sa", minContrast: 4.5, variationTargets: [500] },
+  { name: "Surface/Default", shorthand: "sd", minContrast: 4.5, variationTargets: [300, 500, 700] },
+  { name: "Surface/Subtle", shorthand: "ss", minContrast: 2.0, variationTargets: [100, 200] },
+  { name: "Text/Primary", shorthand: "tp", minContrast: 7.0, variationTargets: [800, 900] },
+  { name: "Text/Secondary", shorthand: "ts", minContrast: 4.5, variationTargets: [600, 700] },
+  { name: "Standalone", shorthand: "sa", minContrast: 4.5, variationTargets: [500] },
 ];
 
-
 function ColorTree() {
-  const colors    = useAppStore((s) => s.appState.colors);
+  const colors = useAppStore((s) => s.projectStore.colors);
   const moveColor = useAppStore((s) => s.moveColor);
-  const setColor  = useAppStore((s) => s.setColor);
+  const setColor = useAppStore((s) => s.setColor);
   const [committed, flushCommitted] = useCommittedNames(colors);
-  const [collapsed, setCollapsed]         = useState<Record<string, boolean>>({});
-  const [activeId, setActiveId]           = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [overGroupPath, setOverGroupPath] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds]     = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
   const dndId = useId();
 
   function toggleSelect(id: string, _meta: boolean) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -187,22 +166,19 @@ function ColorTree() {
 
   // Only include IDs that are actually rendered (collapsed groups skip their children).
   // During a drag we include everything so the active item stays registered.
-  function collectVisibleIds(nodes: TreeNode<typeof committed[number]>[], dragging: boolean): string[] {
+  function collectVisibleIds(nodes: TreeNode<(typeof committed)[number]>[], dragging: boolean): string[] {
     const ids: string[] = [];
     for (const n of nodes) {
-      if (n.kind === "leaf") { ids.push(n.item._id); }
-      else {
+      if (n.kind === "leaf") {
+        ids.push(n.item._id);
+      } else {
         ids.push(`group::${n.fullPath}`);
-        if (dragging || !(collapsed[n.fullPath] ?? false))
-          ids.push(...collectVisibleIds(n.children, dragging));
+        if (dragging || !(collapsed[n.fullPath] ?? false)) ids.push(...collectVisibleIds(n.children, dragging));
       }
     }
     return ids;
   }
-  const allIds = useMemo(
-    () => collectVisibleIds(tree, activeId !== null),
-    [tree, collapsed, activeId],
-  );
+  const allIds = useMemo(() => collectVisibleIds(tree, activeId !== null), [tree, collapsed, activeId]);
 
   const activeGroupPath = activeId?.startsWith("group::") ? activeId.slice(7) : null;
 
@@ -212,7 +188,10 @@ function ColorTree() {
   }
 
   function handleDragOver(e: { over: { id: string } | null }) {
-    if (!e.over) { setOverGroupPath(null); return; }
+    if (!e.over) {
+      setOverGroupPath(null);
+      return;
+    }
     const id = e.over.id as string;
     setOverGroupPath(id.startsWith("group::") ? id.slice(7) : null);
   }
@@ -224,16 +203,16 @@ function ColorTree() {
     if (!over || active.id === over.id) return;
 
     const activeIdStr = active.id as string;
-    const overId      = over.id as string;
+    const overId = over.id as string;
 
     // ── Group dragged onto group ──────────────────────────────────────────────
     if (activeIdStr.startsWith("group::") && overId.startsWith("group::")) {
-      const srcPath    = activeIdStr.slice(7);
+      const srcPath = activeIdStr.slice(7);
       const targetPath = overId.slice(7);
       // Don't nest a group into its own descendant
       if (targetPath === srcPath || targetPath.startsWith(srcPath + "/")) return;
       const srcSegment = srcPath.includes("/") ? srcPath.split("/").pop()! : srcPath;
-      const newBase    = `${targetPath}/${srcSegment}`;
+      const newBase = `${targetPath}/${srcSegment}`;
       colors.forEach((c, idx) => {
         if (c.name === srcPath || c.name.startsWith(srcPath + "/")) {
           setColor(idx, "name", newBase + c.name.slice(srcPath.length));
@@ -247,7 +226,7 @@ function ColorTree() {
       const fromIdx = colors.findIndex((c) => c._id === activeIdStr);
       if (fromIdx < 0) return;
       const targetPath = overId.slice(7);
-      const localName  = colors[fromIdx].name.split("/").pop()!;
+      const localName = colors[fromIdx].name.split("/").pop()!;
       setColor(fromIdx, "name", `${targetPath}/${localName}`);
       return;
     }
@@ -255,10 +234,10 @@ function ColorTree() {
     // ── Leaf dragged onto leaf ────────────────────────────────────────────────
     if (!activeIdStr.startsWith("group::")) {
       const fromIdx = colors.findIndex((c) => c._id === activeIdStr);
-      const toIdx   = colors.findIndex((c) => c._id === overId);
+      const toIdx = colors.findIndex((c) => c._id === overId);
       if (fromIdx < 0 || toIdx < 0) return;
       const fromGroup = colors[fromIdx].name.split("/").slice(0, -1).join("/");
-      const toGroup   = colors[toIdx].name.split("/").slice(0, -1).join("/");
+      const toGroup = colors[toIdx].name.split("/").slice(0, -1).join("/");
       if (fromGroup === toGroup) {
         moveColor(fromIdx, toIdx);
       } else {
@@ -270,14 +249,16 @@ function ColorTree() {
 
   function renameGroup(fullPath: string, newSegment: string) {
     const parentPath = fullPath.includes("/") ? fullPath.slice(0, fullPath.lastIndexOf("/")) : "";
-    const newPath    = parentPath ? `${parentPath}/${newSegment}` : newSegment;
+    const newPath = parentPath ? `${parentPath}/${newSegment}` : newSegment;
     colors.forEach((c, idx) => {
-      if (c.name === fullPath || c.name.startsWith(fullPath + "/"))
-        setColor(idx, "name", newPath + c.name.slice(fullPath.length));
+      if (c.name === fullPath || c.name.startsWith(fullPath + "/")) setColor(idx, "name", newPath + c.name.slice(fullPath.length));
     });
     setCollapsed((prev) => {
       const next = { ...prev };
-      if (fullPath in next) { next[newPath] = next[fullPath]; delete next[fullPath]; }
+      if (fullPath in next) {
+        next[newPath] = next[fullPath];
+        delete next[fullPath];
+      }
       return next;
     });
   }
@@ -296,15 +277,22 @@ function ColorTree() {
     useAppStore.getState().addColorWith(`${fullPath}/New`, "#888888", "");
   }
 
-  const renderColorLeaf = useCallback((color: typeof committed[number], idx: number, selected: boolean, _multiDragCount: number, onToggleSel: (id: string, meta: boolean, shift?: boolean) => void) => (
-    <SortableLeafWrapper key={color._id} id={color._id} selected={selected} onToggleSelect={onToggleSel}
-      renderContent={() => (
-        <div draggable={false} onDragStart={(e) => e.preventDefault()}>
-          <ColorGroupCard color={color} idx={idx} />
-        </div>
-      )}
-    />
-  ), []);
+  const renderColorLeaf = useCallback(
+    (color: (typeof committed)[number], idx: number, selected: boolean, _multiDragCount: number, onToggleSel: (id: string, meta: boolean, shift?: boolean) => void) => (
+      <SortableLeafWrapper
+        key={color._id}
+        id={color._id}
+        selected={selected}
+        onToggleSelect={onToggleSel}
+        renderContent={() => (
+          <div draggable={false} onDragStart={(e) => e.preventDefault()}>
+            <ColorGroupCard color={color} idx={idx} />
+          </div>
+        )}
+      />
+    ),
+    [],
+  );
 
   const activeColor = !activeGroupPath && activeId ? colors.find((c) => c._id === activeId) : null;
   const activeGroup = activeGroupPath ? committed.find((c) => c.name.startsWith(activeGroupPath + "/") || c.name === activeGroupPath) : null;
@@ -331,14 +319,10 @@ function ColorTree() {
           />
         </SortableContext>
         <DragOverlay>
-          {activeColor && (
-            <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary">
-              {activeColor.name}
-            </div>
-          )}
+          {activeColor && <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary">{activeColor.name}</div>}
           {activeGroupSegment && (
             <div className="px-3 py-1.5 rounded-[8px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-secondary flex items-center gap-1.5">
-              <span className="text-text-dim text-[10px]">{activeGroup ? committed.filter(c => c.name.startsWith(activeGroupPath! + "/")).length : 0}</span>
+              <span className="text-text-dim text-[10px]">{activeGroup ? committed.filter((c) => c.name.startsWith(activeGroupPath! + "/")).length : 0}</span>
               {activeGroupSegment}
             </div>
           )}
@@ -349,9 +333,28 @@ function ColorTree() {
       {selectedIds.size > 0 && (
         <MultiSelectToolbar
           count={selectedIds.size}
-          onGroup={() => { colors.forEach((c, i) => { if (!selectedIds.has(c._id)) return; setColor(i, "name", `Untitled/${c.name.split("/").pop()!}`); }); setSelectedIds(new Set()); }}
-          onUngroup={() => { colors.forEach((c, i) => { if (!selectedIds.has(c._id)) return; setColor(i, "name", c.name.split("/").pop()!); }); setSelectedIds(new Set()); }}
-          onDelete={() => { const idxs = colors.map((c, i) => selectedIds.has(c._id) ? i : -1).filter(i => i >= 0).reverse(); idxs.forEach(i => useAppStore.getState().removeColor(i)); setSelectedIds(new Set()); }}
+          onGroup={() => {
+            colors.forEach((c, i) => {
+              if (!selectedIds.has(c._id)) return;
+              setColor(i, "name", `Untitled/${c.name.split("/").pop()!}`);
+            });
+            setSelectedIds(new Set());
+          }}
+          onUngroup={() => {
+            colors.forEach((c, i) => {
+              if (!selectedIds.has(c._id)) return;
+              setColor(i, "name", c.name.split("/").pop()!);
+            });
+            setSelectedIds(new Set());
+          }}
+          onDelete={() => {
+            const idxs = colors
+              .map((c, i) => (selectedIds.has(c._id) ? i : -1))
+              .filter((i) => i >= 0)
+              .reverse();
+            idxs.forEach((i) => useAppStore.getState().removeColor(i));
+            setSelectedIds(new Set());
+          }}
           onClear={() => setSelectedIds(new Set())}
           onSelectAll={() => setSelectedIds(new Set(colors.map((c) => c._id)))}
         />
@@ -361,21 +364,22 @@ function ColorTree() {
 }
 
 function RoleTree() {
-  const roles    = useAppStore((s) => s.appState.roles);
+  const roles = useAppStore((s) => s.projectStore.roles);
   const moveRole = useAppStore((s) => s.moveRole);
-  const setRole  = useAppStore((s) => s.setRole);
+  const setRole = useAppStore((s) => s.setRole);
   const [committed, flushCommitted] = useCommittedNames(roles);
-  const [collapsed, setCollapsed]         = useState<Record<string, boolean>>({});
-  const [activeId, setActiveId]           = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [overGroupPath, setOverGroupPath] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds]     = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
   const dndId = useId();
 
   function toggleSelect(id: string, _meta: boolean) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -407,22 +411,19 @@ function RoleTree() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const tree = useMemo(() => buildTree(committed), [committed]);
 
-  function collectVisibleIds(nodes: TreeNode<typeof committed[number]>[], dragging: boolean): string[] {
+  function collectVisibleIds(nodes: TreeNode<(typeof committed)[number]>[], dragging: boolean): string[] {
     const ids: string[] = [];
     for (const n of nodes) {
-      if (n.kind === "leaf") { ids.push(n.item._id); }
-      else {
+      if (n.kind === "leaf") {
+        ids.push(n.item._id);
+      } else {
         ids.push(`group::${n.fullPath}`);
-        if (dragging || !(collapsed[n.fullPath] ?? false))
-          ids.push(...collectVisibleIds(n.children, dragging));
+        if (dragging || !(collapsed[n.fullPath] ?? false)) ids.push(...collectVisibleIds(n.children, dragging));
       }
     }
     return ids;
   }
-  const allIds = useMemo(
-    () => collectVisibleIds(tree, activeId !== null),
-    [tree, collapsed, activeId],
-  );
+  const allIds = useMemo(() => collectVisibleIds(tree, activeId !== null), [tree, collapsed, activeId]);
 
   const activeGroupPath = activeId?.startsWith("group::") ? activeId.slice(7) : null;
 
@@ -432,7 +433,10 @@ function RoleTree() {
   }
 
   function handleDragOver(e: { over: { id: string } | null }) {
-    if (!e.over) { setOverGroupPath(null); return; }
+    if (!e.over) {
+      setOverGroupPath(null);
+      return;
+    }
     const id = e.over.id as string;
     setOverGroupPath(id.startsWith("group::") ? id.slice(7) : null);
   }
@@ -444,17 +448,16 @@ function RoleTree() {
     if (!over || active.id === over.id) return;
 
     const activeIdStr = active.id as string;
-    const overId      = over.id as string;
+    const overId = over.id as string;
 
     if (activeIdStr.startsWith("group::") && overId.startsWith("group::")) {
-      const srcPath    = activeIdStr.slice(7);
+      const srcPath = activeIdStr.slice(7);
       const targetPath = overId.slice(7);
       if (targetPath === srcPath || targetPath.startsWith(srcPath + "/")) return;
       const srcSegment = srcPath.includes("/") ? srcPath.split("/").pop()! : srcPath;
-      const newBase    = `${targetPath}/${srcSegment}`;
+      const newBase = `${targetPath}/${srcSegment}`;
       roles.forEach((r, idx) => {
-        if (r.name === srcPath || r.name.startsWith(srcPath + "/"))
-          setRole(idx, "name", newBase + r.name.slice(srcPath.length));
+        if (r.name === srcPath || r.name.startsWith(srcPath + "/")) setRole(idx, "name", newBase + r.name.slice(srcPath.length));
       });
       return;
     }
@@ -463,17 +466,17 @@ function RoleTree() {
       const fromIdx = roles.findIndex((r) => r._id === activeIdStr);
       if (fromIdx < 0) return;
       const targetPath = overId.slice(7);
-      const localName  = roles[fromIdx].name.split("/").pop()!;
+      const localName = roles[fromIdx].name.split("/").pop()!;
       setRole(fromIdx, "name", `${targetPath}/${localName}`);
       return;
     }
 
     if (!activeIdStr.startsWith("group::")) {
       const fromIdx = roles.findIndex((r) => r._id === activeIdStr);
-      const toIdx   = roles.findIndex((r) => r._id === overId);
+      const toIdx = roles.findIndex((r) => r._id === overId);
       if (fromIdx < 0 || toIdx < 0) return;
       const fromGroup = roles[fromIdx].name.split("/").slice(0, -1).join("/");
-      const toGroup   = roles[toIdx].name.split("/").slice(0, -1).join("/");
+      const toGroup = roles[toIdx].name.split("/").slice(0, -1).join("/");
       if (fromGroup === toGroup) {
         moveRole(fromIdx, toIdx);
       } else {
@@ -485,14 +488,16 @@ function RoleTree() {
 
   function renameGroup(fullPath: string, newSegment: string) {
     const parentPath = fullPath.includes("/") ? fullPath.slice(0, fullPath.lastIndexOf("/")) : "";
-    const newPath    = parentPath ? `${parentPath}/${newSegment}` : newSegment;
+    const newPath = parentPath ? `${parentPath}/${newSegment}` : newSegment;
     roles.forEach((r, idx) => {
-      if (r.name === fullPath || r.name.startsWith(fullPath + "/"))
-        setRole(idx, "name", newPath + r.name.slice(fullPath.length));
+      if (r.name === fullPath || r.name.startsWith(fullPath + "/")) setRole(idx, "name", newPath + r.name.slice(fullPath.length));
     });
     setCollapsed((prev) => {
       const next = { ...prev };
-      if (fullPath in next) { next[newPath] = next[fullPath]; delete next[fullPath]; }
+      if (fullPath in next) {
+        next[newPath] = next[fullPath];
+        delete next[fullPath];
+      }
       return next;
     });
   }
@@ -511,16 +516,23 @@ function RoleTree() {
     useAppStore.getState().addRoleWith(`${fullPath}/New`, "", 4.5, [500]);
   }
 
-  const renderRoleLeaf = useCallback((role: typeof committed[number], idx: number, selected: boolean, _multiDragCount: number, onToggleSel: (id: string, meta: boolean, shift?: boolean) => void) => (
-    <SortableLeafWrapper key={role._id} id={role._id} selected={selected} onToggleSelect={onToggleSel}
-      renderContent={(listeners, attributes) => (
-        /* pb-10 reserves space for the floating toolbar that sits below the card */
-        <div className="pb-10" draggable={false} onDragStart={(e) => e.preventDefault()}>
-          <RoleGroupCard role={role} idx={idx} dragListeners={listeners} dragAttributes={attributes} />
-        </div>
-      )}
-    />
-  ), []);
+  const renderRoleLeaf = useCallback(
+    (role: (typeof committed)[number], idx: number, selected: boolean, _multiDragCount: number, onToggleSel: (id: string, meta: boolean, shift?: boolean) => void) => (
+      <SortableLeafWrapper
+        key={role._id}
+        id={role._id}
+        selected={selected}
+        onToggleSelect={onToggleSel}
+        renderContent={(listeners, attributes) => (
+          /* pb-10 reserves space for the floating toolbar that sits below the card */
+          <div className="pb-10" draggable={false} onDragStart={(e) => e.preventDefault()}>
+            <RoleGroupCard role={role} idx={idx} dragListeners={listeners} dragAttributes={attributes} />
+          </div>
+        )}
+      />
+    ),
+    [],
+  );
 
   const activeRole = !activeGroupPath && activeId ? roles.find((r) => r._id === activeId) : null;
   const activeGroupSegment = activeGroupPath?.split("/").pop();
@@ -546,14 +558,10 @@ function RoleTree() {
           />
         </SortableContext>
         <DragOverlay>
-          {activeRole && (
-            <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary">
-              {activeRole.name}
-            </div>
-          )}
+          {activeRole && <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary">{activeRole.name}</div>}
           {activeGroupSegment && (
             <div className="px-3 py-1.5 rounded-[8px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-secondary flex items-center gap-1.5">
-              <span className="text-text-dim text-[10px]">{committed.filter(r => r.name.startsWith(activeGroupPath! + "/")).length}</span>
+              <span className="text-text-dim text-[10px]">{committed.filter((r) => r.name.startsWith(activeGroupPath! + "/")).length}</span>
               {activeGroupSegment}
             </div>
           )}
@@ -564,9 +572,28 @@ function RoleTree() {
       {selectedIds.size > 0 && (
         <MultiSelectToolbar
           count={selectedIds.size}
-          onGroup={() => { roles.forEach((r, i) => { if (!selectedIds.has(r._id)) return; setRole(i, "name", `Untitled/${r.name.split("/").pop()!}`); }); setSelectedIds(new Set()); }}
-          onUngroup={() => { roles.forEach((r, i) => { if (!selectedIds.has(r._id)) return; setRole(i, "name", r.name.split("/").pop()!); }); setSelectedIds(new Set()); }}
-          onDelete={() => { const idxs = roles.map((r, i) => selectedIds.has(r._id) ? i : -1).filter(i => i >= 0).reverse(); idxs.forEach(i => useAppStore.getState().removeRole(i)); setSelectedIds(new Set()); }}
+          onGroup={() => {
+            roles.forEach((r, i) => {
+              if (!selectedIds.has(r._id)) return;
+              setRole(i, "name", `Untitled/${r.name.split("/").pop()!}`);
+            });
+            setSelectedIds(new Set());
+          }}
+          onUngroup={() => {
+            roles.forEach((r, i) => {
+              if (!selectedIds.has(r._id)) return;
+              setRole(i, "name", r.name.split("/").pop()!);
+            });
+            setSelectedIds(new Set());
+          }}
+          onDelete={() => {
+            const idxs = roles
+              .map((r, i) => (selectedIds.has(r._id) ? i : -1))
+              .filter((i) => i >= 0)
+              .reverse();
+            idxs.forEach((i) => useAppStore.getState().removeRole(i));
+            setSelectedIds(new Set());
+          }}
           onClear={() => setSelectedIds(new Set())}
           onSelectAll={() => setSelectedIds(new Set(roles.map((r) => r._id)))}
         />
@@ -578,48 +605,37 @@ function RoleTree() {
 // ── Suggestion sheets (mirrors ColorsScreen / RolesScreen) ───────────────────
 
 const SUGGESTED_COLORS = [
-  { name: "Brand/Primary",   value: "#0066FF", shorthand: "bp" },
-  { name: "Brand/Accent",    value: "#8B5CF6", shorthand: "ba" },
-  { name: "Brand/Warning",   value: "#F59E0B", shorthand: "bw" },
-  { name: "Brand/Danger",    value: "#EF4444", shorthand: "bd" },
-  { name: "Brand/Success",   value: "#22C55E", shorthand: "bs" },
-  { name: "Neutral/Gray",    value: "#6B7280", shorthand: "ng" },
-  { name: "Neutral/Warm",    value: "#78716C", shorthand: "nw" },
-  { name: "Neutral/Cool",    value: "#64748B", shorthand: "nc" },
-  { name: "Color/Sky",       value: "#0EA5E9", shorthand: "cs" },
-  { name: "Color/Teal",      value: "#14B8A6", shorthand: "ct" },
-  { name: "Color/Indigo",    value: "#6366F1", shorthand: "ci" },
-  { name: "Color/Pink",      value: "#EC4899", shorthand: "cp" },
+  { name: "Brand/Primary", value: "#0066FF", shorthand: "bp" },
+  { name: "Brand/Accent", value: "#8B5CF6", shorthand: "ba" },
+  { name: "Brand/Warning", value: "#F59E0B", shorthand: "bw" },
+  { name: "Brand/Danger", value: "#EF4444", shorthand: "bd" },
+  { name: "Brand/Success", value: "#22C55E", shorthand: "bs" },
+  { name: "Neutral/Gray", value: "#6B7280", shorthand: "ng" },
+  { name: "Neutral/Warm", value: "#78716C", shorthand: "nw" },
+  { name: "Neutral/Cool", value: "#64748B", shorthand: "nc" },
+  { name: "Color/Sky", value: "#0EA5E9", shorthand: "cs" },
+  { name: "Color/Teal", value: "#14B8A6", shorthand: "ct" },
+  { name: "Color/Indigo", value: "#6366F1", shorthand: "ci" },
+  { name: "Color/Pink", value: "#EC4899", shorthand: "cp" },
 ];
 
 const SUGGESTED_ROLES = [
-  { name: "Background",     shorthand: "bg",  minContrast: 1.05, variationTargets: [1, 1.05, 1.1, 1.2, 1.35] },
-  { name: "Surface",        shorthand: "sf",  minContrast: 1.15, variationTargets: [1.35, 1.5, 1.8, 2.2, 2.7] },
-  { name: "Border",         shorthand: "bd",  minContrast: 1.6,  variationTargets: [2.7, 3.2, 4, 4.8, 5.8] },
-  { name: "Fill",           shorthand: "fi",  minContrast: 3,    variationTargets: [2.7, 4, 5.8, 8.5, 11.5] },
-  { name: "Fill/Strong",    shorthand: "fis", minContrast: 4.5,  variationTargets: [4, 5.8, 8.5, 11.5, 14.5] },
-  { name: "Text/Muted",     shorthand: "txm", minContrast: 3,    variationTargets: [7, 8.5, 10, 11.5, 13] },
-  { name: "Text",           shorthand: "tx",  minContrast: 4.5,  variationTargets: [10, 11.5, 13, 14.5, 16] },
-  { name: "Text/Strong",    shorthand: "txs", minContrast: 7,    variationTargets: [13, 14.5, 16, 17.5, 19] },
-  { name: "Interactive",    shorthand: "ia",  minContrast: 3,    variationTargets: [3.5, 4.5, 5.5, 7, 9] },
-  { name: "Focus",          shorthand: "fc",  minContrast: 3,    variationTargets: [3, 4.5, 5.5, 7, 9] },
+  { name: "Background", shorthand: "bg", minContrast: 1.05, variationTargets: [1, 1.05, 1.1, 1.2, 1.35] },
+  { name: "Surface", shorthand: "sf", minContrast: 1.15, variationTargets: [1.35, 1.5, 1.8, 2.2, 2.7] },
+  { name: "Border", shorthand: "bd", minContrast: 1.6, variationTargets: [2.7, 3.2, 4, 4.8, 5.8] },
+  { name: "Fill", shorthand: "fi", minContrast: 3, variationTargets: [2.7, 4, 5.8, 8.5, 11.5] },
+  { name: "Fill/Strong", shorthand: "fis", minContrast: 4.5, variationTargets: [4, 5.8, 8.5, 11.5, 14.5] },
+  { name: "Text/Muted", shorthand: "txm", minContrast: 3, variationTargets: [7, 8.5, 10, 11.5, 13] },
+  { name: "Text", shorthand: "tx", minContrast: 4.5, variationTargets: [10, 11.5, 13, 14.5, 16] },
+  { name: "Text/Strong", shorthand: "txs", minContrast: 7, variationTargets: [13, 14.5, 16, 17.5, 19] },
+  { name: "Interactive", shorthand: "ia", minContrast: 3, variationTargets: [3.5, 4.5, 5.5, 7, 9] },
+  { name: "Focus", shorthand: "fc", minContrast: 3, variationTargets: [3, 4.5, 5.5, 7, 9] },
 ];
 
-function ColorSuggestSheet({ existingNames, onPick, onBlank, onClose }: {
-  existingNames: string[];
-  onPick: (c: typeof SUGGESTED_COLORS[number]) => void;
-  onBlank: () => void;
-  onClose: () => void;
-}) {
+function ColorSuggestSheet({ existingNames, onPick, onBlank, onClose }: { existingNames: string[]; onPick: (c: (typeof SUGGESTED_COLORS)[number]) => void; onBlank: () => void; onClose: () => void }) {
   const available = SUGGESTED_COLORS.filter((c) => !existingNames.includes(c.name));
   return (
-    <SuggestSheet
-      label="Suggested colors"
-      linkLabel="+ Custom"
-      onLink={onBlank}
-      onClose={onClose}
-      empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions added.</div> : undefined}
-    >
+    <SuggestSheet label="Suggested colors" linkLabel="+ Custom" onLink={onBlank} onClose={onClose} empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions added.</div> : undefined}>
       {available.map((c) => (
         <MenuRow key={c.name} onClick={() => onPick(c)}>
           <ColorSwatch color={c.value} size="md" />
@@ -633,26 +649,17 @@ function ColorSuggestSheet({ existingNames, onPick, onBlank, onClose }: {
   );
 }
 
-function RoleSuggestSheet({ existingNames, onPick, onBlank, onClose }: {
-  existingNames: string[];
-  onPick: (r: typeof SUGGESTED_ROLES[number]) => void;
-  onBlank: () => void;
-  onClose: () => void;
-}) {
+function RoleSuggestSheet({ existingNames, onPick, onBlank, onClose }: { existingNames: string[]; onPick: (r: (typeof SUGGESTED_ROLES)[number]) => void; onBlank: () => void; onClose: () => void }) {
   const available = SUGGESTED_ROLES.filter((r) => !existingNames.includes(r.name));
   return (
-    <SuggestSheet
-      label="Suggested roles"
-      linkLabel="+ Custom"
-      onLink={onBlank}
-      onClose={onClose}
-      empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions added.</div> : undefined}
-    >
+    <SuggestSheet label="Suggested roles" linkLabel="+ Custom" onLink={onBlank} onClose={onClose} empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions added.</div> : undefined}>
       {available.map((r) => (
         <MenuRow key={r.name} onClick={() => onPick(r)}>
           <div className="flex flex-col min-w-0">
             <span className="text-[12px] font-semibold text-text-primary truncate">{r.name}</span>
-            <span className="text-[10px] text-text-muted">{r.minContrast}:1 min contrast · {r.variationTargets.length} vars</span>
+            <span className="text-[10px] text-text-muted">
+              {r.minContrast}:1 min contrast · {r.variationTargets.length} vars
+            </span>
           </div>
         </MenuRow>
       ))}
@@ -663,21 +670,19 @@ function RoleSuggestSheet({ existingNames, onPick, onBlank, onClose }: {
 // ── SectionB ──────────────────────────────────────────────────────────────────
 
 function SectionB() {
-  const colors        = useAppStore((s) => s.appState.colors);
-  const roles         = useAppStore((s) => s.appState.roles);
-  const addColor      = useAppStore((s) => s.addColor);
-  const addColorWith  = useAppStore((s) => s.addColorWith);
-  const addRole       = useAppStore((s) => s.addRole);
-  const addRoleWith   = useAppStore((s) => s.addRoleWith);
-  const removeColor   = useAppStore((s) => s.removeColor);
-  const removeRole    = useAppStore((s) => s.removeRole);
+  const colors = useAppStore((s) => s.projectStore.colors);
+  const roles = useAppStore((s) => s.projectStore.roles);
+  const addColor = useAppStore((s) => s.addColor);
+  const addColorWith = useAppStore((s) => s.addColorWith);
+  const addRole = useAppStore((s) => s.addRole);
+  const addRoleWith = useAppStore((s) => s.addRoleWith);
+  const removeColor = useAppStore((s) => s.removeColor);
+  const removeRole = useAppStore((s) => s.removeRole);
 
   const [showColorSuggest, setShowColorSuggest] = useState(false);
-  const [showRoleSuggest,  setShowRoleSuggest]  = useState(false);
+  const [showRoleSuggest, setShowRoleSuggest] = useState(false);
 
-  const hasDemo =
-    colors.some((c) => DEMO_COLORS.some((d) => d.name === c.name)) ||
-    roles.some((r) => DEMO_ROLES.some((d) => d.name === r.name));
+  const hasDemo = colors.some((c) => DEMO_COLORS.some((d) => d.name === c.name)) || roles.some((r) => DEMO_ROLES.some((d) => d.name === r.name));
 
   function loadDemo() {
     for (let i = colors.length - 1; i >= 0; i--) {
@@ -704,11 +709,7 @@ function SectionB() {
         </div>
       )}
 
-      <SplitActionButton
-        label="+ Add Color"
-        onAdd={addColor}
-        onPick={() => setShowColorSuggest(true)}
-      />
+      <SplitActionButton label="+ Add Color" onAdd={addColor} onPick={() => setShowColorSuggest(true)} />
 
       {roles.length > 0 && (
         <div className="flex flex-col gap-1 mt-1">
@@ -717,25 +718,33 @@ function SectionB() {
         </div>
       )}
 
-      <SplitActionButton
-        label="+ Add Role"
-        onAdd={addRole}
-        onPick={() => setShowRoleSuggest(true)}
-      />
+      <SplitActionButton label="+ Add Role" onAdd={addRole} onPick={() => setShowRoleSuggest(true)} />
 
       {showColorSuggest && (
         <ColorSuggestSheet
           existingNames={colors.map((c) => c.name)}
-          onPick={(c) => { addColorWith(c.name, c.value, c.shorthand); setShowColorSuggest(false); }}
-          onBlank={() => { addColor(); setShowColorSuggest(false); }}
+          onPick={(c) => {
+            addColorWith(c.name, c.value, c.shorthand);
+            setShowColorSuggest(false);
+          }}
+          onBlank={() => {
+            addColor();
+            setShowColorSuggest(false);
+          }}
           onClose={() => setShowColorSuggest(false)}
         />
       )}
       {showRoleSuggest && (
         <RoleSuggestSheet
           existingNames={roles.map((r) => r.name)}
-          onPick={(r) => { addRoleWith(r.name, r.shorthand, r.minContrast, r.variationTargets); setShowRoleSuggest(false); }}
-          onBlank={() => { addRole(); setShowRoleSuggest(false); }}
+          onPick={(r) => {
+            addRoleWith(r.name, r.shorthand, r.minContrast, r.variationTargets);
+            setShowRoleSuggest(false);
+          }}
+          onBlank={() => {
+            addRole();
+            setShowRoleSuggest(false);
+          }}
           onClose={() => setShowRoleSuggest(false)}
         />
       )}

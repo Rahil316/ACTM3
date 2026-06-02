@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
-import { useAppStore, makeBootstrapState, ensureIds, ensureVariations } from '../store/appStore';
-import { banner } from '../store/bannerStore';
-import { useUiStore } from '../store/uiStore';
-import { VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from '../store/uiStore';
-import type { PluginToUiMessage, CollectionCheckResultMessage, SyncTally } from '../types/messages';
-import type { AppState, UiPrefs } from '../types/state';
+import { useEffect, useRef } from "react";
+import { useAppStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/appStore";
+import { banner } from "../store/bannerStore";
+import { useUiStore } from "../store/uiStore";
+import { VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
+import type { PluginToUiMessage, CollectionCheckResultMessage, SyncTally } from "../types/messages";
+import type { ProjectStore, UiPrefs } from "../types/state";
 
 // ── Standalone browser mock ──────────────────────────────────────────────────
 // When running in a plain browser (window.parent === window) the Figma plugin
@@ -15,95 +15,107 @@ const isStandalone = window.parent === window;
 function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: string]: unknown } }): void {
   const pm = msg.pluginMessage;
 
-  if (pm.type === 'check-collections') {
+  if (pm.type === "check-collections") {
     setTimeout(() => {
-      window.postMessage({
-        pluginMessage: {
-          type: 'collection-check-result',
-          existing: [],
-          renames: { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } },
-          conflicts: [
-            {
-              tokenRef: 'token:primary/text/default',
-              figmaName: 'Primary/Text/Default-custom-name',
-              suggestedName: 'Primary/Text/Default',
-              type: 'token',
-            },
-          ],
+      window.postMessage(
+        {
+          pluginMessage: {
+            type: "collection-check-result",
+            existing: [],
+            renames: { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } },
+            conflicts: [
+              {
+                tokenRef: "token:primary/text/default",
+                figmaName: "Primary/Text/Default-custom-name",
+                suggestedName: "Primary/Text/Default",
+                type: "token",
+              },
+            ],
+          },
         },
-      }, '*');
+        "*",
+      );
     }, 50);
     return;
   }
 
-  if (pm.type === 'run-creator') {
-    localStorage.setItem('tw_state', JSON.stringify(pm.state));
+  if (pm.type === "run-creator") {
+    localStorage.setItem("tw_state", JSON.stringify(pm.state));
     setTimeout(() => {
-      window.postMessage({
-        pluginMessage: {
-          type: 'finish',
-          tally: { created: 12, updated: 4, renamed: 0, failed: 0 },
-          errors: null,
-          result: null,
+      window.postMessage(
+        {
+          pluginMessage: {
+            type: "finish",
+            tally: { created: 12, updated: 4, renamed: 0, failed: 0 },
+            errors: null,
+            result: null,
+          },
         },
-      }, '*');
+        "*",
+      );
     }, 1000);
     return;
   }
 
-  if (pm.type === 'run-preview') {
+  if (pm.type === "run-preview") {
     setTimeout(() => {
-      window.postMessage({ pluginMessage: { type: 'preview-done' } }, '*');
+      window.postMessage({ pluginMessage: { type: "preview-done" } }, "*");
     }, 800);
     return;
   }
 
-  if (pm.type === 'save-config') {
-    localStorage.setItem('tw_state', JSON.stringify(pm.state));
+  if (pm.type === "save-config") {
+    localStorage.setItem("tw_state", JSON.stringify(pm.state));
     return;
   }
 
-  if (pm.type === 'save-ui-prefs-meta') {
-    localStorage.setItem('uiPrefsMeta', JSON.stringify(pm.prefs));
+  if (pm.type === "save-ui-prefs-meta") {
+    localStorage.setItem("uiPrefsMeta", JSON.stringify(pm.prefs));
     return;
   }
 
-  if (pm.type === 'resize') {
-    localStorage.setItem('uiSize', JSON.stringify({ width: pm.width, height: pm.height }));
+  if (pm.type === "resize") {
+    localStorage.setItem("uiSize", JSON.stringify({ width: pm.width, height: pm.height }));
     return;
   }
 
-  if (pm.type === 'request-processed-data') {
-    import('../lib/colorEngine').then(({ variableMaker, resolveTokenRefBgs, translateLocalBg }) => {
-      const appState = pm.state as any;
+  if (pm.type === "request-processed-data") {
+    import("../lib/colorEngine").then(({ variableMaker, resolveTokenRefBgs, translateLocalBg }) => {
+      const projectStore = pm.state as any;
       const config = {
-        ...appState,
-        roles: (appState.roles ?? []).map((r: any) => ({
+        ...projectStore,
+        roles: (projectStore.roles ?? []).map((r: any) => ({
           ...r,
-          ...translateLocalBg(r.localBg, appState.colors ?? [], appState.themes ?? []),
+          ...translateLocalBg(r.localBg, projectStore.colors ?? [], projectStore.themes ?? []),
         })),
       } as Parameters<typeof variableMaker>[0];
       const pass1 = variableMaker(config);
       const result = resolveTokenRefBgs(config, pass1) ? variableMaker(config) : pass1;
-      window.postMessage({
-        pluginMessage: {
-          type: 'processed-data-response',
-          exportType: pm.exportType,
-          content: JSON.stringify({ scales: result.scales, tokens: result.tokens }, null, 2),
+      window.postMessage(
+        {
+          pluginMessage: {
+            type: "processed-data-response",
+            exportType: pm.exportType,
+            content: JSON.stringify({ scales: result.scales, tokens: result.tokens }, null, 2),
+          },
         },
-      }, '*');
+        "*",
+      );
     });
     return;
   }
 
-  if (pm.type === 'request-export-bundle') {
+  if (pm.type === "request-export-bundle") {
     setTimeout(() => {
-      window.postMessage({
-        pluginMessage: {
-          type: 'export-bundle-response',
-          files: [],
+      window.postMessage(
+        {
+          pluginMessage: {
+            type: "export-bundle-response",
+            files: [],
+          },
         },
-      }, '*');
+        "*",
+      );
     }, 300);
     return;
   }
@@ -113,7 +125,7 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
 if (isStandalone) {
   const _origPost = window.parent.postMessage.bind(window.parent);
   window.parent.postMessage = (data: unknown, ...args: unknown[]) => {
-    if (data && typeof data === 'object' && 'pluginMessage' in (data as object)) {
+    if (data && typeof data === "object" && "pluginMessage" in (data as object)) {
       standaloneHandleOutgoing(data as { pluginMessage: { type: string; [key: string]: unknown } });
       return;
     }
@@ -128,11 +140,11 @@ function bootStandalone(): void {
   const { applyUiPrefs } = useUiStore.getState();
 
   // Load saved state
-  const raw = localStorage.getItem('tw_state');
+  const raw = localStorage.getItem("tw_state");
   if (raw) {
     try {
-      const parsed = JSON.parse(raw) as Partial<AppState>;
-      setSavedState(parsed as AppState);
+      const parsed = JSON.parse(raw) as Partial<ProjectStore>;
+      setSavedState(parsed as ProjectStore);
       loadState({ ...JSON.parse(JSON.stringify(makeBootstrapState())), ...parsed });
     } catch {
       // Corrupt storage — start fresh
@@ -140,12 +152,12 @@ function bootStandalone(): void {
   }
 
   // Load ui prefs
-  const rawPrefs = localStorage.getItem('uiPrefsMeta');
+  const rawPrefs = localStorage.getItem("uiPrefsMeta");
   if (rawPrefs) {
     try {
       const prefs = JSON.parse(rawPrefs) as Partial<UiPrefs>;
       const safePrefs: Partial<UiPrefs> = {};
-      if (prefs.scale !== undefined && VALID_SCALES.includes(prefs.scale as typeof VALID_SCALES[number])) {
+      if (prefs.scale !== undefined && VALID_SCALES.includes(prefs.scale as (typeof VALID_SCALES)[number])) {
         safePrefs.scale = prefs.scale;
       }
       if (prefs.theme !== undefined && VALID_THEMES.includes(prefs.theme)) {
@@ -163,28 +175,24 @@ function bootStandalone(): void {
 
 // ── Incoming message dispatcher ───────────────────────────────────────────────
 
-function handleMessage(
-  msg: PluginToUiMessage,
-  callbacks: BridgeCallbacks,
-): void {
+function handleMessage(msg: PluginToUiMessage, callbacks: BridgeCallbacks): void {
   const { loadState, setSavedState, markClean } = useAppStore.getState();
   const { applyUiPrefs, openOverlay } = useUiStore.getState();
 
   switch (msg.type) {
-
-    case 'load-config': {
+    case "load-config": {
       const isFirstLaunch = !msg.state || Object.keys(msg.state).length === 0;
       if (isFirstLaunch) {
-        openOverlay('quick-start');
+        openOverlay("quick-start");
       } else {
-        const merged = { ...JSON.parse(JSON.stringify(makeBootstrapState())), ...(msg.state as Partial<AppState>) } as AppState;
+        const merged = { ...JSON.parse(JSON.stringify(makeBootstrapState())), ...(msg.state as Partial<ProjectStore>) } as ProjectStore;
         ensureIds(merged);
         ensureVariations(merged);
         // savedState = last synced baseline (for rename detection).
         // Falls back to the UI state itself when no separate sync record exists
         // (first run after this change, or fresh install).
         if (msg.syncedState && Object.keys(msg.syncedState).length > 0) {
-          const syncedMerged = { ...JSON.parse(JSON.stringify(makeBootstrapState())), ...(msg.syncedState as Partial<AppState>) } as AppState;
+          const syncedMerged = { ...JSON.parse(JSON.stringify(makeBootstrapState())), ...(msg.syncedState as Partial<ProjectStore>) } as ProjectStore;
           ensureIds(syncedMerged);
           ensureVariations(syncedMerged);
           setSavedState(syncedMerged);
@@ -196,10 +204,10 @@ function handleMessage(
       break;
     }
 
-    case 'load-ui-prefs-meta': {
+    case "load-ui-prefs-meta": {
       const p = msg.prefs;
       const safePrefs: Partial<UiPrefs> = {};
-      if (p.scale !== undefined && VALID_SCALES.includes(p.scale as typeof VALID_SCALES[number])) {
+      if (p.scale !== undefined && VALID_SCALES.includes(p.scale as (typeof VALID_SCALES)[number])) {
         safePrefs.scale = p.scale;
       }
       if (p.theme !== undefined && VALID_THEMES.includes(p.theme)) {
@@ -212,64 +220,64 @@ function handleMessage(
       break;
     }
 
-    case 'collection-check-result': {
+    case "collection-check-result": {
       callbacks.onCollectionCheckResult?.(msg);
       break;
     }
 
-    case 'selection-change': {
+    case "selection-change": {
       useUiStore.getState().setIsPreviewSelected(msg.isPreviewSelected);
       break;
     }
 
-    case 'finish': {
-      const { appState } = useAppStore.getState();
-      setSavedState(appState);
+    case "finish": {
+      const { projectStore } = useAppStore.getState();
+      setSavedState(projectStore);
       markClean();
       callbacks.onFinish?.(msg.tally, msg.errors);
       break;
     }
 
-    case 'capabilities': {
+    case "capabilities": {
       useUiStore.getState().setMultiMode(msg.capabilities.multiMode);
       if (!msg.capabilities.multiMode) {
         banner.show({
-          id: 'multi-mode-disabled',
-          type: 'warning',
-          title: 'Multi-mode not available',
-          message: 'Your Figma plan does not support multi-mode variables. Themes will be created as separate collections.',
+          id: "multi-mode-disabled",
+          type: "warning",
+          title: "Multi-mode not available",
+          message: "Your Figma plan does not support multi-mode variables. Themes will be created as separate collections.",
         });
         callbacks.onMultiModeDisabled?.();
       }
       break;
     }
 
-    case 'processed-data-response': {
+    case "processed-data-response": {
       callbacks.onProcessedData?.(msg.exportType, msg.content);
       break;
     }
 
-    case 'export-bundle-response': {
+    case "export-bundle-response": {
       callbacks.onExportBundle?.(msg.files);
       break;
     }
 
-    case 'preview-done': {
+    case "preview-done": {
       callbacks.onPreviewDone?.();
       break;
     }
 
-    case 'preview-interrupted': {
+    case "preview-interrupted": {
       callbacks.onPreviewInterrupted?.();
       break;
     }
 
-    case 'error': {
+    case "error": {
       callbacks.onError?.(msg.message);
       break;
     }
 
-    case 'warning': {
+    case "warning": {
       callbacks.onWarning?.(msg.message);
       break;
     }
@@ -309,41 +317,41 @@ export function useFigmaBridge(callbacks: BridgeCallbacks = {}): void {
       handleMessage(msg, cbRef.current);
     };
 
-    window.addEventListener('message', handler);
+    window.addEventListener("message", handler);
 
     if (!isStandalone) {
-      parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
+      parent.postMessage({ pluginMessage: { type: "ui-ready" } }, "*");
     }
 
-    // Auto-save appState to Figma plugin storage whenever it changes.
+    // Auto-save projectStore to Figma plugin storage whenever it changes.
     // Debounced so rapid edits (typing a color name letter-by-letter) don't
     // flood the Figma sandbox with serialization work.
     // On cleanup (plugin close), the pending timer is flushed immediately so
     // changes are never lost when the user closes before the debounce fires.
     let saveTimer: ReturnType<typeof setTimeout> | null = null;
-    let pendingState: ReturnType<typeof useAppStore.getState>['appState'] | null = null;
+    let pendingState: ReturnType<typeof useAppStore.getState>["projectStore"] | null = null;
 
     const unsubscribe = useAppStore.subscribe((state, prev) => {
-      if (state.appState === prev.appState) return;
-      pendingState = state.appState;
+      if (state.projectStore === prev.projectStore) return;
+      pendingState = state.projectStore;
       if (saveTimer) clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
-        parent.postMessage({ pluginMessage: { type: 'save-config', state: state.appState } }, '*');
+        parent.postMessage({ pluginMessage: { type: "save-config", state: state.projectStore } }, "*");
         pendingState = null;
         saveTimer = null;
       }, 500);
     });
 
     return () => {
-      window.removeEventListener('message', handler);
+      window.removeEventListener("message", handler);
       unsubscribe();
       if (saveTimer) {
         clearTimeout(saveTimer);
         if (pendingState) {
-          parent.postMessage({ pluginMessage: { type: 'save-config', state: pendingState } }, '*');
+          parent.postMessage({ pluginMessage: { type: "save-config", state: pendingState } }, "*");
         }
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

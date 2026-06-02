@@ -1,89 +1,35 @@
-import {
-  contrastRating,
-  contrastRatio,
-  hexToHue,
-  hexToSat,
-  hslToHex,
-  normalizeHex,
-  relLum,
-  seriesMaker,
-  shortestHueDiff,
-  srgbDelinearize,
-  srgbLinearize,
-} from "./clrUtils";
+import { contrastRating, contrastRatio, hexToHue, hexToSat, hslToHex, normalizeHex, relLum, seriesMaker, shortestHueDiff, srgbDelinearize, srgbLinearize } from "./clrUtils";
 
 import type { ContrastRating } from "./clrUtils";
+import type { Color, Theme, Variation, Role, ScaleAlgorithm, SolverMode, ScaleStepToken } from "./types";
 
-// ── Public types ──────────────────────────────────────────────────────────────
+export type { ScaleAlgorithm, SolverMode };
 
-export type ScaleAlgorithm = "Linear" | "Uniform" | "Natural" | "Expressive" | "Symmetric" | "OKLCH" | "Material";
-export type SolverMode = "natural" | "saturated" | "luminance" | "hue-locked" | "chroma-maximized";
-
-export interface EngineColor {
-  name: string;
-  shorthand: string;
-  value: string;
-  _id?: string;
-  description?: string;
-  scaleAlgorithm?: ScaleAlgorithm;
-  solverMode?: SolverMode;
-}
-
-export interface EngineTheme {
-  name: string;
-  bg: string;
-}
-
-export interface EngineVariation {
-  name: string;
-  shorthand?: string;
-}
-
-export interface EngineRole {
-  name: string;
-  shorthand?: string;
-  description?: string;
-  mappingMethod?: "contrast" | "index";
-  variationTargets?: number[];
-  customVariationList?: boolean;
-  customVariations?: EngineVariation[];
-  solverMode?: SolverMode;
-  scaleAlgorithm?: ScaleAlgorithm;
-  scopedColorIds?: string[] | null;
-  localBg?: Record<string, string> | null;                        // theme-name → resolved hex (hex/color/fixed-token kinds)
-  localBgTokenRef?: string | null;                               // fixed token ref — resolved post-engine pass-1
-  localBgDynamicRef?: string | null;                             // dynamic token ref with [color] placeholder — resolved post-engine pass-1
-  localBgPerColor?: Record<string, Record<string, string>> | null; // colorName → { theme-name → hex } (dynamic token kind)
-}
-
-export interface EngineConfig {
-  colors: EngineColor[];
-  themes: EngineTheme[];
-  roles: EngineRole[];
-  variations: EngineVariation[];
+// variableMaker accepts ProjectStore directly — imported lazily via the type-only
+// import below to avoid a circular dependency (shared ← ui).
+// The structural subset used by the engine:
+//   colors, themes, roles, variations, scaleLength, scaleAlgorithm, pluginMode,
+//   scaleSteps, useUniformAlgorithm, algorithmScopeLevel, solverMode
+export type EngineInput = {
+  colors: Color[];
+  themes: Theme[];
+  roles: Role[];
+  variations: Variation[] | null;
   scaleLength: number;
   scaleAlgorithm: ScaleAlgorithm;
-  scaleStepNames?: (string | number)[];
-  pluginMode: "scale" | "direct";
+  pluginMode: string;
+  scaleSteps?: Array<{ name: string; shorthand: string }> | string[] | null;
   useUniformAlgorithm?: boolean;
-  algorithmScopeLevel?: "color" | "role";
+  algorithmScopeLevel?: string;
   solverMode?: SolverMode;
-}
+};
 
 export interface ContrastInfo {
   ratio: number | null;
   rating: ContrastRating | null;
 }
 
-export interface ScaleStep {
-  value: string;
-  stepName: string;
-  shorthand: string;
-  description: string;
-  contrast: Record<string, ContrastInfo>;
-}
-
-export type ScaleCollection = Record<string, Record<string | number, ScaleStep>>;
+export type ScaleCollection = Record<string, Record<string | number, ScaleStepToken>>;
 
 export interface TokenEntry {
   tokenName: string;
@@ -135,7 +81,11 @@ const TONAL_SCALE_ALGO: Record<ScaleAlgorithm, AlgoFn> = {
   Uniform: (hue, satu, N, stepLum, findL) => {
     const out: string[] = [];
     for (let i = 0; i < N; i++) {
-      const L = findL(stepLum(i), () => satu, () => hue);
+      const L = findL(
+        stepLum(i),
+        () => satu,
+        () => hue,
+      );
       out.push(hslToHex(hue, satu, L) || "#000000");
     }
     return out;
@@ -178,7 +128,11 @@ const TONAL_SCALE_ALGO: Record<ScaleAlgorithm, AlgoFn> = {
       else if (i <= mid && mid > 0) u = uMax - ((uMax - uSrc) * i) / mid;
       else u = uSrc - ((uSrc - uMin) * (i - mid)) / (N - 1 - mid);
       const targetLum = Math.max(0.0001, Math.exp(Math.min(uMax, Math.max(uMin, u))) - 0.05);
-      const L = findL(targetLum, () => satu, () => hue);
+      const L = findL(
+        targetLum,
+        () => satu,
+        () => hue,
+      );
       out.push(hslToHex(hue, satu, L) || "#000000");
     }
     return out;
@@ -189,7 +143,9 @@ const TONAL_SCALE_ALGO: Record<ScaleAlgorithm, AlgoFn> = {
     const out: string[] = [];
     for (let i = 0; i < N; i++) {
       const targetLum = stepLum(i);
-      let lo = 0, hi = 1, oL = 0.5;
+      let lo = 0,
+        hi = 1,
+        oL = 0.5;
       for (let j = 0; j < 40; j++) {
         const mid = (lo + hi) / 2;
         const lum = relLum(oklchToHex(mid, srcC, srcH));
@@ -208,7 +164,9 @@ const TONAL_SCALE_ALGO: Record<ScaleAlgorithm, AlgoFn> = {
     const out: string[] = [];
     for (let i = 0; i < N; i++) {
       const targetLum = stepLum(i);
-      let lo = 0, hi = 100, tone = 50;
+      let lo = 0,
+        hi = 100,
+        tone = 50;
       for (let j = 0; j < 40; j++) {
         const mid = (lo + hi) / 2;
         const lum = relLum(hctToHex(srcH, srcC, mid));
@@ -241,7 +199,9 @@ export function scaleMaker(hexIn: string, scaleLength: number, scaleAlgo?: Scale
   };
 
   const findL: FindLFn = (targetLum, getS, getH) => {
-    let lo = 0, hi = 100, L = 50;
+    let lo = 0,
+      hi = 100,
+      L = 50;
     for (let j = 0; j < 30; j++) {
       const mid = (lo + hi) / 2;
       const lum = relLum(hslToHex(getH(mid), getS(mid), mid) ?? "#000000");
@@ -259,14 +219,13 @@ export function scaleMaker(hexIn: string, scaleLength: number, scaleAlgo?: Scale
 
 // ── TOKEN PIPELINE ────────────────────────────────────────────────────────────
 
-export function variableMaker(config: EngineConfig): EngineResult {
+export function variableMaker(config: EngineInput): EngineResult {
   const { colors, themes, scaleLength } = config;
   const errors: EngineErrors = { critical: [], warnings: [], notices: [] };
+  const variations: Variation[] = config.variations ?? [];
+  const stepNames: string[] | null = !config.scaleSteps ? null : (config.scaleSteps as Array<unknown>).every((s) => typeof s === "string") ? (config.scaleSteps as string[]) : (config.scaleSteps as Array<{ name: string }>).map((s) => s.name);
 
-  const scales: ScaleCollection =
-    config.pluginMode !== "direct"
-      ? _generateScales(colors, scaleLength, config.scaleAlgorithm, config.scaleStepNames, themes, config.useUniformAlgorithm ?? false, errors)
-      : Object.create(null);
+  const scales: ScaleCollection = config.pluginMode !== "direct" ? _generateScales(colors, scaleLength, config.scaleAlgorithm, stepNames, themes, config.useUniformAlgorithm ?? false, errors) : Object.create(null);
 
   const tokens: EngineResult["tokens"] = {};
   for (const mode of themes) tokens[mode.name.toLowerCase()] = {};
@@ -276,26 +235,18 @@ export function variableMaker(config: EngineConfig): EngineResult {
     for (const color of colors) {
       themeTokens[color.name] = {};
       if (config.pluginMode === "direct") {
-        _solveDirectMode(color, mode, config, themeTokens[color.name], errors);
+        _solveDirectMode(color, mode, config, variations, themeTokens[color.name], errors);
       } else {
-        _processScaleMode(color, mode, config, scales, themeTokens[color.name], errors);
+        _processScaleMode(color, mode, config, scales, stepNames ?? seriesMaker(scaleLength).map(String), variations, themeTokens[color.name], errors);
       }
     }
   }
   return { scales, tokens, errors };
 }
 
-function _generateScales(
-  colors: EngineColor[],
-  scaleLength: number,
-  scaleAlgo: ScaleAlgorithm,
-  stepNames: (string | number)[] | undefined,
-  themes: EngineTheme[],
-  useUniformAlgorithm: boolean,
-  errors: EngineErrors,
-): ScaleCollection {
+function _generateScales(colors: Color[], scaleLength: number, scaleAlgo: ScaleAlgorithm, stepNames: string[] | null | undefined, themes: Theme[], useUniformAlgorithm: boolean, errors: EngineErrors): ScaleCollection {
   const collection: ScaleCollection = Object.create(null);
-  const names = stepNames || seriesMaker(scaleLength);
+  const names: string[] = stepNames || seriesMaker(scaleLength).map(String);
   const themeBgs = themes.map((t) => ({ key: t.name.toLowerCase(), bg: normalizeHex(t.bg) || "#FFFFFF" }));
   for (const color of colors) {
     const colorAlgo = !useUniformAlgorithm && color.scaleAlgorithm ? color.scaleAlgorithm : scaleAlgo;
@@ -304,7 +255,7 @@ function _generateScales(
       errors.critical.push(`Color "${color.name}" has an invalid hex value "${color.value}" — scale generation aborted for this color.`);
       continue;
     }
-    const scale: Record<string | number, ScaleStep> = Object.create(null);
+    const scale: Record<string | number, ScaleStepToken> = Object.create(null);
     collection[color.name] = scale;
     for (let i = 0; i < scaleLength; i++) {
       const value = normalizeHex(scaleData[i]) || "#000000";
@@ -315,6 +266,7 @@ function _generateScales(
       }
       scale[step] = {
         value,
+        _id: "",
         stepName: `${color.name}-${step}`,
         shorthand: `${color.shorthand}-${step}`,
         description: color.description || "",
@@ -325,36 +277,27 @@ function _generateScales(
   return collection;
 }
 
-function _getSolverMode(config: EngineConfig, color: EngineColor, role: EngineRole | null): SolverMode {
+function _getSolverMode(config: EngineInput, color: Color, role: Role | null): SolverMode {
   if (config.useUniformAlgorithm !== false) return config.solverMode || "natural";
   if (config.algorithmScopeLevel === "role") return (role && role.solverMode) || config.solverMode || "natural";
   return color.solverMode || config.solverMode || "natural";
 }
 
-function _solveDirectMode(
-  color: EngineColor,
-  mode: EngineTheme,
-  config: EngineConfig,
-  groupOutput: Record<number, Record<number, TokenEntry>>,
-  errors: EngineErrors,
-): void {
+function _solveDirectMode(color: Color, mode: Theme, config: EngineInput, globalVariations: Variation[], groupOutput: Record<number, Record<number, TokenEntry>>, errors: EngineErrors): void {
   const modeName = mode.name.toLowerCase();
 
   for (let ri = 0; ri < config.roles.length; ri++) {
     const role = config.roles[ri];
     if (role.scopedColorIds != null && !role.scopedColorIds.includes(color._id || color.name)) continue;
-    const perColorBg = role.localBgPerColor?.[color.name] ?? role.localBgPerColor?.[color._id ?? ''];
-    const bgHex = (perColorBg && perColorBg[modeName]) ?? (role.localBg && role.localBg[modeName]) ?? mode.bg;
+    const perColorBg = role.localBgPerColor?.[color.name] ?? role.localBgPerColor?.[color._id ?? ""];
+    const bgHex = (perColorBg && perColorBg[modeName]) ?? (role.localBgResolved && role.localBgResolved[modeName]) ?? mode.bg;
     const roleOutput: Record<number, TokenEntry> = (groupOutput[ri] = {});
     const solverMode = _getSolverMode(config, color, role);
-    const variations =
-      role.customVariationList && role.customVariations && role.customVariations.length
-        ? role.customVariations
-        : config.variations;
-    const targets = role.variationTargets || variations.map((_, i) => [1.5, 3, 4.5, 7, 12][i] || 1.5 + i * 1.5);
+    const roleVariations = role.variations ?? globalVariations;
 
-    targets.forEach((targetContrast, vi) => {
-      const variation = variations[vi]?.name ?? String(vi);
+    roleVariations.forEach((v, vi) => {
+      const targetContrast = v.target ?? [1.5, 3, 4.5, 7, 12][vi] ?? 4.5;
+      const variation = v.name ?? String(vi);
       const solved = solveColorForContrast(color.value, targetContrast, bgHex, solverMode);
       if (solved.warning) errors.warnings.push({ color: color.name, role: role.name, variation, theme: modeName, warning: solved.warning });
       if (solved.chromaReduced) errors.notices.push({ color: color.name, role: role.name, variation, theme: modeName, notice: "Chroma reduced to fit gamut." });
@@ -374,52 +317,32 @@ function _solveDirectMode(
   }
 }
 
-function _processScaleMode(
-  color: EngineColor,
-  mode: EngineTheme,
-  config: EngineConfig,
-  scales: ScaleCollection,
-  groupOutput: Record<number, Record<number, TokenEntry>>,
-  errors: EngineErrors,
-): void {
+function _processScaleMode(color: Color, mode: Theme, config: EngineInput, scales: ScaleCollection, stepNames: string[], globalVariations: Variation[], groupOutput: Record<number, Record<number, TokenEntry>>, errors: EngineErrors): void {
   const modeName = mode.name.toLowerCase();
   const scale = scales[color.name];
-  const stepNames = config.scaleStepNames || seriesMaker(config.scaleLength);
 
   for (let ri = 0; ri < config.roles.length; ri++) {
     const role = config.roles[ri];
     if (role.scopedColorIds != null && !role.scopedColorIds.includes(color._id || color.name)) continue;
-    const perColorBg = role.localBgPerColor?.[color.name] ?? role.localBgPerColor?.[color._id ?? ''];
-    const effectiveBg = (perColorBg && perColorBg[modeName]) ?? (role.localBg && role.localBg[modeName]) ?? mode.bg;
+    const perColorBg = role.localBgPerColor?.[color.name] ?? role.localBgPerColor?.[color._id ?? ""];
+    const effectiveBg = (perColorBg && perColorBg[modeName]) ?? (role.localBgResolved && role.localBgResolved[modeName]) ?? mode.bg;
     const isDark = (relLum(normalizeHex(effectiveBg) || "#FFFFFF") ?? 1) < 0.4;
     const roleOutput: Record<number, TokenEntry> = (groupOutput[ri] = {});
-    const variations =
-      role.customVariationList && role.customVariations && role.customVariations.length
-        ? role.customVariations
-        : config.variations;
+    const roleVariations = role.variations ?? globalVariations;
 
     if (role.mappingMethod === "index") {
-      _mapByIndex(color, role, variations, scale, stepNames, modeName, roleOutput);
+      _mapByIndex(color, role, roleVariations, scale, stepNames, modeName, roleOutput);
     } else {
-      _mapByScaleContrast(color, role, variations, scale, stepNames, modeName, effectiveBg, isDark, roleOutput, errors);
+      _mapByScaleContrast(color, role, roleVariations, scale, stepNames, modeName, effectiveBg, isDark, roleOutput, errors);
     }
   }
 }
 
-function _mapByIndex(
-  color: EngineColor,
-  role: EngineRole,
-  variations: EngineVariation[],
-  scale: Record<string | number, ScaleStep>,
-  stepNames: (string | number)[],
-  modeName: string,
-  output: Record<number, TokenEntry>,
-): void {
-  const targets = role.variationTargets || variations.map((_, i) => Math.floor((stepNames.length * i) / Math.max(1, variations.length - 1)));
-  variations.forEach((_, vi) => {
-    const idx = Math.max(0, Math.min(stepNames.length - 1, parseInt(String(targets[vi]), 10) || 0));
+function _mapByIndex(color: Color, role: Role, variations: Variation[], scale: Record<string | number, ScaleStepToken>, stepNames: string[], modeName: string, output: Record<number, TokenEntry>): void {
+  variations.forEach((v, vi) => {
+    const idx = Math.max(0, Math.min(stepNames.length - 1, parseInt(String(v.target ?? Math.floor((stepNames.length * vi) / Math.max(1, variations.length - 1))), 10) || 0));
     const data = scale[stepNames[idx]];
-    const variation = variations[vi]?.name ?? String(vi);
+    const variation = v.name ?? String(vi);
     output[vi] = {
       tokenName: `${color.name}-${role.name}-${variation}`,
       color: color.name,
@@ -434,11 +357,11 @@ function _mapByIndex(
 }
 
 function _mapByScaleContrast(
-  color: EngineColor,
-  role: EngineRole,
-  variations: EngineVariation[],
-  scale: Record<string | number, ScaleStep>,
-  stepNames: (string | number)[],
+  color: Color,
+  role: Role,
+  variations: Variation[],
+  scale: Record<string | number, ScaleStepToken>,
+  stepNames: string[],
   modeName: string,
   effectiveBg: string,
   isDark: boolean,
@@ -447,28 +370,38 @@ function _mapByScaleContrast(
 ): void {
   // effectiveBg is already resolved: localBgPerColor > localBg > theme.bg.
   // Always contrast against it — no flag needed.
-  const getContrast = (step: string | number): number =>
-    contrastRatio(scale[step].value, effectiveBg) ?? 0;
+  const getContrast = (step: string | number): number => contrastRatio(scale[step].value, effectiveBg) ?? 0;
 
-  variations.forEach((_, vi) => {
-    const variation = variations[vi]?.name ?? String(vi);
-    const target = parseFloat(String(role.variationTargets && role.variationTargets[vi])) || 4.5;
+  variations.forEach((v, vi) => {
+    const variation = v.name ?? String(vi);
+    const target = v.target ?? 4.5;
     let bestIdx = isDark ? stepNames.length - 1 : 0;
     let found = false;
     if (isDark) {
       for (let i = stepNames.length - 1; i >= 0; i--) {
-        if (getContrast(stepNames[i]) >= target) { bestIdx = i; found = true; break; }
+        if (getContrast(stepNames[i]) >= target) {
+          bestIdx = i;
+          found = true;
+          break;
+        }
       }
     } else {
       for (let i = 0; i < stepNames.length; i++) {
-        if (getContrast(stepNames[i]) >= target) { bestIdx = i; found = true; break; }
+        if (getContrast(stepNames[i]) >= target) {
+          bestIdx = i;
+          found = true;
+          break;
+        }
       }
     }
     if (!found) {
       let maxC = -1;
       stepNames.forEach((n, i) => {
         const c = getContrast(n);
-        if (c > maxC) { maxC = c; bestIdx = i; }
+        if (c > maxC) {
+          maxC = c;
+          bestIdx = i;
+        }
       });
       errors.warnings.push({ color: color.name, role: role.name, variation, theme: modeName, warning: `Target contrast ${target} not achievable. Using closest (${maxC.toFixed(2)}).` });
     }
@@ -505,11 +438,7 @@ function _lr2h(r: number, g: number, b: number): string {
 }
 
 function _m3(m: Mat3, v: Vec3): Vec3 {
-  return [
-    m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2],
-    m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2],
-    m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2],
-  ];
+  return [m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2], m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2], m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2]];
 }
 
 const _M1: Mat3 = [
@@ -533,7 +462,11 @@ const _M2i: Mat3 = [
   [1.0, -0.0894841775, -1.291485548],
 ];
 
-export interface OklchColor { L: number; C: number; H: number }
+export interface OklchColor {
+  L: number;
+  C: number;
+  H: number;
+}
 
 export function hexToOklch(hex: string): OklchColor {
   const [r, g, b] = _h2lr(hex);
@@ -563,30 +496,57 @@ const _XL: Mat3 = [
 ];
 
 interface ViewingConditions {
-  F: number; c: number; Nc: number; Nbb: number; Ncb: number;
-  FL: number; n: number; z: number; Aw: number; D: number;
+  F: number;
+  c: number;
+  Nc: number;
+  Nbb: number;
+  Ncb: number;
+  FL: number;
+  n: number;
+  z: number;
+  Aw: number;
+  D: number;
   Drgb: number[];
-  hpe: Mat3; cat: Mat3; ci: Mat3; hpi: Mat3;
+  hpe: Mat3;
+  cat: Mat3;
+  ci: Mat3;
+  hpi: Mat3;
   ad: (c2: number) => number;
 }
 
 const _VC: ViewingConditions = (() => {
   const W: Vec3 = [95.047, 100, 108.883];
   const aL = (200 / Math.PI) * Math.pow(66 / 116, 3);
-  const F = 1, c = 0.69, Nc = 1;
+  const F = 1,
+    c = 0.69,
+    Nc = 1;
   const k = 1 / (5 * aL + 1);
   const FL = 0.2 * k ** 4 * (5 * aL) + 0.1 * (1 - k ** 4) ** 2 * (5 * aL) ** (1 / 3);
   const n = Math.pow(66 / 116, 3);
-  const z = 1.48 + Math.sqrt(50 * n), Nbb = 0.725 / n ** 0.2, Ncb = Nbb;
-  const hpe: Mat3 = [[0.38971, 0.68898, -0.07868], [-0.22981, 1.1834, 0.04641], [0, 0, 1]];
-  const cat: Mat3 = [[0.7328, 0.4296, -0.1624], [-0.7036, 1.6975, 0.0061], [0.003, 0.0136, 0.9834]];
-  const ci: Mat3 = [[1.0961238208, -0.2788690002, 0.1827452039], [0.4543690419, 0.4735331543, 0.0720978039], [-0.0096276087, -0.0056980312, 1.0153256399]];
-  const hpi: Mat3 = [[1.9101968341, -1.1121238928, 0.2019079568], [0.3709500882, 0.6290542574, -0.0000080551], [0, 0, 1]];
-  const m3 = (m: Mat3, v: Vec3): Vec3 => [
-    m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2],
-    m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2],
-    m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2],
+  const z = 1.48 + Math.sqrt(50 * n),
+    Nbb = 0.725 / n ** 0.2,
+    Ncb = Nbb;
+  const hpe: Mat3 = [
+    [0.38971, 0.68898, -0.07868],
+    [-0.22981, 1.1834, 0.04641],
+    [0, 0, 1],
   ];
+  const cat: Mat3 = [
+    [0.7328, 0.4296, -0.1624],
+    [-0.7036, 1.6975, 0.0061],
+    [0.003, 0.0136, 0.9834],
+  ];
+  const ci: Mat3 = [
+    [1.0961238208, -0.2788690002, 0.1827452039],
+    [0.4543690419, 0.4735331543, 0.0720978039],
+    [-0.0096276087, -0.0056980312, 1.0153256399],
+  ];
+  const hpi: Mat3 = [
+    [1.9101968341, -1.1121238928, 0.2019079568],
+    [0.3709500882, 0.6290542574, -0.0000080551],
+    [0, 0, 1],
+  ];
+  const m3 = (m: Mat3, v: Vec3): Vec3 => [m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2], m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2], m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2]];
   const D = F * (1 - (1 / 3.6) * Math.exp((-aL - 42) / 92));
   const rW = m3(cat, W.map((v) => v / 100) as Vec3);
   const Drgb = rW.map((v) => D / v + 1 - D);
@@ -598,15 +558,15 @@ const _VC: ViewingConditions = (() => {
   return { F, c, Nc, Nbb, Ncb, FL, n, z, Aw: (2 * aW[0] + aW[1] + 0.05 * aW[2] - 0.305) * Nbb, D, Drgb, hpe, cat, ci, hpi, ad };
 })();
 
-export interface HctColor { h: number; c: number; t: number }
+export interface HctColor {
+  h: number;
+  c: number;
+  t: number;
+}
 
 function _x2hct(X: number, Y: number, Z: number): HctColor {
   const v = _VC;
-  const m3 = (m: Mat3, v2: Vec3): Vec3 => [
-    m[0][0] * v2[0] + m[0][1] * v2[1] + m[0][2] * v2[2],
-    m[1][0] * v2[0] + m[1][1] * v2[1] + m[1][2] * v2[2],
-    m[2][0] * v2[0] + m[2][1] * v2[1] + m[2][2] * v2[2],
-  ];
+  const m3 = (m: Mat3, v2: Vec3): Vec3 => [m[0][0] * v2[0] + m[0][1] * v2[1] + m[0][2] * v2[2], m[1][0] * v2[0] + m[1][1] * v2[1] + m[1][2] * v2[2], m[2][0] * v2[0] + m[2][1] * v2[1] + m[2][2] * v2[2]];
   const rgb = m3(v.cat, [X, Y, Z]).map((c2, i) => c2 * v.Drgb[i]) as Vec3;
   const rA = m3(v.hpe, m3(v.ci, rgb)).map(v.ad);
   const p2 = (2 * rA[0] + rA[1] + 0.05 * rA[2] - 0.305) * v.Nbb;
@@ -629,11 +589,7 @@ export function hexToHct(hex: string): HctColor {
 
 function _jFromTone(tone: number): number {
   const v = _VC;
-  const m3 = (m: Mat3, v2: Vec3): Vec3 => [
-    m[0][0] * v2[0] + m[0][1] * v2[1] + m[0][2] * v2[2],
-    m[1][0] * v2[0] + m[1][1] * v2[1] + m[1][2] * v2[2],
-    m[2][0] * v2[0] + m[2][1] * v2[1] + m[2][2] * v2[2],
-  ];
+  const m3 = (m: Mat3, v2: Vec3): Vec3 => [m[0][0] * v2[0] + m[0][1] * v2[1] + m[0][2] * v2[2], m[1][0] * v2[0] + m[1][1] * v2[1] + m[1][2] * v2[2], m[2][0] * v2[0] + m[2][1] * v2[1] + m[2][2] * v2[2]];
   if (tone <= 0) return 0;
   if (tone >= 100) return 100;
   const Y = tone > 8 ? Math.pow((tone + 16) / 116, 3) : tone / 903.3;
@@ -644,17 +600,14 @@ function _jFromTone(tone: number): number {
 
 function _hctRgbOrNull(hue: number, ch: number, J: number): Vec3 | null {
   const v = _VC;
-  const m3 = (m: Mat3, v2: Vec3): Vec3 => [
-    m[0][0] * v2[0] + m[0][1] * v2[1] + m[0][2] * v2[2],
-    m[1][0] * v2[0] + m[1][1] * v2[1] + m[1][2] * v2[2],
-    m[2][0] * v2[0] + m[2][1] * v2[1] + m[2][2] * v2[2],
-  ];
+  const m3 = (m: Mat3, v2: Vec3): Vec3 => [m[0][0] * v2[0] + m[0][1] * v2[1] + m[0][2] * v2[2], m[1][0] * v2[0] + m[1][1] * v2[1] + m[1][2] * v2[2], m[2][0] * v2[0] + m[2][1] * v2[1] + m[2][2] * v2[2]];
   if (J <= 0) return null;
   const ta = ch > 0 ? Math.pow(ch / Math.sqrt(J / 100), 1 / 0.9) / Math.pow(1.64 - Math.pow(0.29, v.n), 0.73) : 0;
   const hr = (hue * Math.PI) / 180;
   const p1 = (50000 / 13) * v.Nc * v.Ncb;
   const p2 = (Math.pow(J / 100, 1 / (v.c * v.z)) * v.Aw) / v.Nbb + 0.305;
-  let a = 0, b = 0;
+  let a = 0,
+    b = 0;
   if (ta > 0) {
     const g = (23 * (p2 + 0.305) * ta) / (23 * p1 + 11 * ta * Math.cos(hr) + 108 * ta * Math.sin(hr));
     a = g * Math.cos(hr);
@@ -681,7 +634,9 @@ export function hctToHex(hue: number, ch: number, tone: number): string {
   }
   const J = _jFromTone(tone);
   if (J <= 0) return "#000000";
-  let lo = 0, hi = ch, best: string | null = null;
+  let lo = 0,
+    hi = ch,
+    best: string | null = null;
   for (let it = 0; it < 50; it++) {
     if (hi - lo < 0.01) break;
     const mid = (lo + hi) / 2;
@@ -693,7 +648,14 @@ export function hctToHex(hue: number, ch: number, tone: number): string {
       lo = mid;
     }
   }
-  return best || "#" + srgbDelinearize(tone > 8 ? Math.pow((tone + 16) / 116, 3) : tone / 903.3).toString(16).padStart(2, "0").repeat(3);
+  return (
+    best ||
+    "#" +
+      srgbDelinearize(tone > 8 ? Math.pow((tone + 16) / 116, 3) : tone / 903.3)
+        .toString(16)
+        .padStart(2, "0")
+        .repeat(3)
+  );
 }
 
 // ── CONTRAST SOLVER ───────────────────────────────────────────────────────────
@@ -703,7 +665,8 @@ function _relLumFromLinear(r: number, g: number, b: number): number {
 }
 
 function _wcagContrast(lum1: number, lum2: number): number {
-  const hi = Math.max(lum1, lum2), lo = Math.min(lum1, lum2);
+  const hi = Math.max(lum1, lum2),
+    lo = Math.min(lum1, lum2);
   return (hi + 0.05) / (lo + 0.05);
 }
 
@@ -719,7 +682,8 @@ function _inGamutOklch(L: number, C: number, H: number): boolean {
 
 function _maxChromaAtLH(L: number, H: number, startC: number): number {
   if (startC <= 0.001) return 0;
-  let lo = 0, hi = startC;
+  let lo = 0,
+    hi = startC;
   for (let i = 0; i < 40; i++) {
     if (hi - lo < 0.0005) break;
     const mid = (lo + hi) / 2;
@@ -732,10 +696,14 @@ function _maxChromaAtLH(L: number, H: number, startC: number): number {
 function _targetChroma(L: number, srcL: number, srcC: number, _srcH: number, mode: SolverMode): number {
   if (srcC < 0.001) return 0;
   switch (mode) {
-    case "saturated": return srcC;
-    case "luminance": return srcC * (1 - Math.pow(Math.abs(2 * L - 1), 1.5));
-    case "natural": return (srcC / Math.max(srcL, 1 - srcL)) * Math.min(L, 1 - L);
-    default: return srcC;
+    case "saturated":
+      return srcC;
+    case "luminance":
+      return srcC * (1 - Math.pow(Math.abs(2 * L - 1), 1.5));
+    case "natural":
+      return (srcC / Math.max(srcL, 1 - srcL)) * Math.min(L, 1 - L);
+    default:
+      return srcC;
   }
 }
 
@@ -747,7 +715,10 @@ function _searchL(bgLum: number, targetContrast: number, lo: number, hi: number,
     const mid = (lo + hi) / 2;
     const hex = getHexAtL(mid);
     if (!hex) {
-      if (++failedConversions > 8) { console.warn("_searchL: too many failed hex conversions, aborting search"); break; }
+      if (++failedConversions > 8) {
+        console.warn("_searchL: too many failed hex conversions, aborting search");
+        break;
+      }
       lo = mid;
       continue;
     }
@@ -782,11 +753,21 @@ export function solveColorForContrast(sourceHex: string, targetContrast: number,
   const maxTheoreticalContrast = _wcagContrast(bgLum, bgIsLight ? 0 : 1);
   if (targetContrast > maxTheoreticalContrast + 0.01) {
     const fallback = bgIsLight ? "#000000" : "#FFFFFF";
-    return { hex: fallback, achievedContrast: parseFloat(maxTheoreticalContrast.toFixed(2)), solverMode: mode, chromaReduced: true, clipped: true, warning: `Target contrast ${targetContrast} is unreachable against this background (max ${maxTheoreticalContrast.toFixed(2)}). Black/white used.` };
+    return {
+      hex: fallback,
+      achievedContrast: parseFloat(maxTheoreticalContrast.toFixed(2)),
+      solverMode: mode,
+      chromaReduced: true,
+      clipped: true,
+      warning: `Target contrast ${targetContrast} is unreachable against this background (max ${maxTheoreticalContrast.toFixed(2)}). Black/white used.`,
+    };
   }
 
-  const lLow = 0.001, lHigh = 0.999;
-  let solvedL: number | null = null, solvedC: number | null = null, chromaReduced = false;
+  const lLow = 0.001,
+    lHigh = 0.999;
+  let solvedL: number | null = null,
+    solvedC: number | null = null,
+    chromaReduced = false;
 
   if (mode === "chroma-maximized") {
     const getHex = (L: number) => {
@@ -821,7 +802,14 @@ export function solveColorForContrast(sourceHex: string, targetContrast: number,
 
   if (solvedL === null) {
     const fallback = bgIsLight ? "#000000" : "#FFFFFF";
-    return { hex: fallback, achievedContrast: parseFloat(_wcagContrast(_lumOfHex(fallback), bgLum).toFixed(2)), solverMode: mode, chromaReduced: true, clipped: true, warning: `Solver could not find a solution for target contrast ${targetContrast}. Black/white used.` };
+    return {
+      hex: fallback,
+      achievedContrast: parseFloat(_wcagContrast(_lumOfHex(fallback), bgLum).toFixed(2)),
+      solverMode: mode,
+      chromaReduced: true,
+      clipped: true,
+      warning: `Solver could not find a solution for target contrast ${targetContrast}. Black/white used.`,
+    };
   }
 
   const resultHex = oklchToHex(solvedL, solvedC || 0, src.H);

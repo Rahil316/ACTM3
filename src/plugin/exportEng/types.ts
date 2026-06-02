@@ -1,3 +1,7 @@
+import type { Color, Variation, Role } from '../../shared/types';
+
+export type { Color, Variation, Role };
+
 export interface ScaleEntry {
   value: string;
   description?: string;
@@ -21,28 +25,11 @@ export interface EngineResult {
   errors?: EngineErrors | string[];
 }
 
-export interface ColorDef {
-  name: string;
-  shorthand?: string;
-}
-
-export interface RoleDef {
-  name: string;
-  shorthand?: string;
-  customVariationList?: boolean;
-  customVariations?: VarDef[];
-}
-
-export interface VarDef {
-  name: string;
-  shorthand?: string;
-}
-
 export interface ExportConfig {
   name?: string;
-  colors?: ColorDef[];
-  roles?: Record<string, RoleDef>;
-  variations?: VarDef[];
+  colors?: Color[];
+  roles?: Record<string, Role>;
+  variations?: Variation[];
   useShorthandColors?: boolean;
   useShorthandRoles?: boolean;
   useShorthandVariations?: boolean;

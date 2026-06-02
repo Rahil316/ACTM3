@@ -6,6 +6,8 @@ import { contrastRatio, contrastRating } from "../shared/clrUtils";
 import { buildScaleStepMaster } from "./figmaComponents/ScaleStepTile";
 import { buildSourceAlphaMaster } from "./figmaComponents/SourceAlphaTile";
 import { buildRoleTokenMaster } from "./figmaComponents/RoleTokenTile";
+import { translateConfig } from "./config";
+import { variableMaker } from "../shared/clrEngine";
 
 function yieldFrame(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
@@ -80,7 +82,11 @@ function findByRole(parent: FrameNode | PageNode, role: string): FrameNode | Com
 // Clear all children of a frame
 function clearFrame(f: FrameNode): void {
   for (const child of [...f.children]) {
-    try { child.remove(); } catch { /* ignore */ }
+    try {
+      child.remove();
+    } catch {
+      /* ignore */
+    }
   }
 }
 
@@ -100,11 +106,9 @@ export function wasPreviewInterrupted(): boolean {
   return figma.root.getPluginData(INTERRUPTED_KEY) === "1";
 }
 
-export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): Promise<void> {
-  const { translateConfig } = await import("./config");
-  const cfg = translateConfig(appState);
+export async function generateCanvasPreview(projectStore: AnyObj, result?: AnyObj): Promise<void> {
+  const cfg = translateConfig(projectStore);
   if (!result) {
-    const { variableMaker } = await import("../shared/clrEngine.js");
     result = variableMaker(cfg);
   }
 
@@ -131,19 +135,16 @@ export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): 
 
   // ── 3. Variables / collections ────────────────────────────────────────────
   const collections = await figma.variables.getLocalVariableCollectionsAsync();
-  const tokenCol = collections.find((c) => c.name === (appState.tokenCollectionName || "color tokens")) || null;
-  const scaleCol = collections.find((c) => c.name === (appState.scaleCollectionName || "_scale")) || null;
+  const tokenCol = collections.find((c) => c.name === (projectStore.tokenCollectionName || "color tokens")) || null;
+  const scaleCol = collections.find((c) => c.name === (projectStore.scaleCollectionName || "_scale")) || null;
   const allVars = await figma.variables.getLocalVariablesAsync();
   const findVarByRef = (ref: string) => allVars.find((v) => v.getPluginData("tokenRef") === ref);
 
-  const includeScales = appState.includeColorScalesCollection !== false;
-  const includeSource = appState.includeSourceColors === true;
-  const themes: AnyObj[] = appState.themes || [];
+  const includeScales = projectStore.includeColorScalesCollection !== false;
+  const includeSource = projectStore.includeSourceColors === true;
+  const themes: AnyObj[] = projectStore.themes || [];
 
-  const alphaValues: number[] = (appState.alphaValues || "10,25,50,75,90")
-    .split(",")
-    .map((v: string) => parseInt(v.trim(), 10))
-    .filter((v: number) => !isNaN(v));
+  const alphaValues: number[] = projectStore.alphaValues?.length ? projectStore.alphaValues : [10, 25, 50, 75, 90];
 
   // ── 4. Master components ──────────────────────────────────────────────────
   // Each master stores the config it was built for as a fingerprint.
@@ -207,24 +208,24 @@ export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): 
   }
 
   // ── 6. Section fingerprints — decide what needs redrawing ─────────────────
-  const effectiveStepNames: AnyObj[] = Array.isArray(cfg.scaleStepNames) && cfg.scaleStepNames.length > 0 ? cfg.scaleStepNames : Array.from({ length: cfg.scaleLength ?? 23 }, (_, i) => ({ _id: String(i + 1), name: String(i + 1) }));
+  const effectiveStepNames: AnyObj[] = Array.isArray(cfg.scaleSteps) && cfg.scaleSteps.length > 0 ? cfg.scaleSteps : Array.from({ length: cfg.scaleLength ?? 23 }, (_, i) => ({ _id: String(i + 1), name: String(i + 1) }));
 
   const sourceFp = fingerprint({
-    colors: (appState.colors || []).map((c: AnyObj) => ({ id: c._id, value: c.value })),
+    colors: (projectStore.colors || []).map((c: AnyObj) => ({ id: c._id, value: c.value })),
     themes: themes.map((t) => ({ name: t.name, bg: t.bg })),
     alphaValues,
   });
 
   const scaleFp = fingerprint({
-    colors: (appState.colors || []).map((c: AnyObj) => ({ id: c._id, value: c.value })),
+    colors: (projectStore.colors || []).map((c: AnyObj) => ({ id: c._id, value: c.value })),
     steps: effectiveStepNames.map((s: AnyObj) => s._id || s.name),
   });
 
   const rolesFp = fingerprint({
     tokens: result?.tokens,
     themes: themes.map((t) => ({ name: t.name, bg: t.bg })),
-    roles: (appState.roles || []).map((r: AnyObj) => r._id),
-    vars: (appState.variations || []).map((v: AnyObj) => v._id),
+    roles: (projectStore.roles || []).map((r: AnyObj) => r._id),
+    vars: (projectStore.variations || []).map((v: AnyObj) => v._id),
   });
 
   // ── Helper: get-or-create a section container inside outputFrame ──────────
@@ -274,7 +275,7 @@ export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): 
   }
 
   // ── 7. Source Colors ──────────────────────────────────────────────────────
-  if (includeSource && (appState.colors || []).length > 0) {
+  if (includeSource && (projectStore.colors || []).length > 0) {
     const sourceContainer = getOrCreateSection("sourceContainer", "Source Colors", (f) => {
       f.layoutMode = "VERTICAL";
       f.primaryAxisSizingMode = "AUTO";
@@ -287,15 +288,13 @@ export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): 
       f.fills = [];
     });
 
-    const sourceNeedsRender =
-      sourceContainer.getPluginData("sectionFingerprint") !== sourceFp ||
-      sourceContainer.getPluginData("renderInProgress") === "1";
+    const sourceNeedsRender = sourceContainer.getPluginData("sectionFingerprint") !== sourceFp || sourceContainer.getPluginData("renderInProgress") === "1";
 
     if (sourceNeedsRender) {
       sourceContainer.setPluginData("renderInProgress", "1");
       clearFrame(sourceContainer);
 
-      for (const color of appState.colors || []) {
+      for (const color of projectStore.colors || []) {
         const colorRow = figma.createFrame();
         colorRow.name = color.name;
         colorRow.layoutMode = "HORIZONTAL";
@@ -369,15 +368,13 @@ export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): 
       f.fills = [];
     });
 
-    const scaleNeedsRender =
-      scaleContainer.getPluginData("sectionFingerprint") !== scaleFp ||
-      scaleContainer.getPluginData("renderInProgress") === "1";
+    const scaleNeedsRender = scaleContainer.getPluginData("sectionFingerprint") !== scaleFp || scaleContainer.getPluginData("renderInProgress") === "1";
 
     if (scaleNeedsRender) {
       scaleContainer.setPluginData("renderInProgress", "1");
       clearFrame(scaleContainer);
 
-      for (const color of appState.colors || []) {
+      for (const color of projectStore.colors || []) {
         const colorCol = figma.createFrame();
         colorCol.name = color.name;
         colorCol.layoutMode = "VERTICAL";
@@ -449,9 +446,7 @@ export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): 
     f.fills = [];
   });
 
-  const rolesNeedsRender =
-    roleTokensWrapper.getPluginData("sectionFingerprint") !== rolesFp ||
-    roleTokensWrapper.getPluginData("renderInProgress") === "1";
+  const rolesNeedsRender = roleTokensWrapper.getPluginData("sectionFingerprint") !== rolesFp || roleTokensWrapper.getPluginData("renderInProgress") === "1";
 
   if (rolesNeedsRender) {
     roleTokensWrapper.setPluginData("renderInProgress", "1");
@@ -491,7 +486,7 @@ export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): 
       const themeTokens = (result.tokens?.[themeKey] || {}) as Record<string, Record<number, Record<number, AnyObj>>>;
 
       for (const [colorName, roleMap] of Object.entries(themeTokens)) {
-        const colorObj = appState.colors.find((c: AnyObj) => c.name === colorName);
+        const colorObj = projectStore.colors.find((c: AnyObj) => c.name === colorName);
         if (!colorObj) continue;
         const colorId = colorObj._id;
 
@@ -508,10 +503,10 @@ export async function generateCanvasPreview(appState: AnyObj, result?: AnyObj): 
 
         for (const [roleIdxStr, varMap] of Object.entries(roleMap as Record<string, Record<number, AnyObj>>)) {
           const roleIdx = parseInt(roleIdxStr, 10);
-          const roleObj = appState.roles[roleIdx];
+          const roleObj = projectStore.roles[roleIdx];
           if (!roleObj) continue;
 
-          const varDefs = roleObj.customVariationList && roleObj.customVariations?.length ? roleObj.customVariations : appState.variations || [];
+          const varDefs = roleObj.variations ?? projectStore.variations ?? [];
 
           const roleLabel = figma.createText();
           roleLabel.fontName = { family: "Inter", style: "Bold" };

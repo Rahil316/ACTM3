@@ -12,6 +12,7 @@ import { Toggle } from "../components/Toggle";
 import { Select } from "../components/Select";
 import { SegmentedControl } from "../components/SegmentedControl";
 import { Input } from "../components/Input";
+import { TagInput } from "../components/TagInput";
 import { Button, ActionButton } from "../components/Button";
 import { ListRow, ListHeader } from "../components/ListRow";
 import { SectionLabel, HelperText, CardTitle } from "../components/typography";
@@ -45,10 +46,10 @@ function SortableSegmentPill({ id }: { id: TokenNameSegment }) {
 // ── Tokens tab ───────────────────────────────────────────────────────────────
 
 function TokensTab() {
-  const appState = useAppStore((s) => s.appState);
+  const projectStore = useAppStore((s) => s.projectStore);
   const setAppField = useAppStore((s) => s.setAppField);
 
-  const pluginMode = appState.pluginMode;
+  const pluginMode = projectStore.pluginMode;
   const isScaleMode = pluginMode === "scale";
 
   const algoOptions = SCALE_ALGORITHM_OPTIONS.map((a) => ({ value: a, label: a }));
@@ -61,15 +62,15 @@ function TokensTab() {
     { value: "role", label: "Per Role" },
   ] as const;
 
-  const scaleStepNamesRaw = useAppStore((s) => s.appState.scaleStepNames);
-  const scaleStepNames = scaleStepNamesRaw ?? [];
-  const setScaleStepName = useAppStore((s) => s.setScaleStepName);
-  const addScaleStepName = useAppStore((s) => s.addScaleStepName);
-  const removeScaleStepName = useAppStore((s) => s.removeScaleStepName);
+  const scaleStepsRaw = useAppStore((s) => s.projectStore.scaleSteps);
+  const scaleSteps = scaleStepsRaw ?? [];
+  const setScaleStep = useAppStore((s) => s.setScaleStep);
+  const addScaleStep = useAppStore((s) => s.addScaleStep);
+  const removeScaleStep = useAppStore((s) => s.removeScaleStep);
   const [stepLabelsCollapsed, setStepLabelsCollapsed] = useState(true);
-  const [scaleLengthDraft, setScaleLengthDraft] = useState<string>(String(appState.scaleLength));
+  const [scaleLengthDraft, setScaleLengthDraft] = useState<string>(String(projectStore.scaleLength));
 
-  const tokenNameSegments = appState.tokenNameSegments ?? ["color", "role", "variation"];
+  const tokenNameSegments = projectStore.tokenNameSegments ?? ["color", "role", "variation"];
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   function handleSegmentDragEnd(event: DragEndEvent) {
@@ -83,9 +84,9 @@ function TokensTab() {
   }
 
   // Live preview of resulting token name
-  const exampleColor = appState.colors[0]?.name || "Color";
-  const exampleRole = appState.roles[0]?.name || "Role";
-  const exampleVariation = appState.variations?.[0]?.name || "Subtle";
+  const exampleColor = projectStore.colors[0]?.name || "Color";
+  const exampleRole = projectStore.roles[0]?.name || "Role";
+  const exampleVariation = projectStore.variations?.[0]?.name || "Subtle";
   const segmentValues: Record<TokenNameSegment, string> = {
     color: exampleColor,
     role: exampleRole,
@@ -96,30 +97,32 @@ function TokensTab() {
     return isScale ? (
       <SettingsCard>
         <SectionLabel>Color Algorithm</SectionLabel>
-        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={appState.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !appState.useUniformAlgorithm)} />} />
-        {appState.useUniformAlgorithm && <SmallRow label="Algorithm" control={<Select size="md" options={algoOptions} value={appState.scaleAlgorithm} onChange={(e) => setAppField("scaleAlgorithm", e.target.value as typeof appState.scaleAlgorithm)} />} />}
-        {!appState.useUniformAlgorithm && (
+        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
+        {projectStore.useUniformAlgorithm && (
+          <SmallRow label="Algorithm" control={<Select size="md" options={algoOptions} value={projectStore.scaleAlgorithm} onChange={(e) => setAppField("scaleAlgorithm", e.target.value as typeof projectStore.scaleAlgorithm)} />} />
+        )}
+        {!projectStore.useUniformAlgorithm && (
           <PanelRow
             label="Algorithm Scope"
-            description={appState.algorithmScopeLevel == "color" ? "Select Algorithm for each color." : "Select Algorithm for each role."}
-            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={appState.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />}
+            description={projectStore.algorithmScopeLevel == "color" ? "Select Algorithm for each color." : "Select Algorithm for each role."}
+            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />}
           />
         )}
       </SettingsCard>
     ) : (
       <SettingsCard>
         <SectionLabel>Color Algorithm</SectionLabel>
-        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={appState.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !appState.useUniformAlgorithm)} />} />
-        {appState.useUniformAlgorithm && (
+        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
+        {projectStore.useUniformAlgorithm && (
           <SmallRow
             label="Solver Algorithm"
-            control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={appState.solverMode} onChange={(e) => setAppField("solverMode", e.target.value as typeof appState.solverMode)} />}
+            control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={projectStore.solverMode} onChange={(e) => setAppField("solverMode", e.target.value as typeof projectStore.solverMode)} />}
           />
         )}
-        {!appState.useUniformAlgorithm && (
+        {!projectStore.useUniformAlgorithm && (
           <SmallRow
             label="Algorithm Scope"
-            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={appState.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />}
+            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />}
           />
         )}
       </SettingsCard>
@@ -154,7 +157,7 @@ function TokensTab() {
                 }}
                 onBlur={() => {
                   const v = parseInt(scaleLengthDraft);
-                  if (isNaN(v) || v < 5 || v > 100) setScaleLengthDraft(String(appState.scaleLength));
+                  if (isNaN(v) || v < 5 || v > 100) setScaleLengthDraft(String(projectStore.scaleLength));
                 }}
               />
             }
@@ -194,28 +197,41 @@ function TokensTab() {
           {/* Live preview */}
           <HelperText className="font-mono bg-bg-input rounded-[4px] p-2">{namePreview}</HelperText>
         </div>
-        <PanelRow label="Use Shorthand for Colors" control={<Toggle on={appState.useShorthandColors} onChange={() => setAppField("useShorthandColors", !appState.useShorthandColors)} />} />
-        <PanelRow label="Use Shorthand for Roles" control={<Toggle on={appState.useShorthandRoles} onChange={() => setAppField("useShorthandRoles", !appState.useShorthandRoles)} />} />
-        <PanelRow label="Use Shorthand for Variations" control={<Toggle on={appState.useShorthandVariations} onChange={() => setAppField("useShorthandVariations", !appState.useShorthandVariations)} />} />
-        <PanelRow label="Use Shorthand for Steps" control={<Toggle on={appState.useShorthandSteps} onChange={() => setAppField("useShorthandSteps", !appState.useShorthandSteps)} />} />
-        <PanelRow label="Include Descriptions" control={<Toggle on={appState.includeDescriptions} onChange={() => setAppField("includeDescriptions", !appState.includeDescriptions)} />} />
+        <PanelRow label="Use Shorthand for Colors" control={<Toggle on={projectStore.useShorthandColors} onChange={() => setAppField("useShorthandColors", !projectStore.useShorthandColors)} />} />
+        <PanelRow label="Use Shorthand for Roles" control={<Toggle on={projectStore.useShorthandRoles} onChange={() => setAppField("useShorthandRoles", !projectStore.useShorthandRoles)} />} />
+        <PanelRow label="Use Shorthand for Variations" control={<Toggle on={projectStore.useShorthandVariations} onChange={() => setAppField("useShorthandVariations", !projectStore.useShorthandVariations)} />} />
+        <PanelRow label="Use Shorthand for Steps" control={<Toggle on={projectStore.useShorthandSteps} onChange={() => setAppField("useShorthandSteps", !projectStore.useShorthandSteps)} />} />
+        <PanelRow label="Include Descriptions" control={<Toggle on={projectStore.includeDescriptions} onChange={() => setAppField("includeDescriptions", !projectStore.includeDescriptions)} />} />
       </SettingsCard>
 
       {/* Collections */}
       <SettingsCard>
         <SectionLabel>Figma Collections</SectionLabel>
-        <SmallRow label="Token Collection Name" control={<Input size="md" value={appState.tokenCollectionName} onChange={(e) => setAppField("tokenCollectionName", e.target.value)} />} />
+        <SmallRow label="Token Collection Name" control={<Input size="md" value={projectStore.tokenCollectionName} onChange={(e) => setAppField("tokenCollectionName", e.target.value)} />} />
         {isScaleMode && (
           <>
-            <PanelRow label="Include Scale Collection" control={<Toggle on={appState.includeColorScalesCollection} onChange={() => setAppField("includeColorScalesCollection", !appState.includeColorScalesCollection)} />} />
-            {appState.includeColorScalesCollection && <SmallRow label="Scale Collection Name" control={<Input size="md" value={appState.scaleCollectionName} onChange={(e) => setAppField("scaleCollectionName", e.target.value)} />} />}
+            <PanelRow label="Include Scale Collection" control={<Toggle on={projectStore.includeColorScalesCollection} onChange={() => setAppField("includeColorScalesCollection", !projectStore.includeColorScalesCollection)} />} />
+            {projectStore.includeColorScalesCollection && <SmallRow label="Scale Collection Name" control={<Input size="md" value={projectStore.scaleCollectionName} onChange={(e) => setAppField("scaleCollectionName", e.target.value)} />} />}
           </>
         )}
-        <PanelRow label="Include Source Colors" description="Creates a separate collection for seed hex values." control={<Toggle on={appState.includeSourceColors} onChange={() => setAppField("includeSourceColors", !appState.includeSourceColors)} />} />
-        {appState.includeSourceColors && (
+        <PanelRow
+          label="Include Source Colors"
+          description="Creates a separate collection for seed hex values."
+          control={<Toggle on={projectStore.includeSourceColors} onChange={() => setAppField("includeSourceColors", !projectStore.includeSourceColors)} />}
+        />
+        {projectStore.includeSourceColors && (
           <>
-            <SmallRow label="Source Collection Name" control={<Input size="md" value={appState.sourceCollectionName} onChange={(e) => setAppField("sourceCollectionName", e.target.value)} />} />
-            <SmallRow label="Alpha Tint Values (CSV %)" control={<Input size="lg" value={appState.alphaValues} placeholder="Leave empty to skip, e.g. 10, 25, 50, 75, 90" onChange={(e) => setAppField("alphaValues", e.target.value)} />} />
+            <SmallRow label="Source Collection Name" control={<Input size="md" value={projectStore.sourceCollectionName} onChange={(e) => setAppField("sourceCollectionName", e.target.value)} />} />
+            <SmallRow
+              label="Alpha Tint Values (%)"
+              control={
+                <TagInput
+                  values={projectStore.alphaValues || []}
+                  placeholder="Type a number and press Enter (e.g. 10, 25, 50)"
+                  onChange={(newValues) => setAppField("alphaValues", newValues)}
+                />
+              }
+            />
           </>
         )}
       </SettingsCard>
@@ -223,30 +239,29 @@ function TokensTab() {
       {/* Step labels */}
       {isScaleMode && (
         <SettingsCard>
-          <button
-            type="button"
-            className="flex items-center justify-between w-full text-left"
-            onClick={() => setStepLabelsCollapsed((c) => !c)}
-          >
+          <button type="button" className="flex items-center justify-between w-full text-left" onClick={() => setStepLabelsCollapsed((c) => !c)}>
             <SectionLabel>Step Labels</SectionLabel>
-            <span className="text-text-muted text-[10px]">{stepLabelsCollapsed ? '▸' : '▾'}</span>
+            <span className="text-text-muted text-[10px]">{stepLabelsCollapsed ? "▸" : "▾"}</span>
           </button>
           {!stepLabelsCollapsed && (
             <>
-              <HelperText className="mt-1">Names for each scale step. Always {appState.scaleLength} entries — leave blank to use step numbers.</HelperText>
-              {scaleStepNames.length === 0 && (
-                <ActionButton label={`+ Enable Step Labels`} onClick={addScaleStepName} />
-              )}
-              {scaleStepNames.length > 0 && (
+              <HelperText className="mt-1">Names for each scale step. Always {projectStore.scaleLength} entries — leave blank to use step numbers.</HelperText>
+              {scaleSteps.length === 0 && <ActionButton label={`+ Enable Step Labels`} onClick={addScaleStep} />}
+              {scaleSteps.length > 0 && (
                 <>
                   <ListHeader columns={["Name", "Short"]} withRemoveButton />
-                  {scaleStepNames.map((step, i) => (
-                    <ListRow key={step._id} onRemove={() => removeScaleStepName(i)} removeAriaLabel="Clear step label">
-                      <Input size="sm" value={step.name} placeholder={`Step ${i + 1}`} onChange={(e) => setScaleStepName(i, "name", e.target.value)} />
-                      <Input size="sm" value={step.shorthand ?? ""} placeholder="Short" onChange={(e) => setScaleStepName(i, "shorthand", e.target.value)} />
+                  {scaleSteps.map((step, i) => (
+                    <ListRow key={step._id || i} onRemove={() => removeScaleStep(i)} removeAriaLabel="Clear step label">
+                      <Input size="sm" value={step.name} placeholder={`Step ${i + 1}`} onChange={(e) => setScaleStep(i, "name", e.target.value)} />
+                      <Input size="sm" value={step.shorthand ?? ""} placeholder="Short" onChange={(e) => setScaleStep(i, "shorthand", e.target.value)} />
                     </ListRow>
                   ))}
-                  <ActionButton label="− Disable Step Labels" onClick={() => { for (let k = scaleStepNames.length - 1; k >= 0; k--) removeScaleStepName(k); }} />
+                  <ActionButton
+                    label="− Disable Step Labels"
+                    onClick={() => {
+                      for (let k = scaleSteps.length - 1; k >= 0; k--) removeScaleStep(k);
+                    }}
+                  />
                 </>
               )}
             </>
@@ -260,9 +275,9 @@ function TokensTab() {
 // ── Roles tab ────────────────────────────────────────────────────────────────
 
 function RolesTab() {
-  const appState = useAppStore((s) => s.appState);
+  const projectStore = useAppStore((s) => s.projectStore);
   const setAppField = useAppStore((s) => s.setAppField);
-  const variationsRaw = useAppStore((s) => s.appState.variations);
+  const variationsRaw = useAppStore((s) => s.projectStore.variations);
   const variations = variationsRaw ?? [];
   const setVariation = useAppStore((s) => s.setVariation);
   const addVariation = useAppStore((s) => s.addVariation);
@@ -273,9 +288,17 @@ function RolesTab() {
       <SettingsCard>
         <SectionLabel>Role Defaults</SectionLabel>
         <PanelRow
-          label="Per-Role Variation Override"
-          description="Allow each role to define its own variation list."
-          control={<Toggle on={appState.perRoleVariationOverride} onChange={() => setAppField("perRoleVariationOverride", !appState.perRoleVariationOverride)} />}
+          label="Custom Variation Names for each role"
+          description="Allow each role to define its own variation names."
+          control={
+            <Toggle
+              on={projectStore.canEditRoleVariantNames}
+              onChange={() => {
+                setAppField("canEditRoleVariantNames", !projectStore.canEditRoleVariantNames);
+                console.log(!projectStore.canEditRoleVariantNames);
+              }}
+            />
+          }
         />
       </SettingsCard>
 
@@ -284,11 +307,12 @@ function RolesTab() {
         <HelperText>Define the variation levels applied across all roles.</HelperText>
         {variations.length > 0 && (
           <>
-            <ListHeader columns={["Name", "Short"]} withDragHandle withRemoveButton />
+            <ListHeader columns={["Name", "Short", "Target"]} withDragHandle withRemoveButton />
             {variations.map((v, i) => (
-              <ListRow key={v._id} onRemove={() => removeVariation(i)} removeDisabled={variations.length <= 1} removeAriaLabel="Remove variation">
+              <ListRow key={v._id || i} onRemove={() => removeVariation(i)} removeDisabled={variations.length <= 1} removeAriaLabel="Remove variation">
                 <Input size="sm" value={v.name ?? ""} placeholder="Name" onChange={(e) => setVariation(i, "name", e.target.value)} />
                 <Input size="sm" value={v.shorthand ?? ""} placeholder="Short" onChange={(e) => setVariation(i, "shorthand", e.target.value)} />
+                <Input size="sm" type="number" value={String(v.target ?? 4.5)} min="1" max="21" step="0.1" onChange={(e) => setVariation(i, "target", e.target.value)} />
               </ListRow>
             ))}
           </>

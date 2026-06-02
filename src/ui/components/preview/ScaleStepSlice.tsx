@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ScaleStep } from '../../../shared/clrEngine';
+import type { ScaleStepToken as ScaleStep } from '../../../shared/types';
 import { getInkMode, inkColor, copyText } from './previewUtils';
 
 export interface ScaleStepSliceProps {

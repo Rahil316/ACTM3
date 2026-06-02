@@ -1,54 +1,42 @@
-import { useState, useEffect, useDeferredValue, useCallback, useMemo } from 'react';
-import { useAppStore } from '../store/appStore';
-import { useUiStore } from '../store/uiStore';
-import { banner } from '../store/bannerStore';
-import { SectionSpinner } from '../components/Spinner';
-import { EmptyState } from '../components/EmptyState';
-import { Modal, ModalHeader } from '../components/Modal';
-import { Button } from '../components/Button';
-import { SegmentedControl } from '../components/SegmentedControl';
-import { variableMaker, resolveTokenRefBgs, translateLocalBg, type EngineConfig, type EngineResult } from '../lib/colorEngine';
-import { CardTitle, MicroText } from '../components/typography';
-import type { AppState } from '../types/state';
-import {
-  RatingBadge,
-  TokenTile,
-  ScaleStepSlice,
-  SourceColorCard,
-  getInkMode,
-  inkColor,
-  normalizeHex,
-  copyText,
-} from '../components/preview';
+import { useState, useEffect, useDeferredValue, useCallback, useMemo } from "react";
+import { useAppStore } from "../store/appStore";
+import { useUiStore } from "../store/uiStore";
+import { banner } from "../store/bannerStore";
+import { SectionSpinner } from "../components/Spinner";
+import { EmptyState } from "../components/EmptyState";
+import { Modal, ModalHeader } from "../components/Modal";
+import { Button } from "../components/Button";
+import { SegmentedControl } from "../components/SegmentedControl";
+import { variableMaker, resolveTokenRefBgs, translateLocalBg, type EngineConfig, type EngineResult } from "../lib/colorEngine";
+import { CardTitle, MicroText } from "../components/typography";
+import type { ProjectStore } from "../types/state";
+import { RatingBadge, TokenTile, ScaleStepSlice, SourceColorCard, getInkMode, inkColor, normalizeHex, copyText } from "../components/preview";
 
 // ── Engine call ───────────────────────────────────────────────────────────────
 
-function buildEngineConfig(appState: AppState): EngineConfig {
+function buildEngineConfig(projectStore: ProjectStore): EngineConfig {
   return {
-    colors: appState.colors.map((c) => ({
+    colors: projectStore.colors.map((c) => ({
       _id: c._id,
       name: c.name,
       value: c.value,
-      shorthand: c.shorthand ?? '',
-      description: c.description ?? '',
+      shorthand: c.shorthand ?? "",
+      description: c.description ?? "",
       scaleAlgorithm: c.scaleAlgorithm,
       solverMode: c.solverMode,
     })),
-    themes: appState.themes.map((t) => ({ name: t.name, bg: t.bg })),
-    scaleLength: appState.scaleLength,
-    scaleStepNames: appState.scaleStepNames?.map((s) => s.name) ?? undefined,
-    scaleAlgorithm: appState.scaleAlgorithm,
-    pluginMode: appState.pluginMode,
-    roles: appState.roles.map((r) => {
-      const { localBg, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, appState.colors, appState.themes);
+    themes: projectStore.themes.map((t) => ({ name: t.name, bg: t.bg })),
+    scaleLength: projectStore.scaleLength,
+    scaleSteps: projectStore.scaleSteps?.map((s) => s.name) ?? undefined,
+    scaleAlgorithm: projectStore.scaleAlgorithm,
+    pluginMode: projectStore.pluginMode,
+    roles: projectStore.roles.map((r) => {
+      const { localBg, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, projectStore.colors, projectStore.themes);
       return {
         name: r.name,
-        shorthand: r.shorthand ?? '',
+        shorthand: r.shorthand ?? "",
         mappingMethod: r.mappingMethod,
-        minContrast: r.minContrast,
-        variationTargets: r.variationTargets,
-        customVariationList: r.customVariationList,
-        customVariations: r.customVariations,
+        variations: r.variations,
         solverMode: r.solverMode,
         description: r.description,
         scopedColorIds: r.scopedColorIds,
@@ -57,18 +45,18 @@ function buildEngineConfig(appState: AppState): EngineConfig {
         localBgDynamicRef,
       };
     }),
-    variations: (appState.variations ?? []).map((v) => ({ name: v.name, shorthand: v.shorthand })),
-    useUniformAlgorithm: appState.useUniformAlgorithm,
-    algorithmScopeLevel: appState.algorithmScopeLevel,
-    solverMode: appState.solverMode,
+    variations: (projectStore.variations ?? []).map((v) => ({ name: v.name, shorthand: v.shorthand })),
+    useUniformAlgorithm: projectStore.useUniformAlgorithm,
+    algorithmScopeLevel: projectStore.algorithmScopeLevel,
+    solverMode: projectStore.solverMode,
   };
 }
 
-function runEngine(appState: AppState): EngineResult | null {
-  if (!appState.colors.length || !appState.roles.length || !appState.themes.length) return null;
+function runEngine(projectStore: ProjectStore): EngineResult | null {
+  if (!projectStore.colors.length || !projectStore.roles.length || !projectStore.themes.length) return null;
   try {
-    const config = buildEngineConfig(appState);
-    const pass1  = variableMaker(config);
+    const config = buildEngineConfig(projectStore);
+    const pass1 = variableMaker(config);
     // Two-pass: resolve token-kind localBg refs from pass-1 output, re-run if needed
     if (resolveTokenRefBgs(config, pass1)) return variableMaker(config);
     return pass1;
@@ -77,30 +65,23 @@ function runEngine(appState: AppState): EngineResult | null {
   }
 }
 
-
 // ── Color section (grid mode) ─────────────────────────────────────────────────
 
 interface ColorSectionProps {
   colorName: string;
   srcHex: string;
-  roles: Record<number, Record<number, import('../../shared/clrEngine').TokenEntry>>;
-  appState: AppState;
-  ink: 'light' | 'dark';
+  roles: Record<number, Record<number, import("../../shared/clrEngine").TokenEntry>>;
+  projectStore: ProjectStore;
+  ink: "light" | "dark";
 }
 
-function ColorSection({ colorName, srcHex, roles, appState, ink }: ColorSectionProps) {
-  const variations = appState.variations ?? [];
+function ColorSection({ colorName, srcHex, roles, projectStore, ink }: ColorSectionProps) {
+  const variations = projectStore.variations ?? [];
 
   return (
-    <div
-      className="rounded-[14px] p-4"
-      style={{ border: `1px solid ${inkColor(ink, 0.1)}`, background: inkColor(ink, 0.03) }}
-    >
+    <div className="rounded-[14px] p-4" style={{ border: `1px solid ${inkColor(ink, 0.1)}`, background: inkColor(ink, 0.03) }}>
       <div className="flex items-center gap-2 mb-3">
-        <div
-          className="w-3 h-3 rounded-[3px] shrink-0"
-          style={{ background: srcHex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }}
-        />
+        <div className="w-3 h-3 rounded-[3px] shrink-0" style={{ background: srcHex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
         <span className="text-[13px] font-bold" style={{ color: inkColor(ink) }}>
           {colorName}
         </span>
@@ -109,32 +90,21 @@ function ColorSection({ colorName, srcHex, roles, appState, ink }: ColorSectionP
       <div className="flex flex-col gap-4">
         {Object.entries(roles).map(([roleIdxStr, vars]) => {
           const roleIdx = parseInt(roleIdxStr);
-          const role = appState.roles[roleIdx];
+          const role = projectStore.roles[roleIdx];
           if (!role) return null;
-          const roleVars =
-            role.customVariationList && role.customVariations?.length ? role.customVariations : variations;
+          const roleVars = role.variations ?? variations;
 
           return (
             <div key={roleIdx} className="flex flex-col gap-2">
               <span className="text-[12px] font-bold truncate" style={{ color: inkColor(ink, 0.9) }}>
                 {role.name}
               </span>
-              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(88px,1fr))' }}>
+              <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(88px,1fr))" }}>
                 {Object.entries(vars).map(([varIdxStr, token]) => {
                   const varIdx = parseInt(varIdxStr);
                   const v = roleVars[varIdx];
                   const varLabel = v ? v.shorthand || v.name : String(varIdx);
-                  return (
-                    <TokenTile
-                      key={varIdxStr}
-                      hex={token.value}
-                      ratio={token.contrast?.ratio ?? null}
-                      rating={token.contrast?.rating ?? 'Fail'}
-                      varLabel={varLabel}
-                      tokenName={token.tokenName}
-                      ink={ink}
-                    />
-                  );
+                  return <TokenTile key={varIdxStr} hex={token.value} ratio={token.contrast?.ratio ?? null} rating={token.contrast?.rating ?? "Fail"} varLabel={varLabel} tokenName={token.tokenName} ink={ink} />;
                 })}
               </div>
             </div>
@@ -150,26 +120,22 @@ function ColorSection({ colorName, srcHex, roles, appState, ink }: ColorSectionP
 interface TableSectionProps {
   colorName: string;
   srcHex: string;
-  roles: Record<number, Record<number, import('../../shared/clrEngine').TokenEntry>>;
-  appState: AppState;
-  ink: 'light' | 'dark';
+  roles: Record<number, Record<number, import("../../shared/clrEngine").TokenEntry>>;
+  projectStore: ProjectStore;
+  ink: "light" | "dark";
 }
 
-function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
-  const variations = appState.variations ?? [];
+function TableSection({ srcHex, roles, projectStore, ink }: TableSectionProps) {
+  const variations = projectStore.variations ?? [];
   const hdrInk = getInkMode(srcHex);
-  const COL = 'minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)';
+  const COL = "minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)";
 
   return (
     <div className="rounded-[10px] overflow-hidden" style={{ border: `1px solid ${inkColor(ink, 0.1)}` }}>
       {/* Section header — uses source color as bg */}
       <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: srcHex, gridTemplateColumns: COL }}>
-        {(['Token', 'Hex', 'Ratio', 'WCAG', 'Token Name'] as const).map((h, i) => (
-          <div
-            key={h}
-            className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate"
-            style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}
-          >
+        {(["Token", "Hex", "Ratio", "WCAG", "Token Name"] as const).map((h, i) => (
+          <div key={h} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate" style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>
             {h}
           </div>
         ))}
@@ -177,20 +143,14 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
 
       {Object.entries(roles).map(([roleIdxStr, vars]) => {
         const roleIdx = parseInt(roleIdxStr);
-        const role = appState.roles[roleIdx];
+        const role = projectStore.roles[roleIdx];
         if (!role) return null;
-        const roleVars = role.customVariationList && role.customVariations?.length ? role.customVariations : variations;
+        const roleVars = role.variations ?? variations;
 
         return (
           <div key={roleIdx}>
-            <div
-              className="h-[26px] flex items-center px-4"
-              style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}
-            >
-              <span
-                className="text-[10px] font-bold tracking-[0.06em] uppercase truncate"
-                style={{ color: inkColor(ink, 0.5) }}
-              >
+            <div className="h-[26px] flex items-center px-4" style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}>
+              <span className="text-[10px] font-bold tracking-[0.06em] uppercase truncate" style={{ color: inkColor(ink, 0.5) }}>
                 {role.name}
               </span>
             </div>
@@ -199,21 +159,18 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
               const varIdx = parseInt(varIdxStr);
               const v = roleVars[varIdx];
               const varLabel = v ? v.shorthand || v.name : String(varIdx);
-              const ratio = typeof token.contrast?.ratio === 'number' ? token.contrast.ratio.toFixed(1) : '—';
+              const ratio = typeof token.contrast?.ratio === "number" ? token.contrast.ratio.toFixed(1) : "—";
 
               return (
                 <div
                   key={varIdxStr}
                   className="grid items-center h-9 cursor-pointer hover:opacity-80 transition-opacity"
                   style={{ gridTemplateColumns: COL, borderTop: `1px solid ${inkColor(ink, 0.06)}` }}
-                  onClick={() => copyText(token.value, 'hex')}
+                  onClick={() => copyText(token.value, "hex")}
                   title={`${token.value.toUpperCase()} — click to copy hex`}
                 >
                   <div className="px-3 flex items-center gap-1.5 min-w-0">
-                    <div
-                      className="w-3.5 h-3.5 rounded-[3px] shrink-0"
-                      style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }}
-                    />
+                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0" style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
                     <span className="text-[11px] font-semibold truncate" style={{ color: inkColor(ink, 0.85) }}>
                       {varLabel}
                     </span>
@@ -224,7 +181,7 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
                       style={{ color: token.value }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyText(token.value, 'hex');
+                        copyText(token.value, "hex");
                       }}
                     >
                       {token.value.toUpperCase()}
@@ -236,7 +193,7 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
                     </span>
                   </div>
                   <div className="px-2">
-                    <RatingBadge rating={token.contrast?.rating ?? 'Fail'} />
+                    <RatingBadge rating={token.contrast?.rating ?? "Fail"} />
                   </div>
                   <div className="px-2 min-w-0">
                     {token.tokenName ? (
@@ -245,7 +202,7 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
                         style={{ color: inkColor(ink, 0.45) }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          copyText(token.tokenName, 'token name');
+                          copyText(token.tokenName, "token name");
                         }}
                         title={`${token.tokenName} — click to copy`}
                       >
@@ -272,50 +229,36 @@ function TableSection({ srcHex, roles, appState, ink }: TableSectionProps) {
 
 interface RoleTableSectionProps {
   roleName: string;
-  colorMap: Record<string, Record<number, import('../../shared/clrEngine').TokenEntry>>;
-  appState: AppState;
-  ink: 'light' | 'dark';
+  colorMap: Record<string, Record<number, import("../../shared/clrEngine").TokenEntry>>;
+  projectStore: ProjectStore;
+  ink: "light" | "dark";
 }
 
-function RoleTableSection({ roleName, colorMap, appState, ink }: RoleTableSectionProps) {
-  const COL = 'minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)';
-  const role = appState.roles.find((r) => r.name === roleName);
-  const roleVars =
-    role?.customVariationList && role.customVariations?.length ? role.customVariations : (appState.variations ?? []);
+function RoleTableSection({ roleName, colorMap, projectStore, ink }: RoleTableSectionProps) {
+  const COL = "minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)";
+  const role = projectStore.roles.find((r) => r.name === roleName);
+  const roleVars = role?.variations ?? projectStore.variations ?? [];
 
   return (
     <div className="rounded-[10px] overflow-hidden" style={{ border: `1px solid ${inkColor(ink, 0.1)}` }}>
       {/* Role header row */}
-      <div
-        className="grid items-center h-8 sticky top-0 z-10"
-        style={{ background: inkColor(ink, 0.12), gridTemplateColumns: COL }}
-      >
-        {(['Role / Color', 'Hex', 'Ratio', 'WCAG', 'Token Name'] as const).map((h, i) => (
-          <div
-            key={h}
-            className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate"
-            style={{ color: inkColor(ink, 0.75), paddingLeft: i === 0 ? 12 : undefined }}
-          >
+      <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: inkColor(ink, 0.12), gridTemplateColumns: COL }}>
+        {(["Role / Color", "Hex", "Ratio", "WCAG", "Token Name"] as const).map((h, i) => (
+          <div key={h} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate" style={{ color: inkColor(ink, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>
             {i === 0 ? roleName : h}
           </div>
         ))}
       </div>
 
       {Object.entries(colorMap).map(([colorName, vars]) => {
-        const colorEntry = appState.colors.find((c) => c.name === colorName);
-        const cHex = normalizeHex(colorEntry?.value ?? '888888');
+        const colorEntry = projectStore.colors.find((c) => c.name === colorName);
+        const cHex = normalizeHex(colorEntry?.value ?? "888888");
         return (
           <div key={colorName}>
             {/* Color sub-header */}
-            <div
-              className="h-[26px] flex items-center gap-2 px-4"
-              style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}
-            >
+            <div className="h-[26px] flex items-center gap-2 px-4" style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}>
               <div className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ background: cHex }} />
-              <span
-                className="text-[10px] font-bold tracking-[0.06em] uppercase truncate"
-                style={{ color: inkColor(ink, 0.5) }}
-              >
+              <span className="text-[10px] font-bold tracking-[0.06em] uppercase truncate" style={{ color: inkColor(ink, 0.5) }}>
                 {colorName}
               </span>
             </div>
@@ -324,21 +267,12 @@ function RoleTableSection({ roleName, colorMap, appState, ink }: RoleTableSectio
               const varIdx = parseInt(varIdxStr);
               const v = roleVars[varIdx];
               const varLabel = v ? v.shorthand || v.name : String(varIdx);
-              const contrastRatioStr =
-                typeof token.contrast?.ratio === 'number' ? token.contrast.ratio.toFixed(1) : '—';
+              const contrastRatioStr = typeof token.contrast?.ratio === "number" ? token.contrast.ratio.toFixed(1) : "—";
 
               return (
-                <div
-                  key={varIdxStr}
-                  className="grid items-center h-9 cursor-pointer hover:opacity-80 transition-opacity"
-                  style={{ gridTemplateColumns: COL, borderTop: `1px solid ${inkColor(ink, 0.06)}` }}
-                  onClick={() => copyText(token.value, 'hex')}
-                >
+                <div key={varIdxStr} className="grid items-center h-9 cursor-pointer hover:opacity-80 transition-opacity" style={{ gridTemplateColumns: COL, borderTop: `1px solid ${inkColor(ink, 0.06)}` }} onClick={() => copyText(token.value, "hex")}>
                   <div className="px-3 flex items-center gap-1.5 min-w-0">
-                    <div
-                      className="w-3.5 h-3.5 rounded-[3px] shrink-0"
-                      style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }}
-                    />
+                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0" style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
                     <span className="text-[11px] font-semibold truncate" style={{ color: inkColor(ink, 0.85) }}>
                       {varLabel}
                     </span>
@@ -349,7 +283,7 @@ function RoleTableSection({ roleName, colorMap, appState, ink }: RoleTableSectio
                       style={{ color: token.value }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyText(token.value, 'hex');
+                        copyText(token.value, "hex");
                       }}
                     >
                       {token.value.toUpperCase()}
@@ -361,7 +295,7 @@ function RoleTableSection({ roleName, colorMap, appState, ink }: RoleTableSectio
                     </span>
                   </div>
                   <div className="px-2">
-                    <RatingBadge rating={token.contrast?.rating ?? 'Fail'} />
+                    <RatingBadge rating={token.contrast?.rating ?? "Fail"} />
                   </div>
                   <div className="px-2 min-w-0">
                     {token.tokenName ? (
@@ -370,7 +304,7 @@ function RoleTableSection({ roleName, colorMap, appState, ink }: RoleTableSectio
                         style={{ color: inkColor(ink, 0.45) }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          copyText(token.tokenName, 'token name');
+                          copyText(token.tokenName, "token name");
                         }}
                       >
                         {token.tokenName}
@@ -395,12 +329,12 @@ function RoleTableSection({ roleName, colorMap, appState, ink }: RoleTableSectio
 
 interface ScaleTableViewProps {
   result: EngineResult;
-  appState: AppState;
+  projectStore: ProjectStore;
 }
 
-function ScaleTableView({ result, appState }: ScaleTableViewProps) {
-  const COL = '80px 1fr 64px 56px 48px';
-  const themes = appState.themes;
+function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
+  const COL = "80px 1fr 64px 56px 48px";
+  const themes = projectStore.themes;
 
   if (Object.keys(result.scales).length === 0) {
     return <p className="text-[12px] text-text-muted p-4 text-center">No scale in Direct mode.</p>;
@@ -408,7 +342,7 @@ function ScaleTableView({ result, appState }: ScaleTableViewProps) {
 
   return (
     <div className="flex flex-col gap-4 p-3 pb-6">
-      {appState.colors.map((color) => {
+      {projectStore.colors.map((color) => {
         const scale = result.scales[color.name];
         if (!scale) return null;
         const srcHex = normalizeHex(color.value);
@@ -417,40 +351,23 @@ function ScaleTableView({ result, appState }: ScaleTableViewProps) {
         return (
           <div key={color._id} className="rounded-[10px] overflow-hidden border border-border-base">
             {/* Color header */}
-            <div
-              className="grid items-center h-8 sticky top-0 z-10"
-              style={{ background: srcHex, gridTemplateColumns: COL }}
-            >
-              {(['Step', 'Hex', 'Ratio', 'WCAG', ''].concat(themes.map((t) => t.name)) as string[])
-                .slice(0, 4 + themes.length)
-                .map((h, i) => (
-                  <div
-                    key={i}
-                    className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate"
-                    style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}
-                  >
-                    {i === 0 ? color.name : h}
-                  </div>
-                ))}
+            <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: srcHex, gridTemplateColumns: COL }}>
+              {(["Step", "Hex", "Ratio", "WCAG", ""].concat(themes.map((t) => t.name)) as string[]).slice(0, 4 + themes.length).map((h, i) => (
+                <div key={i} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate" style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>
+                  {i === 0 ? color.name : h}
+                </div>
+              ))}
             </div>
 
             {Object.entries(scale).map(([stepName, stepData]) => {
               const firstTheme = themes[0];
               const contrast = firstTheme ? stepData.contrast?.[firstTheme.name.toLowerCase()] : null;
-              const ratioStr = typeof contrast?.ratio === 'number' ? contrast.ratio.toFixed(1) : '—';
+              const ratioStr = typeof contrast?.ratio === "number" ? contrast.ratio.toFixed(1) : "—";
 
               return (
-                <div
-                  key={stepName}
-                  className="grid items-center h-9 border-t border-border-subtle cursor-pointer hover:bg-bg-hover transition-colors"
-                  style={{ gridTemplateColumns: COL }}
-                  onClick={() => copyText(stepData.value, `${color.name}/${stepName}`)}
-                >
+                <div key={stepName} className="grid items-center h-9 border-t border-border-subtle cursor-pointer hover:bg-bg-hover transition-colors" style={{ gridTemplateColumns: COL }} onClick={() => copyText(stepData.value, `${color.name}/${stepName}`)}>
                   <div className="px-3 flex items-center gap-1.5">
-                    <div
-                      className="w-3.5 h-3.5 rounded-[3px] shrink-0 border border-border-subtle"
-                      style={{ background: stepData.value }}
-                    />
+                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0 border border-border-subtle" style={{ background: stepData.value }} />
                     <span className="text-[11px] font-semibold text-text-primary">{stepName}</span>
                   </div>
                   <div className="px-2">
@@ -459,7 +376,7 @@ function ScaleTableView({ result, appState }: ScaleTableViewProps) {
                       style={{ color: stepData.value }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyText(stepData.value, 'hex');
+                        copyText(stepData.value, "hex");
                       }}
                     >
                       {stepData.value.toUpperCase()}
@@ -474,10 +391,10 @@ function ScaleTableView({ result, appState }: ScaleTableViewProps) {
                       .slice(1)
                       .map((t) => {
                         const c = stepData.contrast?.[t.name.toLowerCase()];
-                        return c ? `${t.name}: ${c.ratio?.toFixed(1)}` : '';
+                        return c ? `${t.name}: ${c.ratio?.toFixed(1)}` : "";
                       })
                       .filter(Boolean)
-                      .join(' · ')}
+                      .join(" · ")}
                   </div>
                 </div>
               );
@@ -491,28 +408,28 @@ function ScaleTableView({ result, appState }: ScaleTableViewProps) {
 
 // ── Theme panel (one per theme tab) ──────────────────────────────────────────
 
-type GroupBy = 'color' | 'role';
-type ViewMode = 'grid' | 'table';
+type GroupBy = "color" | "role";
+type ViewMode = "grid" | "table";
 
 interface ThemePanelProps {
   result: EngineResult;
-  appState: AppState;
+  projectStore: ProjectStore;
   themeIdx: number;
   groupBy: GroupBy;
   viewMode: ViewMode;
 }
 
-function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePanelProps) {
-  const theme = appState.themes[themeIdx];
+function ThemePanel({ result, projectStore, themeIdx, groupBy, viewMode }: ThemePanelProps) {
+  const theme = projectStore.themes[themeIdx];
   if (!theme) return null;
 
-  const bgHex = normalizeHex(theme.bg || '#FFFFFF');
+  const bgHex = normalizeHex(theme.bg || "#FFFFFF");
   const ink = getInkMode(bgHex);
   const themeKey = theme.name.toLowerCase();
   const themeTokens = result.tokens[themeKey] ?? {};
 
   // Re-group by role if needed: role → { colorName → { varIdx → token } }
-  type VarMap = Record<number, import('../../shared/clrEngine').TokenEntry>;
+  type VarMap = Record<number, import("../../shared/clrEngine").TokenEntry>;
   type ByRole = Record<number, Record<string, VarMap>>;
 
   function buildByRole(): ByRole {
@@ -528,7 +445,7 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
   }
 
   const colorEntries = Object.entries(themeTokens) as [string, Record<number, VarMap>][];
-  const byRole = useMemo(() => groupBy === 'role' ? buildByRole() : null, [groupBy, themeTokens]);
+  const byRole = useMemo(() => (groupBy === "role" ? buildByRole() : null), [groupBy, themeTokens]);
 
   if (colorEntries.length === 0) {
     return (
@@ -542,53 +459,27 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
 
   return (
     <div className="flex flex-col gap-4 p-3 pb-6">
-      {groupBy === 'color'
+      {groupBy === "color"
         ? colorEntries.map(([colorName, roles]) => {
-            const colorEntry = appState.colors.find((c) => c.name === colorName);
-            const srcHex = normalizeHex(colorEntry?.value ?? '888888');
-            return viewMode === 'grid' ? (
-              <ColorSection
-                key={colorName}
-                colorName={colorName}
-                srcHex={srcHex}
-                roles={roles}
-                appState={appState}
-                ink={ink}
-              />
+            const colorEntry = projectStore.colors.find((c) => c.name === colorName);
+            const srcHex = normalizeHex(colorEntry?.value ?? "888888");
+            return viewMode === "grid" ? (
+              <ColorSection key={colorName} colorName={colorName} srcHex={srcHex} roles={roles} projectStore={projectStore} ink={ink} />
             ) : (
-              <TableSection
-                key={colorName}
-                colorName={colorName}
-                srcHex={srcHex}
-                roles={roles}
-                appState={appState}
-                ink={ink}
-              />
+              <TableSection key={colorName} colorName={colorName} srcHex={srcHex} roles={roles} projectStore={projectStore} ink={ink} />
             );
           })
         : Object.entries(byRole!).map(([roleIdxStr, colorMap]) => {
             const roleIdx = parseInt(roleIdxStr);
-            const role = appState.roles[roleIdx];
+            const role = projectStore.roles[roleIdx];
             if (!role) return null;
 
-            if (viewMode === 'table') {
-              return (
-                <RoleTableSection
-                  key={roleIdxStr}
-                  roleName={role.name}
-                  colorMap={colorMap}
-                  appState={appState}
-                  ink={ink}
-                />
-              );
+            if (viewMode === "table") {
+              return <RoleTableSection key={roleIdxStr} roleName={role.name} colorMap={colorMap} projectStore={projectStore} ink={ink} />;
             }
 
             return (
-              <div
-                key={roleIdxStr}
-                className="rounded-[14px] p-4"
-                style={{ border: `1px solid ${inkColor(ink, 0.1)}`, background: inkColor(ink, 0.03) }}
-              >
+              <div key={roleIdxStr} className="rounded-[14px] p-4" style={{ border: `1px solid ${inkColor(ink, 0.1)}`, background: inkColor(ink, 0.03) }}>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-[13px] font-bold" style={{ color: inkColor(ink) }}>
                     {role.name}
@@ -596,43 +487,24 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
                 </div>
                 <div className="flex flex-col gap-4">
                   {Object.entries(colorMap).map(([colorName, vars]) => {
-                    const colorEntry = appState.colors.find((c) => c.name === colorName);
-                    const cHex = normalizeHex(colorEntry?.value ?? '888888');
-                    const roleVarsArr =
-                      role.customVariationList && role.customVariations?.length
-                        ? role.customVariations
-                        : (appState.variations ?? []);
+                    const colorEntry = projectStore.colors.find((c) => c.name === colorName);
+                    const cHex = normalizeHex(colorEntry?.value ?? "888888");
+                    const roleVarsArr = role.variations ?? projectStore.variations ?? [];
 
                     return (
                       <div key={colorName}>
                         <div className="flex items-center gap-1.5 mb-2">
-                          <div
-                            className="w-2.5 h-2.5 rounded-[2px] shrink-0"
-                            style={{ background: cHex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }}
-                          />
+                          <div className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ background: cHex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
                           <span className="text-[11px] font-bold" style={{ color: inkColor(ink, 0.7) }}>
                             {colorName}
                           </span>
                         </div>
-                        <div
-                          className="grid gap-2"
-                          style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(88px,1fr))' }}
-                        >
+                        <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(88px,1fr))" }}>
                           {Object.entries(vars).map(([varIdxStr, token]) => {
                             const varIdx = parseInt(varIdxStr);
                             const v = roleVarsArr[varIdx];
                             const varLabel = v ? v.shorthand || v.name : String(varIdx);
-                            return (
-                              <TokenTile
-                                key={varIdxStr}
-                                hex={token.value}
-                                ratio={token.contrast?.ratio ?? null}
-                                rating={token.contrast?.rating ?? 'Fail'}
-                                varLabel={varLabel}
-                                tokenName={token.tokenName}
-                                ink={ink}
-                              />
-                            );
+                            return <TokenTile key={varIdxStr} hex={token.value} ratio={token.contrast?.ratio ?? null} rating={token.contrast?.rating ?? "Fail"} varLabel={varLabel} tokenName={token.tokenName} ink={ink} />;
                           })}
                         </div>
                       </div>
@@ -642,7 +514,6 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
               </div>
             );
           })}
-
     </div>
   );
 }
@@ -651,22 +522,20 @@ function ThemePanel({ result, appState, themeIdx, groupBy, viewMode }: ThemePane
 
 interface ScaleSectionProps {
   result: EngineResult;
-  appState: AppState;
+  projectStore: ProjectStore;
   groupByStep?: boolean;
   viewMode?: ViewMode;
 }
 
-function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid' }: ScaleSectionProps) {
-  const colors = appState.colors;
-  const themes = appState.themes;
+function ScaleSection({ result, projectStore, groupByStep = false, viewMode = "grid" }: ScaleSectionProps) {
+  const colors = projectStore.colors;
+  const themes = projectStore.themes;
   const themeKeys = themes.map((t) => t.name.toLowerCase());
 
   if (Object.keys(result.scales).length === 0) {
     return (
       <div className="p-4 text-center">
-        <p className="text-[12px] text-text-muted">
-          No scale in Direct mode — colors are solved directly per variation target.
-        </p>
+        <p className="text-[12px] text-text-muted">No scale in Direct mode — colors are solved directly per variation target.</p>
       </div>
     );
   }
@@ -683,7 +552,7 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
               <CardTitle>{stepName}</CardTitle>
             </div>
 
-            {viewMode === 'table' ? (
+            {viewMode === "table" ? (
               // Table: one row per color at this step
               <div className="rounded-[10px] overflow-hidden border border-border-base">
                 {colors.map((color) => {
@@ -691,23 +560,17 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
                   if (!stepData) return null;
                   const srcHex = normalizeHex(color.value);
                   const contrast = themeKeys.length > 0 ? stepData.contrast?.[themeKeys[0]] : null;
-                  const ratioStr = typeof contrast?.ratio === 'number' ? contrast.ratio.toFixed(1) : '—';
+                  const ratioStr = typeof contrast?.ratio === "number" ? contrast.ratio.toFixed(1) : "—";
                   return (
                     <div
                       key={color._id}
                       className="grid items-center h-9 border-t border-border-subtle first:border-0 cursor-pointer hover:bg-bg-hover transition-colors"
-                      style={{ gridTemplateColumns: '1fr 64px 56px 48px' }}
+                      style={{ gridTemplateColumns: "1fr 64px 56px 48px" }}
                       onClick={() => copyText(stepData.value, `${color.name}/${stepName}`)}
                     >
                       <div className="px-3 flex items-center gap-2 min-w-0">
-                        <div
-                          className="w-3.5 h-3.5 rounded-[3px] shrink-0"
-                          style={{ background: stepData.value, boxShadow: '0 0 0 1px rgba(0,0,0,0.10)' }}
-                        />
-                        <div
-                          className="w-2.5 h-2.5 rounded-[2px] shrink-0"
-                          style={{ background: srcHex, boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }}
-                        />
+                        <div className="w-3.5 h-3.5 rounded-[3px] shrink-0" style={{ background: stepData.value, boxShadow: "0 0 0 1px rgba(0,0,0,0.10)" }} />
+                        <div className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ background: srcHex, boxShadow: "0 0 0 1px rgba(0,0,0,0.08)" }} />
                         <span className="text-[11px] font-semibold text-text-primary truncate">{color.name}</span>
                       </div>
                       <div className="px-2">
@@ -725,22 +588,11 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
               </div>
             ) : (
               // Strip: all colors at this step as a horizontal spectrum
-              <div
-                className="flex w-full h-24 rounded-[10px] overflow-hidden cursor-crosshair"
-                style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.12)', border: '1px solid rgba(136,136,136,0.10)' }}
-              >
+              <div className="flex w-full h-24 rounded-[10px] overflow-hidden cursor-crosshair" style={{ boxShadow: "0 10px 30px rgba(0,0,0,0.12)", border: "1px solid rgba(136,136,136,0.10)" }}>
                 {colors.map((color) => {
                   const stepData = result.scales[color.name]?.[stepName];
                   if (!stepData) return null;
-                  return (
-                    <ScaleStepSlice
-                      key={color._id}
-                      stepName={color.name}
-                      stepData={stepData}
-                      themeKeys={themeKeys}
-                      colorName={color.name}
-                    />
-                  );
+                  return <ScaleStepSlice key={color._id} stepName={color.name} stepData={stepData} themeKeys={themeKeys} colorName={color.name} />;
                 })}
               </div>
             )}
@@ -750,8 +602,8 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
     );
   }
 
-  if (viewMode === 'table') {
-    return <ScaleTableView result={result} appState={appState} />;
+  if (viewMode === "table") {
+    return <ScaleTableView result={result} projectStore={projectStore} />;
   }
 
   return (
@@ -770,28 +622,13 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
               <MicroText className="text-text-dim ml-1">{srcHex.toUpperCase()}</MicroText>
             </div>
 
-            <div
-              className="flex w-full h-24 rounded-[10px] overflow-hidden cursor-crosshair"
-              style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.12)', border: '1px solid rgba(136,136,136,0.10)' }}
-            >
+            <div className="flex w-full h-24 rounded-[10px] overflow-hidden cursor-crosshair" style={{ boxShadow: "0 10px 30px rgba(0,0,0,0.12)", border: "1px solid rgba(136,136,136,0.10)" }}>
               {steps.map(([stepName, stepData]) => (
-                <ScaleStepSlice
-                  key={stepName}
-                  stepName={stepName}
-                  stepData={stepData}
-                  themeKeys={themeKeys}
-                  colorName={color.name}
-                />
+                <ScaleStepSlice key={stepName} stepName={stepName} stepData={stepData} themeKeys={themeKeys} colorName={color.name} />
               ))}
             </div>
 
-            {(appState.alphaValues ?? '').trim() && (
-              <SourceColorCard
-                color={color}
-                alphaValues={appState.alphaValues ?? ''}
-                showAlphas
-              />
-            )}
+            {(projectStore.alphaValues?.length ?? 0) > 0 && <SourceColorCard color={color} alphaValues={projectStore.alphaValues ?? []} showAlphas />}
           </div>
         );
       })}
@@ -799,21 +636,15 @@ function ScaleSection({ result, appState, groupByStep = false, viewMode = 'grid'
   );
 }
 
-
 // ── Source collection panel ───────────────────────────────────────────────────
 
-function SourcePanel({ appState }: { appState: AppState }) {
-  const showAlphas = (appState.alphaValues ?? '').trim().length > 0;
+function SourcePanel({ projectStore }: { projectStore: ProjectStore }) {
+  const showAlphas = (projectStore.alphaValues?.length ?? 0) > 0;
 
   return (
     <div className="flex flex-col gap-5 p-3 pb-6">
-      {appState.colors.map((color) => (
-        <SourceColorCard
-          key={color._id}
-          color={color}
-          alphaValues={appState.alphaValues ?? ''}
-          showAlphas={showAlphas}
-        />
+      {projectStore.colors.map((color) => (
+        <SourceColorCard key={color._id} color={color} alphaValues={projectStore.alphaValues ?? []} showAlphas={showAlphas} />
       ))}
     </div>
   );
@@ -826,37 +657,48 @@ function reportAccessibilityWarnings(result: EngineResult, pluginMode: string): 
   // In direct mode the solver always produces the closest achievable color —
   // "can't hit exact target" is expected and not actionable for the user.
   // Contrast warnings only apply in scale mode where steps are discrete.
-  if (!warnings || warnings.length === 0 || pluginMode !== 'scale') {
-    banner.remove('preview-contrast-warnings');
+  if (!warnings || warnings.length === 0 || pluginMode !== "scale") {
+    banner.remove("preview-contrast-warnings");
     return;
   }
-  const msg = `${warnings.length} contrast warning${warnings.length > 1 ? 's' : ''}: some tokens may not meet their contrast targets.`;
-  banner.show({ id: 'preview-contrast-warnings', type: 'warning', title: 'Contrast Warnings', message: msg });
+  const msg = `${warnings.length} contrast warning${warnings.length > 1 ? "s" : ""}: some tokens may not meet their contrast targets.`;
+  banner.show({ id: "preview-contrast-warnings", type: "warning", title: "Contrast Warnings", message: msg });
 }
 
 // ── Preview content ───────────────────────────────────────────────────────────
 
-type TabId = 'scale' | `theme-${number}` | 'source';
+type TabId = "scale" | `theme-${number}` | "source";
 
 function PreviewContent() {
-  const appState = useAppStore((s) => s.appState);
-  const deferred = useDeferredValue(appState);
+  const projectStore = useAppStore((s) => s.projectStore);
+  const deferred = useDeferredValue(projectStore);
 
   const [result, setResult] = useState<EngineResult | null>(null);
   const [computing, setComputing] = useState(false);
   function usePersistedString<T extends string>(key: string, def: T): [T, (v: T) => void] {
     const [val, setVal] = useState<T>(() => {
-      try { return (localStorage.getItem(key) as T) ?? def; } catch { return def; }
+      try {
+        return (localStorage.getItem(key) as T) ?? def;
+      } catch {
+        return def;
+      }
     });
-    function set(v: T) { setVal(v); try { localStorage.setItem(key, v); } catch { /* ignore */ } }
+    function set(v: T) {
+      setVal(v);
+      try {
+        localStorage.setItem(key, v);
+      } catch {
+        /* ignore */
+      }
+    }
     return [val, set];
   }
 
-  const [activeTab, setActiveTab] = usePersistedString<TabId>('preview_activeTab', 'scale');
-  const [groupBy, setGroupBy] = usePersistedString<GroupBy>('preview_groupBy', 'color');
-  const [viewMode, setViewMode] = usePersistedString<ViewMode>('preview_viewMode', 'grid');
+  const [activeTab, setActiveTab] = usePersistedString<TabId>("preview_activeTab", "scale");
+  const [groupBy, setGroupBy] = usePersistedString<GroupBy>("preview_groupBy", "color");
+  const [viewMode, setViewMode] = usePersistedString<ViewMode>("preview_viewMode", "grid");
 
-  const compute = useCallback((state: AppState) => {
+  const compute = useCallback((state: ProjectStore) => {
     setComputing(true);
     setTimeout(() => {
       const r = runEngine(state);
@@ -872,43 +714,39 @@ function PreviewContent() {
 
   // Default to first theme tab in direct mode
   useEffect(() => {
-    if (appState.pluginMode === 'direct' && activeTab === 'scale' && appState.themes.length > 0) {
-      setActiveTab('theme-0');
+    if (projectStore.pluginMode === "direct" && activeTab === "scale" && projectStore.themes.length > 0) {
+      setActiveTab("theme-0");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appState.pluginMode, appState.themes.length]);
+  }, [projectStore.pluginMode, projectStore.themes.length]);
 
-  const isScaleMode = appState.pluginMode === 'scale';
-  const isEmpty = !appState.colors.length || !appState.roles.length;
+  const isScaleMode = projectStore.pluginMode === "scale";
+  const isEmpty = !projectStore.colors.length || !projectStore.roles.length;
 
   if (isEmpty) {
     return (
       <div className="p-3">
-        <EmptyState
-          icon="👁"
-          title="Nothing to preview"
-          description="Add at least one color and one role to see a preview."
-        />
+        <EmptyState icon="👁" title="Nothing to preview" description="Add at least one color and one role to see a preview." />
       </div>
     );
   }
 
   const tabs: { id: TabId; label: string; bg?: string }[] = [
-    ...(isScaleMode ? [{ id: 'scale' as TabId, label: 'Scale' }] : []),
-    ...appState.themes.map((t, i) => ({
+    ...(isScaleMode ? [{ id: "scale" as TabId, label: "Scale" }] : []),
+    ...projectStore.themes.map((t, i) => ({
       id: `theme-${i}` as TabId,
       label: t.name,
-      bg: normalizeHex(t.bg || '#FFFFFF'),
+      bg: normalizeHex(t.bg || "#FFFFFF"),
     })),
-    ...(appState.includeSourceColors ? [{ id: 'source' as TabId, label: 'Source' }] : []),
+    ...(projectStore.includeSourceColors ? [{ id: "source" as TabId, label: "Source" }] : []),
   ];
 
   const activeThemeMatch = activeTab.match(/^theme-(\d+)$/);
   const activeThemeIdx = activeThemeMatch ? parseInt(activeThemeMatch[1]) : -1;
-  const activeTheme = activeThemeIdx >= 0 ? appState.themes[activeThemeIdx] : null;
-  const panelBg = activeTheme ? normalizeHex(activeTheme.bg || '#FFFFFF') : undefined;
-  const isScaleTab = activeTab === 'scale';
-  const isSourceTab = activeTab === 'source';
+  const activeTheme = activeThemeIdx >= 0 ? projectStore.themes[activeThemeIdx] : null;
+  const panelBg = activeTheme ? normalizeHex(activeTheme.bg || "#FFFFFF") : undefined;
+  const isScaleTab = activeTab === "scale";
+  const isSourceTab = activeTab === "source";
 
   function cycleTab(dir: 1 | -1) {
     const idx = tabs.findIndex((t) => t.id === activeTab);
@@ -917,11 +755,11 @@ function PreviewContent() {
   }
 
   function onTabBarKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'ArrowRight') {
+    if (e.key === "ArrowRight") {
       e.preventDefault();
       cycleTab(1);
     }
-    if (e.key === 'ArrowLeft') {
+    if (e.key === "ArrowLeft") {
       e.preventDefault();
       cycleTab(-1);
     }
@@ -942,18 +780,9 @@ function PreviewContent() {
                 aria-selected={isActive}
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors flex items-center gap-1.5 ${
-                  isActive
-                    ? 'bg-accent text-text-on-accent'
-                    : 'bg-bg-input text-text-muted hover:bg-bg-hover hover:text-text-primary'
-                }`}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors flex items-center gap-1.5 ${isActive ? "bg-accent text-text-on-accent" : "bg-bg-input text-text-muted hover:bg-bg-hover hover:text-text-primary"}`}
               >
-                {tab.bg && (
-                  <span
-                    className="w-2.5 h-2.5 rounded-[2px] shrink-0 inline-block"
-                    style={{ background: tab.bg, boxShadow: '0 0 0 1px rgba(128,128,128,0.2)' }}
-                  />
-                )}
+                {tab.bg && <span className="w-2.5 h-2.5 rounded-[2px] shrink-0 inline-block" style={{ background: tab.bg, boxShadow: "0 0 0 1px rgba(128,128,128,0.2)" }} />}
                 {tab.label}
               </button>
             );
@@ -961,18 +790,18 @@ function PreviewContent() {
         </div>
 
         {/* Toolbar — hidden on Source tab */}
-        <div className={`flex items-center gap-2 ${isSourceTab ? 'invisible pointer-events-none' : ''}`}>
+        <div className={`flex items-center gap-2 ${isSourceTab ? "invisible pointer-events-none" : ""}`}>
           {computing && <MicroText className="text-text-dim">Computing…</MicroText>}
           <SegmentedControl
             segments={
               isScaleTab
                 ? [
-                    { value: 'color', label: 'Color' },
-                    { value: 'role', label: 'Step' },
+                    { value: "color", label: "Color" },
+                    { value: "role", label: "Step" },
                   ]
                 : [
-                    { value: 'color', label: 'Color' },
-                    { value: 'role', label: 'Role' },
+                    { value: "color", label: "Color" },
+                    { value: "role", label: "Role" },
                   ]
             }
             value={groupBy}
@@ -982,12 +811,12 @@ function PreviewContent() {
             segments={
               isScaleTab
                 ? [
-                    { value: 'grid', label: 'Strip' },
-                    { value: 'table', label: 'Table' },
+                    { value: "grid", label: "Strip" },
+                    { value: "table", label: "Table" },
                   ]
                 : [
-                    { value: 'grid', label: 'Grid' },
-                    { value: 'table', label: 'Table' },
+                    { value: "grid", label: "Grid" },
+                    { value: "table", label: "Table" },
                   ]
             }
             value={viewMode}
@@ -1003,27 +832,13 @@ function PreviewContent() {
         </div>
       ) : result ? (
         <div className="flex-1 overflow-y-auto" style={panelBg ? { backgroundColor: panelBg } : undefined}>
-          {isScaleTab && (
-            <ScaleSection result={result} appState={appState} groupByStep={groupBy === 'role'} viewMode={viewMode} />
-          )}
-          {activeThemeIdx >= 0 && (
-            <ThemePanel
-              result={result}
-              appState={appState}
-              themeIdx={activeThemeIdx}
-              groupBy={groupBy}
-              viewMode={viewMode}
-            />
-          )}
-          {isSourceTab && <SourcePanel appState={appState} />}
+          {isScaleTab && <ScaleSection result={result} projectStore={projectStore} groupByStep={groupBy === "role"} viewMode={viewMode} />}
+          {activeThemeIdx >= 0 && <ThemePanel result={result} projectStore={projectStore} themeIdx={activeThemeIdx} groupBy={groupBy} viewMode={viewMode} />}
+          {isSourceTab && <SourcePanel projectStore={projectStore} />}
         </div>
       ) : (
         <div className="flex-1 p-3">
-          <EmptyState
-            icon="⚠"
-            title="Engine error"
-            description="Could not compute tokens. Check color values and settings."
-          />
+          <EmptyState icon="⚠" title="Engine error" description="Could not compute tokens. Check color values and settings." />
         </div>
       )}
     </div>
@@ -1031,18 +846,14 @@ function PreviewContent() {
 }
 
 export function PreviewScreen() {
-  const isOpen = useUiStore((s) => s.activeOverlay === 'preview');
+  const isOpen = useUiStore((s) => s.activeOverlay === "preview");
   const closeOverlay = useUiStore((s) => s.closeOverlay);
 
   if (!isOpen) return null;
 
   return (
     <Modal open layer="overlay">
-      <ModalHeader
-        title="Preview"
-        subtitle="Live token and color scale preview."
-        actions={<Button variant="secondary" size="md" label="Close" onClick={closeOverlay} />}
-      />
+      <ModalHeader title="Preview" subtitle="Live token and color scale preview." actions={<Button variant="secondary" size="md" label="Close" onClick={closeOverlay} />} />
       <div className="flex-1 overflow-hidden flex flex-col">
         <PreviewContent />
       </div>

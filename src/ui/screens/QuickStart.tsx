@@ -8,7 +8,7 @@ import { Badge } from "../components/Badge";
 import { SelectableCard } from "../components/SelectableCard";
 import { CentredOverlay } from "../components/ResultOverlay";
 import { PRESETS, type Preset } from "../lib/presets/presets";
-import type { AppState } from "../types/state";
+import type { ProjectStore } from "../types/state";
 
 // ── Quick Start overlay ───────────────────────────────────────────────────────
 
@@ -31,9 +31,9 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
   function loadPreset(preset: Preset) {
     const base = makeBootstrapState();
     const config = { ...base, ...preset.config, _presetId: preset.id };
-    ensureIds(config as unknown as Partial<AppState>);
-    ensureVariations(config as AppState);
-    loadState(config as AppState);
+    ensureIds(config as unknown as Partial<ProjectStore>);
+    ensureVariations(config as ProjectStore);
+    loadState(config as ProjectStore);
     close();
   }
 
@@ -55,7 +55,7 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const parsed = JSON.parse(ev.target?.result as string) as AppState;
+        const parsed = JSON.parse(ev.target?.result as string) as ProjectStore;
         if (!Array.isArray(parsed.colors) || !Array.isArray(parsed.roles) || !Array.isArray(parsed.themes)) {
           toast.error("Invalid file: missing colors, roles, or themes");
           return;
@@ -85,7 +85,11 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
         {quickPresets.map((preset) => (
           <SelectableCard key={preset.id} onClick={() => loadPreset(preset)}>
             <div className="flex items-center gap-1.5 mb-1">
-              {preset.badge && <Badge variant="accent" size="xs" pill>{preset.badge}</Badge>}
+              {preset.badge && (
+                <Badge variant="accent" size="xs" pill>
+                  {preset.badge}
+                </Badge>
+              )}
               <ItemTitle className="truncate">{preset.name}</ItemTitle>
             </div>
             {preset.description && <Caption className="line-clamp-2">{preset.description}</Caption>}

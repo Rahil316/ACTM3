@@ -1,20 +1,5 @@
 import { useState, useCallback } from "react";
-import {
-  FileCode2,
-  FileJson2,
-  FileText,
-  FileSpreadsheet,
-  Smartphone,
-  Tablet,
-  Wind,
-  Braces,
-  Hash,
-  Package,
-  Download,
-  Plus,
-  X,
-  PackageOpen,
-} from "lucide-react";
+import { FileCode2, FileJson2, FileText, FileSpreadsheet, Smartphone, Tablet, Wind, Braces, Hash, Package, Download, Plus, X, PackageOpen } from "lucide-react";
 import { useAppStore } from "../store/appStore";
 import { useUiStore } from "../store/uiStore";
 import { useFigmaBridge, type BridgeCallbacks } from "../hooks/useFigmaBridge";
@@ -31,90 +16,90 @@ import type { LucideIcon } from "lucide-react";
 // ── Format catalogue ──────────────────────────────────────────────────────────
 
 interface FormatDef {
-  format:      ExportFormat;
-  label:       string;
+  format: ExportFormat;
+  label: string;
   description: string;
-  ext:         string;
-  Icon:        LucideIcon;
+  ext: string;
+  Icon: LucideIcon;
 }
 
 const EXPORT_FORMATS: FormatDef[] = [
   {
-    format:      "wand",
-    label:       "Token Wand Config",
+    format: "wand",
+    label: "Token Wand Config",
     description: "Full plugin config — reimportable",
-    ext:         "wand",
-    Icon:        Package,
+    ext: "wand",
+    Icon: Package,
   },
   {
-    format:      "css",
-    label:       "CSS Variables",
+    format: "css",
+    label: "CSS Variables",
     description: "Per-theme custom properties + :root scale",
-    ext:         "css",
-    Icon:        Hash,
+    ext: "css",
+    Icon: Hash,
   },
   {
-    format:      "scss",
-    label:       "SCSS",
+    format: "scss",
+    label: "SCSS",
     description: "Scale vars, token maps, apply-theme mixin",
-    ext:         "scss",
-    Icon:        Hash,
+    ext: "scss",
+    Icon: Hash,
   },
   {
-    format:      "tailwind",
-    label:       "Tailwind Config",
+    format: "tailwind",
+    label: "Tailwind Config",
     description: "theme.extend.colors with CSS var references",
-    ext:         "js",
-    Icon:        Wind,
+    ext: "js",
+    Icon: Wind,
   },
   {
-    format:      "dtcg",
-    label:       "W3C Design Tokens (DTCG)",
+    format: "dtcg",
+    label: "W3C Design Tokens (DTCG)",
     description: "W3C DTCG spec — works with Tokens Studio",
-    ext:         "json",
-    Icon:        Braces,
+    ext: "json",
+    Icon: Braces,
   },
   {
-    format:      "style-dictionary",
-    label:       "Style Dictionary",
+    format: "style-dictionary",
+    label: "Style Dictionary",
     description: "SD v3 input format — transform to any platform",
-    ext:         "json",
-    Icon:        FileJson2,
+    ext: "json",
+    Icon: FileJson2,
   },
   {
-    format:      "ios-swift",
-    label:       "iOS / Swift",
+    format: "ios-swift",
+    label: "iOS / Swift",
     description: "UIColor + SwiftUI Color static extensions",
-    ext:         "swift",
-    Icon:        Tablet,
+    ext: "swift",
+    Icon: Tablet,
   },
   {
-    format:      "android",
-    label:       "Android XML",
+    format: "android",
+    label: "Android XML",
     description: "values/ + values-night/ color resources",
-    ext:         "xml",
-    Icon:        Smartphone,
+    ext: "xml",
+    Icon: Smartphone,
   },
   {
-    format:      "rn-ts",
-    label:       "React Native",
+    format: "rn-ts",
+    label: "React Native",
     description: "Typed token objects with useTokens() helper",
-    ext:         "ts",
-    Icon:        FileCode2,
+    ext: "ts",
+    Icon: FileCode2,
   },
   {
-    format:      "csv",
-    label:       "CSV Spreadsheet",
+    format: "csv",
+    label: "CSV Spreadsheet",
     description: "Scale + role token table with contrast data",
-    ext:         "csv",
-    Icon:        FileSpreadsheet,
+    ext: "csv",
+    Icon: FileSpreadsheet,
   },
   {
-    format:      "json",
-    label:       "JSON",
+    format: "json",
+    label: "JSON",
     description: "Design token JSON",
-    ext:         "json",
-    Icon:        FileText,
+    ext: "json",
+    Icon: FileText,
   },
 ];
 
@@ -163,12 +148,9 @@ async function downloadFiles(files: Array<{ path: string; content: string }>, zi
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ExportSheet() {
-  const isOpen = useUiStore(
-    (s) =>
-      s.activeOverlay === "export-sheet" || s.activeOverlay === "design-lab",
-  );
+  const isOpen = useUiStore((s) => s.activeOverlay === "export-sheet" || s.activeOverlay === "design-lab");
   const closeOverlay = useUiStore((s) => s.closeOverlay);
-  const appState = useAppStore((s) => s.appState);
+  const projectStore = useAppStore((s) => s.projectStore);
 
   // Queue = formats added for bulk export
   const [queue, setQueue] = useState<Set<ExportFormat>>(new Set());
@@ -186,16 +168,14 @@ export function ExportSheet() {
         toast.error("Export returned no files.");
         return;
       }
-      const projectSlug = (appState.name || "tokens").replace(/\s+/g, "-").toLowerCase();
+      const projectSlug = (projectStore.name || "tokens").replace(/\s+/g, "-").toLowerCase();
       downloadFiles(files, projectSlug + "-tokens").then(() => {
-        const label = wasBulk
-          ? `Exported ${files.length} file${files.length > 1 ? "s" : ""}`
-          : `Downloaded ${files.length > 1 ? files.length + " files" : files[0].path.split("/").pop()}`;
+        const label = wasBulk ? `Exported ${files.length} file${files.length > 1 ? "s" : ""}` : `Downloaded ${files.length > 1 ? files.length + " files" : files[0].path.split("/").pop()}`;
         toast.success(label);
         if (wasBulk) setQueue(new Set());
       });
     },
-    [appState.name, building],
+    [projectStore.name, building],
   );
 
   const handleError = useCallback((message: string) => {
@@ -206,7 +186,7 @@ export function ExportSheet() {
 
   useFigmaBridge({
     onExportBundle: handleExportBundle,
-    onError:        handleError,
+    onError: handleError,
   } satisfies BridgeCallbacks);
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -214,16 +194,16 @@ export function ExportSheet() {
   function handleSingleDownload(format: ExportFormat) {
     if (downloading) return;
     setDownloading(format);
-    sendToPlugin({ type: "request-processed-data", exportType: format, state: appState });
+    sendToPlugin({ type: "request-processed-data", exportType: format, state: projectStore });
   }
 
   function handleBulkExport() {
     if (queue.size === 0) return;
     setBuilding(true);
     sendToPlugin({
-      type:    "request-export-bundle",
+      type: "request-export-bundle",
       formats: Array.from(queue),
-      state:   appState,
+      state: projectStore,
     });
   }
 
@@ -242,18 +222,7 @@ export function ExportSheet() {
     <>
       <Backdrop open={isOpen} onClick={closeOverlay} />
       <Sheet open={isOpen}>
-        <ModalHeader
-          title="Export Tokens"
-          subtitle="Download formats individually or queue for bulk export"
-          actions={
-            <Button
-              variant="ghost"
-              size="sm"
-              label="Close"
-              onClick={closeOverlay}
-            />
-          }
-        />
+        <ModalHeader title="Export Tokens" subtitle="Download formats individually or queue for bulk export" actions={<Button variant="ghost" size="sm" label="Close" onClick={closeOverlay} />} />
 
         {/* Format list */}
         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
@@ -262,36 +231,13 @@ export function ExportSheet() {
             const isLoading = downloading === format;
 
             return (
-              <div
-                key={format}
-                className={[
-                  "flex items-center gap-3 px-3 py-2 rounded-[10px] border transition-colors",
-                  inQueue
-                    ? "border-accent bg-accent-subtle"
-                    : "border-border-base bg-bg-card",
-                ].join(" ")}
-              >
+              <div key={format} className={["flex items-center gap-3 px-3 py-2 rounded-[10px] border transition-colors", inQueue ? "border-accent bg-accent-subtle" : "border-border-base bg-bg-card"].join(" ")}>
                 {/* Format icon */}
-                <Icon
-                  size={16}
-                  className={
-                    inQueue
-                      ? "text-accent shrink-0"
-                      : "text-text-muted shrink-0"
-                  }
-                  strokeWidth={1.75}
-                />
+                <Icon size={16} className={inQueue ? "text-accent shrink-0" : "text-text-muted shrink-0"} strokeWidth={1.75} />
 
                 {/* Label + desc */}
                 <div className="flex-1 min-w-0">
-                  <p
-                    className={[
-                      "text-[12px] font-semibold",
-                      inQueue ? "text-accent" : "text-text-primary",
-                    ].join(" ")}
-                  >
-                    {label}
-                  </p>
+                  <p className={["text-[12px] font-semibold", inQueue ? "text-accent" : "text-text-primary"].join(" ")}>{label}</p>
                   <HelperText>{description}</HelperText>
                 </div>
 
@@ -301,39 +247,25 @@ export function ExportSheet() {
                   <button
                     type="button"
                     onClick={() => toggleQueue(format)}
-                    title={
-                      inQueue ? "Remove from bulk export" : "Add to bulk export"
-                    }
+                    title={inQueue ? "Remove from bulk export" : "Add to bulk export"}
                     className={[
                       "w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors cursor-pointer",
-                      inQueue
-                        ? "bg-accent text-text-on-accent hover:opacity-80"
-                        : "bg-bg-input border border-border-base text-text-muted hover:bg-bg-hover hover:text-text-primary",
+                      inQueue ? "bg-accent text-text-on-accent hover:opacity-80" : "bg-bg-input border border-border-base text-text-muted hover:bg-bg-hover hover:text-text-primary",
                     ].join(" ")}
                   >
-                    {inQueue ? (
-                      <X size={11} strokeWidth={2.5} />
-                    ) : (
-                      <Plus size={11} strokeWidth={2.5} />
-                    )}
+                    {inQueue ? <X size={11} strokeWidth={2.5} /> : <Plus size={11} strokeWidth={2.5} />}
                   </button>
 
                   {/* Download button */}
                   <button
                     type="button"
                     onClick={() => handleSingleDownload(format)}
-                    disabled={!!downloading}
+                    disabled={downloading}
                     title={`Download ${label}`}
                     className="h-6 px-2 rounded-[6px] flex items-center gap-1 text-[10px] font-semibold bg-bg-input border border-border-base text-text-primary hover:bg-bg-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default"
                   >
-                    {isLoading ? (
-                      <Spinner size="sm" />
-                    ) : (
-                      <Download size={11} strokeWidth={2} />
-                    )}
-                    <span className="hidden sm:inline">
-                      {isLoading ? "…" : ""}
-                    </span>
+                    {isLoading ? <Spinner size="sm" /> : <Download size={11} strokeWidth={2} />}
+                    <span className="hidden sm:inline">{isLoading ? "…" : ""}</span>
                   </button>
                 </div>
               </div>
@@ -346,46 +278,20 @@ export function ExportSheet() {
           {building ? (
             <div className="flex items-center justify-center gap-2 py-2">
               <Spinner size="sm" />
-              <span className="text-[12px] text-text-muted">
-                Building package…
-              </span>
+              <span className="text-[12px] text-text-muted">Building package…</span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                <PackageOpen
-                  size={13}
-                  strokeWidth={1.75}
-                  className={queue.size > 0 ? "text-accent" : "text-text-dim"}
-                />
-                <span
-                  className={[
-                    "text-[11px]",
-                    queue.size > 0 ? "text-text-muted" : "text-text-dim",
-                  ].join(" ")}
-                >
-                  {queue.size > 0
-                    ? `${queue.size} format${queue.size > 1 ? "s" : ""} queued`
-                    : "No formats queued"}
-                </span>
+                <PackageOpen size={13} strokeWidth={1.75} className={queue.size > 0 ? "text-accent" : "text-text-dim"} />
+                <span className={["text-[11px]", queue.size > 0 ? "text-text-muted" : "text-text-dim"].join(" ")}>{queue.size > 0 ? `${queue.size} format${queue.size > 1 ? "s" : ""} queued` : "No formats queued"}</span>
                 {queue.size > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setQueue(new Set())}
-                    className="text-[10px] text-text-dim hover:text-danger cursor-pointer ml-1"
-                  >
+                  <button type="button" onClick={() => setQueue(new Set())} className="text-[10px] text-text-dim hover:text-danger cursor-pointer ml-1">
                     Clear
                   </button>
                 )}
               </div>
-              <Button
-                variant="primary"
-                size="md"
-                label="Export All"
-                leftIcon={<Package size={13} strokeWidth={2} />}
-                onClick={handleBulkExport}
-                disabled={queue.size === 0}
-              />
+              <Button variant="primary" size="md" label="Export All" leftIcon={<Package size={13} strokeWidth={2} />} onClick={handleBulkExport} disabled={queue.size === 0} />
             </div>
           )}
         </div>

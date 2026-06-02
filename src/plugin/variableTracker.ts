@@ -82,8 +82,7 @@ export function computeSyncPreview(
         for (const [roleId, variations] of Object.entries(roles as Record<string, any>)) {
           const roleObj = (config.roles && config.roles[roleId]) || {};
           const roleIdStr = roleObj._id || roleId;
-          const variationDefs = roleObj.customVariationList && roleObj.customVariations?.length
-            ? roleObj.customVariations : config.variations || [];
+          const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let vi = 0; vi < variationDefs.length; vi++) {
             const token = (variations as any)[String(vi)];
             if (!token) continue;
@@ -255,10 +254,7 @@ export function analyzeNameConflicts(
   if (tokenCol && result?.tokens) {
     const tokenMetadataMap = buildMetadataMap(tokenCol, localVars, 'token:');
     const tokenNameOrder: string[] =
-      config.tokenNameSegments ||
-      (config.tokenGrouping === 'role'
-        ? ['role', 'color', 'variation']
-        : ['color', 'role', 'variation']);
+      config.tokenNameSegments || ['color', 'role', 'variation'];
 
     const firstTheme = Object.keys(result.tokens)[0];
     if (firstTheme) {
@@ -275,9 +271,7 @@ export function analyzeNameConflicts(
           const rName = roleObj.name || roleId;
           const rLabel = roleLabel(rName, parseInt(roleId, 10));
 
-          const variationDefs = roleObj.customVariationList && roleObj.customVariations?.length
-            ? roleObj.customVariations
-            : config.variations;
+          const variationDefs = roleObj.variations ?? config.variations ?? [];
 
           for (let vi = 0; vi < variationDefs.length; vi++) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

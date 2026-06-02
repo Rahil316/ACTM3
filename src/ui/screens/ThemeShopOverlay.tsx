@@ -1,31 +1,40 @@
-import { useState, useEffect } from 'react';
-import { useUiStore } from '../store/uiStore';
-import { useAppStore, ensureIds, ensureVariations } from '../store/appStore';
-import { banner } from '../store/bannerStore';
-import { PRESETS } from '../lib/presets/presets';
-import { ShopCard } from '../components/cards/ShopCard';
-import { Button } from '../components/Button';
-import { IconChevronLeft } from '../components/icons';
-import { FullscreenOverlay } from '../components/FullscreenOverlay';
-import type { Preset } from '../lib/presets/types';
-import type { AppState } from '../types/state';
+import { useState, useEffect } from "react";
+import { useUiStore } from "../store/uiStore";
+import { useAppStore, ensureIds, ensureVariations } from "../store/appStore";
+import { banner } from "../store/bannerStore";
+import { PRESETS } from "../lib/presets/presets";
+import { ShopCard } from "../components/cards/ShopCard";
+import { Button } from "../components/Button";
+import { IconChevronLeft } from "../components/icons";
+import { FullscreenOverlay } from "../components/FullscreenOverlay";
+import type { ProjectStore } from "../types/state";
+
+export interface Preset {
+  id: string;
+  name: string;
+  description?: string;
+  tags?: string[];
+  badge?: string;
+  swatches?: string[];
+  config: Partial<Omit<ProjectStore, "versions">>;
+}
 
 export function ThemeShopOverlay() {
-  const isOpen      = useUiStore((s) => s.activeOverlay === 'theme-shop');
+  const isOpen = useUiStore((s) => s.activeOverlay === "theme-shop");
   const closeOverlay = useUiStore((s) => s.closeOverlay);
-  const loadState   = useAppStore((s) => s.loadState);
-  const presetId    = useAppStore((s) => (s.appState as AppState & { _presetId?: string })._presetId);
+  const loadState = useAppStore((s) => s.loadState);
+  const presetId = useAppStore((s) => (s.projectStore as ProjectStore & { _presetId?: string })._presetId);
 
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   // Keyboard close
   useEffect(() => {
     if (!isOpen) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') closeOverlay();
+      if (e.key === "Escape") closeOverlay();
     }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, closeOverlay]);
 
   if (!isOpen) return null;
@@ -33,17 +42,12 @@ export function ThemeShopOverlay() {
   const filtered = query.trim()
     ? PRESETS.filter((p) => {
         const q = query.toLowerCase();
-        return (
-          p.name.toLowerCase().includes(q) ||
-          p.description?.toLowerCase().includes(q) ||
-          p.tags?.some((t) => t.toLowerCase().includes(q)) ||
-          p.badge?.toLowerCase().includes(q)
-        );
+        return p.name.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q) || p.tags?.some((t: string) => t.toLowerCase().includes(q)) || p.badge?.toLowerCase().includes(q);
       })
     : PRESETS;
 
   function handleLoad(preset: Preset) {
-    const next = { ...preset.config, _presetId: preset.id } as AppState & { _presetId: string };
+    const next = { ...preset.config, _presetId: preset.id } as ProjectStore & { _presetId: string };
     ensureIds(next);
     ensureVariations(next);
     loadState(next);
@@ -55,15 +59,7 @@ export function ThemeShopOverlay() {
     <FullscreenOverlay>
       {/* Header */}
       <div className="shrink-0 flex items-center gap-3 px-3 py-3 border-b border-border-base bg-bg-app">
-        <Button
-          variant="ghost"
-          size="sm"
-          square
-          icon={<IconChevronLeft className="w-4 h-4" />}
-          onClick={closeOverlay}
-          aria-label="Back"
-          title="Back"
-        />
+        <Button variant="ghost" size="sm" square icon={<IconChevronLeft className="w-4 h-4" />} onClick={closeOverlay} aria-label="Back" title="Back" />
         <div className="flex-1 min-w-0">
           <h2 className="text-[15px] font-semibold text-text-primary leading-tight">Theme Shop</h2>
           <p className="text-[11px] text-text-muted mt-0.5">Load a preset to get started — everything is editable.</p>
@@ -84,18 +80,11 @@ export function ThemeShopOverlay() {
       {/* Grid */}
       <div className="flex-1 overflow-y-auto p-2">
         {filtered.length === 0 ? (
-          <div className="flex items-center justify-center h-32 text-[12px] text-text-muted">
-            No presets match "{query}"
-          </div>
+          <div className="flex items-center justify-center h-32 text-[12px] text-text-muted">No presets match "{query}"</div>
         ) : (
           <div className="grid grid-cols-1 gap-2">
             {filtered.map((preset) => (
-              <ShopCard
-                key={preset.id}
-                preset={preset}
-                isLoaded={presetId === preset.id}
-                onLoad={() => handleLoad(preset)}
-              />
+              <ShopCard key={preset.id} preset={preset} isLoaded={presetId === preset.id} onLoad={() => handleLoad(preset)} />
             ))}
           </div>
         )}

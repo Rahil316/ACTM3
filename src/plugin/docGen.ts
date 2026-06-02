@@ -43,7 +43,7 @@ export const ExportFormatter = {
         for (const [roleId, variations] of Object.entries(roles)) {
           const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
           const roleName = roleObj.name || roleId;
-          const variationDefs = roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0 ? roleObj.customVariations : (config.variations ?? []);
+          const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let i = 0; i < variationDefs.length; i++) {
             const token = variations[String(i)];
             if (!token) continue;
@@ -86,7 +86,7 @@ export const ExportFormatter = {
         for (const [roleId, variations] of Object.entries(roles)) {
           const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
           const roleName = roleObj.name || roleId;
-          const variationDefs = roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0 ? roleObj.customVariations : (config.variations ?? []);
+          const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let i = 0; i < variationDefs.length; i++) {
             const token = variations[String(i)];
             if (!token) continue;
@@ -106,7 +106,7 @@ export const ExportFormatter = {
         for (const [roleId, variations] of Object.entries(roles)) {
           const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
           const roleName = roleObj.name || roleId;
-          const variationDefs = roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0 ? roleObj.customVariations : (config.variations ?? []);
+          const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let i = 0; i < variationDefs.length; i++) {
             const token = variations[String(i)];
             if (!token) continue;
@@ -164,7 +164,7 @@ export function generateScss(result: EngineResult, config: ExportConfig): string
       for (const [roleId, variations] of Object.entries(roles)) {
         const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
         const roleName = roleObj.name || roleId;
-        const variationDefs = roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0 ? roleObj.customVariations : configVariations;
+        const variationDefs = roleObj.variations ?? configVariations ?? [];
         for (let i = 0; i < variationDefs.length; i++) {
           const token = variations[String(i)];
           if (!token) continue;

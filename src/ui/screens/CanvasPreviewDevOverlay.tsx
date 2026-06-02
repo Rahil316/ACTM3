@@ -13,7 +13,7 @@ import { useAppStore } from "../store/appStore";
 import { useUiStore } from "../store/uiStore";
 import { variableMaker, resolveTokenRefBgs, translateLocalBg, contrastRatio, contrastRating } from "../lib/colorEngine";
 import { getInkMode, inkColor, normalizeHex } from "../components/preview";
-import type { AppState } from "../types/state";
+import type { ProjectStore } from "../types/state";
 import { CanvasPreviewDevTree } from "./CanvasPreviewDevTree";
 
 // ── Detail panel payload ──────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ type SourceDetail = {
   colorName: string;
   colorId: string;
   hex: string;
-  pluginDataRef: string;          // tokenRef stored in Figma variable pluginData
+  pluginDataRef: string; // tokenRef stored in Figma variable pluginData
   figmaCollection: string;
   contrastVsThemes: { theme: string; bg: string; ratio: string }[];
   alphaRefs: { opacity: number; pluginDataRef: string }[];
@@ -53,7 +53,7 @@ type TokenDetail = {
   varId: string;
   themeName: string;
   hex: string;
-  pluginDataRef: string;          // tokenRef stored in Figma variable pluginData
+  pluginDataRef: string; // tokenRef stored in Figma variable pluginData
   figmaCollection: string;
   scaleStep: string | null;
   contrastRatio: string;
@@ -99,9 +99,9 @@ function logValidation(label: string, pass: boolean, detail?: string) {
 // ── Build engine config ───────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildConfig(appState: AppState): any {
+function buildConfig(projectStore: ProjectStore): any {
   return {
-    colors: appState.colors.map((c) => ({
+    colors: projectStore.colors.map((c) => ({
       _id: c._id,
       name: c.name,
       value: c.value,
@@ -110,21 +110,18 @@ function buildConfig(appState: AppState): any {
       scaleAlgorithm: c.scaleAlgorithm,
       solverMode: c.solverMode,
     })),
-    themes: appState.themes.map((t) => ({ name: t.name, bg: t.bg })),
-    scaleLength: appState.scaleLength,
-    scaleStepNames: appState.scaleStepNames?.map((s) => s.name) ?? undefined,
-    scaleAlgorithm: appState.scaleAlgorithm,
-    pluginMode: appState.pluginMode,
-    roles: appState.roles.map((r) => {
-      const { localBg, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, appState.colors, appState.themes);
+    themes: projectStore.themes.map((t) => ({ name: t.name, bg: t.bg })),
+    scaleLength: projectStore.scaleLength,
+    scaleSteps: projectStore.scaleSteps?.map((s) => s.name) ?? undefined,
+    scaleAlgorithm: projectStore.scaleAlgorithm,
+    pluginMode: projectStore.pluginMode,
+    roles: projectStore.roles.map((r) => {
+      const { localBg, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, projectStore.colors, projectStore.themes);
       return {
         name: r.name,
         shorthand: r.shorthand ?? "",
         mappingMethod: r.mappingMethod,
-        minContrast: r.minContrast,
-        variationTargets: r.variationTargets,
-        customVariationList: r.customVariationList,
-        customVariations: r.customVariations,
+        variations: r.variations,
         solverMode: r.solverMode,
         description: r.description,
         scopedColorIds: r.scopedColorIds,
@@ -133,37 +130,21 @@ function buildConfig(appState: AppState): any {
         localBgDynamicRef,
       };
     }),
-    variations: appState.variations ?? [],
-    tokenGrouping: appState.tokenGrouping,
-    tokenNameSegments: appState.tokenNameSegments,
-    useShorthandColors: appState.useShorthandColors,
-    useShorthandRoles: appState.useShorthandRoles,
-    useShorthandVariations: appState.useShorthandVariations,
-    useShorthandSteps: appState.useShorthandSteps,
-    alphaValues: (appState.alphaValues || "10,25,50,75,90")
-      .split(",")
-      .map((v: string) => parseInt(v.trim(), 10))
-      .filter((v: number) => !isNaN(v)),
-    includeSourceColors: appState.includeSourceColors ?? false,
-    includeColorScalesCollection: appState.includeColorScalesCollection !== false,
+    variations: projectStore.variations ?? [],
+    tokenNameSegments: projectStore.tokenNameSegments,
+    useShorthandColors: projectStore.useShorthandColors,
+    useShorthandRoles: projectStore.useShorthandRoles,
+    useShorthandVariations: projectStore.useShorthandVariations,
+    useShorthandSteps: projectStore.useShorthandSteps,
+    alphaValues: projectStore.alphaValues?.length ? projectStore.alphaValues : [10, 25, 50, 75, 90],
+    includeSourceColors: projectStore.includeSourceColors ?? false,
+    includeColorScalesCollection: projectStore.includeColorScalesCollection !== false,
   };
 }
 
 // ── Shared primitive components ───────────────────────────────────────────────
 
-function Swatch({
-  hex,
-  size = 32,
-  label,
-  onClick,
-  selected,
-}: {
-  hex: string;
-  size?: number;
-  label?: string;
-  onClick?: () => void;
-  selected?: boolean;
-}) {
+function Swatch({ hex, size = 32, label, onClick, selected }: { hex: string; size?: number; label?: string; onClick?: () => void; selected?: boolean }) {
   const mode = getInkMode(hex);
   return (
     <div
@@ -185,11 +166,7 @@ function Swatch({
         outlineOffset: 2,
       }}
     >
-      {label && (
-        <span style={{ fontSize: 8, color: inkColor(mode, 0.7), lineHeight: 1, wordBreak: "break-all" }}>
-          {label}
-        </span>
-      )}
+      {label && <span style={{ fontSize: 8, color: inkColor(mode, 0.7), lineHeight: 1, wordBreak: "break-all" }}>{label}</span>}
     </div>
   );
 }
@@ -237,9 +214,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function DetailRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 10 }}>
-      <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-        {label}
-      </span>
+      <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
       <span
         style={{
           fontSize: 10,
@@ -268,23 +243,15 @@ function ColorChip({ hex }: { hex: string }) {
           flexShrink: 0,
         }}
       />
-      <span style={{ fontFamily: "monospace", fontSize: 12, color: "#f4f4f5", fontWeight: 600 }}>
-        {normalizeHex(hex)}
-      </span>
+      <span style={{ fontFamily: "monospace", fontSize: 12, color: "#f4f4f5", fontWeight: 600 }}>{normalizeHex(hex)}</span>
     </div>
   );
 }
 
 function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void }) {
-  const kindLabel =
-    item.kind === "source" ? "Source Color"
-    : item.kind === "scale" ? "Scale Step"
-    : "Role Token";
+  const kindLabel = item.kind === "source" ? "Source Color" : item.kind === "scale" ? "Scale Step" : "Role Token";
 
-  const kindColor =
-    item.kind === "source" ? "#34d399"
-    : item.kind === "scale" ? "#60a5fa"
-    : "#f59e0b";
+  const kindColor = item.kind === "source" ? "#34d399" : item.kind === "scale" ? "#60a5fa" : "#f59e0b";
 
   return (
     <div
@@ -342,11 +309,7 @@ function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void 
       {/* Panel body */}
       <div style={{ flex: 1, overflowY: "auto", padding: "14px" }}>
         {/* Color chip */}
-        {item.kind !== "scale" || item.hex ? (
-          <ColorChip hex={(item as SourceDetail | TokenDetail).hex ?? (item as ScaleDetail).hex ?? "#888"} />
-        ) : (
-          <div style={{ marginBottom: 14, fontSize: 10, color: "#52525b" }}>No hex resolved</div>
-        )}
+        {item.kind !== "scale" || item.hex ? <ColorChip hex={(item as SourceDetail | TokenDetail).hex ?? (item as ScaleDetail).hex ?? "#888"} /> : <div style={{ marginBottom: 14, fontSize: 10, color: "#52525b" }}>No hex resolved</div>}
 
         {/* ── Source ── */}
         {item.kind === "source" && (
@@ -362,18 +325,12 @@ function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void 
                 marginBottom: 10,
               }}
             >
-              <div style={{ fontSize: 9, color: "#a78bfa", marginBottom: 4, fontWeight: 600 }}>
-                Figma pluginData ref
-              </div>
-              <code style={{ fontSize: 10, color: "#c4b5fd", wordBreak: "break-all" }}>
-                {item.pluginDataRef}
-              </code>
+              <div style={{ fontSize: 9, color: "#a78bfa", marginBottom: 4, fontWeight: 600 }}>Figma pluginData ref</div>
+              <code style={{ fontSize: 10, color: "#c4b5fd", wordBreak: "break-all" }}>{item.pluginDataRef}</code>
             </div>
             <DetailRow label="Figma collection" value={item.figmaCollection} mono />
             <div style={{ marginBottom: 10 }}>
-              <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Contrast vs themes
-              </span>
+              <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Contrast vs themes</span>
               {item.contrastVsThemes.map((ct) => (
                 <div key={ct.theme} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
                   <div
@@ -393,9 +350,7 @@ function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void 
             </div>
             {item.alphaRefs.length > 0 && (
               <div>
-                <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                  Alpha variant refs
-                </span>
+                <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Alpha variant refs</span>
                 {item.alphaRefs.map((a) => (
                   <div key={a.opacity} style={{ marginTop: 5 }}>
                     <div style={{ fontSize: 9, color: "#71717a" }}>{a.opacity}% opacity</div>
@@ -421,20 +376,14 @@ function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void 
                 marginBottom: 10,
               }}
             >
-              <div style={{ fontSize: 9, color: "#60a5fa", marginBottom: 4, fontWeight: 600 }}>
-                Figma pluginData ref
-              </div>
-              <code style={{ fontSize: 10, color: "#93c5fd", wordBreak: "break-all" }}>
-                {item.pluginDataRef}
-              </code>
+              <div style={{ fontSize: 9, color: "#60a5fa", marginBottom: 4, fontWeight: 600 }}>Figma pluginData ref</div>
+              <code style={{ fontSize: 10, color: "#93c5fd", wordBreak: "break-all" }}>{item.pluginDataRef}</code>
             </div>
             <DetailRow label="Figma collection" value={item.figmaCollection} mono />
             <DetailRow label="Color ID" value={item.colorId} mono />
             {item.contrastVsThemes.length > 0 && (
               <div style={{ marginBottom: 10 }}>
-                <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                  Contrast vs themes
-                </span>
+                <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Contrast vs themes</span>
                 {item.contrastVsThemes.map((ct) => (
                   <div key={ct.theme} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
                     <span style={{ fontSize: 10, color: "#a1a1aa", flex: 1 }}>{ct.theme}</span>
@@ -445,9 +394,7 @@ function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void 
             )}
             {item.engineEntry && (
               <div>
-                <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                  Raw engine entry
-                </span>
+                <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Raw engine entry</span>
                 <pre
                   style={{
                     marginTop: 6,
@@ -485,12 +432,8 @@ function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void 
                 marginBottom: 10,
               }}
             >
-              <div style={{ fontSize: 9, color: "#f59e0b", marginBottom: 4, fontWeight: 600 }}>
-                Figma pluginData ref
-              </div>
-              <code style={{ fontSize: 10, color: "#fcd34d", wordBreak: "break-all" }}>
-                {item.pluginDataRef}
-              </code>
+              <div style={{ fontSize: 9, color: "#f59e0b", marginBottom: 4, fontWeight: 600 }}>Figma pluginData ref</div>
+              <code style={{ fontSize: 10, color: "#fcd34d", wordBreak: "break-all" }}>{item.pluginDataRef}</code>
             </div>
             <DetailRow label="Figma collection" value={item.figmaCollection} mono />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
@@ -500,13 +443,9 @@ function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void 
               {item.scaleStep && <DetailRow label="Mapped scale step" value={item.scaleStep} mono />}
             </div>
             <div style={{ marginBottom: 10 }}>
-              <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Contrast vs theme BG
-              </span>
+              <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Contrast vs theme BG</span>
               <div style={{ marginTop: 5, display: "flex", gap: 6, alignItems: "center" }}>
-                <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace", color: "#f4f4f5" }}>
-                  {item.contrastRatio}
-                </span>
+                <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace", color: "#f4f4f5" }}>{item.contrastRatio}</span>
                 {item.contrastRating && (
                   <span
                     style={{
@@ -523,9 +462,7 @@ function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void 
               </div>
             </div>
             <div>
-              <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Raw engine token
-              </span>
+              <span style={{ fontSize: 9, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Raw engine token</span>
               <pre
                 style={{
                   marginTop: 6,
@@ -552,47 +489,32 @@ function DetailPanel({ item, onClose }: { item: DetailItem; onClose: () => void 
 
 // ── Section A: Source Colors ──────────────────────────────────────────────────
 
-function SourceColorsSection({
-  appState,
-  onSelect,
-  selectedRef,
-}: {
-  appState: AppState;
-  onSelect: (item: DetailItem) => void;
-  selectedRef: string | null;
-}) {
-  const alphaValues = (appState.alphaValues || "10,25,50,75,90")
-    .split(",")
-    .map((v) => parseInt(v.trim(), 10))
-    .filter((v) => !isNaN(v));
+function SourceColorsSection({ projectStore, onSelect, selectedRef }: { projectStore: ProjectStore; onSelect: (item: DetailItem) => void; selectedRef: string | null }) {
+  const alphaValues: number[] = projectStore.alphaValues?.length ? projectStore.alphaValues : [10, 25, 50, 75, 90];
 
-  const sourceCollection = appState.sourceCollectionName || "_constants";
+  const sourceCollection = projectStore.sourceCollectionName || "_constants";
 
   useEffect(() => {
     logSection("Source Colors", {
-      colors: appState.colors.map((c) => ({ name: c.name, value: c.value })),
+      colors: projectStore.colors.map((c) => ({ name: c.name, value: c.value })),
       alphaValues,
-      themes: appState.themes.map((t) => ({ name: t.name, bg: t.bg })),
+      themes: projectStore.themes.map((t) => ({ name: t.name, bg: t.bg })),
     });
-    appState.colors.forEach((color) => {
-      logValidation(`Source: ${color.name}`, !!color.value, color.value);
-      appState.themes.forEach((theme) => {
+    projectStore.colors.forEach((color) => {
+      logValidation(`Source: ${color.name}`, color.value, color.value);
+      projectStore.themes.forEach((theme) => {
         const ratio = contrastRatio(color.value, theme.bg);
-        logValidation(
-          `  Contrast ${color.name} vs ${theme.name}`,
-          ratio != null && ratio >= 1,
-          ratio != null ? `${ratio.toFixed(1)}:1` : "null",
-        );
+        logValidation(`  Contrast ${color.name} vs ${theme.name}`, ratio != null && ratio >= 1, ratio != null ? `${ratio.toFixed(1)}:1` : "null");
       });
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div style={{ marginBottom: 32 }}>
-      <SectionTitle>Source Colors ({appState.colors.length})</SectionTitle>
+      <SectionTitle>Source Colors ({projectStore.colors.length})</SectionTitle>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {appState.colors.map((color) => {
+        {projectStore.colors.map((color) => {
           const ref = `source:${color._id}`;
           const isSelected = selectedRef === ref;
           return (
@@ -606,7 +528,7 @@ function SourceColorsSection({
                   hex: color.value,
                   pluginDataRef: ref,
                   figmaCollection: sourceCollection,
-                  contrastVsThemes: appState.themes.map((t) => ({
+                  contrastVsThemes: projectStore.themes.map((t) => ({
                     theme: t.name,
                     bg: t.bg,
                     ratio: contrastStr(color.value, t.bg),
@@ -634,7 +556,7 @@ function SourceColorsSection({
                 <span style={{ fontSize: 11, fontWeight: 600, color: "#f4f4f5" }}>{color.name}</span>
                 <Badge>{normalizeHex(color.value)}</Badge>
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                  {appState.themes.map((theme) => (
+                  {projectStore.themes.map((theme) => (
                     <Badge key={theme.name} color="#94a3b8">
                       {theme.name} {contrastStr(color.value, theme.bg)}
                     </Badge>
@@ -659,47 +581,43 @@ function SourceColorsSection({
 // ── Section B: Color Scales ───────────────────────────────────────────────────
 
 function ColorScalesSection({
-  appState,
+  projectStore,
   result,
   onSelect,
   selectedRef,
 }: {
-  appState: AppState;
+  projectStore: ProjectStore;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result: any;
   onSelect: (item: DetailItem) => void;
   selectedRef: string | null;
 }) {
   const stepNames: string[] = useMemo(() => {
-    if (Array.isArray(appState.scaleStepNames) && appState.scaleStepNames.length > 0) {
-      return appState.scaleStepNames.map((s) => s.name);
+    if (Array.isArray(projectStore.scaleSteps) && projectStore.scaleSteps.length > 0) {
+      return projectStore.scaleSteps.map((s) => s.name);
     }
-    const len = appState.scaleLength ?? 23;
+    const len = projectStore.scaleLength ?? 23;
     return Array.from({ length: len }, (_, i) => String(i + 1));
-  }, [appState]);
+  }, [projectStore]);
 
-  const scaleCollection = appState.scaleCollectionName || "_scale";
+  const scaleCollection = projectStore.scaleCollectionName || "_scale";
 
   useEffect(() => {
-    logSection("Color Scales", { colors: appState.colors.length, steps: stepNames.length });
-    appState.colors.forEach((color) => {
+    logSection("Color Scales", { colors: projectStore.colors.length, steps: stepNames.length });
+    projectStore.colors.forEach((color) => {
       const missing = stepNames.filter((s) => !result?.scales?.[color.name]?.[s]);
-      logValidation(
-        `Scale: ${color.name} (${stepNames.length - missing.length}/${stepNames.length} steps)`,
-        missing.length === 0,
-        missing.length > 0 ? `missing: ${missing.join(", ")}` : undefined,
-      );
+      logValidation(`Scale: ${color.name} (${stepNames.length - missing.length}/${stepNames.length} steps)`, missing.length === 0, missing.length > 0 ? `missing: ${missing.join(", ")}` : undefined);
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div style={{ marginBottom: 32 }}>
       <SectionTitle>
-        Color Scales — {appState.colors.length} colors × {stepNames.length} steps
+        Color Scales — {projectStore.colors.length} colors × {stepNames.length} steps
       </SectionTitle>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        {appState.colors.map((color) => (
+        {projectStore.colors.map((color) => (
           <div key={color._id}>
             <div style={{ fontSize: 10, fontWeight: 600, color: "#a1a1aa", marginBottom: 4 }}>{color.name}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -707,12 +625,11 @@ function ColorScalesSection({
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const entry = result?.scales?.[color.name]?.[step] as any;
                 const hex = entry && typeof entry === "object" ? entry.value : (entry as string) || null;
-                const stepId =
-                  appState.scaleStepNames?.find((s) => s.name === step)?._id ?? step;
+                const stepId = projectStore.scaleSteps?.find((s) => s.name === step)?._id ?? step;
                 const ref = `scale:${color._id}/${stepId}`;
                 const isSelected = selectedRef === ref;
 
-                const contrastVsThemes = appState.themes.map((t) => ({
+                const contrastVsThemes = projectStore.themes.map((t) => ({
                   theme: t.name,
                   ratio: hex ? contrastStr(hex, t.bg) : "—",
                 }));
@@ -746,9 +663,7 @@ function ColorScalesSection({
                   >
                     <Swatch hex={hex ?? "#888"} size={20} selected={isSelected} />
                     <span style={{ fontSize: 9, color: "#71717a", width: 28, textAlign: "right" }}>{step}</span>
-                    <span style={{ fontSize: 9, fontFamily: "monospace", color: "#a1a1aa" }}>
-                      {hex ? normalizeHex(hex) : "—"}
-                    </span>
+                    <span style={{ fontSize: 9, fontFamily: "monospace", color: "#a1a1aa" }}>{hex ? normalizeHex(hex) : "—"}</span>
                   </div>
                 );
               })}
@@ -763,24 +678,24 @@ function ColorScalesSection({
 // ── Section C: Role Tokens ────────────────────────────────────────────────────
 
 function RoleTokensSection({
-  appState,
+  projectStore,
   result,
   onSelect,
   selectedRef,
 }: {
-  appState: AppState;
+  projectStore: ProjectStore;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result: any;
   onSelect: (item: DetailItem) => void;
   selectedRef: string | null;
 }) {
-  const tokenCollection = appState.tokenCollectionName || "color tokens";
+  const tokenCollection = projectStore.tokenCollectionName || "color tokens";
 
   useEffect(() => {
     logSection("Role Tokens", result?.tokens ?? {});
     let totalTokens = 0;
     let missingTokens = 0;
-    appState.themes.forEach((theme) => {
+    projectStore.themes.forEach((theme) => {
       const themeKey = theme.name.toLowerCase();
       const themeTokens = result?.tokens?.[themeKey] ?? {};
       Object.entries(themeTokens).forEach(([, roleMap]) => {
@@ -794,29 +709,21 @@ function RoleTokensSection({
           });
         });
       });
-      logValidation(
-        `Theme: ${theme.name} — colors present`,
-        Object.keys(themeTokens).length === appState.colors.length,
-        `${Object.keys(themeTokens).length}/${appState.colors.length}`,
-      );
+      logValidation(`Theme: ${theme.name} — colors present`, Object.keys(themeTokens).length === projectStore.colors.length, `${Object.keys(themeTokens).length}/${projectStore.colors.length}`);
       Object.entries(themeTokens).forEach(([_colorName, colorRoles]) => {
         const roleCount = Object.keys((colorRoles as object) ?? {}).length;
         logValidation(`  ${theme.name} / ${_colorName} — roles`, roleCount > 0, `${roleCount} role(s)`);
       });
     });
-    logValidation(
-      `Total tokens generated`,
-      missingTokens === 0,
-      `${totalTokens} total, ${missingTokens} missing value`,
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    logValidation(`Total tokens generated`, missingTokens === 0, `${totalTokens} total, ${missingTokens} missing value`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div style={{ marginBottom: 32 }}>
-      <SectionTitle>Role Tokens — {appState.themes.length} theme(s)</SectionTitle>
+      <SectionTitle>Role Tokens — {projectStore.themes.length} theme(s)</SectionTitle>
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "flex-start" }}>
-        {appState.themes.map((theme) => {
+        {projectStore.themes.map((theme) => {
           const isBgDark = isColorDark(theme.bg);
           const onBg = isBgDark ? "#f4f4f5" : "#18181b";
           const onBgMuted = isBgDark ? "#a1a1aa" : "#52525b";
@@ -837,32 +744,23 @@ function RoleTokensSection({
                 flexShrink: 0,
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: onBg, marginBottom: 12 }}>
-                {theme.name}
-              </div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: onBg, marginBottom: 12 }}>{theme.name}</div>
 
               {Object.entries(themeTokens).map(([colorName, roleMap]) => {
-                const colorObj = appState.colors.find((c) => c.name === colorName);
+                const colorObj = projectStore.colors.find((c) => c.name === colorName);
                 return (
                   <div key={colorName} style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: onBg, marginBottom: 6 }}>
-                      {colorName}
-                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: onBg, marginBottom: 6 }}>{colorName}</div>
 
                     {Object.entries(roleMap).map(([roleIdxStr, varMap]) => {
                       const roleIdx = parseInt(roleIdxStr, 10);
-                      const roleObj = appState.roles[roleIdx];
+                      const roleObj = projectStore.roles[roleIdx];
                       if (!roleObj) return null;
-                      const varDefs =
-                        roleObj.customVariationList && roleObj.customVariations?.length
-                          ? roleObj.customVariations
-                          : appState.variations ?? [];
+                      const varDefs = roleObj.variations ?? projectStore.variations ?? [];
 
                       return (
                         <div key={roleIdxStr} style={{ marginBottom: 6 }}>
-                          <div style={{ fontSize: 9, color: onBgMuted, marginBottom: 3 }}>
-                            {roleObj.name}
-                          </div>
+                          <div style={{ fontSize: 9, color: onBgMuted, marginBottom: 3 }}>{roleObj.name}</div>
                           <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
                             {Object.entries(varMap).map(([varIdxStr, token]) => {
                               if (!token?.value) return null;
@@ -890,8 +788,7 @@ function RoleTokensSection({
                                       pluginDataRef: ref,
                                       figmaCollection: tokenCollection,
                                       scaleStep: (token.scaleStep as string | undefined) ?? null,
-                                      contrastRatio:
-                                        ratio != null ? `${Number(ratio).toFixed(1)}:1` : "—",
+                                      contrastRatio: ratio != null ? `${Number(ratio).toFixed(1)}:1` : "—",
                                       contrastRating: rating,
                                       engineToken: token,
                                     })
@@ -904,9 +801,7 @@ function RoleTokensSection({
                                     cursor: "pointer",
                                     borderRadius: 4,
                                     padding: 2,
-                                    outline: isSelected
-                                      ? "2px solid #a78bfa"
-                                      : "2px solid transparent",
+                                    outline: isSelected ? "2px solid #a78bfa" : "2px solid transparent",
                                     outlineOffset: 1,
                                   }}
                                 >
@@ -928,11 +823,7 @@ function RoleTokensSection({
                                   >
                                     {varDef?.name ?? varIdx}
                                   </span>
-                                  {ratio != null && (
-                                    <span style={{ fontSize: 7, color: onBgMuted }}>
-                                      {Number(ratio).toFixed(1)}
-                                    </span>
-                                  )}
+                                  {ratio != null && <span style={{ fontSize: 7, color: onBgMuted }}>{Number(ratio).toFixed(1)}</span>}
                                 </div>
                               );
                             })}
@@ -992,20 +883,17 @@ function ModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (m: ViewMode
 // ── Main overlay ──────────────────────────────────────────────────────────────
 
 export function CanvasPreviewDevOverlay() {
-  const appState = useAppStore((s) => s.appState);
+  const projectStore = useAppStore((s) => s.projectStore);
   const closeOverlay = useUiStore((s) => s.closeOverlay);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [mode, setMode] = useState<ViewMode>("flat");
   const [selectedItem, setSelectedItem] = useState<DetailItem | null>(null);
 
-  const selectedRef = useMemo<string | null>(
-    () => selectedItem?.pluginDataRef ?? null,
-    [selectedItem],
-  );
+  const selectedRef = useMemo<string | null>(() => selectedItem?.pluginDataRef ?? null, [selectedItem]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const config = useMemo(() => buildConfig(appState) as any, [appState]);
+  const config = useMemo(() => buildConfig(projectStore) as any, [projectStore]);
 
   const result = useMemo(() => {
     try {
@@ -1018,28 +906,25 @@ export function CanvasPreviewDevOverlay() {
     }
   }, [config]);
 
-  const includeSource = appState.includeSourceColors === true;
-  const includeScales = appState.includeColorScalesCollection !== false;
+  const includeSource = projectStore.includeSourceColors === true;
+  const includeScales = projectStore.includeColorScalesCollection !== false;
 
   useEffect(() => {
     console.clear();
     console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color:#a78bfa;font-weight:bold");
     console.log("%c  CanvasPreviewDev — Token Wand output validation", "color:#a78bfa;font-size:13px;font-weight:bold");
     console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color:#a78bfa;font-weight:bold");
-    console.log(`Colors: ${appState.colors.length} | Roles: ${appState.roles.length} | Themes: ${appState.themes.length}`);
-    logValidation("Engine result present", !!result);
-    logValidation("Colors defined", appState.colors.length > 0, `${appState.colors.length}`);
-    logValidation("Roles defined", appState.roles.length > 0, `${appState.roles.length}`);
-    logValidation("Themes defined", appState.themes.length > 0, `${appState.themes.length}`);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    console.log(`Colors: ${projectStore.colors.length} | Roles: ${projectStore.roles.length} | Themes: ${projectStore.themes.length}`);
+    logValidation("Engine result present", result);
+    logValidation("Colors defined", projectStore.colors.length > 0, `${projectStore.colors.length}`);
+    logValidation("Roles defined", projectStore.roles.length > 0, `${projectStore.roles.length}`);
+    logValidation("Themes defined", projectStore.themes.length > 0, `${projectStore.themes.length}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!selectedItem) return;
-    console.group(
-      `%c[CanvasPreviewDev] Selected — ${selectedItem.kind} — ${selectedItem.pluginDataRef}`,
-      "color:#f59e0b;font-weight:bold",
-    );
+    console.group(`%c[CanvasPreviewDev] Selected — ${selectedItem.kind} — ${selectedItem.pluginDataRef}`, "color:#f59e0b;font-weight:bold");
     console.log(selectedItem);
     console.groupEnd();
   }, [selectedItem]);
@@ -1085,9 +970,15 @@ export function CanvasPreviewDevOverlay() {
           <span style={{ fontSize: 12, fontWeight: 700, color: "#f4f4f5", flexShrink: 0 }}>Canvas Preview Dev</span>
           <Badge color="#71717a">testing only</Badge>
           {criticalCount > 0 && <Badge color="#f87171">✕ {criticalCount} critical</Badge>}
-          {warningCount > 0 && <Badge color="#fbbf24">⚠ {warningCount} warning{warningCount > 1 ? "s" : ""}</Badge>}
+          {warningCount > 0 && (
+            <Badge color="#fbbf24">
+              ⚠ {warningCount} warning{warningCount > 1 ? "s" : ""}
+            </Badge>
+          )}
           {mode === "flat" && selectedItem && (
-            <Badge color="#f59e0b">{selectedItem.kind} · {selectedItem.pluginDataRef}</Badge>
+            <Badge color="#f59e0b">
+              {selectedItem.kind} · {selectedItem.pluginDataRef}
+            </Badge>
           )}
         </div>
 
@@ -1097,7 +988,7 @@ export function CanvasPreviewDevOverlay() {
         {/* Right: stats + close */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <span style={{ fontSize: 10, color: "#52525b" }}>
-            {appState.colors.length}c · {appState.roles.length}r · {appState.themes.length}t
+            {projectStore.colors.length}c · {projectStore.roles.length}r · {projectStore.themes.length}t
           </span>
           <button
             onClick={closeOverlay}
@@ -1111,7 +1002,7 @@ export function CanvasPreviewDevOverlay() {
               cursor: "pointer",
             }}
           >
-            Close  Esc
+            Close Esc
           </button>
         </div>
       </div>
@@ -1119,30 +1010,20 @@ export function CanvasPreviewDevOverlay() {
       {/* Body */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {!result ? (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#f87171" }}>
-            Engine returned no result — check the console for errors.
-          </div>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#f87171" }}>Engine returned no result — check the console for errors.</div>
         ) : mode === "flat" ? (
           <>
             <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
-              {includeSource && appState.colors.length > 0 && (
-                <SourceColorsSection appState={appState} onSelect={setSelectedItem} selectedRef={selectedRef} />
-              )}
-              {includeScales && (
-                <ColorScalesSection appState={appState} result={result} onSelect={setSelectedItem} selectedRef={selectedRef} />
-              )}
-              <RoleTokensSection appState={appState} result={result} onSelect={setSelectedItem} selectedRef={selectedRef} />
-              <div style={{ marginTop: 8, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 9, color: "#3f3f46", textAlign: "center" }}>
-                ✦ Token Wand · Flat view · Click any tile to inspect · Open console for validation logs
-              </div>
+              {includeSource && projectStore.colors.length > 0 && <SourceColorsSection projectStore={projectStore} onSelect={setSelectedItem} selectedRef={selectedRef} />}
+              {includeScales && <ColorScalesSection projectStore={projectStore} result={result} onSelect={setSelectedItem} selectedRef={selectedRef} />}
+              <RoleTokensSection projectStore={projectStore} result={result} onSelect={setSelectedItem} selectedRef={selectedRef} />
+              <div style={{ marginTop: 8, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 9, color: "#3f3f46", textAlign: "center" }}>✦ Token Wand · Flat view · Click any tile to inspect · Open console for validation logs</div>
             </div>
-            {selectedItem && (
-              <DetailPanel item={selectedItem} onClose={() => setSelectedItem(null)} />
-            )}
+            {selectedItem && <DetailPanel item={selectedItem} onClose={() => setSelectedItem(null)} />}
           </>
         ) : (
           <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
-            <CanvasPreviewDevTree appState={appState} config={config} result={result} />
+            <CanvasPreviewDevTree projectStore={projectStore} config={config} result={result} />
           </div>
         )}
       </div>

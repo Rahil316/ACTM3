@@ -90,21 +90,21 @@ Last updated: 2026-05-22
 
 ## ⚠️ UI state with no engine effect
 
-| Field | Notes |
-|---|---|
+| Field            | Notes                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
 | (none confirmed) | All previously suspected dead keys are now verified wired. No confirmed dead toggles as of 2026-05-22. |
 
 ---
 
 ## 🚧 Designed but not yet implemented
 
-- **Project Name field** — `appState.name` is read in `translateConfig`; verify it drives export filenames and success messages end-to-end
+- **Project Name field** — `projectStore.name` is read in `translateConfig`; verify it drives export filenames and success messages end-to-end
 - **Saved States** — versioned snapshots with timestamp, View / Restore / Delete. Placeholder visible in UI, non-functional
 - **Role Labels CSV** — bulk-rename all variation levels via comma-separated string (seen in settings PDF mockup; not in current UI)
 - **Language selector** — UI placeholder only, no i18n infrastructure
 - **Beta Features section** — enrollment toggle + placeholder feature flags
 - **About Token Wand section** — feedback link + learn more link
-- **`tokenGrouping` UI control** — `appState.tokenGrouping` (`"color"` / `"role"`) is wired in engine but no settings UI control renders it
+- **`tokenGrouping` UI control** — `projectStore.tokenGrouping` (`"color"` / `"role"`) is wired in engine but no settings UI control renders it
 
 ---
 

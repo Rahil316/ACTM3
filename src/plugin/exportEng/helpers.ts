@@ -1,10 +1,10 @@
-import type { ExportConfig, EngineResult, RoleDef, VarDef, TokenEntry } from './types';
+import type { ExportConfig, EngineResult, TokenEntry, Role, Variation } from './types';
 
 export type EachTokenCallback = (
   theme: string,
   colorName: string,
-  roleObj: RoleDef,
-  varDef: VarDef,
+  roleObj: Role,
+  varDef: Variation,
   token: TokenEntry,
   cLabel: string,
   rLabel: string,
@@ -21,12 +21,12 @@ export function _colorLabel(colorName: string, config: ExportConfig): string {
   return colorName;
 }
 
-export function _roleLabel(roleObj: RoleDef, config: ExportConfig): string {
+export function _roleLabel(roleObj: Role, config: ExportConfig): string {
   if (!config.useShorthandRoles) return roleObj.name;
   return (roleObj && roleObj.shorthand) ? roleObj.shorthand : roleObj.name;
 }
 
-export function _varLabel(varDef: VarDef, config: ExportConfig): string {
+export function _varLabel(varDef: Variation, config: ExportConfig): string {
   if (!config.useShorthandVariations) return varDef.name;
   return (varDef && varDef.shorthand) ? varDef.shorthand : varDef.name;
 }
@@ -48,10 +48,8 @@ export function _tokenSegments(colorLabel: string, roleLabel: string, varLabel: 
   return out;
 }
 
-export function _variationDefs(roleObj: RoleDef, config: ExportConfig): VarDef[] {
-  return (roleObj.customVariationList && roleObj.customVariations && roleObj.customVariations.length > 0)
-    ? roleObj.customVariations
-    : (config.variations || []);
+export function _variationDefs(roleObj: Role, config: ExportConfig): Variation[] {
+  return roleObj.variations ?? config.variations ?? [];
 }
 
 export function _slug(str: string | null | undefined): string {
@@ -103,7 +101,7 @@ export function _eachToken(result: EngineResult, config: ExportConfig, cb: EachT
       var roleIds = Object.keys(roles);
       for (var ri = 0; ri < roleIds.length; ri++) {
         var roleId = roleIds[ri];
-        var roleObj: RoleDef = (config.roles && config.roles[roleId]) || { name: roleId };
+        var roleObj: Role = (config.roles && config.roles[roleId]) || { _id: roleId, name: roleId, shorthand: roleId, mappingMethod: 'contrast', variations: null };
         var rLabel = _roleLabel(roleObj, config);
         var varDefs = _variationDefs(roleObj, config);
         var variations = roles[roleId];

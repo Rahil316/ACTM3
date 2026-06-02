@@ -98,7 +98,7 @@ const test01: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "Subtle", shorthand: "1" },
@@ -174,7 +174,7 @@ const test02: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "default", shorthand: "d" },
@@ -276,7 +276,7 @@ const test03: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "subtle", shorthand: "1" },
@@ -355,7 +355,7 @@ const test04: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "default", shorthand: "d" },
@@ -437,7 +437,7 @@ const test05: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "subtle", shorthand: "1" },
@@ -522,7 +522,7 @@ const test06: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "subtle", shorthand: "1" },
@@ -607,7 +607,7 @@ const test07: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "default", shorthand: "d" },
@@ -697,7 +697,7 @@ const test08: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "light", shorthand: "L" },
@@ -739,7 +739,7 @@ const test08: Preset = {
 // TEST-09 — customVariationList per role
 // ─────────────────────────────────────────────────────────────────────────────
 // Exercises:
-//   perRoleVariationOverride=true
+//   canEditRoleVariantNames=true
 //   role A: customVariationList=true, 3 custom variations
 //   role B: customVariationList=false, falls back to global 5 variations
 //   Both on same color — shows different variation counts in output
@@ -748,7 +748,7 @@ const test09: Preset = {
   id: "test-09-custom-variations",
   name: "TEST-09 Custom Variations",
   badge: "T09",
-  description: "perRoleVariationOverride=true · role A: customVariationList=true, 3 custom variations (bg/fill/text) · role B: customVariationList=false, uses global 5 variations · same color, different variation counts",
+  description: "canEditRoleVariantNames=true · role A: customVariationList=true, 3 custom variations (bg/fill/text) · role B: customVariationList=false, uses global 5 variations · same color, different variation counts",
   tags: ["test", "customVariations", "perRole"],
   swatches: ["0891B2", "67E8F9"],
   config: {
@@ -775,7 +775,7 @@ const test09: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: true,
+    canEditRoleVariantNames: true,
 
     // Global fallback variations (5)
     variations: [
@@ -870,7 +870,7 @@ const test10: Preset = {
       { name: "darkest", shorthand: "xd" },
     ],
 
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "subtle", shorthand: "s" },
@@ -954,7 +954,7 @@ const test11: Preset = {
       { name: "900", shorthand: "2xl" },
     ],
 
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "default", shorthand: "d" },
@@ -1023,7 +1023,7 @@ const test12: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [{ name: "default", shorthand: "d" }],
 
@@ -1091,7 +1091,7 @@ const test13: Preset = {
     tokenCollectionName: "brand/tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "subtle", shorthand: "1" },
@@ -1163,7 +1163,7 @@ const test14: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [
       { name: "default", shorthand: "d" },
@@ -1234,7 +1234,7 @@ const test15: Preset = {
     tokenCollectionName: "color tokens",
 
     scaleStepNames: null,
-    perRoleVariationOverride: false,
+    canEditRoleVariantNames: false,
 
     variations: [{ name: "default", shorthand: "d" }],
 

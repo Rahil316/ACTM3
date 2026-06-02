@@ -7,7 +7,7 @@ import { SelectableCard } from "../components/SelectableCard";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PRESETS, type Preset } from "../lib/presets/presets";
 import { HelperText } from "../components/typography";
-import type { AppState } from "../types/state";
+import type { ProjectStore } from "../types/state";
 
 // ── Preset shop ───────────────────────────────────────────────────────────────
 
@@ -29,10 +29,16 @@ function PresetShop() {
     return (
       <SelectableCard key={preset.id} onClick={() => handlePresetClick(preset)}>
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-          {preset.badge && <Badge variant="accent" size="xs" pill>{preset.badge}</Badge>}
+          {preset.badge && (
+            <Badge variant="accent" size="xs" pill>
+              {preset.badge}
+            </Badge>
+          )}
           <p className="text-[13px] font-semibold text-text-primary">{preset.name}</p>
           {preset.tags?.slice(0, 2).map((tag) => (
-            <Badge key={tag} variant="muted" size="xs" pill>{tag}</Badge>
+            <Badge key={tag} variant="muted" size="xs" pill>
+              {tag}
+            </Badge>
           ))}
         </div>
         {preset.description && <HelperText className="line-clamp-2">{preset.description}</HelperText>}
@@ -42,8 +48,8 @@ function PresetShop() {
 
   function applyPreset(preset: Preset) {
     const base = makeBootstrapState();
-    const config = { ...base, ...preset.config, _presetId: preset.id } as AppState;
-    ensureIds(config as unknown as Partial<AppState>);
+    const config = { ...base, ...preset.config, _presetId: preset.id } as ProjectStore;
+    ensureIds(config as unknown as Partial<ProjectStore>);
     ensureVariations(config);
     loadState(config);
     toast.success(`Loaded "${preset.name}"`);
@@ -53,7 +59,7 @@ function PresetShop() {
   return (
     <>
       <ConfirmDialog
-        open={!!confirmPreset}
+        open={confirmPreset}
         title="Load Preset?"
         body={`This will overwrite your current configuration with "${confirmPreset?.name}".`}
         confirmLabel="Load Preset"

@@ -1,15 +1,15 @@
-import type { AppState, UiPrefs } from './state';
+import type { ProjectStore, UiPrefs } from "./state";
 
 // ── Plugin → UI messages ─────────────────────────────────────────────────────
 
 export interface LoadConfigMessage {
-  type: 'load-config';
-  state: Partial<AppState> | null;
-  syncedState?: Partial<AppState> | null;
+  type: "load-config";
+  state: Partial<ProjectStore> | null;
+  syncedState?: Partial<ProjectStore> | null;
 }
 
 export interface LoadUiPrefsMetaMessage {
-  type: 'load-ui-prefs-meta';
+  type: "load-ui-prefs-meta";
   prefs: Partial<UiPrefs>;
 }
 
@@ -17,7 +17,7 @@ export interface NameConflict {
   tokenRef: string;
   figmaName: string;
   suggestedName: string;
-  type: 'token' | 'scale' | 'source';
+  type: "token" | "scale" | "source";
 }
 
 export interface SyncPreview {
@@ -28,16 +28,16 @@ export interface SyncPreview {
 }
 
 export type StructuralChangeKind =
-  | 'mode-direct-to-scale'
-  | 'mode-scale-to-direct'
-  | 'scale-shrunk'
-  | 'scale-collection-renamed'
-  | 'token-collection-renamed'
-  | 'source-collection-renamed'
-  | 'source-removed'
-  | 'alpha-removed'
-  | 'alpha-changed'
-  | 'scale-collection-removed';
+  | "mode-direct-to-scale"
+  | "mode-scale-to-direct"
+  | "scale-shrunk"
+  | "scale-collection-renamed"
+  | "token-collection-renamed"
+  | "source-collection-renamed"
+  | "source-removed"
+  | "alpha-removed"
+  | "alpha-changed"
+  | "scale-collection-removed";
 
 export interface StructuralChange {
   kind: StructuralChangeKind;
@@ -48,7 +48,7 @@ export interface StructuralChange {
 }
 
 export interface CollectionCheckResultMessage {
-  type: 'collection-check-result';
+  type: "collection-check-result";
   existing: ExistingCollection[];
   renames: RenameData;
   conflicts?: NameConflict[];
@@ -57,47 +57,47 @@ export interface CollectionCheckResultMessage {
 }
 
 export interface FinishMessage {
-  type: 'finish';
+  type: "finish";
   tally: SyncTally;
   errors: string[] | null;
 }
 
 export interface PreviewDoneMessage {
-  type: 'preview-done';
+  type: "preview-done";
 }
 
 export interface PreviewInterruptedMessage {
-  type: 'preview-interrupted';
+  type: "preview-interrupted";
 }
 
 export interface CapabilitiesMessage {
-  type: 'capabilities';
+  type: "capabilities";
   capabilities: { multiMode: boolean };
 }
 
 export interface ProcessedDataResponseMessage {
-  type: 'processed-data-response';
+  type: "processed-data-response";
   content: string;
   exportType: ExportFormat;
 }
 
 export interface ExportBundleResponseMessage {
-  type: 'export-bundle-response';
+  type: "export-bundle-response";
   files: ExportFile[];
 }
 
 export interface ErrorMessage {
-  type: 'error';
+  type: "error";
   message: string;
 }
 
 export interface WarningMessage {
-  type: 'warning';
+  type: "warning";
   message: string;
 }
 
 export interface SelectionChangeMessage {
-  type: 'selection-change';
+  type: "selection-change";
   isPreviewSelected: boolean;
 }
 
@@ -118,88 +118,67 @@ export type PluginToUiMessage =
 // ── UI → Plugin messages ─────────────────────────────────────────────────────
 
 export interface RunCreatorMessage {
-  type: 'run-creator';
-  state: AppState;
+  type: "run-creator";
+  state: ProjectStore;
   scope: SyncScope;
-  savedState?: AppState | null;
-  decisions?: Record<string, 'keep' | 'revert'>;
+  savedState?: ProjectStore | null;
+  decisions?: Record<string, "keep" | "revert">;
 }
 
 export interface CheckCollectionsMessage {
-  type: 'check-collections';
-  state: AppState;
-  savedState?: AppState | null;
+  type: "check-collections";
+  state: ProjectStore;
+  savedState?: ProjectStore | null;
 }
 
 export interface ResizeMessage {
-  type: 'resize';
+  type: "resize";
   width: number;
   height: number;
 }
 
 export interface SaveUiPrefsMetaMessage {
-  type: 'save-ui-prefs-meta';
+  type: "save-ui-prefs-meta";
   prefs: UiPrefs;
 }
 
 export interface RequestProcessedDataMessage {
-  type: 'request-processed-data';
+  type: "request-processed-data";
   exportType: ExportFormat;
-  state: AppState;
+  state: ProjectStore;
 }
 
 export interface RequestExportBundleMessage {
-  type: 'request-export-bundle';
+  type: "request-export-bundle";
   formats: ExportFormat[];
-  state: AppState;
+  state: ProjectStore;
 }
 
 export interface SaveConfigMessage {
-  type: 'save-config';
-  state: AppState;
+  type: "save-config";
+  state: ProjectStore;
 }
 
 export interface CancelMessage {
-  type: 'cancel';
+  type: "cancel";
 }
 
 export interface RunPreviewMessage {
-  type: 'run-preview';
-  state: AppState;
+  type: "run-preview";
+  state: ProjectStore;
 }
 
 export interface UiReadyMessage {
-  type: 'ui-ready';
+  type: "ui-ready";
 }
 
-export type UiToPluginMessage =
-  | RunCreatorMessage
-  | CheckCollectionsMessage
-  | ResizeMessage
-  | SaveUiPrefsMetaMessage
-  | RequestProcessedDataMessage
-  | RequestExportBundleMessage
-  | SaveConfigMessage
-  | CancelMessage
-  | RunPreviewMessage
-  | UiReadyMessage;
+export type UiToPluginMessage = RunCreatorMessage | CheckCollectionsMessage | ResizeMessage | SaveUiPrefsMetaMessage | RequestProcessedDataMessage | RequestExportBundleMessage | SaveConfigMessage | CancelMessage | RunPreviewMessage | UiReadyMessage;
 
 // ── Supporting types ─────────────────────────────────────────────────────────
 
-export type SyncScope = 'all' | 'groups' | 'roles';
+export type SyncScope = "all" | "groups" | "roles";
 
-export type ExportFormat =
-  | 'json'
-  | 'css'
-  | 'csv'
-  | 'scss'
-  | 'tailwind'
-  | 'dtcg'
-  | 'style-dictionary'
-  | 'ios-swift'
-  | 'android'
-  | 'rn-ts'
-  | 'wand';
+export type ExportFormat = "json" | "css" | "csv" | "scss" | "tailwind" | "dtcg" | "style-dictionary" | "ios-swift" | "android" | "rn-ts" | "wand";
 
 export interface SyncTally {
   created: number;
@@ -232,5 +211,5 @@ export interface ExportFile {
 // ── postMessage helper ───────────────────────────────────────────────────────
 
 export function sendToPlugin(msg: UiToPluginMessage): void {
-  parent.postMessage({ pluginMessage: msg }, '*');
+  parent.postMessage({ pluginMessage: msg }, "*");
 }

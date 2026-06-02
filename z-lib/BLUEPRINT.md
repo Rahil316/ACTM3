@@ -47,12 +47,12 @@ if (state === null) {
 
 ---
 
-## 2. AppState — The Source of Truth
+## 2. ProjectStore — The Source of Truth
 
 All user configuration lives in a single Zustand store (`appStore`).
 
 ```ts
-interface AppState {
+interface ProjectStore {
   name: string;
   description: string;
   versions: Version[]; // saved snapshots (no engine involvement)
@@ -86,7 +86,7 @@ interface AppState {
   // Entities
   scaleStepNames: ScaleStepName[] | null; // null = numeric 1…N
   variations: Variation[] | null; // global variation list
-  perRoleVariationOverride: boolean; // allow roles to override variations
+  canEditRoleVariantNames: boolean; // allow roles to override variations
   colors: Color[];
   roles: Role[];
   themes: Theme[];
@@ -141,28 +141,28 @@ interface Theme {
 
 ## 3. Config Translation
 
-Before any engine call, `translateConfig(appState)` converts AppState into the engine's flat format.
+Before any engine call, `translateConfig(projectStore)` converts ProjectStore into the engine's flat format.
 
 ```
-translateConfig(appState) → EngineConfig
+translateConfig(projectStore) → EngineConfig
 
   count        = parseInt(scaleLength)            // clamped to ≥1
-  stepNames    = _parseStepNames(appState, count) // null if not set → numeric
-  variations   = appState.variations || [1,2,3,4,5]
-  themes       = _deduplicateThemeNames(appState.themes)
+  stepNames    = _parseStepNames(projectStore, count) // null if not set → numeric
+  variations   = projectStore.variations || [1,2,3,4,5]
+  themes       = _deduplicateThemeNames(projectStore.themes)
 
-  colors[] = appState.colors.map(c => {
+  colors[] = projectStore.colors.map(c => {
     name, shorthand, value, _id, description
     solverMode  = c.solverMode || 'natural'
     scaleAlgorithm = c.scaleAlgorithm || null
   })
 
-  roles[] = _mapRoles(appState, variations)
+  roles[] = _mapRoles(projectStore, variations)
     → for each role:
         mappingMethod = role.mappingMethod === 'index' ? 'index' : 'contrast'
         variationTargets = role.variationTargets || fallback[4.5,…]
         scopedColorIds = role.scopedColorIds ?? null
-        localBg = _resolveLocalBg(role, appState)      // see §4
+        localBg = _resolveLocalBg(role, projectStore)      // see §4
         localBgTokenRef  = (kind=token && !dynamic) ? value : null
         localBgDynamicRef = (kind=token && dynamic) ? value : null
 ```
@@ -170,14 +170,14 @@ translateConfig(appState) → EngineConfig
 ### `_resolveLocalBg` — pre-engine resolution
 
 ```
-_resolveLocalBg(role, appState):
+_resolveLocalBg(role, projectStore):
   if !role.localBg → return null
 
   if kind === 'hex':
     return role.localBg.value          // already { themeName: hex }
 
   if kind === 'color':
-    color = appState.colors.find(c => c.name === role.localBg.value)
+    color = projectStore.colors.find(c => c.name === role.localBg.value)
     if !color → return null
     return { themeName: color.value }  // same hex for every theme
 
@@ -519,12 +519,12 @@ figma.ui.onmessage = async (msg) => {
 Called after every `run-creator`. Writes scales and tokens into Figma's variable API.
 
 ```
-VariableManager.sync(result, config, scope, appState, savedAppState):
+VariableManager.sync(result, config, scope, projectStore, savedProjectStore):
 
   tally = { created:0, updated:0, renamed:0, failed:0 }
   await refreshCache()    // load all local variables + collections into memory
 
-  renameMap = buildVariableRenameMap(savedAppState, appState)
+  renameMap = buildVariableRenameMap(savedProjectStore, projectStore)
   // → { scale: { oldName: newName }, tokens: { oldName: newName } }
 
   // Decide which stages to run
@@ -574,14 +574,14 @@ VariableManager.sync(result, config, scope, appState, savedAppState):
     // → creates/updates collection named config.sourceCollectionName
     // → one variable per color: colorLabel/colorLabel = raw hex
 
-  savePluginConfig(appState)
+  savePluginConfig(projectStore)
   postMessage({ type: 'finish', tally, errors: result.errors, result })
 ```
 
 ### Rename logic
 
 ```
-buildVariableRenameMap(savedAppState, newAppState):
+buildVariableRenameMap(savedProjectStore, newProjectStore):
   // Matches colors/roles by _id across old and new state
   // Computes old token name and new token name for each matched pair
   // Returns { scale: {old→new}, tokens: {old→new} }
@@ -638,7 +638,7 @@ ensureMode(collection, modeName):
 When the user downloads tokens instead of applying to Figma.
 
 ```
-buildExportBundle(result, config, formats[], appState) → ExportFile[]
+buildExportBundle(result, config, formats[], projectStore) → ExportFile[]
 
 for each fmt in formats:
 
@@ -685,7 +685,7 @@ for each fmt in formats:
     // content filled directly in index.ts
 
   'wand':
-    files += {project}.wand         // JSON snapshot of appState — re-importable
+    files += {project}.wand         // JSON snapshot of projectStore — re-importable
 ```
 
 ---
@@ -726,8 +726,8 @@ UI receives 'error':
 
 ```
 // On every significant store change:
-postMessage({ type: 'save-config', state: appState })
-// → plugin calls figma.root.setPluginData('tw_state', JSON.stringify(appState))
+postMessage({ type: 'save-config', state: projectStore })
+// → plugin calls figma.root.setPluginData('tw_state', JSON.stringify(projectStore))
 // → survives plugin close; loaded on next open
 
 // UI preferences (theme, scale, language) stored separately:
@@ -755,7 +755,7 @@ user opens Theme Shop → selects preset:
 ## 12. Full Data Flow Summary
 
 ```
-AppState (Zustand store)
+ProjectStore (Zustand store)
     │
     ▼  translateConfig()
 EngineConfig (flat, engine-ready)

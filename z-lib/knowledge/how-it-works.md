@@ -9,7 +9,7 @@ A Figma plugin runs in two isolated JavaScript contexts that communicate by mess
 
 No shared memory exists between threads. Every data exchange is a serialized message via `figma.ui.postMessage` (main → UI) and `parent.postMessage` (UI → main).
 
-Config is persisted by the main thread using `figma.root.setPluginData("tw_state", JSON.stringify(appState))`. On the next launch, the main thread reads this string and sends it back to the UI as a `load-config` message.
+Config is persisted by the main thread using `figma.root.setPluginData("tw_state", JSON.stringify(projectStore))`. On the next launch, the main thread reads this string and sends it back to the UI as a `load-config` message.
 
 ---
 
@@ -85,7 +85,7 @@ When a role has `customVariationList: true` and a non-empty `customVariations` a
 This path is taken in both `_processScaleMode` and `_solveDirectMode` via the same guard in `store.js`:
 
 ```js
-const roleVars = role.customVariationList && role.customVariations && role.customVariations.length > 0 ? role.customVariations : appState.variations;
+const roleVars = role.customVariationList && role.customVariations && role.customVariations.length > 0 ? role.customVariations : projectStore.variations;
 ```
 
 ---

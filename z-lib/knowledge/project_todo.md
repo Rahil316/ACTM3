@@ -17,7 +17,7 @@ Last updated: 2026-05-22
       `includeAlphaTints` flag works in Figma output. `preview.js` doesn't show alpha tokens visually. Add a section to `renderPreviewPanel`.
 
 - [ ] **`tokenGrouping` UI control missing**
-      `appState.tokenGrouping` (`"color"` / `"role"`) controls color-first vs role-first variable structure and is wired in the engine, but no settings UI control renders it. Add a segmented control to the Collections section of Token Settings.
+      `projectStore.tokenGrouping` (`"color"` / `"role"`) controls color-first vs role-first variable structure and is wired in the engine, but no settings UI control renders it. Add a segmented control to the Collections section of Token Settings.
 
 ---
 
@@ -33,7 +33,7 @@ Last updated: 2026-05-22
       Preview panel HTML generation still uses some innerHTML string concatenation. Migrate to `el()` for consistency.
 
 - [ ] **Project Name end-to-end verification**
-      `appState.name` is read in `translateConfig`. Verify it is used in: export filenames (CSS, SCSS, CSV, JSON downloads) and Figma sync success messages.
+      `projectStore.name` is read in `translateConfig`. Verify it is used in: export filenames (CSS, SCSS, CSV, JSON downloads) and Figma sync success messages.
 
 - [ ] **Per-role variation override — full manual test**
       `customVariationList: true` + `customVariations[]` paths exist in state and UI. Full manual test across Scale and Direct modes not completed. Cover: add/remove custom variations, drag to reorder, sync to Figma, export to CSS/JSON.

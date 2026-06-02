@@ -1,89 +1,25 @@
-// ── Core entity types ────────────────────────────────────────────────────────
+// Entity types live in shared so both the engine and UI can import from one source
+export type { PluginMode, MappingMethod, AlgorithmScopeLevel, TokenNameSegment, ScaleAlgorithm, SolverMode, Variation, ScaleStep, Color, RoleLocalBgKind, RoleLocalBg, Role, Theme } from "../../shared/types";
 
-export type PluginMode = "scale" | "direct";
-export type MappingMethod = "contrast" | "index";
-export type AlgorithmScopeLevel = "color" | "role";
-export type TokenGrouping = "color" | "role";
-export type TokenNameSegment = "color" | "role" | "variation";
+// ── Root app state ───────────────────────────────────────────────────────────
 
-export type ScaleAlgorithm = "Natural" | "Uniform" | "Expressive" | "Symmetric" | "OKLCH" | "Material" | "Linear";
-
-export type SolverMode = "natural" | "saturated" | "luminance" | "hue-locked" | "chroma-maximized";
-
-// ── Entity shapes ────────────────────────────────────────────────────────────
-
-export interface Variation {
-  _id: string;
-  name: string;
-  shorthand: string;
-  description?: string;
-}
-
-export interface ScaleStepName {
-  _id: string;
-  name: string;
-  shorthand: string;
-}
-
-export interface Color {
-  _id: string;
-  name: string;
-  shorthand: string;
-  value: string;
-  description: string;
-  scaleAlgorithm?: ScaleAlgorithm;
-  solverMode?: SolverMode;
-}
-
-export type RoleLocalBgKind = "token" | "color" | "hex";
-
-export interface RoleLocalBg {
-  kind: RoleLocalBgKind;
-  // token/color: value is a string (token ref or color name)
-  // hex:         value is Record<themeName, hexString>
-  value: string | Record<string, string>;
-  // token kind only: if true, value contains [color] placeholder replaced per color at engine time
-  dynamic?: boolean;
-}
-
-export interface Role {
-  _id: string;
-  name: string;
-  shorthand: string;
-  minContrast: number;
-  mappingMethod: MappingMethod;
-  variationTargets: number[];
-  customVariationList: boolean;
-  customVariations: Variation[];
-  scaleAlgorithm?: ScaleAlgorithm;
-  solverMode?: SolverMode;
-  description?: string;
-  scopedColorIds?: string[] | null;
-  localBg?: RoleLocalBg | null;
-  scopes?: VariableScope[];
-}
-
-export interface Theme {
-  _id: string;
-  name: string;
-  bg: string;
-}
+import type { PluginMode, ScaleAlgorithm, SolverMode, AlgorithmScopeLevel, TokenNameSegment, ScaleStep, Variation, Color, Role, Theme } from "../../shared/types";
 
 export interface Version {
   _id: string;
   name: string;
   description: string;
   createdAt: number;
-  state: Omit<AppState, "versions">;
+  state: Omit<ProjectStore, "versions">;
 }
 
-// ── Root app state ───────────────────────────────────────────────────────────
-
-export interface AppState {
+export interface ProjectStore {
+  // Project Indentity
   name: string;
   description: string;
   versions: Version[];
 
+  // Engine Settings
   pluginMode: PluginMode;
   scaleAlgorithm: ScaleAlgorithm;
   scaleLength: number;
@@ -91,24 +27,25 @@ export interface AppState {
   algorithmScopeLevel: AlgorithmScopeLevel;
   solverMode: SolverMode;
 
+  // Token Naming Settings
   tokenNameSegments: TokenNameSegment[];
   useShorthandColors: boolean;
   useShorthandRoles: boolean;
   useShorthandVariations: boolean;
   useShorthandSteps: boolean;
 
+  // Extra Token Options
   includeSourceColors: boolean;
   sourceCollectionName: string;
-  alphaValues: string;
-  tokenGrouping: TokenGrouping;
+  alphaValues: number[];
   includeColorScalesCollection: boolean;
   includeDescriptions: boolean;
   scaleCollectionName: string;
   tokenCollectionName: string;
 
-  scaleStepNames: ScaleStepName[] | null;
+  scaleSteps: ScaleStep[] | null;
   variations: Variation[] | null;
-  perRoleVariationOverride: boolean;
+  canEditRoleVariantNames: boolean;
 
   colors: Color[];
   roles: Role[];
