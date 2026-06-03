@@ -1,5 +1,5 @@
 import { useState, useId, useEffect, useRef, useCallback, useMemo } from "react";
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent, DragOverlay } from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent, DragOverlay, type DragOverEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useProjectStore, deriveShorthand, groupedName } from "../store/projectStore";
@@ -62,7 +62,7 @@ function ColorSuggestSheet({ existingNames, onPick, onBlank, onClose }: ColorSug
 // ── Flat sortable card (used when no groups present) ─────────────────────────
 
 function SortableColorCard({ color, idx, selected, onToggleSelect }: { color: Color; idx: number; selected: boolean; onToggleSelect: (id: string, meta: boolean, shift?: boolean) => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: color._id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: color._id ?? "" });
 
   return (
     <div
@@ -70,7 +70,7 @@ function SortableColorCard({ color, idx, selected, onToggleSelect }: { color: Co
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
       onClick={(e) => {
         e.stopPropagation();
-        onToggleSelect(color._id, e.metaKey || e.ctrlKey, e.shiftKey);
+        onToggleSelect(color._id ?? "", e.metaKey || e.ctrlKey, e.shiftKey);
       }}
     >
       <div style={selected ? { borderRadius: 12, outline: "2px solid var(--accent)", outlineOffset: 2, boxShadow: "0 0 0 4px var(--accent-glow)" } : undefined}>
@@ -86,7 +86,8 @@ function ColorTree() {
   const colors = useProjectStore((s) => s.projectStore.colors);
   const moveColor = useProjectStore((s) => s.moveColor);
   const setColor = useProjectStore((s) => s.setColor);
-  const [committed, flushCommitted] = useCommittedNames(colors);
+  const committedColors = useMemo(() => colors.map(c => ({ ...c, _id: c._id ?? "" })), [colors]);
+  const [committed, flushCommitted] = useCommittedNames(committedColors);
   const collapsed = useUiStore((s) => s.colorGroupCollapsed);
   const setCollapsed = useUiStore((s) => s.setColorGroupCollapsed);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -97,23 +98,23 @@ function ColorTree() {
   const dndId = useId();
 
   const handleGroup = useCallback(() => {
-    const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
+    const selectedNames = colors.filter((c) => c._id && selectedIds.has(c._id)).map((c) => c.name);
     colors.forEach((c, i) => {
-      if (selectedIds.has(c._id)) setColor(i, "name", groupedName(c.name, selectedNames));
+      if (c._id && selectedIds.has(c._id)) setColor(i, "name", groupedName(c.name, selectedNames));
     });
     setSelectedIds(new Set());
   }, [colors, selectedIds, setColor]);
 
   const handleUngroup = useCallback(() => {
     colors.forEach((c, i) => {
-      if (selectedIds.has(c._id)) setColor(i, "name", c.name.split("/").pop()!);
+      if (c._id && selectedIds.has(c._id)) setColor(i, "name", c.name.split("/").pop()!);
     });
     setSelectedIds(new Set());
   }, [colors, selectedIds, setColor]);
 
   const handleDelete = useCallback(() => {
     const idxs = colors
-      .map((c, i) => (selectedIds.has(c._id) ? i : -1))
+      .map((c, i) => (c._id && selectedIds.has(c._id) ? i : -1))
       .filter((i) => i >= 0)
       .reverse();
     idxs.forEach((i) => useProjectStore.getState().removeColor(i));
@@ -122,7 +123,7 @@ function ColorTree() {
 
   const handleClear = useCallback(() => setSelectedIds(new Set()), []);
 
-  const handleSelectAll = useCallback(() => setSelectedIds(new Set(colors.map((c) => c._id))), [colors]);
+  const handleSelectAll = useCallback(() => setSelectedIds(new Set(colors.map((c) => c._id ?? ""))), [colors]);
 
   function getTreeOrderIds() {
     function collectLeaves(nodes: TreeNode<(typeof committed)[number]>[]): string[] {
@@ -197,15 +198,15 @@ function ColorTree() {
       if (e.key === "g" && e.shiftKey) {
         e.preventDefault();
         colors.forEach((c, idx) => {
-          if (!selectedIds.has(c._id)) return;
+          if (!c._id || !selectedIds.has(c._id)) return;
           setColor(idx, "name", c.name.split("/").pop()!);
         });
         setSelectedIds(new Set());
       } else if (e.key === "g" && !e.shiftKey) {
         e.preventDefault();
-        const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
+        const selectedNames = colors.filter((c) => c._id && selectedIds.has(c._id)).map((c) => c.name);
         colors.forEach((c, idx) => {
-          if (!selectedIds.has(c._id)) return;
+          if (!c._id || !selectedIds.has(c._id)) return;
           setColor(idx, "name", groupedName(c.name, selectedNames));
         });
         setSelectedIds(new Set());
@@ -239,7 +240,7 @@ function ColorTree() {
     setActiveId(e.active.id as string);
   }
 
-  function handleDragOver(e: { over: { id: string } | null }) {
+  function handleDragOver(e: DragOverEvent) {
     if (!e.over) {
       setOverGroupPath(null);
       return;
@@ -275,7 +276,7 @@ function ColorTree() {
       const targetPath = overId.slice(7);
       const idsToMove = selectedIds.has(activeIdStr) ? [...selectedIds] : [activeIdStr];
       colors.forEach((c, idx) => {
-        if (!idsToMove.includes(c._id)) return;
+        if (!c._id || !idsToMove.includes(c._id)) return;
         const localName = c.name.split("/").pop()!;
         setColor(idx, "name", `${targetPath}/${localName}`);
       });
@@ -307,7 +308,7 @@ function ColorTree() {
         // Cross-group: move dragged + all selected to the target group
         const idsToMove = selectedIds.has(activeIdStr) ? [...selectedIds] : [activeIdStr];
         colors.forEach((c, idx) => {
-          if (!idsToMove.includes(c._id)) return;
+          if (!c._id || !idsToMove.includes(c._id)) return;
           const localName = c.name.split("/").pop()!;
           setColor(idx, "name", toGroup ? `${toGroup}/${localName}` : localName);
         });
@@ -380,7 +381,7 @@ function ColorTree() {
         if (selectedIds.size > 0) setSelectedIds(new Set());
       }}
     >
-      <DndContext id={dndId} sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver as any} onDragEnd={handleDragEnd}>
+      <DndContext id={dndId} sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
         <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
           <TreeRenderer
             nodes={tree}
@@ -401,7 +402,7 @@ function ColorTree() {
         <DragOverlay>
           {activeColor && (
             <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary flex items-center gap-2">
-              {selectedIds.has(activeColor._id) && selectedIds.size > 1 && <span className="bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{selectedIds.size}</span>}
+              {activeColor._id && selectedIds.has(activeColor._id) && selectedIds.size > 1 && <span className="bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{selectedIds.size}</span>}
               {activeColor.name.split("/").pop()}
             </div>
           )}
@@ -436,23 +437,23 @@ export function ColorsScreen() {
   const hasGroups = colors.some((c) => c.name.includes("/"));
 
   const handleGroup = useCallback(() => {
-    const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
+    const selectedNames = colors.filter((c) => c._id && selectedIds.has(c._id)).map((c) => c.name);
     colors.forEach((c, i) => {
-      if (selectedIds.has(c._id)) setColor(i, "name", groupedName(c.name, selectedNames));
+      if (c._id && selectedIds.has(c._id)) setColor(i, "name", groupedName(c.name, selectedNames));
     });
     setSelectedIds(new Set());
   }, [colors, selectedIds, setColor]);
 
   const handleUngroup = useCallback(() => {
     colors.forEach((c, i) => {
-      if (selectedIds.has(c._id)) setColor(i, "name", c.name.split("/").pop()!);
+      if (c._id && selectedIds.has(c._id)) setColor(i, "name", c.name.split("/").pop()!);
     });
     setSelectedIds(new Set());
   }, [colors, selectedIds, setColor]);
 
   const handleDelete = useCallback(() => {
     const idxs = colors
-      .map((c, i) => (selectedIds.has(c._id) ? i : -1))
+      .map((c, i) => (c._id && selectedIds.has(c._id) ? i : -1))
       .filter((i) => i >= 0)
       .reverse();
     idxs.forEach((i) => useProjectStore.getState().removeColor(i));
@@ -461,7 +462,7 @@ export function ColorsScreen() {
 
   const handleClear = useCallback(() => setSelectedIds(new Set()), []);
 
-  const handleSelectAll = useCallback(() => setSelectedIds(new Set(colors.map((c) => c._id))), [colors]);
+  const handleSelectAll = useCallback(() => setSelectedIds(new Set(colors.map((c) => c._id ?? ""))), [colors]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -472,7 +473,7 @@ export function ColorsScreen() {
       return;
     }
     if (shift && lastSelectedRef.current) {
-      const flatIds = colors.map((c) => c._id);
+      const flatIds = colors.map((c) => c._id ?? "");
       const a = flatIds.indexOf(lastSelectedRef.current);
       const b = flatIds.indexOf(id);
       if (a !== -1 && b !== -1) {
@@ -506,14 +507,14 @@ export function ColorsScreen() {
       if (e.key === "g" && e.shiftKey) {
         e.preventDefault();
         colors.forEach((c, i) => {
-          if (selectedIds.has(c._id)) setColor(i, "name", c.name.split("/").pop()!);
+          if (c._id && selectedIds.has(c._id)) setColor(i, "name", c.name.split("/").pop()!);
         });
         setSelectedIds(new Set());
       } else if (e.key === "g" && !e.shiftKey) {
         e.preventDefault();
-        const selectedNames = colors.filter((c) => selectedIds.has(c._id)).map((c) => c.name);
+        const selectedNames = colors.filter((c) => c._id && selectedIds.has(c._id)).map((c) => c.name);
         colors.forEach((c, i) => {
-          if (selectedIds.has(c._id)) setColor(i, "name", groupedName(c.name, selectedNames));
+          if (c._id && selectedIds.has(c._id)) setColor(i, "name", groupedName(c.name, selectedNames));
         });
         setSelectedIds(new Set());
       }
@@ -566,9 +567,9 @@ export function ColorsScreen() {
       ) : (
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           {addBtn}
-          <SortableContext items={colors.map((c) => c._id)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={colors.map((c) => c._id ?? "")} strategy={verticalListSortingStrategy}>
             {colors.map((color, idx) => (
-              <SortableColorCard key={color._id} color={color} idx={idx} selected={selectedIds.has(color._id)} onToggleSelect={toggleSelect} />
+              <SortableColorCard key={color._id} color={color} idx={idx} selected={selectedIds.has(color._id ?? "")} onToggleSelect={toggleSelect} />
             ))}
           </SortableContext>
         </DndContext>

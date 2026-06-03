@@ -116,7 +116,7 @@ function buildConfig(projectStore: ProjectStore): any {
     scaleAlgorithm: projectStore.scaleAlgorithm,
     pluginMode: projectStore.pluginMode,
     roles: projectStore.roles.map((r) => {
-      const { localBg, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, projectStore.colors, projectStore.themes);
+      const { localBgResolved, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, projectStore.colors, projectStore.themes);
       return {
         name: r.name,
         shorthand: r.shorthand ?? "",
@@ -125,7 +125,8 @@ function buildConfig(projectStore: ProjectStore): any {
         solverMode: r.solverMode,
         description: r.description,
         scopedColorIds: r.scopedColorIds,
-        localBg,
+        localBg: r.localBg,
+        localBgResolved,
         localBgTokenRef,
         localBgDynamicRef,
       };
@@ -501,7 +502,7 @@ function SourceColorsSection({ projectStore, onSelect, selectedRef }: { projectS
       themes: projectStore.themes.map((t) => ({ name: t.name, bg: t.bg })),
     });
     projectStore.colors.forEach((color) => {
-      logValidation(`Source: ${color.name}`, color.value, color.value);
+      logValidation(`Source: ${color.name}`, !!color.value, color.value);
       projectStore.themes.forEach((theme) => {
         const ratio = contrastRatio(color.value, theme.bg);
         logValidation(`  Contrast ${color.name} vs ${theme.name}`, ratio != null && ratio >= 1, ratio != null ? `${ratio.toFixed(1)}:1` : "null");
@@ -523,7 +524,7 @@ function SourceColorsSection({ projectStore, onSelect, selectedRef }: { projectS
                 onSelect({
                   kind: "source",
                   colorName: color.name,
-                  colorId: color._id,
+                  colorId: color._id ?? "",
                   hex: color.value,
                   pluginDataRef: ref,
                   figmaCollection: sourceCollection,
@@ -639,7 +640,7 @@ function ColorScalesSection({
                       onSelect({
                         kind: "scale",
                         colorName: color.name,
-                        colorId: color._id,
+                        colorId: color._id ?? "",
                         step,
                         hex,
                         pluginDataRef: ref,
@@ -777,7 +778,7 @@ function RoleTokensSection({
                                       colorName,
                                       colorId: colorObj?._id ?? "",
                                       roleName: roleObj.name,
-                                      roleId: roleObj._id,
+                                      roleId: roleObj._id ?? "",
                                       varName: varDef?.name ?? String(varIdx),
                                       varId: varDef?._id ?? String(varIdx),
                                       themeName: theme.name,
@@ -912,7 +913,7 @@ export function CanvasPreviewDevOverlay() {
     console.log("%c  CanvasPreviewDev — Token Wand output validation", "color:#a78bfa;font-size:13px;font-weight:bold");
     console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color:#a78bfa;font-weight:bold");
     console.log(`Colors: ${projectStore.colors.length} | Roles: ${projectStore.roles.length} | Themes: ${projectStore.themes.length}`);
-    logValidation("Engine result present", result);
+    logValidation("Engine result present", !!result);
     logValidation("Colors defined", projectStore.colors.length > 0, `${projectStore.colors.length}`);
     logValidation("Roles defined", projectStore.roles.length > 0, `${projectStore.roles.length}`);
     logValidation("Themes defined", projectStore.themes.length > 0, `${projectStore.themes.length}`);

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ProjectStore, Color, Role, Theme, Variation, ValidationIssues, MappingMethod } from "../types/state";
+import type { ProjectStore, Color, Role, Theme, Variation, ValidationIssues, MappingMethod, VariableScope } from "../types/state";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -517,7 +517,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
         const existing = s.projectStore.scaleSteps;
         if (existing.length !== len) {
           const padded = [...existing];
-          while (padded.length < len) padded.push({ _id: generateId(), name: "", shorthand: "", index: padded.length });
+          while (padded.length < len) padded.push({ _id: generateId(), name: "", shorthand: "" });
           next.scaleSteps = padded.slice(0, len);
         }
       }
@@ -792,7 +792,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const len = Math.max(1, parseInt(s.projectStore.scaleLength as unknown as string) || 23);
       const existing = s.projectStore.scaleSteps ?? [];
       const steps = [...existing];
-      while (steps.length < len) steps.push({ _id: generateId(), name: "", shorthand: "", index: steps.length });
+      while (steps.length < len) steps.push({ _id: generateId(), name: "", shorthand: "" });
       return { projectStore: { ...s.projectStore, scaleSteps: steps.slice(0, len) } };
     });
   },

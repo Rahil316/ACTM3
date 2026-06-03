@@ -2255,7 +2255,6 @@
         "role",
         "variation"
       ],
-      "tokenGrouping": "color",
       "useShorthandColors": true,
       "useShorthandRoles": false,
       "useShorthandVariations": false,
@@ -2287,7 +2286,7 @@
       "includeDescriptions": false,
       "scaleCollectionName": "nclarity/scale",
       "tokenCollectionName": "nclarity/tokens",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "canEditRoleVariantNames": true,
       "variations": [
         {
@@ -2548,9 +2547,8 @@
             }
           ],
           "localBg": {
-            "kind": "token",
-            "value": "[color]/fill/button/default",
-            "dynamic": true
+            "kind": "token-dynamic",
+            "value": "[color]/fill/button/default"
           }
         },
         {
@@ -2820,12 +2818,11 @@
         60,
         80
       ],
-      "tokenGrouping": "color",
       "includeColorScalesCollection": true,
       "includeDescriptions": true,
       "scaleCollectionName": "palette/scale",
       "tokenCollectionName": "tokens",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "canEditRoleVariantNames": true,
       "variations": [
         {
@@ -2972,7 +2969,8 @@
               "target": 1.6
             }
           ],
-          "description": "Page and section backgrounds · 5 depth steps"
+          "description": "Page and section backgrounds · 5 depth steps",
+          "mappingMethod": "contrast"
         },
         {
           "name": "surface",
@@ -3004,7 +3002,8 @@
               "target": 14
             }
           ],
-          "description": "Surface elevation stack · sunken → card → popover → modal scrim"
+          "description": "Surface elevation stack · sunken → card → popover → modal scrim",
+          "mappingMethod": "contrast"
         },
         {
           "name": "fill",
@@ -3036,7 +3035,8 @@
               "target": 12
             }
           ],
-          "description": "Colored fills · tint → AA → AAA · badges, chips, CTAs"
+          "description": "Colored fills · tint → AA → AAA · badges, chips, CTAs",
+          "mappingMethod": "contrast"
         },
         {
           "name": "text",
@@ -3068,7 +3068,8 @@
               "target": 11.5
             }
           ],
-          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA"
+          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA",
+          "mappingMethod": "contrast"
         },
         {
           "name": "stroke",
@@ -3100,7 +3101,8 @@
               "target": 4.5
             }
           ],
-          "description": "Borders and dividers · hairline → focus ring"
+          "description": "Borders and dividers · hairline → focus ring",
+          "mappingMethod": "contrast"
         },
         {
           "name": "status/success",
@@ -3303,12 +3305,11 @@
         60,
         80
       ],
-      "tokenGrouping": "color",
       "includeColorScalesCollection": false,
       "includeDescriptions": true,
       "scaleCollectionName": "palette/scale",
       "tokenCollectionName": "tokens",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "canEditRoleVariantNames": true,
       "variations": [
         {
@@ -3456,7 +3457,8 @@
               "target": 14
             }
           ],
-          "description": "Surface elevation · page → card → popover → modal scrim"
+          "description": "Surface elevation · page → card → popover → modal scrim",
+          "mappingMethod": "contrast"
         },
         {
           "name": "fill",
@@ -3489,7 +3491,8 @@
               "target": 14
             }
           ],
-          "description": "Solid fills · subtle tint → AA → AAA → inverse"
+          "description": "Solid fills · subtle tint → AA → AAA → inverse",
+          "mappingMethod": "contrast"
         },
         {
           "name": "on/fill",
@@ -3526,7 +3529,8 @@
             "kind": "token-dynamic",
             "value": "[color]/fill/default"
           },
-          "description": "Text / icon on fill · contrast vs fill/default per color · luminance solver"
+          "description": "Text / icon on fill · contrast vs fill/default per color · luminance solver",
+          "mappingMethod": "contrast"
         },
         {
           "name": "text",
@@ -3559,7 +3563,8 @@
               "target": 11.5
             }
           ],
-          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA"
+          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA",
+          "mappingMethod": "contrast"
         },
         {
           "name": "border",
@@ -3592,7 +3597,8 @@
               "target": 4.5
             }
           ],
-          "description": "Borders and dividers · hairline → focus ring"
+          "description": "Borders and dividers · hairline → focus ring",
+          "mappingMethod": "contrast"
         },
         {
           "name": "status/success",
@@ -3628,7 +3634,8 @@
           "scopedColorIds": [
             "dc-ss"
           ],
-          "description": "Success channel · chroma-maximized · scoped to Status/Success"
+          "description": "Success channel · chroma-maximized · scoped to Status/Success",
+          "mappingMethod": "contrast"
         },
         {
           "name": "status/warning",
@@ -3664,7 +3671,8 @@
           "scopedColorIds": [
             "dc-sw"
           ],
-          "description": "Warning channel · chroma-maximized · scoped to Status/Warning"
+          "description": "Warning channel · chroma-maximized · scoped to Status/Warning",
+          "mappingMethod": "contrast"
         },
         {
           "name": "status/danger",
@@ -3700,7 +3708,8 @@
           "scopedColorIds": [
             "dc-sd"
           ],
-          "description": "Danger / error channel · chroma-maximized · scoped to Status/Danger"
+          "description": "Danger / error channel · chroma-maximized · scoped to Status/Danger",
+          "mappingMethod": "contrast"
         },
         {
           "name": "status/info",
@@ -3736,7 +3745,8 @@
           "scopedColorIds": [
             "dc-si"
           ],
-          "description": "Info channel · chroma-maximized · scoped to Status/Info"
+          "description": "Info channel · chroma-maximized · scoped to Status/Info",
+          "mappingMethod": "contrast"
         }
       ],
       "themes": [
@@ -5158,7 +5168,7 @@
     "id": "test-11-named-steps",
     "name": "TEST-11 Named Scale Steps",
     "badge": "T11",
-    "description": "scaleStepNames: 7 named steps (50→900 T-shirt) with shorthands (xs→3xl) · useShorthandSteps=true · scaleLength=7 · tests _parseStepNames + _parseStepShorthands in translateConfig",
+    "description": "scaleSteps: 7 named steps (50→900 T-shirt) with shorthands (xs→3xl) · useShorthandSteps=true · scaleLength=7 · tests _parseStepNames + _parseStepShorthands in translateConfig",
     "tags": [
       "test",
       "scaleStepNames",
@@ -5744,12 +5754,11 @@
         90,
         95
       ],
-      "tokenGrouping": "color",
       "includeColorScalesCollection": true,
       "includeDescriptions": true,
       "scaleCollectionName": "_scale",
       "tokenCollectionName": "color tokens",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "variations": [
         {
           "name": "default",
@@ -6131,12 +6140,11 @@
         70,
         85
       ],
-      "tokenGrouping": "role",
       "includeColorScalesCollection": true,
       "includeDescriptions": true,
       "scaleCollectionName": "color-palette",
       "tokenCollectionName": "color",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "variations": [
         {
           "name": "default",
@@ -7071,12 +7079,11 @@
         90,
         95
       ],
-      "tokenGrouping": "color",
       "includeColorScalesCollection": true,
       "includeDescriptions": true,
       "scaleCollectionName": "primitives",
       "tokenCollectionName": "tokens",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "variations": [
         {
           "name": "default",
@@ -7113,131 +7120,107 @@
         {
           "name": "background",
           "shorthand": "background",
-          "minContrast": 1,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "app",
-              "shorthand": "app"
+              "shorthand": "app",
+              "target": 1
             },
             {
               "name": "subtle",
-              "shorthand": "subtle"
+              "shorthand": "subtle",
+              "target": 1.05
             }
-          ],
-          "variationTargets": [
-            1,
-            1.05
           ],
           "description": "Page background fills · app canvas and subtle tint"
         },
         {
           "name": "element",
           "shorthand": "element",
-          "minContrast": 1,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "default",
-              "shorthand": "default"
+              "shorthand": "default",
+              "target": 1.1
             },
             {
               "name": "hover",
-              "shorthand": "hover"
+              "shorthand": "hover",
+              "target": 1.15
             },
             {
               "name": "active",
-              "shorthand": "active"
+              "shorthand": "active",
+              "target": 1.2
             }
-          ],
-          "variationTargets": [
-            1.1,
-            1.15,
-            1.2
           ],
           "description": "UI element fills · resting · hover · active"
         },
         {
           "name": "border",
           "shorthand": "border",
-          "minContrast": 1,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "subtle",
-              "shorthand": "subtle"
+              "shorthand": "subtle",
+              "target": 1.5
             },
             {
               "name": "ui",
-              "shorthand": "ui"
+              "shorthand": "ui",
+              "target": 2.5
             },
             {
               "name": "hover",
-              "shorthand": "hover"
+              "shorthand": "hover",
+              "target": 3
             }
-          ],
-          "variationTargets": [
-            1.5,
-            2.5,
-            3
           ],
           "description": "Borders and separators · subtle divider · UI border · hover border"
         },
         {
           "name": "solid",
           "shorthand": "solid",
-          "minContrast": 4,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "default",
-              "shorthand": "default"
+              "shorthand": "default",
+              "target": 4.5
             },
             {
               "name": "hover",
-              "shorthand": "hover"
+              "shorthand": "hover",
+              "target": 5.5
             }
-          ],
-          "variationTargets": [
-            4.5,
-            5.5
           ],
           "description": "Solid fills · button/badge backgrounds · resting and hover"
         },
         {
           "name": "text",
           "shorthand": "text",
-          "minContrast": 3,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "low",
-              "shorthand": "low"
+              "shorthand": "low",
+              "target": 3
             },
             {
               "name": "high",
-              "shorthand": "high"
+              "shorthand": "high",
+              "target": 7
             }
-          ],
-          "variationTargets": [
-            3,
-            7
           ],
           "description": "Text contrast tiers · low-contrast muted · high-contrast body"
         },
         {
           "name": "overlay",
           "shorthand": "overlay",
-          "minContrast": 1,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "default",
-              "shorthand": "default"
+              "shorthand": "default",
+              "target": 14
             }
-          ],
-          "variationTargets": [
-            14
           ],
           "description": "Overlay scrim · modal and drawer backdrop"
         }
@@ -7314,12 +7297,11 @@
         90,
         95
       ],
-      "tokenGrouping": "color",
       "includeColorScalesCollection": false,
       "includeDescriptions": true,
       "scaleCollectionName": "system-colors",
       "tokenCollectionName": "semantic-colors",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "variations": [
         {
           "name": "default",
@@ -7393,223 +7375,193 @@
           "variations": [
             {
               "name": "primary",
-              "shorthand": "primary"
+              "shorthand": "primary",
+              "target": 2.5
             },
             {
               "name": "secondary",
-              "shorthand": "secondary"
+              "shorthand": "secondary",
+              "target": 2
             },
             {
               "name": "tertiary",
-              "shorthand": "tertiary"
+              "shorthand": "tertiary",
+              "target": 1.7
             },
             {
               "name": "quaternary",
-              "shorthand": "quaternary"
+              "shorthand": "quaternary",
+              "target": 1.4
             }
-          ],
-          "variationTargets": [
-            2.5,
-            2,
-            1.7,
-            1.4
           ],
           "description": "System fill hierarchy · interactive control surfaces · 4 tiers"
         },
         {
           "name": "background",
           "shorthand": "background",
-          "minContrast": 1,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "default",
-              "shorthand": "default"
+              "shorthand": "default",
+              "target": 1
             },
             {
               "name": "secondary",
-              "shorthand": "secondary"
+              "shorthand": "secondary",
+              "target": 1.1
             },
             {
               "name": "tertiary",
-              "shorthand": "tertiary"
+              "shorthand": "tertiary",
+              "target": 1.2
             }
-          ],
-          "variationTargets": [
-            1,
-            1.1,
-            1.2
           ],
           "description": "System background · page / grouped / nested surface"
         },
         {
           "name": "background/grouped",
           "shorthand": "background/grouped",
-          "minContrast": 1,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "default",
-              "shorthand": "default"
+              "shorthand": "default",
+              "target": 1
             },
             {
               "name": "secondary",
-              "shorthand": "secondary"
+              "shorthand": "secondary",
+              "target": 1.15
             },
             {
               "name": "tertiary",
-              "shorthand": "tertiary"
+              "shorthand": "tertiary",
+              "target": 1.3
             }
-          ],
-          "variationTargets": [
-            1,
-            1.15,
-            1.3
           ],
           "description": "Grouped-style (insetGrouped) background hierarchy"
         },
         {
           "name": "separator",
           "shorthand": "separator",
-          "minContrast": 1.5,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "default",
-              "shorthand": "default"
+              "shorthand": "default",
+              "target": 1.5
             },
             {
               "name": "opaque",
-              "shorthand": "opaque"
+              "shorthand": "opaque",
+              "target": 2.5
             }
-          ],
-          "variationTargets": [
-            1.5,
-            2.5
           ],
           "description": "Separator lines · translucent hairline and opaque fallback"
         },
         {
           "name": "tint",
           "shorthand": "tint",
-          "minContrast": 2,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "primary",
-              "shorthand": "primary"
+              "shorthand": "primary",
+              "target": 4.5
             },
             {
               "name": "secondary",
-              "shorthand": "secondary"
+              "shorthand": "secondary",
+              "target": 3.5
             },
             {
               "name": "tertiary",
-              "shorthand": "tertiary"
+              "shorthand": "tertiary",
+              "target": 3
             },
             {
               "name": "quaternary",
-              "shorthand": "quaternary"
+              "shorthand": "quaternary",
+              "target": 2
             }
-          ],
-          "variationTargets": [
-            4.5,
-            3.5,
-            3,
-            2
           ],
           "description": "Interactive tint · primary accent in four rendering tiers"
         },
         {
           "name": "status/error",
           "shorthand": "status/error",
-          "minContrast": 2,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "primary",
-              "shorthand": "primary"
+              "shorthand": "primary",
+              "target": 7
             },
             {
               "name": "secondary",
-              "shorthand": "secondary"
+              "shorthand": "secondary",
+              "target": 4.5
             },
             {
               "name": "tertiary",
-              "shorthand": "tertiary"
+              "shorthand": "tertiary",
+              "target": 3
             },
             {
               "name": "quaternary",
-              "shorthand": "quaternary"
+              "shorthand": "quaternary",
+              "target": 2
             }
-          ],
-          "variationTargets": [
-            7,
-            4.5,
-            3,
-            2
           ],
           "description": "Error / destructive semantic hierarchy · 4 rendering tiers"
         },
         {
           "name": "status/success",
           "shorthand": "status/success",
-          "minContrast": 2,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "primary",
-              "shorthand": "primary"
+              "shorthand": "primary",
+              "target": 7
             },
             {
               "name": "secondary",
-              "shorthand": "secondary"
+              "shorthand": "secondary",
+              "target": 4.5
             },
             {
               "name": "tertiary",
-              "shorthand": "tertiary"
+              "shorthand": "tertiary",
+              "target": 3
             },
             {
               "name": "quaternary",
-              "shorthand": "quaternary"
+              "shorthand": "quaternary",
+              "target": 2
             }
-          ],
-          "variationTargets": [
-            7,
-            4.5,
-            3,
-            2
           ],
           "description": "Success / confirmation semantic hierarchy · 4 rendering tiers"
         },
         {
           "name": "status/warning",
           "shorthand": "status/warning",
-          "minContrast": 2,
-          "customVariationList": true,
-          "customVariations": [
+          "variations": [
             {
               "name": "primary",
-              "shorthand": "primary"
+              "shorthand": "primary",
+              "target": 7
             },
             {
               "name": "secondary",
-              "shorthand": "secondary"
+              "shorthand": "secondary",
+              "target": 4.5
             },
             {
               "name": "tertiary",
-              "shorthand": "tertiary"
+              "shorthand": "tertiary",
+              "target": 3
             },
             {
               "name": "quaternary",
-              "shorthand": "quaternary"
+              "shorthand": "quaternary",
+              "target": 2
             }
-          ],
-          "variationTargets": [
-            7,
-            4.5,
-            3,
-            2
           ],
           "description": "Warning / attention semantic hierarchy · 4 rendering tiers"
         }
@@ -7942,12 +7894,11 @@
         90,
         95
       ],
-      "tokenGrouping": "color",
       "includeColorScalesCollection": true,
       "includeDescriptions": true,
       "scaleCollectionName": "ibm-colors",
       "tokenCollectionName": "carbon",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "variations": [
         {
           "name": "default",
@@ -8276,12 +8227,11 @@
         90,
         95
       ],
-      "tokenGrouping": "color",
       "includeColorScalesCollection": false,
       "includeDescriptions": true,
       "scaleCollectionName": "color-palette",
       "tokenCollectionName": "color",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "variations": [
         {
           "name": "default",
@@ -8708,12 +8658,11 @@
         90,
         95
       ],
-      "tokenGrouping": "color",
       "includeColorScalesCollection": true,
       "includeDescriptions": false,
       "scaleCollectionName": "_scale",
       "tokenCollectionName": "color tokens",
-      "scaleStepNames": null,
+      "scaleSteps": null,
       "variations": [
         {
           "name": "Subtle",

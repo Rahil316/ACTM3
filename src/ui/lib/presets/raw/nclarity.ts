@@ -84,7 +84,6 @@ const nclarity: Preset = {
 
     // ── Token naming ────────────────────────────────────────────────────────
     tokenNameSegments: ["color", "role", "variation"],
-    tokenGrouping: "color",
     useShorthandColors: true,
     useShorthandRoles: false,
     useShorthandVariations: false,
@@ -99,7 +98,7 @@ const nclarity: Preset = {
     scaleCollectionName: "nclarity/scale",
     tokenCollectionName: "nclarity/tokens",
 
-    scaleStepNames: null,
+    scaleSteps: null,
     canEditRoleVariantNames: true,
 
     // Global fallback variation — all roles override with customVariationList.
@@ -209,9 +208,8 @@ const nclarity: Preset = {
           { name: "Pressed", shorthand: "5", target: 8.0 },
         ],
         localBg: {
-          kind: "token",
+          kind: "token-dynamic",
           value: "[color]/fill/button/default",
-          dynamic: true,
         },
       },
 

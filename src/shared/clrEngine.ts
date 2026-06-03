@@ -266,7 +266,6 @@ function _generateScales(colors: Color[], scaleLength: number, scaleAlgo: ScaleA
       }
       scale[step] = {
         value,
-        _id: "",
         stepName: `${color.name}-${step}`,
         shorthand: `${color.shorthand}-${step}`,
         description: color.description || "",

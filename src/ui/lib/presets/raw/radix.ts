@@ -39,7 +39,7 @@
  *   overlay/default     14.0   scrim / backdrop overlay
  */
 
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 const presets: Preset[] = [
   {
@@ -65,13 +65,12 @@ const presets: Preset[] = [
       includeSourceColors: false,
       sourceCollectionName: "global",
       alphaValues: [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95],
-      tokenGrouping: "color",
       includeColorScalesCollection: true,
       includeDescriptions: true,
       scaleCollectionName: "primitives",
       tokenCollectionName: "tokens",
 
-      scaleStepNames: null,
+      scaleSteps: null,
 
       // Global variations — not used directly (all roles use customVariationList).
       variations: [{ name: "default", shorthand: "default" }],
@@ -89,13 +88,10 @@ const presets: Preset[] = [
         {
           name: "background",
           shorthand: "background",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "app", shorthand: "app" }, // step 1 — page/app background
-            { name: "subtle", shorthand: "subtle" }, // step 2 — tinted off-white/off-black
+          variations: [
+            { name: "app", shorthand: "app", target: 1.0 }, // step 1 — page/app background
+            { name: "subtle", shorthand: "subtle", target: 1.05 }, // step 2 — tinted off-white/off-black
           ],
-          variationTargets: [1.0, 1.05],
           description: "Page background fills · app canvas and subtle tint",
         },
 
@@ -104,14 +100,11 @@ const presets: Preset[] = [
         {
           name: "element",
           shorthand: "element",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // step 3 — component resting fill
-            { name: "hover", shorthand: "hover" }, // step 4 — component hover fill
-            { name: "active", shorthand: "active" }, // step 5 — active/selected component fill
+          variations: [
+            { name: "default", shorthand: "default", target: 1.1 }, // step 3 — component resting fill
+            { name: "hover", shorthand: "hover", target: 1.15 }, // step 4 — component hover fill
+            { name: "active", shorthand: "active", target: 1.2 }, // step 5 — active/selected component fill
           ],
-          variationTargets: [1.1, 1.15, 1.2],
           description: "UI element fills · resting · hover · active",
         },
 
@@ -120,14 +113,11 @@ const presets: Preset[] = [
         {
           name: "border",
           shorthand: "border",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtle", shorthand: "subtle" }, // step 6 — decorative separator
-            { name: "ui", shorthand: "ui" }, // step 7 — interactive border / focus ring
-            { name: "hover", shorthand: "hover" }, // step 8 — hovered interactive border
+          variations: [
+            { name: "subtle", shorthand: "subtle", target: 1.5 }, // step 6 — decorative separator
+            { name: "ui", shorthand: "ui", target: 2.5 }, // step 7 — interactive border / focus ring
+            { name: "hover", shorthand: "hover", target: 3.0 }, // step 8 — hovered interactive border
           ],
-          variationTargets: [1.5, 2.5, 3.0],
           description: "Borders and separators · subtle divider · UI border · hover border",
         },
 
@@ -136,13 +126,10 @@ const presets: Preset[] = [
         {
           name: "solid",
           shorthand: "solid",
-          minContrast: 4.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // step 9  — solid fill (primary button bg)
-            { name: "hover", shorthand: "hover" }, // step 10 — hovered solid fill
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // step 9  — solid fill (primary button bg)
+            { name: "hover", shorthand: "hover", target: 5.5 }, // step 10 — hovered solid fill
           ],
-          variationTargets: [4.5, 5.5],
           description: "Solid fills · button/badge backgrounds · resting and hover",
         },
 
@@ -151,13 +138,10 @@ const presets: Preset[] = [
         {
           name: "text",
           shorthand: "text",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "low", shorthand: "low" }, // step 11 — muted / supplementary text (AA-large)
-            { name: "high", shorthand: "high" }, // step 12 — primary body text (AA strict)
+          variations: [
+            { name: "low", shorthand: "low", target: 3.0 }, // step 11 — muted / supplementary text (AA-large)
+            { name: "high", shorthand: "high", target: 7.0 }, // step 12 — primary body text (AA strict)
           ],
-          variationTargets: [3.0, 7.0],
           description: "Text contrast tiers · low-contrast muted · high-contrast body",
         },
 
@@ -166,12 +150,7 @@ const presets: Preset[] = [
         {
           name: "overlay",
           shorthand: "overlay",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // scrim / modal backdrop
-          ],
-          variationTargets: [14.0],
+          variations: [{ name: "default", shorthand: "default", target: 14.0 }],
           description: "Overlay scrim · modal and drawer backdrop",
         },
       ],

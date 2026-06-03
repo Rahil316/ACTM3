@@ -21,7 +21,6 @@ const TOKEN_COL_GAP = 40;
 const RT_THEME_PADDING = 24;
 const RT_THEME_GAP = 24;
 const RT_THEME_RADIUS = 8;
-const RT_THEME_FILL_OPACITY = 1;
 const TREE_INDENT = 16;
 const TREE_LINE_WIDTH = 1;
 const TREE_LINE_OPACITY = 0.18;
@@ -30,8 +29,6 @@ const RT_COLOR_LABEL_SIZE = 12;
 const RT_COLOR_LABEL_STYLE = "Bold" as const;
 const RT_COLOR_LABEL_COLOR = "";
 const RT_ROLE_GAP = 4;
-const RT_ROLE_LABEL_SIZE = 10;
-const RT_ROLE_LABEL_STYLE = "Medium" as const;
 const RT_ROLE_LABEL_COLOR = "";
 
 // ─────────────────────────────────────────────────────────────────────────────

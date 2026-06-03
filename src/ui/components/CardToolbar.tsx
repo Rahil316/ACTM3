@@ -32,8 +32,8 @@ export function CardToolbar({
             variant="icon"
             size="sm"
             className="cursor-grab touch-none"
-            {...(dragAttributes as any)}
-            {...(dragListeners as any)}
+            {...(dragAttributes as React.HTMLAttributes<HTMLButtonElement>)}
+            {...(dragListeners as React.HTMLAttributes<HTMLButtonElement>)}
             title="Drag to reorder"
             onClick={(e) => e.stopPropagation()}
             icon={<GripVertical size={12} strokeWidth={1.75} />}

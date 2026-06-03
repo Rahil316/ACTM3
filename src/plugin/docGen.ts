@@ -1,4 +1,4 @@
-import type { EngineResult, ExportConfig } from "./exportEng/types";
+import type { EngineResult, ExportConfig, Role } from "./exportEng/types";
 
 function cssSlug(str: string): string {
   if (!str) return "";
@@ -21,13 +21,12 @@ export const ExportFormatter = {
     lines.push("COLOR SCALES");
     const scaleEntries = Object.values(result.scales || {});
     const firstStep = scaleEntries.length ? Object.values(scaleEntries[0])[0] : null;
-    const contrastKeys = firstStep ? Object.keys((firstStep as any).contrast || {}) : [];
+    const contrastKeys = firstStep ? Object.keys(firstStep.contrast || {}) : [];
     const scaleHeader = ["Group", "Step", "Hex", ...contrastKeys.flatMap((k) => [k + " Contrast", k + " Rating"])].join(",");
     lines.push(scaleHeader);
     for (const [colorName, scale] of Object.entries(result.scales || {})) {
       for (const [step, entry] of Object.entries(scale)) {
-        const e = entry as any;
-        const contrast = e.contrast as Record<string, { ratio: unknown; rating: unknown }> | undefined;
+        const contrast = entry.contrast;
         const contrastCols = contrastKeys.flatMap((k) => [csvField(contrast && contrast[k] ? contrast[k].ratio : ""), csvField(contrast && contrast[k] ? contrast[k].rating : "")]);
         lines.push([csvField(colorName), csvField(step), csvField(entry.value), ...contrastCols].join(","));
       }
@@ -41,14 +40,13 @@ export const ExportFormatter = {
       if (!themeTokens) continue;
       for (const [colorName, roles] of Object.entries(themeTokens)) {
         for (const [roleId, variations] of Object.entries(roles)) {
-          const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
+          const roleObj: Role = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
           const roleName = roleObj.name || roleId;
           const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let i = 0; i < variationDefs.length; i++) {
             const token = variations[String(i)];
             if (!token) continue;
-            const t = token as any;
-            const contrast = t.contrast as { ratio: unknown; rating: unknown } | undefined;
+            const contrast = token.contrast;
             const dispName = variationDefs[i].shorthand || variationDefs[i].name;
             lines.push(
               [csvField(colorName), csvField(roleName), csvField(dispName), csvField(theme), csvField(token.value), csvField(contrast ? contrast.ratio : ""), csvField(contrast ? contrast.rating : ""), csvField(token.isAdjusted ? "yes" : "")].join(","),
@@ -84,7 +82,7 @@ export const ExportFormatter = {
       for (const [colorName, roles] of Object.entries(themeTokens)) {
         css += `\n  /* ${colorName} */\n`;
         for (const [roleId, variations] of Object.entries(roles)) {
-          const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
+          const roleObj: Role = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
           const roleName = roleObj.name || roleId;
           const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let i = 0; i < variationDefs.length; i++) {
@@ -104,7 +102,7 @@ export const ExportFormatter = {
       css += `\n/* ── OS Dark Mode Fallback ── */\n@media (prefers-color-scheme: dark) {\n  :root:not([data-theme]) {\n`;
       for (const [colorName, roles] of Object.entries(darkTokens)) {
         for (const [roleId, variations] of Object.entries(roles)) {
-          const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
+          const roleObj: Role = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
           const roleName = roleObj.name || roleId;
           const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let i = 0; i < variationDefs.length; i++) {
@@ -162,7 +160,7 @@ export function generateScss(result: EngineResult, config: ExportConfig): string
     for (const [colorName, roles] of Object.entries(themeTokens)) {
       scss += `  // ${colorName}\n`;
       for (const [roleId, variations] of Object.entries(roles)) {
-        const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
+        const roleObj: Role = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
         const roleName = roleObj.name || roleId;
         const variationDefs = roleObj.variations ?? configVariations ?? [];
         for (let i = 0; i < variationDefs.length; i++) {

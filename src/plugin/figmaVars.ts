@@ -308,6 +308,7 @@ export const VariableManager = {
     }
     try {
       return collection.addMode(modeName);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_e) {
       return null;
     }

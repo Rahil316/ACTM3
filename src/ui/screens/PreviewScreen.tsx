@@ -31,7 +31,7 @@ function buildEngineConfig(projectStore: ProjectStore): EngineConfig {
     scaleAlgorithm: projectStore.scaleAlgorithm,
     pluginMode: projectStore.pluginMode,
     roles: projectStore.roles.map((r) => {
-      const { localBg, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, projectStore.colors, projectStore.themes);
+      const { localBgResolved, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, projectStore.colors, projectStore.themes);
       return {
         name: r.name,
         shorthand: r.shorthand ?? "",
@@ -40,7 +40,8 @@ function buildEngineConfig(projectStore: ProjectStore): EngineConfig {
         solverMode: r.solverMode,
         description: r.description,
         scopedColorIds: r.scopedColorIds,
-        localBg,
+        localBg: r.localBg,
+        localBgResolved,
         localBgTokenRef,
         localBgDynamicRef,
       };

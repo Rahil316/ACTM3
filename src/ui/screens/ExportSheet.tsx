@@ -260,7 +260,7 @@ export function ExportSheet() {
                   <button
                     type="button"
                     onClick={() => handleSingleDownload(format)}
-                    disabled={downloading}
+                    disabled={downloading !== null}
                     title={`Download ${label}`}
                     className="h-6 px-2 rounded-[6px] flex items-center gap-1 text-[10px] font-semibold bg-bg-input border border-border-base text-text-primary hover:bg-bg-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default"
                   >

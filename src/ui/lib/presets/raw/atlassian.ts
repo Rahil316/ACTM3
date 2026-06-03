@@ -74,7 +74,6 @@ const presets: Preset[] = [
       includeSourceColors: false,
       sourceCollectionName: "global",
       alphaValues: [8, 16, 32, 50, 70, 85],
-      tokenGrouping: "role",
       includeColorScalesCollection: true,
       includeDescriptions: true,
 
@@ -82,7 +81,7 @@ const presets: Preset[] = [
       scaleCollectionName: "color-palette",
       tokenCollectionName: "color",
 
-      scaleStepNames: null,
+      scaleSteps: null,
 
       // Single global variation — not used (every role uses customVariationList).
       variations: [{ name: "default", shorthand: "default" }],
@@ -335,17 +334,13 @@ const presets: Preset[] = [
         {
           name: "icon/brand",
           shorthand: "icon/brand",
-          variations: [
-            { name: "default", shorthand: "default", target: 4.5 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.brand",
         },
         {
           name: "icon/success",
           shorthand: "icon/success",
-          variations: [
-            { name: "default", shorthand: "default", target: 4.5 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.success",
         },
         {
@@ -360,25 +355,19 @@ const presets: Preset[] = [
         {
           name: "icon/danger",
           shorthand: "icon/danger",
-          variations: [
-            { name: "default", shorthand: "default", target: 4.5 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.danger",
         },
         {
           name: "icon/information",
           shorthand: "icon/information",
-          variations: [
-            { name: "default", shorthand: "default", target: 4.5 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.information",
         },
         {
           name: "icon/discovery",
           shorthand: "icon/discovery",
-          variations: [
-            { name: "default", shorthand: "default", target: 4.5 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.discovery",
         },
 
@@ -403,49 +392,37 @@ const presets: Preset[] = [
         {
           name: "border/brand",
           shorthand: "border/brand",
-          variations: [
-            { name: "default", shorthand: "default", target: 3.0 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.brand",
         },
         {
           name: "border/success",
           shorthand: "border/success",
-          variations: [
-            { name: "default", shorthand: "default", target: 3.0 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.success",
         },
         {
           name: "border/warning",
           shorthand: "border/warning",
-          variations: [
-            { name: "default", shorthand: "default", target: 2.5 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 2.5 }],
           description: "color.border.warning",
         },
         {
           name: "border/danger",
           shorthand: "border/danger",
-          variations: [
-            { name: "default", shorthand: "default", target: 3.0 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.danger",
         },
         {
           name: "border/information",
           shorthand: "border/information",
-          variations: [
-            { name: "default", shorthand: "default", target: 3.0 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.information",
         },
         {
           name: "border/discovery",
           shorthand: "border/discovery",
-          variations: [
-            { name: "default", shorthand: "default", target: 3.0 }
-          ],
+          variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.discovery",
         },
 

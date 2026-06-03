@@ -41,7 +41,7 @@ export function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
       <Input label="Version Name" size="lg" placeholder="e.g. v1.0 — Launch" value={name} onChange={(e) => setName(e.target.value)} />
       <Input label="Notes" size="lg" placeholder="Optional description…" value={desc} onChange={(e) => setDesc(e.target.value)} />
       {reason && <HelperText>{reason}</HelperText>}
-      <Button variant="primary" size="md" label="Save Version" onClick={handleSave} disabled={!name.trim() || reason} />
+      <Button variant="primary" size="md" label="Save Version" onClick={handleSave} disabled={!name.trim() || !!reason} />
     </div>
   );
 }
@@ -104,7 +104,7 @@ export function ProjectScreen() {
     <div className="flex flex-col gap-3 p-3">
       {/* Confirm restore version */}
       <ConfirmDialog
-        open={confirmRestore}
+        open={!!confirmRestore}
         title="Restore this version?"
         body="Your current configuration will be replaced."
         confirmLabel="Restore"
@@ -118,7 +118,7 @@ export function ProjectScreen() {
 
       {/* Confirm delete version */}
       <ConfirmDialog
-        open={confirmDelete}
+        open={!!confirmDelete}
         title="Delete this version?"
         body="This cannot be undone."
         confirmLabel="Delete"
@@ -132,7 +132,7 @@ export function ProjectScreen() {
 
       {/* Confirm import */}
       <ConfirmDialog
-        open={confirmImport}
+        open={!!confirmImport}
         title="Import configuration?"
         body="This will overwrite your current colors, roles, and settings."
         confirmLabel="Import"

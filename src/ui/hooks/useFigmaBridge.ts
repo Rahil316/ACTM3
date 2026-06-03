@@ -3,7 +3,7 @@ import { banner } from "../store/bannerStore";
 import { useUiStore } from "../store/uiStore";
 import { VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
 import type { PluginToUiMessage, CollectionCheckResultMessage, SyncTally } from "../types/messages";
-import type { ProjectStore, UiPrefs } from "../types/state";
+import type { ProjectStore, Role, UiPrefs } from "../types/state";
 import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/projectStore";
 
 // ── Standalone browser mock ──────────────────────────────────────────────────
@@ -81,10 +81,10 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
 
   if (pm.type === "request-processed-data") {
     import("../lib/colorEngine").then(({ variableMaker, resolveTokenRefBgs, translateLocalBg }) => {
-      const projectStore = pm.state as any;
+      const projectStore = pm.state as ProjectStore;
       const config = {
         ...projectStore,
-        roles: (projectStore.roles ?? []).map((r: any) => ({
+        roles: (projectStore.roles ?? []).map((r: Role) => ({
           ...r,
           ...translateLocalBg(r.localBg, projectStore.colors ?? [], projectStore.themes ?? []),
         })),

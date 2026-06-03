@@ -18,12 +18,13 @@
 
 import { variableMaker } from "../src/shared/clrEngine.js";
 import { resolveTokenRefBgs } from "../src/plugin/config.js";
+import type { ProjectStore } from "../src/ui/types/state.js";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const BRAND_HEX = "#5B6AF0"; // same value for both colors
 
-const config: any = {
+const config: ProjectStore = {
   name: "localbg-test",
   pluginMode: "scale",
   scaleAlgorithm: "Natural",
@@ -37,13 +38,11 @@ const config: any = {
   useShorthandVariations: false,
   useShorthandSteps: false,
   includeSourceColors: false,
-  alphaValues: [],
-  tokenGrouping: "color",
   includeColorScalesCollection: true,
   includeDescriptions: false,
   scaleCollectionName: "_scale",
   tokenCollectionName: "color tokens",
-  scaleStepNames: undefined,
+  scaleSteps: null,
 
   colors: [
     { _id: "c-brand1", name: "brand-1", shorthand: "b1", value: BRAND_HEX },
@@ -75,7 +74,7 @@ const config: any = {
       localBgDynamicRef: "[color]/fill/base",
     },
   ],
-};
+} as unknown as ProjectStore;
 
 // ── Two-pass engine run (mirrors index.ts runEngine + resolveTokenRefBgs) ─────
 
@@ -120,7 +119,7 @@ console.log("  " + hr([10, 9, 10, 32]));
 console.log("  " + row(["Name", 10], ["Target", 9], ["Var", 10], ["Local BG", 32]));
 console.log("  " + hr([10, 9, 10, 32]));
 for (const r of config.roles) {
-  const targets = (r.variations ?? config.variations ?? []).map((v: any) => v.target).join(", ");
+  const targets = (r.variations ?? config.variations ?? []).map((v) => v.target).join(", ");
   const vars = (config.variations ?? []).map((v) => v.name).join(", ");
   const lbg = r.localBgDynamicRef ? `dynamic: "${r.localBgDynamicRef}"` : r.localBg ? JSON.stringify(r.localBg) : "none (theme bg)";
   console.log("  " + row([r.name, 10], [targets, 9], [vars, 10], [lbg, 32]));
@@ -160,9 +159,9 @@ for (const [themeName, colorMap] of Object.entries(result.tokens)) {
   if (lastTheme && lastTheme !== themeName) console.log("  " + hr([W.theme, W.color, W.role, W.bg, W.target, W.step, W.hex, W.ratio, W.adj]));
   lastTheme = themeName;
 
-  for (const [colorName, roleMap] of Object.entries(colorMap as Record<string, any>)) {
-    for (const [roleIdxStr, varMap] of Object.entries(roleMap as Record<string, any>)) {
-      const roleIdx = parseInt(roleIdxStr);
+  for (const [colorName, roleMap] of Object.entries(colorMap)) {
+    for (const [roleIdxStr, varMap] of Object.entries(roleMap)) {
+      const roleIdx = parseInt(roleIdxStr, 10);
       const role = config.roles[roleIdx];
 
       let bgHex = theme.bg;
@@ -170,12 +169,12 @@ for (const [themeName, colorMap] of Object.entries(result.tokens)) {
       if (role.localBgPerColor?.[colorName]?.[themeName]) {
         bgHex = role.localBgPerColor[colorName][themeName];
         bgSrc = "per-color";
-      } else if (role.localBg?.[themeName]) {
-        bgHex = role.localBg[themeName];
+      } else if (role.localBg?.kind === "hex" && typeof role.localBg.value === "object" && role.localBg.value?.[themeName]) {
+        bgHex = role.localBg.value[themeName];
         bgSrc = "localBg";
       }
 
-      for (const [, token] of Object.entries(varMap as Record<string, any>)) {
+      for (const [, token] of Object.entries(varMap)) {
         const vars = role.variations ?? config.variations ?? [];
         const target = vars[parseInt(token.variation)]?.target ?? 4.5;
         const ratio = token.contrast?.ratio?.toFixed(2) ?? "—";
@@ -188,7 +187,7 @@ for (const [themeName, colorMap] of Object.entries(result.tokens)) {
               [role.name, W.role],
               [`#${bgHex.replace("#", "").toUpperCase()} (${bgSrc})`, W.bg],
               [`${target}:1`, W.target],
-              [token.tokenRef, W.step],
+              [token.tokenRef ?? "direct", W.step],
               [`#${token.value.replace("#", "").toUpperCase()}`, W.hex],
               [`${ratio}:1`, W.ratio],
               [adjusted, W.adj],

@@ -37,7 +37,7 @@ export const fmtReactNative = {
         const roleIds = Object.keys(roles);
         for (let ri = 0; ri < roleIds.length; ri++) {
           const roleId = roleIds[ri];
-          const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
+          const roleObj = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
           const rLabel = _roleLabel(roleObj, config);
           lines.push("      " + _camel([rLabel]) + ": {");
           const varDefs = _variationDefs(roleObj, config);

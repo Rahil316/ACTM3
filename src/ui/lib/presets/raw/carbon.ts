@@ -75,13 +75,12 @@ const presets: Preset[] = [
       includeSourceColors: false,
       sourceCollectionName: "global",
       alphaValues: [5, 10, 20, 25, 50, 75, 80, 90, 95],
-      tokenGrouping: "color",
       includeColorScalesCollection: true,
       includeDescriptions: true,
       scaleCollectionName: "ibm-colors",
       tokenCollectionName: "carbon",
 
-      scaleStepNames: null,
+      scaleSteps: null,
 
       // Global variations — not used directly (all roles use customVariationList).
       variations: [{ name: "default", shorthand: "default" }],

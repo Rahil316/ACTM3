@@ -198,8 +198,8 @@ export function DroppableGroupHeader({
         variant="icon"
         size="sm"
         className="cursor-grab touch-none shrink-0 text-text-muted hover:text-text-primary hover:bg-bg-hover"
-        {...(attributes as any)}
-        {...(listeners as any)}
+        {...(attributes as React.HTMLAttributes<HTMLButtonElement>)}
+        {...(listeners as React.HTMLAttributes<HTMLButtonElement>)}
         title="Drag group"
         onClick={(e) => e.stopPropagation()}
         icon={<GripVertical size={12} strokeWidth={1.75} />}
@@ -299,8 +299,8 @@ export const SortableLeafWrapper = React.memo(function SortableLeafWrapper({
         transition,
         opacity: isDragging ? 0.3 : 1,
       }}
-      {...(selected ? (attributes as any) : {})}
-      {...(wrapperListeners as any)}
+      {...(selected ? (attributes as React.HTMLAttributes<HTMLDivElement>) : {})}
+      {...(wrapperListeners as React.HTMLAttributes<HTMLDivElement>)}
       onClick={(e) => {
         e.stopPropagation();
         onToggleSelect(id, e.metaKey || e.ctrlKey, e.shiftKey);

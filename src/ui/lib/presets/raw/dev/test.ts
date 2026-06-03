@@ -882,7 +882,7 @@ const test11: Preset = {
   id: "test-11-named-steps",
   name: "TEST-11 Named Scale Steps",
   badge: "T11",
-  description: "scaleStepNames: 7 named steps (50→900 T-shirt) with shorthands (xs→3xl) · useShorthandSteps=true · scaleLength=7 · tests _parseStepNames + _parseStepShorthands in translateConfig",
+  description: "scaleSteps: 7 named steps (50→900 T-shirt) with shorthands (xs→3xl) · useShorthandSteps=true · scaleLength=7 · tests _parseStepNames + _parseStepShorthands in translateConfig",
   tags: ["test", "scaleStepNames", "shorthands"],
   swatches: ["DB2777", "FBBF24"],
   config: {

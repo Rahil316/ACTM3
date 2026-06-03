@@ -79,13 +79,12 @@ const presets: Preset[] = [
       includeSourceColors: false,
       sourceCollectionName: "global",
       alphaValues: [5, 10, 20, 25, 50, 75, 80, 90, 95],
-      tokenGrouping: "color",
       includeColorScalesCollection: true,
       includeDescriptions: true,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
 
-      scaleStepNames: null,
+      scaleSteps: null,
 
       // Global variations — not used directly (all roles use customVariationList).
       // Defined so the config is valid.

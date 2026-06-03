@@ -286,7 +286,6 @@ function RolesTab() {
               on={projectStore.canEditRoleVariantNames}
               onChange={() => {
                 setProjectField("canEditRoleVariantNames", !projectStore.canEditRoleVariantNames);
-                console.log(!projectStore.canEditRoleVariantNames);
               }}
             />
           }

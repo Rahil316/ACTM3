@@ -1,5 +1,5 @@
 import { useState, useId, useEffect, useRef, useCallback, useMemo } from "react";
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, type DragStartEvent } from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, type DragStartEvent, type DragOverEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Settings, RefreshCw } from "lucide-react";
 import { SplitActionButton, Button } from "../components/Button";
@@ -116,7 +116,8 @@ function ColorTree() {
   const colors = useProjectStore((s) => s.projectStore.colors);
   const moveColor = useProjectStore((s) => s.moveColor);
   const setColor = useProjectStore((s) => s.setColor);
-  const [committed, flushCommitted] = useCommittedNames(colors);
+  const committedColors = useMemo(() => colors.map((c) => ({ ...c, _id: c._id ?? "" })), [colors]);
+  const [committed, flushCommitted] = useCommittedNames(committedColors);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overGroupPath, setOverGroupPath] = useState<string | null>(null);
@@ -142,7 +143,7 @@ function ColorTree() {
       if (e.key === "g" && e.shiftKey) {
         e.preventDefault();
         colors.forEach((c, idx) => {
-          if (!selectedIds.has(c._id)) return;
+          if (!c._id || !selectedIds.has(c._id)) return;
           const localName = c.name.split("/").pop()!;
           setColor(idx, "name", localName);
         });
@@ -150,7 +151,7 @@ function ColorTree() {
       } else if (e.key === "g" && !e.shiftKey) {
         e.preventDefault();
         colors.forEach((c, idx) => {
-          if (!selectedIds.has(c._id)) return;
+          if (!c._id || !selectedIds.has(c._id)) return;
           const localName = c.name.split("/").pop()!;
           setColor(idx, "name", `Untitled/${localName}`);
         });
@@ -187,7 +188,7 @@ function ColorTree() {
     setActiveId(e.active.id as string);
   }
 
-  function handleDragOver(e: { over: { id: string } | null }) {
+  function handleDragOver(e: DragOverEvent) {
     if (!e.over) {
       setOverGroupPath(null);
       return;
@@ -300,7 +301,7 @@ function ColorTree() {
 
   return (
     <div ref={containerRef} className="relative">
-      <DndContext id={dndId} sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver as any} onDragEnd={handleDragEnd}>
+      <DndContext id={dndId} sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
         <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
           <TreeRenderer
             nodes={tree}
@@ -335,28 +336,28 @@ function ColorTree() {
           count={selectedIds.size}
           onGroup={() => {
             colors.forEach((c, i) => {
-              if (!selectedIds.has(c._id)) return;
+              if (!c._id || !selectedIds.has(c._id)) return;
               setColor(i, "name", `Untitled/${c.name.split("/").pop()!}`);
             });
             setSelectedIds(new Set());
           }}
           onUngroup={() => {
             colors.forEach((c, i) => {
-              if (!selectedIds.has(c._id)) return;
+              if (!c._id || !selectedIds.has(c._id)) return;
               setColor(i, "name", c.name.split("/").pop()!);
             });
             setSelectedIds(new Set());
           }}
           onDelete={() => {
             const idxs = colors
-              .map((c, i) => (selectedIds.has(c._id) ? i : -1))
+              .map((c, i) => (c._id && selectedIds.has(c._id) ? i : -1))
               .filter((i) => i >= 0)
               .reverse();
             idxs.forEach((i) => useProjectStore.getState().removeColor(i));
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}
-          onSelectAll={() => setSelectedIds(new Set(colors.map((c) => c._id)))}
+          onSelectAll={() => setSelectedIds(new Set(colors.map((c) => c._id ?? "")))}
         />
       )}
     </div>
@@ -367,7 +368,8 @@ function RoleTree() {
   const roles = useProjectStore((s) => s.projectStore.roles);
   const moveRole = useProjectStore((s) => s.moveRole);
   const setRole = useProjectStore((s) => s.setRole);
-  const [committed, flushCommitted] = useCommittedNames(roles);
+  const committedRoles = useMemo(() => roles.map((r) => ({ ...r, _id: r._id ?? "" })), [roles]);
+  const [committed, flushCommitted] = useCommittedNames(committedRoles);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overGroupPath, setOverGroupPath] = useState<string | null>(null);
@@ -391,14 +393,14 @@ function RoleTree() {
       if (e.key === "g" && e.shiftKey) {
         e.preventDefault();
         roles.forEach((r, idx) => {
-          if (!selectedIds.has(r._id)) return;
+          if (!r._id || !selectedIds.has(r._id)) return;
           setRole(idx, "name", r.name.split("/").pop()!);
         });
         setSelectedIds(new Set());
       } else if (e.key === "g" && !e.shiftKey) {
         e.preventDefault();
         roles.forEach((r, idx) => {
-          if (!selectedIds.has(r._id)) return;
+          if (!r._id || !selectedIds.has(r._id)) return;
           setRole(idx, "name", `Untitled/${r.name.split("/").pop()!}`);
         });
         setSelectedIds(new Set());
@@ -432,7 +434,7 @@ function RoleTree() {
     setActiveId(e.active.id as string);
   }
 
-  function handleDragOver(e: { over: { id: string } | null }) {
+  function handleDragOver(e: DragOverEvent) {
     if (!e.over) {
       setOverGroupPath(null);
       return;
@@ -513,7 +515,7 @@ function RoleTree() {
   }
 
   function addChild(fullPath: string) {
-    useProjectStore.getState().addRoleWith(`${fullPath}/New`, "", 4.5, [500]);
+    useProjectStore.getState().addRoleWith(`${fullPath}/New`, "");
   }
 
   const renderRoleLeaf = useCallback(
@@ -539,7 +541,7 @@ function RoleTree() {
 
   return (
     <div ref={containerRef} className="relative">
-      <DndContext id={dndId} sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver as any} onDragEnd={handleDragEnd}>
+      <DndContext id={dndId} sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
         <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
           <TreeRenderer
             nodes={tree}
@@ -574,28 +576,28 @@ function RoleTree() {
           count={selectedIds.size}
           onGroup={() => {
             roles.forEach((r, i) => {
-              if (!selectedIds.has(r._id)) return;
+              if (!r._id || !selectedIds.has(r._id)) return;
               setRole(i, "name", `Untitled/${r.name.split("/").pop()!}`);
             });
             setSelectedIds(new Set());
           }}
           onUngroup={() => {
             roles.forEach((r, i) => {
-              if (!selectedIds.has(r._id)) return;
+              if (!r._id || !selectedIds.has(r._id)) return;
               setRole(i, "name", r.name.split("/").pop()!);
             });
             setSelectedIds(new Set());
           }}
           onDelete={() => {
             const idxs = roles
-              .map((r, i) => (selectedIds.has(r._id) ? i : -1))
+              .map((r, i) => (r._id && selectedIds.has(r._id) ? i : -1))
               .filter((i) => i >= 0)
               .reverse();
             idxs.forEach((i) => useProjectStore.getState().removeRole(i));
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}
-          onSelectAll={() => setSelectedIds(new Set(roles.map((r) => r._id)))}
+          onSelectAll={() => setSelectedIds(new Set(roles.map((r) => r._id ?? "")))}
         />
       )}
     </div>
@@ -692,7 +694,7 @@ function SectionB() {
       if (DEMO_ROLES.some((d) => d.name === roles[i].name)) removeRole(i);
     }
     DEMO_COLORS.forEach((c) => addColorWith(c.name, c.value, c.shorthand));
-    DEMO_ROLES.forEach((r) => addRoleWith(r.name, r.shorthand, r.minContrast, r.variationTargets));
+    DEMO_ROLES.forEach((r) => addRoleWith(r.name, r.shorthand));
   }
 
   return (
@@ -738,7 +740,7 @@ function SectionB() {
         <RoleSuggestSheet
           existingNames={roles.map((r) => r.name)}
           onPick={(r) => {
-            addRoleWith(r.name, r.shorthand, r.minContrast, r.variationTargets);
+            addRoleWith(r.name, r.shorthand);
             setShowRoleSuggest(false);
           }}
           onBlank={() => {

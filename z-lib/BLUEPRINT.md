@@ -77,14 +77,13 @@ interface ProjectStore {
   includeSourceColors: boolean; // emit raw seed hex collection
   sourceCollectionName: string;
   alphaValues: string; // "10, 25, 50" — parsed to number[]
-  tokenGrouping: "color" | "role"; // legacy field; tokenNameSegments is used instead
   includeColorScalesCollection: boolean;
   includeDescriptions: boolean;
   scaleCollectionName: string;
   tokenCollectionName: string;
 
   // Entities
-  scaleStepNames: ScaleStepName[] | null; // null = numeric 1…N
+  scaleSteps: ScaleStepName[] | null; // null = numeric 1…N
   variations: Variation[] | null; // global variation list
   canEditRoleVariantNames: boolean; // allow roles to override variations
   colors: Color[];
@@ -112,11 +111,8 @@ interface Role {
   _id: string;
   name: string; // supports "/" nesting: "status/success"
   shorthand: string;
-  minContrast: number;
   mappingMethod: "contrast" | "index";
-  variationTargets: number[]; // one per variation — contrast ratio or step index
-  customVariationList: boolean;
-  customVariations: Variation[]; // used when customVariationList=true
+  variations: Variation[]; // used when customVariationList=true
   scaleAlgorithm?: ScaleAlgorithm;
   solverMode?: SolverMode;
   scopedColorIds?: string[] | null; // null = all colors; [] = no colors; [...] = specific ids

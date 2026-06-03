@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { variableMaker } from "../../lib/colorEngine";
 import { Settings, X, ChevronDown } from "lucide-react";
 import { Checkbox } from "../Checkbox";
-import type { Color, Theme, RoleLocalBg, RoleLocalBgKind, Role, Variation } from "../../types/state";
+import type { Color, Theme, RoleLocalBg, RoleLocalBgKind, Role, Variation, VariableScope } from "../../types/state";
 import { CardToolbar } from "../CardToolbar";
 import { useProjectStore, SCALE_ALGORITHM_OPTIONS } from "../../store/projectStore";
 import { useLocalField } from "../../hooks/useLocalField";
@@ -14,6 +14,7 @@ import { Collapsible } from "../Collapsible";
 import { Select } from "../Select";
 import { usePersistedToggle } from "../../hooks/usePersistedToggle";
 import { SOLVER_MODE_OPTIONS } from "../../store/projectStore";
+import { TokenEntry } from "src/shared/clrEngine";
 
 interface RoleGroupCardProps {
   role: Role;
@@ -146,7 +147,7 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
         for (const colorTokens of Object.values(themeTokens as object)) {
           for (const roleTokens of Object.values(colorTokens as object)) {
             for (const token of Object.values(roleTokens as object)) {
-              const name = (token as any).tokenName;
+              const name = (token as TokenEntry).tokenName;
               if (name) names.add(name);
             }
           }
@@ -343,7 +344,7 @@ function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClose: () 
   const [draftScopes, setDraftScopes] = useState<VariableScope[] | null>(role?.scopes ?? null);
 
   const isAll = draftScopedIds === null;
-  const effectiveIds: string[] = isAll ? colors.map((c) => c._id) : draftScopedIds;
+  const effectiveIds: string[] = isAll ? colors.map((c) => c._id ?? "") : draftScopedIds;
   const bgKind: RoleLocalBgKind | "none" = draftLocalBg?.kind ?? "none";
 
   // ── Color scope helpers ───────────────────────────────────────────────────
@@ -351,7 +352,7 @@ function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClose: () 
     setDraftScopedIds(isAll ? [] : null);
   }
   function toggleColor(id: string) {
-    const current: string[] = isAll ? colors.map((c) => c._id) : [...draftScopedIds!];
+    const current: string[] = isAll ? colors.map((c) => c._id ?? "") : [...draftScopedIds!];
     const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
     setDraftScopedIds(next.length === colors.length ? null : next);
   }
@@ -466,8 +467,8 @@ function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClose: () 
                 <span className="text-[12px] font-medium text-text-primary">All colors</span>
               </button>
               {colors.map((c) => (
-                <button key={c._id} onClick={() => toggleColor(c._id)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0">
-                  <Checkbox checked={effectiveIds.includes(c._id)} />
+                <button key={c._id ?? ""} onClick={() => toggleColor(c._id ?? "")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0">
+                  <Checkbox checked={effectiveIds.includes(c._id ?? "")} />
                   <div className="w-5 h-5 rounded shrink-0 border border-black/10" style={{ background: c.value }} />
                   <span className="text-[12px] text-text-primary">{c.name}</span>
                 </button>
@@ -697,7 +698,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
             vars={vars}
             useCustomVars={useCustomVars}
             canEditNames={perRoleOverride}
-            mappingMethod={role.mappingMethod}
+            mappingMethod={role.mappingMethod ?? "contrast"}
             idx={idx}
             scaleLength={scaleLength}
             setRoleVariation={setRoleVariation}

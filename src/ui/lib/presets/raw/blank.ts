@@ -24,13 +24,12 @@ const presets: Preset[] = [
       includeSourceColors: false,
       sourceCollectionName: "global",
       alphaValues: [5, 10, 20, 25, 50, 75, 80, 90, 95],
-      tokenGrouping: "color",
       includeColorScalesCollection: true,
       includeDescriptions: false,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
 
-      scaleStepNames: null,
+      scaleSteps: null,
 
       // 5 named variations covering the full perceptual range.
       // These names work for any role — background, border, text, or fill.

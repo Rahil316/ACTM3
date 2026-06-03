@@ -5,6 +5,8 @@ export type MappingMethod = "contrast" | "index";
 export type AlgorithmScopeLevel = "color" | "role";
 export type TokenNameSegment = "color" | "role" | "variation";
 
+export type VariableScope = "FRAME_FILL" | "SHAPE_FILL" | "TEXT_FILL" | "STROKE_COLOR" | "EFFECT_COLOR" | "ALL_SCOPES";
+
 export type ScaleAlgorithm = "Natural" | "Uniform" | "Expressive" | "Symmetric" | "OKLCH" | "Material" | "Linear";
 
 export type SolverMode = "natural" | "saturated" | "luminance" | "hue-locked" | "chroma-maximized";
@@ -15,20 +17,18 @@ export interface Variation {
   _id?: string;
   name: string;
   shorthand: string;
-  target: number;
+  target?: number;
 }
 
 // User-configured label for a scale step position
 export interface ScaleStep {
-  _id?: string;
+  _id: string;
   name: string;
   shorthand: string;
-  index: number;
 }
 
 // Engine-generated output for a scale step — hex value + contrast data
 export interface ScaleStepToken {
-  _id?: string;
   value: string;
   stepName: string;
   shorthand: string;
@@ -61,7 +61,7 @@ export interface Role {
   name: string;
   shorthand: string;
   mappingMethod?: MappingMethod;
-  variations: Variation[] | null; //Use common/default/global Variations if null
+  variations?: Variation[] | null; //Use common/default/global Variations if null
   scaleAlgorithm?: ScaleAlgorithm;
   solverMode?: SolverMode;
   description?: string;

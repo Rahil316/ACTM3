@@ -1,3 +1,7 @@
+import type { EngineResult, TokenEntry } from "../shared/clrEngine";
+import type { PluginConfig } from "./config";
+import type { Role } from "../shared/types";
+
 // No import needed as Variable and VariableCollection are global types in Figma environment.
 
 export interface SyncPreview {
@@ -9,10 +13,8 @@ export interface SyncPreview {
 
 // Counts how many variables would be created, updated, or renamed without writing anything.
 export function computeSyncPreview(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  result: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  config: any,
+  result: EngineResult,
+  config: PluginConfig,
   localVars: Variable[],
   collections: VariableCollection[],
 ): SyncPreview {
@@ -29,8 +31,7 @@ export function computeSyncPreview(
   let toRename = 0;
 
   function checkVars(col: VariableCollection | null, prefix: 'token:' | 'scale:' | 'source:',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    entries: Array<{ tokenRef: string; name: string; value: any; description?: string }>,
+    entries: Array<{ tokenRef: string; name: string; value: string | null; description?: string }>,
     modeId: string,
   ) {
     if (!col) {
@@ -74,17 +75,16 @@ export function computeSyncPreview(
     const firstTheme = Object.keys(result.tokens)[0];
     const modeId = tokenCol ? (tokenCol.modes[0]?.modeId ?? '') : '';
     if (firstTheme) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const entries: Array<{ tokenRef: string; name: string; value: any; description?: string }> = [];
-      for (const [colorName, roles] of Object.entries(result.tokens[firstTheme] as Record<string, any>)) {
-        const colorObj = config.colors?.find((c: any) => c.name === colorName);
+      const entries: Array<{ tokenRef: string; name: string; value: string | null; description?: string }> = [];
+      for (const [colorName, roles] of Object.entries(result.tokens[firstTheme] as Record<string, Record<number, Record<number, TokenEntry>>>)) {
+        const colorObj = config.colors?.find((c) => c.name === colorName);
         const colorId = colorObj?._id || colorName;
-        for (const [roleId, variations] of Object.entries(roles as Record<string, any>)) {
-          const roleObj = (config.roles && config.roles[roleId]) || {};
+        for (const [roleId, variations] of Object.entries(roles)) {
+          const roleObj: Partial<Role> = config.roles?.[parseInt(roleId, 10)] || {};
           const roleIdStr = roleObj._id || roleId;
           const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let vi = 0; vi < variationDefs.length; vi++) {
-            const token = (variations as any)[String(vi)];
+            const token = variations[vi];
             if (!token) continue;
             const varDef = variationDefs[vi];
             const varIdStr = varDef._id || String(vi);
@@ -104,13 +104,12 @@ export function computeSyncPreview(
   // Count scale variables (first theme only)
   if (result?.scales) {
     const modeId = scaleCol ? (scaleCol.modes[0]?.modeId ?? '') : '';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const entries: Array<{ tokenRef: string; name: string; value: any }> = [];
-    for (const [colorName, scale] of Object.entries(result.scales as Record<string, any>)) {
-      const colorObj = config.colors?.find((c: any) => c.name === colorName);
+    const entries: Array<{ tokenRef: string; name: string; value: string | null }> = [];
+    for (const [colorName, scale] of Object.entries(result.scales)) {
+      const colorObj = config.colors?.find((c) => c.name === colorName);
       const colorId = colorObj?._id || colorName;
-      for (const [step, entry] of Object.entries(scale as Record<string, any>)) {
-        entries.push({ tokenRef: `scale:${colorId}/${step}`, name: `${colorName}/${step}`, value: entry?.value });
+      for (const [step, entry] of Object.entries(scale)) {
+        entries.push({ tokenRef: `scale:${colorId}/${step}`, name: `${colorName}/${step}`, value: entry?.value || null });
       }
     }
     checkVars(scaleCol, 'scale:', entries, modeId);
@@ -197,10 +196,8 @@ export function findVariable(
 }
 
 export function analyzeNameConflicts(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  result: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  config: any,
+  result: EngineResult,
+  config: PluginConfig,
   localVars: Variable[],
   tokenCol: VariableCollection | null,
   scaleCol: VariableCollection | null,
@@ -210,13 +207,12 @@ export function analyzeNameConflicts(
 
   const colorLabel = (name: string) => {
     if (!config.useShorthandColors) return name;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const col = config.colors.find((c: any) => c.name === name);
+    const col = config.colors?.find((c) => c.name === name);
     return (col && col.shorthand) || name;
   };
   const roleLabel = (name: string, roleIdx: number) => {
     if (!config.useShorthandRoles) return name;
-    const role = config.roles[roleIdx];
+    const role = config.roles?.[roleIdx];
     return (role && role.shorthand) || name;
   };
   const stepLabel = (name: string) =>
@@ -227,9 +223,8 @@ export function analyzeNameConflicts(
   // 1. Check scale collection conflicts
   if (scaleCol && result?.scales) {
     const scaleMetadataMap = buildMetadataMap(scaleCol, localVars, 'scale:');
-    for (const [colorName, scale] of Object.entries(result.scales as Record<string, unknown>)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const colorObj = config.colors.find((c: any) => c.name === colorName);
+    for (const [colorName, scale] of Object.entries(result.scales)) {
+      const colorObj = config.colors?.find((c) => c.name === colorName);
       const colorId = colorObj?._id || colorName;
       const cLabel = colorLabel(colorName);
 
@@ -259,14 +254,13 @@ export function analyzeNameConflicts(
     const firstTheme = Object.keys(result.tokens)[0];
     if (firstTheme) {
       const colors = result.tokens[firstTheme];
-      for (const [colorName, roles] of Object.entries(colors as Record<string, unknown>)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const colorObj = config.colors.find((c: any) => c.name === colorName);
+      for (const [colorName, roles] of Object.entries(colors)) {
+        const colorObj = config.colors?.find((c) => c.name === colorName);
         const colorId = colorObj?._id || colorName;
         const cLabel = colorLabel(colorName);
 
-        for (const [roleId, variations] of Object.entries(roles as Record<string, unknown>)) {
-          const roleObj = config.roles[roleId] || {};
+        for (const [roleId, variations] of Object.entries(roles)) {
+          const roleObj: Partial<Role> = config.roles?.[parseInt(roleId, 10)] || {};
           const roleIdStr = roleObj._id || roleId;
           const rName = roleObj.name || roleId;
           const rLabel = roleLabel(rName, parseInt(roleId, 10));
@@ -274,8 +268,7 @@ export function analyzeNameConflicts(
           const variationDefs = roleObj.variations ?? config.variations ?? [];
 
           for (let vi = 0; vi < variationDefs.length; vi++) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const token = (variations as any)[String(vi)];
+            const token = variations[vi];
             if (!token) continue;
 
             const varDef = variationDefs[vi];

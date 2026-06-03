@@ -1,5 +1,4 @@
-// Entity types live in shared so both the engine and UI can import from one source
-export type { PluginMode, MappingMethod, AlgorithmScopeLevel, TokenNameSegment, ScaleAlgorithm, SolverMode, Variation, ScaleStep, Color, RoleLocalBgKind, RoleLocalBg, Role, Theme } from "../../shared/types";
+export type { PluginMode, MappingMethod, AlgorithmScopeLevel, TokenNameSegment, ScaleAlgorithm, SolverMode, Variation, ScaleStep, Color, RoleLocalBgKind, RoleLocalBg, Role, Theme, VariableScope } from "../../shared/types";
 
 // ── Root app state ───────────────────────────────────────────────────────────
 

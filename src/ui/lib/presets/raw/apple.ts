@@ -61,14 +61,12 @@ const presets: Preset[] = [
       includeSourceColors: true,
       sourceCollectionName: "system-colors",
       alphaValues: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95],
-
-      tokenGrouping: "color",
       includeColorScalesCollection: false,
       includeDescriptions: true,
       scaleCollectionName: "system-colors",
       tokenCollectionName: "semantic-colors",
 
-      scaleStepNames: null,
+      scaleSteps: null,
 
       // Global variations — not used directly (all roles use customVariationList).
       variations: [{ name: "default", shorthand: "default", target: 1 }],
@@ -105,12 +103,11 @@ const presets: Preset[] = [
           name: "fill",
           shorthand: "fill",
           variations: [
-            { name: "primary", shorthand: "primary" }, // systemFill
-            { name: "secondary", shorthand: "secondary" }, // secondarySystemFill
-            { name: "tertiary", shorthand: "tertiary" }, // tertiarySystemFill
-            { name: "quaternary", shorthand: "quaternary" }, // quaternarySystemFill
+            { name: "primary", shorthand: "primary", target: 2.5 }, // systemFill
+            { name: "secondary", shorthand: "secondary", target: 2.0 }, // secondarySystemFill
+            { name: "tertiary", shorthand: "tertiary", target: 1.7 }, // tertiarySystemFill
+            { name: "quaternary", shorthand: "quaternary", target: 1.4 }, // quaternarySystemFill
           ],
-          variationTargets: [2.5, 2.0, 1.7, 1.4],
           description: "System fill hierarchy · interactive control surfaces · 4 tiers",
         },
 
@@ -119,14 +116,11 @@ const presets: Preset[] = [
         {
           name: "background",
           shorthand: "background",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // systemBackground        — page canvas
-            { name: "secondary", shorthand: "secondary" }, // secondarySystemBackground — grouped tables
-            { name: "tertiary", shorthand: "tertiary" }, // tertiarySystemBackground  — nested groups
+          variations: [
+            { name: "default", shorthand: "default", target: 1.0 }, // systemBackground        — page canvas
+            { name: "secondary", shorthand: "secondary", target: 1.1 }, // secondarySystemBackground — grouped tables
+            { name: "tertiary", shorthand: "tertiary", target: 1.2 }, // tertiarySystemBackground  — nested groups
           ],
-          variationTargets: [1.0, 1.1, 1.2],
           description: "System background · page / grouped / nested surface",
         },
 
@@ -135,14 +129,11 @@ const presets: Preset[] = [
         {
           name: "background/grouped",
           shorthand: "background/grouped",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // systemGroupedBackground
-            { name: "secondary", shorthand: "secondary" }, // secondarySystemGroupedBackground
-            { name: "tertiary", shorthand: "tertiary" }, // tertiarySystemGroupedBackground
+          variations: [
+            { name: "default", shorthand: "default", target: 1.0 }, // systemGroupedBackground
+            { name: "secondary", shorthand: "secondary", target: 1.15 }, // secondarySystemGroupedBackground
+            { name: "tertiary", shorthand: "tertiary", target: 1.3 }, // tertiarySystemGroupedBackground
           ],
-          variationTargets: [1.0, 1.15, 1.3],
           description: "Grouped-style (insetGrouped) background hierarchy",
         },
 
@@ -151,13 +142,10 @@ const presets: Preset[] = [
         {
           name: "separator",
           shorthand: "separator",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // systemSeparator       — translucent hairline
-            { name: "opaque", shorthand: "opaque" }, // systemOpaqueSeparator — screenshot-safe solid
+          variations: [
+            { name: "default", shorthand: "default", target: 1.5 }, // systemSeparator       — translucent hairline
+            { name: "opaque", shorthand: "opaque", target: 2.5 }, // systemOpaqueSeparator — screenshot-safe solid
           ],
-          variationTargets: [1.5, 2.5],
           description: "Separator lines · translucent hairline and opaque fallback",
         },
 
@@ -166,15 +154,12 @@ const presets: Preset[] = [
         {
           name: "tint",
           shorthand: "tint",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "primary", shorthand: "primary" }, // primary tint (links, buttons)
-            { name: "secondary", shorthand: "secondary" }, // secondary tint
-            { name: "tertiary", shorthand: "tertiary" }, // tertiary tint
-            { name: "quaternary", shorthand: "quaternary" }, // quaternary tint
+          variations: [
+            { name: "primary", shorthand: "primary", target: 4.5 }, // primary tint (links, buttons)
+            { name: "secondary", shorthand: "secondary", target: 3.5 }, // secondary tint
+            { name: "tertiary", shorthand: "tertiary", target: 3.0 }, // tertiary tint
+            { name: "quaternary", shorthand: "quaternary", target: 2.0 }, // quaternary tint
           ],
-          variationTargets: [4.5, 3.5, 3.0, 2.0],
           description: "Interactive tint · primary accent in four rendering tiers",
         },
 
@@ -182,15 +167,12 @@ const presets: Preset[] = [
         {
           name: "status/error",
           shorthand: "status/error",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "primary", shorthand: "primary" },
-            { name: "secondary", shorthand: "secondary" },
-            { name: "tertiary", shorthand: "tertiary" },
-            { name: "quaternary", shorthand: "quaternary" },
+          variations: [
+            { name: "primary", shorthand: "primary", target: 7.0 },
+            { name: "secondary", shorthand: "secondary", target: 4.5 },
+            { name: "tertiary", shorthand: "tertiary", target: 3 },
+            { name: "quaternary", shorthand: "quaternary", target: 2 },
           ],
-          variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Error / destructive semantic hierarchy · 4 rendering tiers",
         },
 
@@ -198,15 +180,12 @@ const presets: Preset[] = [
         {
           name: "status/success",
           shorthand: "status/success",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "primary", shorthand: "primary" },
-            { name: "secondary", shorthand: "secondary" },
-            { name: "tertiary", shorthand: "tertiary" },
-            { name: "quaternary", shorthand: "quaternary" },
+          variations: [
+            { name: "primary", shorthand: "primary", target: 7.0 },
+            { name: "secondary", shorthand: "secondary", target: 4.5 },
+            { name: "tertiary", shorthand: "tertiary", target: 3 },
+            { name: "quaternary", shorthand: "quaternary", target: 2 },
           ],
-          variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Success / confirmation semantic hierarchy · 4 rendering tiers",
         },
 
@@ -214,15 +193,12 @@ const presets: Preset[] = [
         {
           name: "status/warning",
           shorthand: "status/warning",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "primary", shorthand: "primary" },
-            { name: "secondary", shorthand: "secondary" },
-            { name: "tertiary", shorthand: "tertiary" },
-            { name: "quaternary", shorthand: "quaternary" },
+          variations: [
+            { name: "primary", shorthand: "primary", target: 7.0 },
+            { name: "secondary", shorthand: "secondary", target: 4.5 },
+            { name: "tertiary", shorthand: "tertiary", target: 3 },
+            { name: "quaternary", shorthand: "quaternary", target: 2 },
           ],
-          variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Warning / attention semantic hierarchy · 4 rendering tiers",
         },
       ],

@@ -1,5 +1,5 @@
 import { useState, useId, useEffect, useRef, useCallback, useMemo } from "react";
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent, DragOverlay } from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent, DragOverlay, type DragOverEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useProjectStore, deriveShorthand, groupedName } from "../store/projectStore";
@@ -62,7 +62,7 @@ function RoleSuggestSheet({ existingNames, onPick, onBlank, onClose }: RoleSugge
 // ── Flat sortable card (used when no groups present) ─────────────────────────
 
 function SortableRoleCard({ role, idx, selected, onToggleSelect }: { role: Role; idx: number; selected: boolean; onToggleSelect: (id: string, meta?: boolean, shift?: boolean) => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: role._id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: role._id ?? "" });
 
   return (
     <div
@@ -70,7 +70,7 @@ function SortableRoleCard({ role, idx, selected, onToggleSelect }: { role: Role;
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
       onClick={(e) => {
         e.stopPropagation();
-        onToggleSelect(role._id, e.metaKey || e.ctrlKey, e.shiftKey);
+        onToggleSelect(role._id ?? "", e.metaKey || e.ctrlKey, e.shiftKey);
       }}
     >
       <div style={selected ? { borderRadius: 12, outline: "2px solid var(--accent)", outlineOffset: 2, boxShadow: "0 0 0 4px var(--accent-glow)" } : undefined}>
@@ -86,7 +86,8 @@ function RoleTree() {
   const roles = useProjectStore((s) => s.projectStore.roles);
   const moveRole = useProjectStore((s) => s.moveRole);
   const setRole = useProjectStore((s) => s.setRole);
-  const [committed, flushCommitted] = useCommittedNames(roles);
+  const committedRoles = useMemo(() => roles.map(r => ({ ...r, _id: r._id ?? "" })), [roles]);
+  const [committed, flushCommitted] = useCommittedNames(committedRoles);
   const collapsed = useUiStore((s) => s.roleGroupCollapsed);
   const setCollapsed = useUiStore((s) => s.setRoleGroupCollapsed);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -97,23 +98,23 @@ function RoleTree() {
   const dndId = useId();
 
   const handleGroup = useCallback(() => {
-    const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
+    const selectedNames = roles.filter((r) => r._id && selectedIds.has(r._id)).map((r) => r.name);
     roles.forEach((r, i) => {
-      if (selectedIds.has(r._id)) setRole(i, "name", groupedName(r.name, selectedNames));
+      if (r._id && selectedIds.has(r._id)) setRole(i, "name", groupedName(r.name, selectedNames));
     });
     setSelectedIds(new Set());
   }, [roles, selectedIds, setRole]);
 
   const handleUngroup = useCallback(() => {
     roles.forEach((r, i) => {
-      if (selectedIds.has(r._id)) setRole(i, "name", r.name.split("/").pop()!);
+      if (r._id && selectedIds.has(r._id)) setRole(i, "name", r.name.split("/").pop()!);
     });
     setSelectedIds(new Set());
   }, [roles, selectedIds, setRole]);
 
   const handleDelete = useCallback(() => {
     const idxs = roles
-      .map((r, i) => (selectedIds.has(r._id) ? i : -1))
+      .map((r, i) => (r._id && selectedIds.has(r._id) ? i : -1))
       .filter((i) => i >= 0)
       .reverse();
     idxs.forEach((i) => useProjectStore.getState().removeRole(i));
@@ -122,7 +123,7 @@ function RoleTree() {
 
   const handleClear = useCallback(() => setSelectedIds(new Set()), []);
 
-  const handleSelectAll = useCallback(() => setSelectedIds(new Set(roles.map((r) => r._id))), [roles]);
+  const handleSelectAll = useCallback(() => setSelectedIds(new Set(roles.map((r) => r._id ?? ""))), [roles]);
 
   function getTreeOrderIds() {
     function collectLeaves(nodes: TreeNode<(typeof committed)[number]>[]): string[] {
@@ -193,15 +194,15 @@ function RoleTree() {
       if (e.key === "g" && e.shiftKey) {
         e.preventDefault();
         roles.forEach((r, idx) => {
-          if (!selectedIds.has(r._id)) return;
+          if (!r._id || !selectedIds.has(r._id)) return;
           setRole(idx, "name", r.name.split("/").pop()!);
         });
         setSelectedIds(new Set());
       } else if (e.key === "g" && !e.shiftKey) {
         e.preventDefault();
-        const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
+        const selectedNames = roles.filter((r) => r._id && selectedIds.has(r._id)).map((r) => r.name);
         roles.forEach((r, idx) => {
-          if (!selectedIds.has(r._id)) return;
+          if (!r._id || !selectedIds.has(r._id)) return;
           setRole(idx, "name", groupedName(r.name, selectedNames));
         });
         setSelectedIds(new Set());
@@ -235,7 +236,7 @@ function RoleTree() {
     setActiveId(e.active.id as string);
   }
 
-  function handleDragOver(e: { over: { id: string } | null }) {
+  function handleDragOver(e: DragOverEvent) {
     if (!e.over) {
       setOverGroupPath(null);
       return;
@@ -271,7 +272,7 @@ function RoleTree() {
       const targetPath = overId.slice(7);
       const idsToMove = selectedIds.has(activeIdStr) ? [...selectedIds] : [activeIdStr];
       roles.forEach((r, idx) => {
-        if (!idsToMove.includes(r._id)) return;
+        if (!r._id || !idsToMove.includes(r._id)) return;
         const localName = r.name.split("/").pop()!;
         setRole(idx, "name", `${targetPath}/${localName}`);
       });
@@ -291,7 +292,7 @@ function RoleTree() {
       } else {
         const idsToMove = selectedIds.has(activeIdStr) ? [...selectedIds] : [activeIdStr];
         roles.forEach((r, idx) => {
-          if (!idsToMove.includes(r._id)) return;
+          if (!r._id || !idsToMove.includes(r._id)) return;
           const localName = r.name.split("/").pop()!;
           setRole(idx, "name", toGroup ? `${toGroup}/${localName}` : localName);
         });
@@ -332,7 +333,7 @@ function RoleTree() {
       .filter(Boolean)
       .map((s) => deriveShorthand(s))
       .join("/");
-    useProjectStore.getState().addRoleWith(`${fullPath}/New`, `${prefixShort}/${deriveShorthand("New")}`, 4.5, [500]);
+    useProjectStore.getState().addRoleWith(`${fullPath}/New`, `${prefixShort}/${deriveShorthand("New")}`);
   }
 
   const renderRoleLeaf = useCallback(
@@ -364,7 +365,7 @@ function RoleTree() {
         if (selectedIds.size > 0) setSelectedIds(new Set());
       }}
     >
-      <DndContext id={dndId} sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver as any} onDragEnd={handleDragEnd}>
+      <DndContext id={dndId} sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
         <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
           <TreeRenderer
             nodes={tree}
@@ -385,7 +386,7 @@ function RoleTree() {
         <DragOverlay>
           {activeRole && (
             <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary flex items-center gap-2">
-              {selectedIds.has(activeRole._id) && selectedIds.size > 1 && <span className="bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{selectedIds.size}</span>}
+              {activeRole._id && selectedIds.has(activeRole._id) && selectedIds.size > 1 && <span className="bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{selectedIds.size}</span>}
               {activeRole.name.split("/").pop()}
             </div>
           )}
@@ -428,7 +429,7 @@ export function RolesScreen() {
       return;
     }
     if (shift && lastSelectedRef.current) {
-      const flatIds = roles.map((r) => r._id);
+      const flatIds = roles.map((r) => r._id ?? "");
       const a = flatIds.indexOf(lastSelectedRef.current);
       const b = flatIds.indexOf(id);
       if (a !== -1 && b !== -1) {
@@ -462,14 +463,14 @@ export function RolesScreen() {
       if (e.key === "g" && e.shiftKey) {
         e.preventDefault();
         roles.forEach((r, i) => {
-          if (selectedIds.has(r._id)) setRole(i, "name", r.name.split("/").pop()!);
+          if (r._id && selectedIds.has(r._id)) setRole(i, "name", r.name.split("/").pop()!);
         });
         setSelectedIds(new Set());
       } else if (e.key === "g" && !e.shiftKey) {
         e.preventDefault();
-        const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
+        const selectedNames = roles.filter((r) => r._id && selectedIds.has(r._id)).map((r) => r.name);
         roles.forEach((r, i) => {
-          if (selectedIds.has(r._id)) setRole(i, "name", groupedName(r.name, selectedNames));
+          if (r._id && selectedIds.has(r._id)) setRole(i, "name", groupedName(r.name, selectedNames));
         });
         setSelectedIds(new Set());
       }
@@ -522,9 +523,9 @@ export function RolesScreen() {
       ) : (
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           {addBtn}
-          <SortableContext items={roles.map((r) => r._id)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={roles.map((r) => r._id ?? "")} strategy={verticalListSortingStrategy}>
             {roles.map((role, idx) => (
-              <SortableRoleCard key={role._id} role={role} idx={idx} selected={selectedIds.has(role._id)} onToggleSelect={toggleSelect} />
+              <SortableRoleCard key={role._id} role={role} idx={idx} selected={selectedIds.has(role._id ?? "")} onToggleSelect={toggleSelect} />
             ))}
           </SortableContext>
         </DndContext>
@@ -533,28 +534,28 @@ export function RolesScreen() {
         <MultiSelectToolbar
           count={selectedIds.size}
           onGroup={() => {
-            const selectedNames = roles.filter((r) => selectedIds.has(r._id)).map((r) => r.name);
+            const selectedNames = roles.filter((r) => r._id && selectedIds.has(r._id)).map((r) => r.name);
             roles.forEach((r, i) => {
-              if (selectedIds.has(r._id)) setRole(i, "name", groupedName(r.name, selectedNames));
+              if (r._id && selectedIds.has(r._id)) setRole(i, "name", groupedName(r.name, selectedNames));
             });
             setSelectedIds(new Set());
           }}
           onUngroup={() => {
             roles.forEach((r, i) => {
-              if (selectedIds.has(r._id)) setRole(i, "name", r.name.split("/").pop()!);
+              if (r._id && selectedIds.has(r._id)) setRole(i, "name", r.name.split("/").pop()!);
             });
             setSelectedIds(new Set());
           }}
           onDelete={() => {
             const idxs = roles
-              .map((r, i) => (selectedIds.has(r._id) ? i : -1))
+              .map((r, i) => (r._id && selectedIds.has(r._id) ? i : -1))
               .filter((i) => i >= 0)
               .reverse();
             idxs.forEach((i) => useProjectStore.getState().removeRole(i));
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}
-          onSelectAll={() => setSelectedIds(new Set(roles.map((r) => r._id)))}
+          onSelectAll={() => setSelectedIds(new Set(roles.map((r) => r._id ?? "")))}
         />
       )}
     </div>

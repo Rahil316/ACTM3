@@ -1,29 +1,7 @@
 import type { Color, Variation, Role } from '../../shared/types';
+import type { TokenEntry, EngineErrors, EngineResult } from '../../shared/clrEngine';
 
-export type { Color, Variation, Role };
-
-export interface ScaleEntry {
-  value: string;
-  description?: string;
-}
-
-export interface TokenEntry {
-  value: string;
-  tokenRef?: string | null;
-  isAdjusted?: boolean;
-}
-
-export interface EngineErrors {
-  critical: unknown[];
-  warnings: { color: string; role: string; variation: string; theme: string; warning: string }[];
-  notices: { color: string; role: string; variation: string; theme: string; notice: string }[];
-}
-
-export interface EngineResult {
-  scales: Record<string, Record<string, ScaleEntry>>;
-  tokens: Record<string, Record<string, Record<string | number, Record<string | number, TokenEntry>>>>;
-  errors?: EngineErrors | string[];
-}
+export type { Color, Variation, Role, TokenEntry, EngineErrors, EngineResult };
 
 export interface ExportConfig {
   name?: string;

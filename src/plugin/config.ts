@@ -4,14 +4,14 @@
 import { translateLocalBg } from "../shared/localBgTranslate";
 import type { ProjectStore, TokenNameSegment } from "../ui/types/state";
 import type { EngineInput } from "../shared/clrEngine";
-interface StepNames {
+import type { Color, Role, Theme, Variation } from "../shared/types";
+export interface StepNames {
   name: string;
   shorthand: string;
 }
 
 export interface PluginConfig extends EngineInput {
   name: string;
-  roleStepNames: string[];
   scaleStepShorthands: Record<string, string>;
   alphaValues: number[];
   includeSourceColors: boolean;
@@ -28,31 +28,32 @@ export interface PluginConfig extends EngineInput {
 }
 
 export function translateConfig(projectStore: ProjectStore): PluginConfig {
-  projectStore.scaleLength = projectStore.scaleLength || 23;
-  const stepNames = _parseStepNames(projectStore, projectStore.scaleLength);
+  const scaleLength = projectStore.scaleLength || undefined;
+  const stepNames = _parseStepNames(projectStore, scaleLength);
   const stepShorthands = _parseStepShorthands(projectStore, stepNames);
   const variations = _parseVariations(projectStore);
-  const roleStepNames = variations.map((v: any) => (projectStore.useShorthandVariations && v.shorthand ? v.shorthand : v.name));
-  const themes = projectStore.themes || [{ bg: "FFFFFF" }, { bg: "000000" }];
+  const themes = projectStore.themes || [
+    { name: "Light", bg: "FFFFFF" },
+    { name: "Dark", bg: "000000" },
+  ];
 
   return {
     name: projectStore.name || "token-wand",
-    colors: (projectStore.colors || []).map((g: any) => ({
+    colors: (projectStore.colors || []).map((g) => ({
       name: g.name,
       shorthand: g.shorthand,
       value: g.value,
       _id: g._id || undefined,
       solverMode: g.solverMode || "natural",
-      scaleAlgorithm: g.scaleAlgorithm || null,
+      scaleAlgorithm: g.scaleAlgorithm || undefined,
       description: g.description || "",
     })),
     roles: _mapRoles(projectStore, variations),
-    scaleLength: projectStore.scaleLength,
+    scaleLength,
     scaleAlgorithm: projectStore.scaleAlgorithm || "Natural",
     pluginMode: projectStore.pluginMode || "scale",
     scaleSteps: stepNames,
-    roleStepNames,
-    variations: variations.map((v: any) => Object.assign({}, v)),
+    variations: variations.map((v) => Object.assign({}, v)),
     themes: _deduplicateThemeNames(themes),
     tokenNameSegments: projectStore.tokenNameSegments || ["color", "role", "variation"],
     useShorthandColors: projectStore.useShorthandColors || false,
@@ -73,9 +74,9 @@ export function translateConfig(projectStore: ProjectStore): PluginConfig {
   };
 }
 
-function _parseStepNames(projectStore: any, count: number): string[] | null {
+function _parseStepNames(projectStore: ProjectStore, count: number): string[] | null {
   const items = Array.isArray(projectStore.scaleSteps) ? projectStore.scaleSteps : [];
-  const userNames = items.length > 0 ? items.map((s: any) => (typeof s === "string" ? s : s.name || "")) : null;
+  const userNames = items.length > 0 ? items.map((s) => (typeof s === "string" ? s : s.name || "")) : null;
   if (!userNames || userNames.length === 0) return null;
 
   const names = userNames.slice();
@@ -83,11 +84,11 @@ function _parseStepNames(projectStore: any, count: number): string[] | null {
   return names.slice(0, count);
 }
 
-function _parseStepShorthands(projectStore: any, resolvedNames: string[] | null): Record<string, string> {
+function _parseStepShorthands(projectStore: ProjectStore, resolvedNames: string[] | null): Record<string, string> {
   if (!resolvedNames) return {};
   const items = Array.isArray(projectStore.scaleSteps) ? projectStore.scaleSteps : [];
   const map: Record<string, string> = {};
-  items.forEach((item: any, i: number) => {
+  items.forEach((item, i: number) => {
     if (typeof item === "object" && item.shorthand && item.shorthand !== item.name) {
       const key = resolvedNames[i];
       if (key) map[key] = item.shorthand;
@@ -96,14 +97,14 @@ function _parseStepShorthands(projectStore: any, resolvedNames: string[] | null)
   return map;
 }
 
-function _deduplicateThemeNames(themes: any[]): any[] {
+function _deduplicateThemeNames(themes: Theme[]): Theme[] {
   const seen: Record<string, number> = {};
   return (
     themes || [
       { name: "Light", bg: "FFFFFF" },
       { name: "Dark", bg: "000000" },
     ]
-  ).map((t: any) => {
+  ).map((t) => {
     const base = (t.name || "Theme").trim();
     if (!seen[base]) {
       seen[base] = 1;
@@ -114,30 +115,30 @@ function _deduplicateThemeNames(themes: any[]): any[] {
   });
 }
 
-function _parseVariations(projectStore: any): any[] {
+function _parseVariations(projectStore: ProjectStore): Variation[] {
   return projectStore.variations && projectStore.variations.length > 0
     ? projectStore.variations
     : [1, 2, 3, 4, 5].map((n) => ({
         _id: String(n),
         name: String(n),
         shorthand: String(n),
-        description: "",
+        target: n,
       }));
 }
 
-function _mapRoles(projectStore: any, _variations: any[]): any[] {
-  return (projectStore.roles || []).map((role: any) => ({
-    _id: role._id || undefined,
+function _mapRoles(projectStore: ProjectStore, _variations: Variation[]): Role[] {
+  return (projectStore.roles || []).map((role) => ({
+    _id: role._id,
     name: role.name,
     shorthand: role.shorthand || role.name.substring(0, 2).toLowerCase(),
     mappingMethod: role.mappingMethod === "index" ? "index" : "contrast",
     variations: role.variations ?? null,
-    scaleAlgorithm: role.scaleAlgorithm || null,
-    solverMode: role.solverMode || null,
+    scaleAlgorithm: role.scaleAlgorithm || undefined,
+    solverMode: role.solverMode || undefined,
     description: role.description || "",
     scopedColorIds: role.scopedColorIds ?? null,
     ...translateLocalBg(role.localBg, projectStore.colors || [], projectStore.themes || []),
-    scopes: role.scopes || null,
+    scopes: role.scopes || undefined,
   }));
 }
 
@@ -154,13 +155,13 @@ export interface RenameMap {
   summary: { scaleCount: number; tokenCount: number; changes: Array<Record<string, string>> };
 }
 
-export function buildVariableRenameMap(savedProjectStore: any, newProjectStore: any): RenameMap {
+export function buildVariableRenameMap(savedProjectStore: ProjectStore | null | undefined, newProjectStore: ProjectStore | null | undefined): RenameMap {
   if (!savedProjectStore || !newProjectStore) {
     return { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } };
   }
 
-  const oldStepNames = savedProjectStore.scaleSteps?.map((s: any) => s.name) || _seriesMaker(savedProjectStore.scaleLength || 23);
-  const newStepNames = newProjectStore.scaleSteps?.map((s: any) => s.name) || _seriesMaker(newProjectStore.scaleLength || 23);
+  const oldStepNames = savedProjectStore.scaleSteps?.map((s) => s.name) || _seriesMaker(savedProjectStore.scaleLength || 23);
+  const newStepNames = newProjectStore.scaleSteps?.map((s) => s.name) || _seriesMaker(newProjectStore.scaleLength || 23);
 
   const colorLabels = _mapIdToLabel(savedProjectStore.colors, newProjectStore.colors, savedProjectStore.useShorthandColors, newProjectStore.useShorthandColors);
   const roleLabels = _mapIdToLabel(savedProjectStore.roles, newProjectStore.roles, savedProjectStore.useShorthandRoles, newProjectStore.useShorthandRoles);
@@ -179,13 +180,15 @@ export function buildVariableRenameMap(savedProjectStore: any, newProjectStore: 
   };
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 function _seriesMaker(n: number): string[] {
   return Array.from({ length: n }, (_, i) => String(i + 1));
 }
 
-function _mapIdToLabel(oldItems: any[], newItems: any[], oldShort: boolean, newShort: boolean): { pairs: any[] } {
-  const getMap = (items: any[], useShort: boolean) => {
-    const m: Record<string, { label: string; item: any }> = {};
+function _mapIdToLabel<T extends { _id?: string; name: string; shorthand?: string }>(oldItems: T[], newItems: T[], oldShort: boolean, newShort: boolean): { pairs: Array<{ oldLabel: string; newLabel: string; oldItem: T; newItem: T }> } {
+  const getMap = (items: T[], useShort: boolean) => {
+    const m: Record<string, { label: string; item: T }> = {};
     (items || []).forEach((item) => {
       if (item._id)
         m[item._id] = {
@@ -208,7 +211,7 @@ function _mapIdToLabel(oldItems: any[], newItems: any[], oldShort: boolean, newS
   return { pairs };
 }
 
-function _getScaleRenames(colorPairs: any[], oldSteps: string[], newSteps: string[], count: number): Record<string, string> {
+function _getScaleRenames(colorPairs: Array<{ oldLabel: string; newLabel: string }>, oldSteps: string[], newSteps: string[], count: number): Record<string, string> {
   const renames: Record<string, string> = {};
   for (const { oldLabel, newLabel } of colorPairs) {
     for (let i = 0; i < count; i++) {
@@ -221,16 +224,21 @@ function _getScaleRenames(colorPairs: any[], oldSteps: string[], newSteps: strin
   return renames;
 }
 
-function _getTokenRenames(colorPairs: any[], rolePairs: any[], oldCfg: any, newCfg: any): Record<string, string> {
+function _getTokenRenames(
+  colorPairs: Array<{ oldLabel: string; newLabel: string; oldItem: Color; newItem: Color }>,
+  rolePairs: Array<{ oldLabel: string; newLabel: string; oldItem: Role; newItem: Role }>,
+  oldCfg: ProjectStore,
+  newCfg: ProjectStore,
+): Record<string, string> {
   const renames: Record<string, string> = {};
   const oldOrder: string[] = oldCfg.tokenNameSegments || ["color", "role", "variation"];
   const newOrder: string[] = newCfg.tokenNameSegments || ["color", "role", "variation"];
   const buildName = (order: string[], color: string, role: string, variation: string) => order.map((s) => ({ color, role, variation })[s as "color" | "role" | "variation"] || s).join("/");
 
-  const getVarMap = (cfg: any, roleItem: any): Map<string, string> => {
+  const getVarMap = (cfg: ProjectStore, roleItem: Role): Map<string, string> => {
     const vars = (roleItem?.variations ?? cfg.variations) || [];
     const map = new Map<string, string>();
-    vars.forEach((v: any, i: number) => {
+    vars.forEach((v, i) => {
       const id = v?._id ? v._id : String(i);
       const name = cfg.useShorthandVariations && v?.shorthand ? v.shorthand : v?.name || String(i);
       map.set(id, name);
@@ -254,7 +262,14 @@ function _getTokenRenames(colorPairs: any[], rolePairs: any[], oldCfg: any, newC
   return renames;
 }
 
-function _getSummaryChanges(colorPairs: any[], rolePairs: any[], oldCfg: any, newCfg: any, oldSteps: string[], newSteps: string[]): Array<Record<string, string>> {
+function _getSummaryChanges(
+  colorPairs: Array<{ oldLabel: string; newLabel: string }>,
+  rolePairs: Array<{ oldLabel: string; newLabel: string }>,
+  oldCfg: ProjectStore,
+  newCfg: ProjectStore,
+  oldSteps: string[],
+  newSteps: string[],
+): Array<Record<string, string>> {
   const changes: Array<Record<string, string>> = [];
   colorPairs.forEach((p) => {
     if (p.oldLabel !== p.newLabel) changes.push({ type: "color", from: p.oldLabel, to: p.newLabel });
