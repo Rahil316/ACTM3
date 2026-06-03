@@ -22,6 +22,8 @@ export interface Banner {
 
 export const BANNER_EXIT_MS = 280; // must match CSS transition duration
 
+type BannerOpts = Partial<Omit<Banner, 'id' | 'type' | 'message'>>;
+
 interface BannerStore {
   banners:  Banner[];
   exiting:  Set<string>; // ids currently playing exit animation
@@ -30,10 +32,10 @@ interface BannerStore {
   _delete: (id: string) => void;  // immediate delete, used internally
   clear:   () => void;
   has:     (id: string) => boolean;
-  warn:    (message: string, opts?: Partial<Omit<Banner, 'id' | 'type' | 'message'>>) => string;
-  error:   (message: string, opts?: Partial<Omit<Banner, 'id' | 'type' | 'message'>>) => string;
-  info:    (message: string, opts?: Partial<Omit<Banner, 'id' | 'type' | 'message'>>) => string;
-  success: (message: string, opts?: Partial<Omit<Banner, 'id' | 'type' | 'message'>>) => string;
+  warn:    (message: string, opts?: BannerOpts) => string;
+  error:   (message: string, opts?: BannerOpts) => string;
+  info:    (message: string, opts?: BannerOpts) => string;
+  success: (message: string, opts?: BannerOpts) => string;
 }
 
 let _uid = 0;

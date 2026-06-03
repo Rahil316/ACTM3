@@ -28,7 +28,7 @@ export interface PluginConfig extends EngineInput {
 }
 
 export function translateConfig(projectStore: ProjectStore): PluginConfig {
-  const scaleLength = projectStore.scaleLength || undefined;
+  const scaleLength = projectStore.scaleLength || 23;
   const stepNames = _parseStepNames(projectStore, scaleLength);
   const stepShorthands = _parseStepShorthands(projectStore, stepNames);
   const variations = _parseVariations(projectStore);

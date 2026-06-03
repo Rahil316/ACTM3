@@ -842,9 +842,9 @@ function RoleTokensSection({
 
 // ── Mode toggle ───────────────────────────────────────────────────────────────
 
-type ViewMode = "flat" | "tree";
+type TreeViewMode = "flat" | "tree";
 
-function ModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (m: ViewMode) => void }) {
+function ModeToggle({ mode, onChange }: { mode: TreeViewMode; onChange: (m: TreeViewMode) => void }) {
   return (
     <div
       style={{
@@ -855,7 +855,7 @@ function ModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (m: ViewMode
         overflow: "hidden",
       }}
     >
-      {(["flat", "tree"] as ViewMode[]).map((m) => (
+      {(["flat", "tree"] as TreeViewMode[]).map((m) => (
         <button
           key={m}
           onClick={() => onChange(m)}
@@ -885,7 +885,7 @@ export function CanvasPreviewDevOverlay() {
   const closeOverlay = useUiStore((s) => s.closeOverlay);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [mode, setMode] = useState<ViewMode>("flat");
+  const [mode, setMode] = useState<TreeViewMode>("flat");
   const [selectedItem, setSelectedItem] = useState<DetailItem | null>(null);
 
   const selectedRef = useMemo<string | null>(() => selectedItem?.pluginDataRef ?? null, [selectedItem]);
@@ -927,7 +927,7 @@ export function CanvasPreviewDevOverlay() {
   }, [selectedItem]);
 
   // Clear detail panel when switching modes
-  const handleModeChange = (m: ViewMode) => {
+  const handleModeChange = (m: TreeViewMode) => {
     setMode(m);
     setSelectedItem(null);
   };

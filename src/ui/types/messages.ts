@@ -1,4 +1,6 @@
 import type { ProjectStore, UiPrefs } from "./state";
+import type { ExportFile } from "../../plugin/exportEng/types";
+export type { ExportFile } from "../../plugin/exportEng/types";
 
 // ── Plugin → UI messages ─────────────────────────────────────────────────────
 
@@ -201,11 +203,6 @@ export interface RenameData {
     tokenCount: number;
     changes: Array<{ type: string; from: string; to: string }>;
   };
-}
-
-export interface ExportFile {
-  path: string;
-  content: string;
 }
 
 // ── postMessage helper ───────────────────────────────────────────────────────

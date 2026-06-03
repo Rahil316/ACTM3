@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ProjectStore, Color, Role, Theme, Variation, ValidationIssues, MappingMethod, VariableScope } from "../types/state";
+import type { ProjectStore, ProjectStoreSnapshot, Color, Role, Theme, Variation, ValidationIssues, MappingMethod, VariableScope } from "../types/state";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -298,13 +298,18 @@ export function ensureVariations(state: ProjectStore): void {
   for (const v of state.variations) {
     if (v.target == null) v.target = 4.5;
   }
+  let hasCustom = false;
   for (const role of state.roles) {
     if (role.variations) {
+      hasCustom = true;
       role.variations.forEach((v) => {
         if (!v._id) v._id = generateId();
         if (v.target == null) v.target = 4.5;
       });
     }
+  }
+  if (hasCustom) {
+    state.canEditRoleVariantNames = true;
   }
 }
 
@@ -383,7 +388,7 @@ function stripIds(obj: unknown): unknown {
   return obj;
 }
 
-function snapWithoutVersions(state: ProjectStore): Omit<ProjectStore, "versions"> {
+function snapWithoutVersions(state: ProjectStore): ProjectStoreSnapshot {
   const snap = JSON.parse(JSON.stringify(state)) as ProjectStore;
   delete (snap as Partial<ProjectStore>).versions;
   return snap;

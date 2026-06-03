@@ -4,12 +4,14 @@ export type { PluginMode, MappingMethod, AlgorithmScopeLevel, TokenNameSegment, 
 
 import type { PluginMode, ScaleAlgorithm, SolverMode, AlgorithmScopeLevel, TokenNameSegment, ScaleStep, Variation, Color, Role, Theme } from "../../shared/types";
 
+export type ProjectStoreSnapshot = Omit<ProjectStore, "versions">;
+
 export interface Version {
   _id: string;
   name: string;
   description: string;
   createdAt: number;
-  state: Omit<ProjectStore, "versions">;
+  state: ProjectStoreSnapshot;
 }
 
 export interface ProjectStore {

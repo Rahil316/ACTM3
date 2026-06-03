@@ -697,7 +697,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
           <VariationTable
             vars={vars}
             useCustomVars={useCustomVars}
-            canEditNames={perRoleOverride}
+            canEditNames={useCustomVars}
             mappingMethod={role.mappingMethod ?? "contrast"}
             idx={idx}
             scaleLength={scaleLength}

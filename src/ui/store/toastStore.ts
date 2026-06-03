@@ -10,14 +10,16 @@ export interface Toast {
   timeout: number;
 }
 
+type ToastShowOpts = { type?: ToastType; icon?: string; timeout?: number };
+
 interface ToastStore {
   toasts: Toast[];
-  show: (message: string, opts?: { type?: ToastType; icon?: string; timeout?: number }) => number;
+  show: (message: string, opts?: ToastShowOpts) => number;
   dismiss: (id: number) => void;
-  success: (message: string, opts?: Omit<Parameters<ToastStore['show']>[1], 'type'>) => number;
-  error:   (message: string, opts?: Omit<Parameters<ToastStore['show']>[1], 'type'>) => number;
-  info:    (message: string, opts?: Omit<Parameters<ToastStore['show']>[1], 'type'>) => number;
-  warn:    (message: string, opts?: Omit<Parameters<ToastStore['show']>[1], 'type'>) => number;
+  success: (message: string, opts?: Omit<ToastShowOpts, 'type'>) => number;
+  error:   (message: string, opts?: Omit<ToastShowOpts, 'type'>) => number;
+  info:    (message: string, opts?: Omit<ToastShowOpts, 'type'>) => number;
+  warn:    (message: string, opts?: Omit<ToastShowOpts, 'type'>) => number;
 }
 
 const MAX_STACK = 5;

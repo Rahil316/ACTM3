@@ -7,7 +7,7 @@ import { ShopCard } from "../components/cards/ShopCard";
 import { Button } from "../components/Button";
 import { IconChevronLeft } from "../components/icons";
 import { FullscreenOverlay } from "../components/FullscreenOverlay";
-import type { ProjectStore } from "../types/state";
+import type { ProjectStore, ProjectStoreSnapshot } from "../types/state";
 
 export interface Preset {
   id: string;
@@ -16,7 +16,7 @@ export interface Preset {
   tags?: string[];
   badge?: string;
   swatches?: string[];
-  config: Partial<Omit<ProjectStore, "versions">>;
+  config: Partial<ProjectStoreSnapshot>;
 }
 
 export function ThemeShopOverlay() {
