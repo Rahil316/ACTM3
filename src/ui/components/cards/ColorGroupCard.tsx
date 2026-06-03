@@ -24,6 +24,8 @@ export const ColorGroupCard = React.memo(function ColorGroupCard({ color, idx, d
   const useUniformAlgo = useProjectStore((s) => s.projectStore.useUniformAlgorithm);
   const algoScope = useProjectStore((s) => s.projectStore.algorithmScopeLevel);
   const includeDescriptions = useProjectStore((s) => s.projectStore.includeDescriptions);
+  const colorScaleAlgorithm = useProjectStore((s) => s.projectStore.colors[idx]?.scaleAlgorithm);
+  const colorSolverMode = useProjectStore((s) => s.projectStore.colors[idx]?.solverMode);
 
   const showAlgoRow = pluginMode === "scale" && !useUniformAlgo && algoScope !== "role";
   const showSolverRow = pluginMode === "direct" && !useUniformAlgo && algoScope !== "role";
@@ -47,8 +49,8 @@ export const ColorGroupCard = React.memo(function ColorGroupCard({ color, idx, d
         </div>
       </div>
 
-      {showAlgoRow && <Select label="Scale Algorithm" size="lg" options={algoOptions} value={color.scaleAlgorithm ?? "Natural"} onChange={(e) => setColor(idx, "scaleAlgorithm", e.target.value)} />}
-      {showSolverRow && <Select label="Color Solver" size="xl" options={solverOptions} value={color.solverMode ?? "natural"} onChange={(e) => setColor(idx, "solverMode", e.target.value)} />}
+      {showAlgoRow && <Select label="Scale Algorithm" size="lg" options={algoOptions} value={colorScaleAlgorithm ?? "Natural"} onChange={(e) => setColor(idx, "scaleAlgorithm", e.target.value)} />}
+      {showSolverRow && <Select label="Color Solver" size="xl" options={solverOptions} value={colorSolverMode ?? "natural"} onChange={(e) => setColor(idx, "solverMode", e.target.value)} />}
       {includeDescriptions && <Input value={localDesc} placeholder="Optional…" onChange={onDescChange} onBlur={onDescBlur} label="Description" size="lg" />}
 
       <CardToolbar onDelete={() => removeColor(idx)} deleteDisabled={colorCount <= 1} deleteTitle="Delete color" dragListeners={dragListeners} dragAttributes={dragAttributes} />

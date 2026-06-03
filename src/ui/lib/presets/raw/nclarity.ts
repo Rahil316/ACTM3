@@ -99,7 +99,7 @@ const nclarity: Preset = {
     tokenCollectionName: "nclarity/tokens",
 
     scaleSteps: null,
-    canEditRoleVariantNames: true,
+    canEditRoleVariants: true,
 
     // Global fallback variation — all roles override with customVariationList.
     variations: [{ name: "default", shorthand: "default" }],

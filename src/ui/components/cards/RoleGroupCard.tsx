@@ -9,7 +9,6 @@ import { useProjectStore, SCALE_ALGORITHM_OPTIONS } from "../../store/projectSto
 import { useLocalField } from "../../hooks/useLocalField";
 import { Input } from "../Input";
 import { Button } from "../Button";
-import { Badge } from "../Badge";
 import { Collapsible } from "../Collapsible";
 import { Select } from "../Select";
 import { usePersistedToggle } from "../../hooks/usePersistedToggle";
@@ -560,18 +559,17 @@ function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClose: () 
 // on each render of RoleGroupCard (which would force full remount every keystroke).
 
 interface VariationTableProps {
-  vars: Variation[];
-  useCustomVars: boolean;
-  canEditNames: boolean;
+  variations: Variation[];
+  canEdit: boolean;
   mappingMethod: "contrast" | "index";
   idx: number;
   scaleLength: number;
-  setRoleVariation: (roleIdx: number, varIdx: number, field: string, value: string) => void;
-  addRoleVariation: (roleIdx: number) => void;
-  removeRoleVariation: (roleIdx: number, varIdx: number) => void;
 }
 
-const VariationTable = React.memo(function VariationTable({ vars, useCustomVars, canEditNames, mappingMethod, idx, scaleLength, setRoleVariation, addRoleVariation, removeRoleVariation }: VariationTableProps) {
+const VariationTable = React.memo(function VariationTable({ variations: vars, canEdit: canEditNames, mappingMethod, idx, scaleLength }: VariationTableProps) {
+  const setRoleVariation = useProjectStore((s) => s.setRoleVariation);
+  const addRoleVariation = useProjectStore((s) => s.addRoleVariation);
+  const removeRoleVariation = useProjectStore((s) => s.removeRoleVariation);
   const cols = canEditNames ? "16px 1fr 56px 88px 24px" : "16px 1fr 88px";
   const headers = canEditNames ? ["#", "Name", "Short", "Target", ""] : ["#", "Variation", "Target"];
 
@@ -604,12 +602,12 @@ const VariationTable = React.memo(function VariationTable({ vars, useCustomVars,
 
             <Input size="table" type="number" value={String(v.target ?? 4.5)} min={isIndex ? "0" : "1"} max={isIndex ? String(scaleLength - 1) : "21"} step="0.1" onChange={(e) => setRoleVariation(idx, vi, "target", e.target.value)} />
 
-            {useCustomVars && canEditNames && <Button variant="ghost" size="xs" square label="−" disabled={vars.length <= 1} onClick={() => removeRoleVariation(idx, vi)} className="hover:text-danger hover:bg-danger-subtle" />}
+            {canEditNames && <Button variant="ghost" size="xs" square label="−" disabled={vars.length <= 1} onClick={() => removeRoleVariation(idx, vi)} className="hover:text-danger hover:bg-danger-subtle" />}
           </div>
         );
       })}
 
-      {useCustomVars && canEditNames && (
+      {canEditNames && (
         <div className="flex px-2 py-1.5 border-t border-border-subtle">
           <Button variant="ghost" size="sm" label="+ Add variation" onClick={() => addRoleVariation(idx)} className="text-accent hover:text-accent hover:bg-accent-subtle" />
         </div>
@@ -627,43 +625,32 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   // Actions — stable references, never change
   const setRole = useProjectStore((s) => s.setRole);
   const removeRole = useProjectStore((s) => s.removeRole);
-  const setRoleVariation = useProjectStore((s) => s.setRoleVariation);
-  const addRoleVariation = useProjectStore((s) => s.addRoleVariation);
-  const removeRoleVariation = useProjectStore((s) => s.removeRoleVariation);
-  const toggleRoleCustomVars = useProjectStore((s) => s.toggleRoleCustomVariations);
 
   // Scalar selectors — only re-render when the specific value changes
-  const sharedVariations = useProjectStore((s) => s.projectStore.variations ?? []);
   const scaleLength = useProjectStore((s) => s.projectStore.scaleLength);
   const pluginMode = useProjectStore((s) => s.projectStore.pluginMode);
   const useUniformAlgo = useProjectStore((s) => s.projectStore.useUniformAlgorithm);
   const algoScope = useProjectStore((s) => s.projectStore.algorithmScopeLevel);
-  const perRoleOverride = useProjectStore((s) => s.projectStore.canEditRoleVariantNames);
+  const canEditNames = useProjectStore((s) => s.projectStore.canEditRoleVariants);
   const roleCount = useProjectStore((s) => s.projectStore.roles.length);
 
-  const useCustomVars = role.variations !== null;
-  const vars: Variation[] = role.variations ?? sharedVariations;
+  // Role-level fields — subscribed directly to avoid stale-prop re-render issues
+  const roleMappingMethod = useProjectStore((s) => s.projectStore.roles[idx]?.mappingMethod ?? "contrast");
+  const roleScaleAlgorithm = useProjectStore((s) => s.projectStore.roles[idx]?.scaleAlgorithm);
+  const roleSolverMode = useProjectStore((s) => s.projectStore.roles[idx]?.solverMode);
+  const scopedIds = useProjectStore((s) => s.projectStore.roles[idx]?.scopedColorIds ?? null);
+  const roleLocalBg = useProjectStore((s) => s.projectStore.roles[idx]?.localBg);
+
+  const vars: Variation[] = useProjectStore((s) => s.projectStore.roles[idx]?.variations ?? []);
 
   const showAlgoRow = pluginMode === "scale" && !useUniformAlgo && algoScope === "role";
   const showSolverRow = pluginMode === "direct" && !useUniformAlgo && algoScope === "role";
   const algoOptions = SCALE_ALGORITHM_OPTIONS.map((a) => ({ value: a, label: a }));
   const solverOptions = SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }));
 
-  const scopeBadge = (
-    <Badge
-      variant={useCustomVars ? "accent" : "default"}
-      onClick={perRoleOverride ? () => toggleRoleCustomVars(idx) : undefined}
-      disabled={!perRoleOverride}
-      title={!perRoleOverride ? "Enable Role-specific Variations in Settings → Roles to override per role" : useCustomVars ? "Click to use global variations" : "Click to use role-specific variations"}
-    >
-      {useCustomVars ? "Role" : "Global"}
-    </Badge>
-  );
-
-  const scopedIds = role.scopedColorIds ?? null;
   const scopeLabel = scopedIds !== null ? (scopedIds.length === 0 ? "No colors" : `${scopedIds.length} colors`) : null;
-  const hasLocalBg = role.localBg;
-  const localBgLabel = hasLocalBg ? (role.localBg!.kind === "token-dynamic" ? "BG: dynamic" : role.localBg!.kind === "token-static" ? "BG: token" : role.localBg!.kind === "color" ? "BG: color" : "BG: hex") : null;
+  const hasLocalBg = roleLocalBg;
+  const localBgLabel = roleLocalBg ? (roleLocalBg.kind === "token-dynamic" ? "BG: dynamic" : roleLocalBg.kind === "token-static" ? "BG: token" : roleLocalBg.kind === "color" ? "BG: color" : "BG: hex") : null;
 
   const [localName, onNameChange, onNameBlur] = useLocalField(role.name, (v) => setRole(idx, "name", v));
   const [localShort, onShortChange, onShortBlur] = useLocalField(role.shorthand ?? "", (v) => setRole(idx, "shorthand", v));
@@ -689,34 +676,23 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
         header={
           <>
             <span className="text-[12px] font-medium text-text-primary flex-1">Variations ({vars.length})</span>
-            {scopeBadge}
           </>
         }
       >
         <div className="py-2">
-          <VariationTable
-            vars={vars}
-            useCustomVars={useCustomVars}
-            canEditNames={useCustomVars}
-            mappingMethod={role.mappingMethod ?? "contrast"}
-            idx={idx}
-            scaleLength={scaleLength}
-            setRoleVariation={setRoleVariation}
-            addRoleVariation={addRoleVariation}
-            removeRoleVariation={removeRoleVariation}
-          />
+          <VariationTable variations={vars} canEdit={canEditNames} mappingMethod={roleMappingMethod} idx={idx} scaleLength={scaleLength} />
         </div>
       </Collapsible>
 
       {showAlgoRow && (
         <div className="space-y-1 mt-2 pt-2 border-t border-border-base">
-          <Select label="Algorithm" size="lg" options={algoOptions} value={role.scaleAlgorithm ?? "Natural"} onChange={(e) => setRole(idx, "scaleAlgorithm", e.target.value)} />
+          <Select label="Algorithm" size="lg" options={algoOptions} value={roleScaleAlgorithm ?? "Natural"} onChange={(e) => setRole(idx, "scaleAlgorithm", e.target.value)} />
         </div>
       )}
 
       {showSolverRow && (
         <div className="space-y-1 mt-2 pt-2 border-t border-border-base">
-          <Select label="Solver" size="lg" options={solverOptions} value={role.solverMode ?? "natural"} onChange={(e) => setRole(idx, "solverMode", e.target.value)} />
+          <Select label="Solver" size="lg" options={solverOptions} value={roleSolverMode ?? "natural"} onChange={(e) => setRole(idx, "solverMode", e.target.value)} />
         </div>
       )}
 

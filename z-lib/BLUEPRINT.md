@@ -85,7 +85,7 @@ interface ProjectStore {
   // Entities
   scaleSteps: ScaleStepName[] | null; // null = numeric 1…N
   variations: Variation[] | null; // global variation list
-  canEditRoleVariantNames: boolean; // allow roles to override variations
+  canEditRoleVariants: boolean; // allow roles to override variations
   colors: Color[];
   roles: Role[];
   themes: Theme[];

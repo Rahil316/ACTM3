@@ -88,7 +88,7 @@ const test01: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "Subtle", shorthand: "1", target: 1.0 },
@@ -164,7 +164,7 @@ const test02: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "default", shorthand: "d", target: 4.5 },
@@ -273,7 +273,7 @@ const test03: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "subtle", shorthand: "1", target: 1.5 },
@@ -351,7 +351,7 @@ const test04: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "default", shorthand: "d", target: 4.5 },
@@ -429,7 +429,7 @@ const test05: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "subtle", shorthand: "1", target: 1.5 },
@@ -508,7 +508,7 @@ const test06: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "subtle", shorthand: "1", target: 1.5 },
@@ -590,7 +590,7 @@ const test07: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "default", shorthand: "d", target: 4.5 },
@@ -678,7 +678,7 @@ const test08: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "light", shorthand: "L", target: 1.0 },
@@ -728,7 +728,7 @@ const test09: Preset = {
   id: "test-09-custom-variations",
   name: "TEST-09 Custom Variations",
   badge: "T09",
-  description: "canEditRoleVariantNames=true · role A: customVariationList=true, 3 custom variations (bg/fill/text) · role B: customVariationList=false, uses global 5 variations · same color, different variation counts",
+  description: "canEditRoleVariants=true · role A: customVariationList=true, 3 custom variations (bg/fill/text) · role B: customVariationList=false, uses global 5 variations · same color, different variation counts",
   tags: ["test", "customVariations", "perRole"],
   swatches: ["0891B2", "67E8F9"],
   config: {
@@ -752,7 +752,7 @@ const test09: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: true,
+    canEditRoleVariants: true,
 
     // Global fallback variations (5)
     variations: [
@@ -832,7 +832,7 @@ const test10: Preset = {
     scaleCollectionName: "_scale",
     tokenCollectionName: "tokens",
 
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "subtle", shorthand: "s", target: 1.1 },
@@ -907,7 +907,7 @@ const test11: Preset = {
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
 
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "default", shorthand: "d", target: 4.5 },
@@ -971,7 +971,7 @@ const test12: Preset = {
     includeDescriptions: false,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [{ name: "default", shorthand: "d", target: 4.5 }],
 
@@ -1031,7 +1031,7 @@ const test13: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "brand/scale",
     tokenCollectionName: "brand/tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "subtle", shorthand: "1", target: 3.0 },
@@ -1097,7 +1097,7 @@ const test14: Preset = {
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [
       { name: "default", shorthand: "d", target: 4.5 },
@@ -1162,7 +1162,7 @@ const test15: Preset = {
     includeDescriptions: false,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
 
     variations: [{ name: "default", shorthand: "d", target: 4.5 }],
 

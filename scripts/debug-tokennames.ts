@@ -39,7 +39,7 @@ const config: ProjectStore = {
   description: "",
   versions: [],
   sourceCollectionName: "",
-  canEditRoleVariantNames: false,
+  canEditRoleVariants: false,
 };
 
 console.log("\n── Pass 1 token names (fill role) ──");

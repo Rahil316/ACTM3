@@ -69,6 +69,7 @@ function SortableRoleCard({ role, idx, selected, onToggleSelect }: { role: Role;
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
       onClick={(e) => {
+        if (!e.metaKey && !e.ctrlKey && !e.shiftKey) return;
         e.stopPropagation();
         onToggleSelect(role._id ?? "", e.metaKey || e.ctrlKey, e.shiftKey);
       }}
@@ -133,11 +134,7 @@ function RoleTree() {
   }
 
   function toggleSelect(id: string, meta: boolean, shift = false) {
-    if (!meta) {
-      lastSelectedRef.current = id;
-      setSelectedIds(new Set([id]));
-      return;
-    }
+    if (!meta && !shift) return;
     if (shift && lastSelectedRef.current) {
       const orderedIds = getTreeOrderIds();
       const a = orderedIds.indexOf(lastSelectedRef.current);
@@ -351,7 +348,7 @@ function RoleTree() {
         )}
       />
     ),
-    [],
+    [committed],
   );
 
   const activeRole = !activeGroupPath && activeId ? roles.find((r) => r._id === activeId) : null;
@@ -423,11 +420,7 @@ export function RolesScreen() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function toggleSelect(id: string, meta = false, shift = false) {
-    if (!meta) {
-      lastSelectedRef.current = id;
-      setSelectedIds(new Set([id]));
-      return;
-    }
+    if (!meta && !shift) return;
     if (shift && lastSelectedRef.current) {
       const flatIds = roles.map((r) => r._id ?? "");
       const a = flatIds.indexOf(lastSelectedRef.current);

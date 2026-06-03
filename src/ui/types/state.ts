@@ -46,7 +46,7 @@ export interface ProjectStore {
 
   scaleSteps: ScaleStep[] | null;
   variations: Variation[] | null;
-  canEditRoleVariantNames: boolean;
+  canEditRoleVariants: boolean;
 
   colors: Color[];
   roles: Role[];

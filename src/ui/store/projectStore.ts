@@ -253,7 +253,7 @@ export function makeBootstrapState(): ProjectStore {
     tokenCollectionName: "color tokens",
     scaleSteps: null,
     variations,
-    canEditRoleVariantNames: false,
+    canEditRoleVariants: false,
     colors: [
       { _id: generateId(), name: "Primary", shorthand: "pr", value: "#0066FF", description: "" },
       { _id: generateId(), name: "Gray", shorthand: "gr", value: "#6B7280", description: "" },
@@ -298,18 +298,18 @@ export function ensureVariations(state: ProjectStore): void {
   for (const v of state.variations) {
     if (v.target == null) v.target = 4.5;
   }
-  let hasCustom = false;
+
+  // Every role always owns a private copy of the variations array.
+  // If a role has none (e.g. freshly imported old data), seed it from global.
   for (const role of state.roles) {
-    if (role.variations) {
-      hasCustom = true;
+    if (!role.variations || role.variations.length === 0) {
+      role.variations = state.variations.map((v) => ({ ...v, _id: generateId() }));
+    } else {
       role.variations.forEach((v) => {
         if (!v._id) v._id = generateId();
         if (v.target == null) v.target = 4.5;
       });
     }
-  }
-  if (hasCustom) {
-    state.canEditRoleVariantNames = true;
   }
 }
 
@@ -439,7 +439,6 @@ interface projectStoreState {
   setRoleVariation: (roleIdx: number, varIdx: number, field: string, value: string) => void;
   addRoleVariation: (roleIdx: number) => void;
   removeRoleVariation: (roleIdx: number, varIdx: number) => void;
-  toggleRoleCustomVariations: (roleIdx: number) => void;
   setRoleScope: (roleIdx: number, colorIds: string[] | null) => void;
   setRoleLocalBg: (roleIdx: number, localBg: import("../types/state").RoleLocalBg | null) => void;
   setRoleScopes: (roleIdx: number, scopes: VariableScope[] | null) => void;
@@ -514,9 +513,6 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
   setProjectField: (key, value) => {
     set((s) => {
       const next: ProjectStore = { ...s.projectStore, [key]: value };
-      if (key === "canEditRoleVariantNames" && value === false) {
-        next.roles = next.roles.map((r) => ({ ...r, variations: null }));
-      }
       if (key === "scaleLength" && s.projectStore.scaleSteps) {
         const len = Math.max(1, parseInt(value as string) || 23);
         const existing = s.projectStore.scaleSteps;
@@ -627,7 +623,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
         name: preset.name,
         shorthand: preset.shorthand,
         mappingMethod: "contrast",
-        variations: null,
+        variations: (s.projectStore.variations ?? []).map((v) => ({ ...v, _id: generateId() })),
       };
       return { projectStore: { ...s.projectStore, roles: [...s.projectStore.roles, role] } };
     });
@@ -640,7 +636,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
         name,
         shorthand: shorthand || deriveShorthand(name),
         mappingMethod: "contrast",
-        variations: null,
+        variations: (s.projectStore.variations ?? []).map((v) => ({ ...v, _id: generateId() })),
       };
       return { projectStore: { ...s.projectStore, roles: [...s.projectStore.roles, role] } };
     });
@@ -667,8 +663,8 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const roles = [...s.projectStore.roles];
       const role = { ...roles[roleIdx] };
       if (!role) return s;
-      // Auto-convert from global to custom on first edit
-      const base = role.variations ?? (s.projectStore.variations ?? []).map((v) => ({ ...v, _id: generateId() }));
+      const base = role.variations;
+      if (!base) return s;
       if (varIdx < 0 || varIdx >= base.length) return s;
       const vars = [...base];
       const val = field === "name" || field === "shorthand" ? normalizeSegment(value) : value;
@@ -685,7 +681,8 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const roles = [...s.projectStore.roles];
       const role = { ...roles[roleIdx] };
       if (!role) return s;
-      const base = role.variations ?? (s.projectStore.variations ?? []).map((v) => ({ ...v, _id: generateId() }));
+      const base = role.variations;
+      if (!base) return s;
       const newVar: Variation = { _id: generateId(), name: "Variation", shorthand: "", target: 4.5 };
       role.variations = [...base, newVar];
       roles[roleIdx] = role;
@@ -698,23 +695,9 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const roles = [...s.projectStore.roles];
       const role = { ...roles[roleIdx] };
       if (!role) return s;
-      const base = role.variations ?? (s.projectStore.variations ?? []).map((v) => ({ ...v, _id: generateId() }));
+      const base = role.variations;
+      if (!base) return s;
       role.variations = base.filter((_, i) => i !== varIdx);
-      roles[roleIdx] = role;
-      return { projectStore: { ...s.projectStore, roles } };
-    });
-  },
-
-  toggleRoleCustomVariations: (roleIdx) => {
-    set((s) => {
-      const roles = [...s.projectStore.roles];
-      const role = { ...roles[roleIdx] };
-      if (!role) return s;
-      if (role.variations !== null) {
-        role.variations = null;
-      } else {
-        role.variations = (s.projectStore.variations ?? []).map((v) => ({ ...v, _id: generateId() }));
-      }
       roles[roleIdx] = role;
       return { projectStore: { ...s.projectStore, roles } };
     });
@@ -753,7 +736,17 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const val = field === "name" || field === "shorthand" ? normalizeSegment(value) : value;
       const parsed = parseFloat(val);
       variations[idx] = { ...variations[idx], [field]: field === "target" ? (isNaN(parsed) ? variations[idx].target : parsed) : val };
-      return { projectStore: { ...s.projectStore, variations } };
+      const next: ProjectStore = { ...s.projectStore, variations };
+      if (!s.projectStore.canEditRoleVariants && (field === "name" || field === "shorthand")) {
+        // Mirror name/shorthand to every role — targets are role-owned, never propagate
+        next.roles = s.projectStore.roles.map((r) => ({
+          ...r,
+          variations: (r.variations ?? variations).map((rv, i) =>
+            i === idx ? { ...rv, [field]: variations[idx][field as keyof Variation] } : rv
+          ),
+        }));
+      }
+      return { projectStore: next };
     });
   },
 
@@ -761,14 +754,28 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
     set((s) => {
       const newVar: Variation = { _id: generateId(), name: "Variation", shorthand: "", target: 4.5 };
       const variations = [...(s.projectStore.variations ?? []), newVar];
-      return { projectStore: { ...s.projectStore, variations } };
+      const next: ProjectStore = { ...s.projectStore, variations };
+      if (!s.projectStore.canEditRoleVariants) {
+        next.roles = s.projectStore.roles.map((r) => ({
+          ...r,
+          variations: [...(r.variations ?? variations.slice(0, -1)), { ...newVar, _id: generateId() }],
+        }));
+      }
+      return { projectStore: next };
     });
   },
 
   removeVariation: (idx) => {
     set((s) => {
       const variations = (s.projectStore.variations ?? []).filter((_, i) => i !== idx);
-      return { projectStore: { ...s.projectStore, variations } };
+      const next: ProjectStore = { ...s.projectStore, variations };
+      if (!s.projectStore.canEditRoleVariants) {
+        next.roles = s.projectStore.roles.map((r) => ({
+          ...r,
+          variations: (r.variations ?? []).filter((_, i) => i !== idx),
+        }));
+      }
+      return { projectStore: next };
     });
   },
 
@@ -777,7 +784,16 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const variations = [...(s.projectStore.variations ?? [])];
       const [item] = variations.splice(from, 1);
       variations.splice(to, 0, item);
-      return { projectStore: { ...s.projectStore, variations } };
+      const next: ProjectStore = { ...s.projectStore, variations };
+      if (!s.projectStore.canEditRoleVariants) {
+        next.roles = s.projectStore.roles.map((r) => {
+          const rv = [...(r.variations ?? [])];
+          const [moved] = rv.splice(from, 1);
+          rv.splice(to, 0, moved);
+          return { ...r, variations: rv };
+        });
+      }
+      return { projectStore: next };
     });
   },
 

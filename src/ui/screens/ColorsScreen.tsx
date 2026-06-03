@@ -69,6 +69,7 @@ function SortableColorCard({ color, idx, selected, onToggleSelect }: { color: Co
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
       onClick={(e) => {
+        if (!e.metaKey && !e.ctrlKey && !e.shiftKey) return;
         e.stopPropagation();
         onToggleSelect(color._id ?? "", e.metaKey || e.ctrlKey, e.shiftKey);
       }}
@@ -133,13 +134,7 @@ function ColorTree() {
   }
 
   function toggleSelect(id: string, meta: boolean, shift = false) {
-    if (!meta) {
-      if (selectedIds.size === 0) return; // plain click — don't enter selection mode
-      // Some items selected — collapse to just this one
-      lastSelectedRef.current = id;
-      setSelectedIds(new Set([id]));
-      return;
-    }
+    if (!meta && !shift) return;
     if (shift && lastSelectedRef.current) {
       // ⌘⇧+click — range select in visual tree order
       const orderedIds = getTreeOrderIds();

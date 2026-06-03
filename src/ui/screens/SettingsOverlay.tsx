@@ -283,9 +283,9 @@ function RolesTab() {
           description="Allow each role to define its own variation names."
           control={
             <Toggle
-              on={projectStore.canEditRoleVariantNames}
+              on={projectStore.canEditRoleVariants}
               onChange={() => {
-                setProjectField("canEditRoleVariantNames", !projectStore.canEditRoleVariantNames);
+                setProjectField("canEditRoleVariants", !projectStore.canEditRoleVariants);
               }}
             />
           }

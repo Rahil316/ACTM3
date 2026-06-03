@@ -133,7 +133,7 @@ const scaleShowcase: Preset = {
     tokenCollectionName: "tokens",
 
     scaleSteps: null,
-    canEditRoleVariantNames: true,
+    canEditRoleVariants: true,
 
     // Global variations — fallback only; all roles override with custom variation arrays.
     variations: [{ name: "default", shorthand: "default", target: 1 }],
@@ -270,7 +270,7 @@ const directShowcase: Preset = {
     tokenCollectionName: "tokens",
 
     scaleSteps: null,
-    canEditRoleVariantNames: true,
+    canEditRoleVariants: true,
 
     variations: [{ name: "default", shorthand: "default", target: 1 }],
 
