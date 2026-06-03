@@ -3,24 +3,24 @@ import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variat
 
 export const fmtSCSS = {
   scale(result: EngineResult, config: ExportConfig): string {
-    var lines = ["// " + (config.name || "tokens") + " — color scale variables", "// Do not edit manually.\n"];
-    var scaleNames = Object.keys(result.scales || {});
-    for (var ci = 0; ci < scaleNames.length; ci++) {
-      var colorName = scaleNames[ci];
-      var cLabel = _colorLabel(colorName, config);
-      var scale = result.scales[colorName];
+    const lines = ["// " + (config.name || "tokens") + " — color scale variables", "// Do not edit manually.\n"];
+    const scaleNames = Object.keys(result.scales || {});
+    for (let ci = 0; ci < scaleNames.length; ci++) {
+      const colorName = scaleNames[ci];
+      const cLabel = _colorLabel(colorName, config);
+      const scale = result.scales[colorName];
       lines.push("// " + colorName);
-      var steps = Object.keys(scale);
-      for (var si = 0; si < steps.length; si++) {
-        var step = steps[si];
-        var entry = scale[step];
+      const steps = Object.keys(scale);
+      for (let si = 0; si < steps.length; si++) {
+        const step = steps[si];
+        const entry = scale[step];
         if (!entry || !entry.value) continue;
         lines.push("$" + _slug(cLabel) + "-" + _slug(_stepLabel(step, config)) + ": " + entry.value + ";");
       }
       lines.push("$scale-" + _slug(cLabel) + ": (");
-      for (var si2 = 0; si2 < steps.length; si2++) {
-        var step2 = steps[si2];
-        var entry2 = result.scales[colorName][step2];
+      for (let si2 = 0; si2 < steps.length; si2++) {
+        const step2 = steps[si2];
+        const entry2 = result.scales[colorName][step2];
         if (!entry2 || !entry2.value) continue;
         lines.push("  " + _slug(_stepLabel(step2, config)) + ": $" + _slug(cLabel) + "-" + _slug(_stepLabel(step2, config)) + ",");
       }
@@ -30,40 +30,40 @@ export const fmtSCSS = {
   },
 
   tokens(result: EngineResult, config: ExportConfig): string {
-    var lines = ["// " + (config.name || "tokens") + " — semantic token maps", "@use 'sass:map';\n", "@forward 'scale';\n"];
-    var themeKeys = Object.keys(result.tokens || {});
-    for (var ti = 0; ti < themeKeys.length; ti++) {
-      var theme = themeKeys[ti];
-      var themeTokens = result.tokens[theme];
+    const lines = ["// " + (config.name || "tokens") + " — semantic token maps", "@use 'sass:map';\n", "@forward 'scale';\n"];
+    const themeKeys = Object.keys(result.tokens || {});
+    for (let ti = 0; ti < themeKeys.length; ti++) {
+      const theme = themeKeys[ti];
+      const themeTokens = result.tokens[theme];
       if (!themeTokens) continue;
       lines.push("$tokens-" + _slug(theme) + ": (");
-      var colorNames = Object.keys(themeTokens);
-      for (var ci = 0; ci < colorNames.length; ci++) {
-        var colorName = colorNames[ci];
-        var cLabel = _colorLabel(colorName, config);
+      const colorNames = Object.keys(themeTokens);
+      for (let ci = 0; ci < colorNames.length; ci++) {
+        const colorName = colorNames[ci];
+        const cLabel = _colorLabel(colorName, config);
         lines.push("  // " + colorName);
-        var roles = themeTokens[colorName];
-        var roleIds = Object.keys(roles);
-        for (var ri = 0; ri < roleIds.length; ri++) {
-          var roleId = roleIds[ri];
-          var roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
-          var rLabel = _roleLabel(roleObj, config);
-          var varDefs = _variationDefs(roleObj, config);
-          var variations = roles[roleId];
-          for (var vi = 0; vi < varDefs.length; vi++) {
-            var token = variations[String(vi)];
+        const roles = themeTokens[colorName];
+        const roleIds = Object.keys(roles);
+        for (let ri = 0; ri < roleIds.length; ri++) {
+          const roleId = roleIds[ri];
+          const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
+          const rLabel = _roleLabel(roleObj, config);
+          const varDefs = _variationDefs(roleObj, config);
+          const variations = roles[roleId];
+          for (let vi = 0; vi < varDefs.length; vi++) {
+            const token = variations[String(vi)];
             if (!token) continue;
-            var vLabel = _varLabel(varDefs[vi], config);
-            var segs = _tokenSegments(cLabel, rLabel, vLabel, config);
-            var key = segs.map(_slug).join("-");
-            var ref: string;
+            const vLabel = _varLabel(varDefs[vi], config);
+            const segs = _tokenSegments(cLabel, rLabel, vLabel, config);
+            const key = segs.map(_slug).join("-");
+            let ref: string;
             if (token.tokenRef) {
-              var parts = _splitTokenRef(token.tokenRef);
+              const parts = _splitTokenRef(token.tokenRef);
               ref = "$" + _slug(parts.color) + "-" + _slug(parts.step);
             } else {
               ref = token.value;
             }
-            var note = token.isAdjusted ? " /* ⚠ adjusted */" : "";
+            const note = token.isAdjusted ? " /* ⚠ adjusted */" : "";
             lines.push("  \"" + key + "\": " + ref + "," + note);
           }
         }
@@ -74,8 +74,8 @@ export const fmtSCSS = {
   },
 
   index(result: EngineResult, config: ExportConfig): string {
-    var themeKeys = Object.keys(result.tokens || {});
-    var lines = [
+    const themeKeys = Object.keys(result.tokens || {});
+    const lines = [
       "// " + (config.name || "tokens") + " — theme output",
       "@use 'sass:map';",
       "@use 'tokens' as *;\n",
@@ -88,17 +88,17 @@ export const fmtSCSS = {
       "}\n",
       "// Class-based theming",
     ];
-    for (var ti = 0; ti < themeKeys.length; ti++) {
-      var theme = themeKeys[ti];
-      var varName = "$tokens-" + _slug(theme);
+    for (let ti = 0; ti < themeKeys.length; ti++) {
+      const theme = themeKeys[ti];
+      const varName = "$tokens-" + _slug(theme);
       if (ti === 0) {
         lines.push(":root,\n[data-theme=\"" + theme + "\"] {\n  @include apply-theme(" + varName + ");\n}\n");
       } else {
         lines.push("[data-theme=\"" + theme + "\"] {\n  @include apply-theme(" + varName + ");\n}\n");
       }
     }
-    var darkKey: string | null = null;
-    for (var ti2 = 0; ti2 < themeKeys.length; ti2++) {
+    let darkKey: string | null = null;
+    for (let ti2 = 0; ti2 < themeKeys.length; ti2++) {
       if (themeKeys[ti2].toLowerCase() === "dark") { darkKey = themeKeys[ti2]; break; }
     }
     if (darkKey) {

@@ -3,19 +3,19 @@ import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, 
 
 export const fmtDTCG = {
   scale(result: EngineResult, config: ExportConfig): string {
-    var out: Record<string, Record<string, Record<string, string>>> = {};
-    var scaleNames = Object.keys(result.scales || {});
-    for (var ci = 0; ci < scaleNames.length; ci++) {
-      var colorName = scaleNames[ci];
-      var cLabel = _slug(_colorLabel(colorName, config));
-      var scale = result.scales[colorName];
+    const out: Record<string, Record<string, Record<string, string>>> = {};
+    const scaleNames = Object.keys(result.scales || {});
+    for (let ci = 0; ci < scaleNames.length; ci++) {
+      const colorName = scaleNames[ci];
+      const cLabel = _slug(_colorLabel(colorName, config));
+      const scale = result.scales[colorName];
       out[cLabel] = {};
-      var steps = Object.keys(scale);
-      for (var si = 0; si < steps.length; si++) {
-        var step = steps[si];
-        var entry = scale[step];
-        var stepKey = _slug(_stepLabel(step, config));
-        var node: Record<string, string> = { "$value": entry.value, "$type": "color" };
+      const steps = Object.keys(scale);
+      for (let si = 0; si < steps.length; si++) {
+        const step = steps[si];
+        const entry = scale[step];
+        const stepKey = _slug(_stepLabel(step, config));
+        const node: Record<string, string> = { "$value": entry.value, "$type": "color" };
         if (config.includeDescriptions !== false && entry.description) {
           node["$description"] = entry.description;
         }
@@ -26,35 +26,35 @@ export const fmtDTCG = {
   },
 
   theme(result: EngineResult, config: ExportConfig, themeName: string): string {
-    var themeTokens = result.tokens && result.tokens[themeName];
+    const themeTokens = result.tokens && result.tokens[themeName];
     if (!themeTokens) return "{}";
-    var out: Record<string, Record<string, Record<string, Record<string, string>>>> = {};
-    var colorNames = Object.keys(themeTokens);
-    for (var ci = 0; ci < colorNames.length; ci++) {
-      var colorName = colorNames[ci];
-      var cLabel = _slug(_colorLabel(colorName, config));
+    const out: Record<string, Record<string, Record<string, Record<string, string>>>> = {};
+    const colorNames = Object.keys(themeTokens);
+    for (let ci = 0; ci < colorNames.length; ci++) {
+      const colorName = colorNames[ci];
+      const cLabel = _slug(_colorLabel(colorName, config));
       if (!out[cLabel]) out[cLabel] = {};
-      var roles = themeTokens[colorName];
-      var roleIds = Object.keys(roles);
-      for (var ri = 0; ri < roleIds.length; ri++) {
-        var roleId = roleIds[ri];
-        var roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
-        var rLabel = _slug(_roleLabel(roleObj, config));
+      const roles = themeTokens[colorName];
+      const roleIds = Object.keys(roles);
+      for (let ri = 0; ri < roleIds.length; ri++) {
+        const roleId = roleIds[ri];
+        const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
+        const rLabel = _slug(_roleLabel(roleObj, config));
         if (!out[cLabel][rLabel]) out[cLabel][rLabel] = {};
-        var varDefs = _variationDefs(roleObj, config);
-        var variations = roles[roleId];
-        for (var vi = 0; vi < varDefs.length; vi++) {
-          var token = variations[String(vi)];
+        const varDefs = _variationDefs(roleObj, config);
+        const variations = roles[roleId];
+        for (let vi = 0; vi < varDefs.length; vi++) {
+          const token = variations[String(vi)];
           if (!token) continue;
-          var vLabel = _slug(_varLabel(varDefs[vi], config));
-          var dtcgValue: string;
+          const vLabel = _slug(_varLabel(varDefs[vi], config));
+          let dtcgValue: string;
           if (token.tokenRef) {
-            var parts = _splitTokenRef(token.tokenRef);
+            const parts = _splitTokenRef(token.tokenRef);
             dtcgValue = "{" + _slug(parts.color) + "." + _slug(parts.step) + "}";
           } else {
             dtcgValue = token.value;
           }
-          var node: Record<string, string> = { "$value": dtcgValue, "$type": "color" };
+          const node: Record<string, string> = { "$value": dtcgValue, "$type": "color" };
           if (token.isAdjusted) node["$description"] = "⚠ Adjusted for contrast";
           out[cLabel][rLabel][vLabel] = node;
         }

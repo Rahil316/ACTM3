@@ -59,7 +59,7 @@ function PresetShop() {
   return (
     <>
       <ConfirmDialog
-        open={confirmPreset}
+        open={!!confirmPreset}
         title="Load Preset?"
         body={`This will overwrite your current configuration with "${confirmPreset?.name}".`}
         confirmLabel="Load Preset"

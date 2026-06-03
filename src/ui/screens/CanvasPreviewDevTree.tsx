@@ -415,7 +415,7 @@ function ThemeColorNode({
 
 // ── Config tree ───────────────────────────────────────────────────────────────
 
-function ConfigTree({ config, expandAll }: { config: EngineConfig; expandAll: boolean }) {
+function ConfigTree({ config, expandAll }: { config: ProjectStore; expandAll: boolean }) {
   return (
     <TreeRow depth={0} label="Config" defaultOpen={expandAll} tag={`${config.colors.length}c · ${config.roles.length}r · ${config.themes.length}t`}>
       {/* Global settings */}
@@ -485,8 +485,8 @@ function ConfigTree({ config, expandAll }: { config: EngineConfig; expandAll: bo
       </TreeRow>
 
       {/* Variations */}
-      <TreeRow depth={1} label="Variations" defaultOpen={expandAll} tag={`${config.variations.length}`}>
-        {config.variations.map((v, i) => (
+      <TreeRow depth={1} label="Variations" defaultOpen={expandAll} tag={`${config.variations?.length}`}>
+        {config.variations?.map((v, i) => (
           <TreeRow key={v.name + i} depth={2} label={v.name} defaultOpen={false}>
             <FieldBlock depth={2}>{v.shorthand && <Field label="shorthand" value={v.shorthand} mono />}</FieldBlock>
           </TreeRow>
@@ -547,7 +547,7 @@ function ToolbarBtn({ label, onClick, title }: { label: string; onClick: () => v
 
 // ── Main tree view ────────────────────────────────────────────────────────────
 
-export function CanvasPreviewDevTree({ projectStore, config, result }: { projectStore: ProjectStore; config: EngineConfig; result: EngineResult }) {
+export function CanvasPreviewDevTree({ projectStore, config, result }: { projectStore: ProjectStore; config: ProjectStore; result: EngineResult }) {
   // ── Filter state ──────────────────────────────────────────────────────────
   const [colorSearch, setColorSearch] = useState("");
   const [roleSearch, setRoleSearch] = useState("");
@@ -565,6 +565,7 @@ export function CanvasPreviewDevTree({ projectStore, config, result }: { project
   function toggleChip(chip: FilterChip) {
     setActiveChips((prev) => {
       const next = new Set(prev);
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       next.has(chip) ? next.delete(chip) : next.add(chip);
       return next;
     });

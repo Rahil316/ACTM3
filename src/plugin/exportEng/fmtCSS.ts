@@ -3,17 +3,17 @@ import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variat
 
 export const fmtCSS = {
   scale(result: EngineResult, config: ExportConfig): string {
-    var lines = ["/* " + (config.name || "tokens") + " — color scales */", ":root {"];
-    var scaleNames = Object.keys(result.scales || {});
-    for (var ci = 0; ci < scaleNames.length; ci++) {
-      var colorName = scaleNames[ci];
-      var cLabel = _colorLabel(colorName, config);
-      var scale = result.scales[colorName];
+    const lines = ["/* " + (config.name || "tokens") + " — color scales */", ":root {"];
+    const scaleNames = Object.keys(result.scales || {});
+    for (let ci = 0; ci < scaleNames.length; ci++) {
+      const colorName = scaleNames[ci];
+      const cLabel = _colorLabel(colorName, config);
+      const scale = result.scales[colorName];
       lines.push("\n  /* " + colorName + " */");
-      var steps = Object.keys(scale);
-      for (var si = 0; si < steps.length; si++) {
-        var step = steps[si];
-        var entry = scale[step];
+      const steps = Object.keys(scale);
+      for (let si = 0; si < steps.length; si++) {
+        const step = steps[si];
+        const entry = scale[step];
         lines.push("  --" + _slug(cLabel) + "-" + _slug(_stepLabel(step, config)) + ": " + entry.value + ";");
       }
     }
@@ -22,30 +22,30 @@ export const fmtCSS = {
   },
 
   theme(result: EngineResult, config: ExportConfig, themeName: string, isFirst: boolean): string {
-    var selector = isFirst
+    const selector = isFirst
       ? ":root,\n[data-theme=\"" + themeName + "\"]"
       : "[data-theme=\"" + themeName + "\"]";
-    var lines = ["/* " + themeName.toUpperCase() + " */", selector + " {"];
-    var themeTokens = result.tokens && result.tokens[themeName];
+    const lines = ["/* " + themeName.toUpperCase() + " */", selector + " {"];
+    const themeTokens = result.tokens && result.tokens[themeName];
     if (!themeTokens) return lines.concat(["}"]).join("\n");
-    var colorNames = Object.keys(themeTokens);
-    for (var ci = 0; ci < colorNames.length; ci++) {
-      var colorName = colorNames[ci];
-      var cLabel = _colorLabel(colorName, config);
+    const colorNames = Object.keys(themeTokens);
+    for (let ci = 0; ci < colorNames.length; ci++) {
+      const colorName = colorNames[ci];
+      const cLabel = _colorLabel(colorName, config);
       lines.push("\n  /* " + colorName + " */");
-      var roles = themeTokens[colorName];
-      var roleIds = Object.keys(roles);
-      for (var ri = 0; ri < roleIds.length; ri++) {
-        var roleId = roleIds[ri];
-        var roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
-        var rLabel = _roleLabel(roleObj, config);
-        var varDefs = _variationDefs(roleObj, config);
-        var variations = roles[roleId];
-        for (var vi = 0; vi < varDefs.length; vi++) {
-          var token = variations[String(vi)];
+      const roles = themeTokens[colorName];
+      const roleIds = Object.keys(roles);
+      for (let ri = 0; ri < roleIds.length; ri++) {
+        const roleId = roleIds[ri];
+        const roleObj = (config.roles && config.roles[roleId]) || { name: roleId };
+        const rLabel = _roleLabel(roleObj, config);
+        const varDefs = _variationDefs(roleObj, config);
+        const variations = roles[roleId];
+        for (let vi = 0; vi < varDefs.length; vi++) {
+          const token = variations[String(vi)];
           if (!token) continue;
-          var vLabel = _varLabel(varDefs[vi], config);
-          var segs = _tokenSegments(cLabel, rLabel, vLabel, config);
+          const vLabel = _varLabel(varDefs[vi], config);
+          const segs = _tokenSegments(cLabel, rLabel, vLabel, config);
           lines.push("  --" + segs.map(_slug).join("-") + ": " + token.value + ";");
         }
       }
@@ -53,26 +53,26 @@ export const fmtCSS = {
     lines.push("}");
     if (themeName.toLowerCase() === "dark") {
       // OS-level dark mode fallback: repeat the same declarations inside the media query
-      var mediaLines = ["\n@media (prefers-color-scheme: dark) {", "  :root:not([data-theme]) {"];
-      var darkTokens = result.tokens && result.tokens[themeName];
+      const mediaLines = ["\n@media (prefers-color-scheme: dark) {", "  :root:not([data-theme]) {"];
+      const darkTokens = result.tokens && result.tokens[themeName];
       if (darkTokens) {
-        var dcNames = Object.keys(darkTokens);
-        for (var dci = 0; dci < dcNames.length; dci++) {
-          var dcName = dcNames[dci];
-          var dcLabel = _colorLabel(dcName, config);
-          var dRoles = darkTokens[dcName];
-          var dRoleIds = Object.keys(dRoles);
-          for (var dri = 0; dri < dRoleIds.length; dri++) {
-            var dRoleId = dRoleIds[dri];
-            var dRoleObj = (config.roles && config.roles[dRoleId]) || { name: dRoleId };
-            var dRLabel = _roleLabel(dRoleObj, config);
-            var dVarDefs = _variationDefs(dRoleObj, config);
-            var dVariations = dRoles[dRoleId];
-            for (var dvi = 0; dvi < dVarDefs.length; dvi++) {
-              var dToken = dVariations[String(dvi)];
+        const dcNames = Object.keys(darkTokens);
+        for (let dci = 0; dci < dcNames.length; dci++) {
+          const dcName = dcNames[dci];
+          const dcLabel = _colorLabel(dcName, config);
+          const dRoles = darkTokens[dcName];
+          const dRoleIds = Object.keys(dRoles);
+          for (let dri = 0; dri < dRoleIds.length; dri++) {
+            const dRoleId = dRoleIds[dri];
+            const dRoleObj = (config.roles && config.roles[dRoleId]) || { name: dRoleId };
+            const dRLabel = _roleLabel(dRoleObj, config);
+            const dVarDefs = _variationDefs(dRoleObj, config);
+            const dVariations = dRoles[dRoleId];
+            for (let dvi = 0; dvi < dVarDefs.length; dvi++) {
+              const dToken = dVariations[String(dvi)];
               if (!dToken) continue;
-              var dVLabel = _varLabel(dVarDefs[dvi], config);
-              var dSegs = _tokenSegments(dcLabel, dRLabel, dVLabel, config);
+              const dVLabel = _varLabel(dVarDefs[dvi], config);
+              const dSegs = _tokenSegments(dcLabel, dRLabel, dVLabel, config);
               mediaLines.push("    --" + dSegs.map(_slug).join("-") + ": " + dToken.value + ";");
             }
           }

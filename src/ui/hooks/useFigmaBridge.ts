@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/projectStore";
 import { banner } from "../store/bannerStore";
 import { useUiStore } from "../store/uiStore";
 import { VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
 import type { PluginToUiMessage, CollectionCheckResultMessage, SyncTally } from "../types/messages";
 import type { ProjectStore, UiPrefs } from "../types/state";
+import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/projectStore";
 
 // ── Standalone browser mock ──────────────────────────────────────────────────
 // When running in a plain browser (window.parent === window) the Figma plugin
@@ -352,6 +352,5 @@ export function useFigmaBridge(callbacks: BridgeCallbacks = {}): void {
         }
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

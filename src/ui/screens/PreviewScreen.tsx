@@ -717,7 +717,6 @@ function PreviewContent() {
     if (projectStore.pluginMode === "direct" && activeTab === "scale" && projectStore.themes.length > 0) {
       setActiveTab("theme-0");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectStore.pluginMode, projectStore.themes.length]);
 
   const isScaleMode = projectStore.pluginMode === "scale";

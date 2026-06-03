@@ -63,7 +63,6 @@ export function RunDialog() {
       setScope(skipScales ? "roles" : "all");
       sendToPlugin({ type: "check-collections", state: projectStore, savedState: savedState ?? null });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, skipScales]);
 
   const handlePreviewDone = useCallback(() => {

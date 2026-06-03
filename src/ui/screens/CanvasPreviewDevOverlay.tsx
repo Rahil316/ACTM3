@@ -507,7 +507,6 @@ function SourceColorsSection({ projectStore, onSelect, selectedRef }: { projectS
         logValidation(`  Contrast ${color.name} vs ${theme.name}`, ratio != null && ratio >= 1, ratio != null ? `${ratio.toFixed(1)}:1` : "null");
       });
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -608,7 +607,6 @@ function ColorScalesSection({
       const missing = stepNames.filter((s) => !result?.scales?.[color.name]?.[s]);
       logValidation(`Scale: ${color.name} (${stepNames.length - missing.length}/${stepNames.length} steps)`, missing.length === 0, missing.length > 0 ? `missing: ${missing.join(", ")}` : undefined);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -716,7 +714,6 @@ function RoleTokensSection({
       });
     });
     logValidation(`Total tokens generated`, missingTokens === 0, `${totalTokens} total, ${missingTokens} missing value`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -919,7 +916,6 @@ export function CanvasPreviewDevOverlay() {
     logValidation("Colors defined", projectStore.colors.length > 0, `${projectStore.colors.length}`);
     logValidation("Roles defined", projectStore.roles.length > 0, `${projectStore.roles.length}`);
     logValidation("Themes defined", projectStore.themes.length > 0, `${projectStore.themes.length}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

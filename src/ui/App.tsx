@@ -22,7 +22,7 @@ import { QuickStart } from "./screens/QuickStart";
 import { ThemesScreen } from "./screens/ThemesScreen";
 import { ThemeShopOverlay } from "./screens/ThemeShopOverlay";
 import { CanvasPreviewDevOverlay } from "./screens/CanvasPreviewDevOverlay";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 declare const __RELEASE__: boolean;
 import { ExportSheet } from "./screens/ExportSheet";
 import { sendToPlugin } from "./types/messages";
@@ -119,7 +119,6 @@ export default function App() {
 
   useKeyboardShortcuts(importRef);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const saveBlockedReason = useMemo(() => saveBlocked(), [projectStore]);
 
   return (

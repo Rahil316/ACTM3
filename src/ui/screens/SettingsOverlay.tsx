@@ -104,7 +104,7 @@ function TokensTab() {
         {!projectStore.useUniformAlgorithm && (
           <PanelRow
             label="Algorithm Scope"
-            description={projectStore.algorithmScopeLevel == "color" ? "Select Algorithm for each color." : "Select Algorithm for each role."}
+            description={projectStore.algorithmScopeLevel === "color" ? "Select Algorithm for each color." : "Select Algorithm for each role."}
             control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setProjectField("algorithmScopeLevel", v as "color" | "role")} />}
           />
         )}

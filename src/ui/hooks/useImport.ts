@@ -1,8 +1,8 @@
 import { useRef, useCallback } from "react";
-import { useProjectStore, ensureIds, ensureVariations } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { toast } from "../store/toastStore";
 import type { ProjectStore } from "../types/state";
+import { useProjectStore, ensureIds, ensureVariations } from "../store/projectStore";
 
 export function useImport() {
   const loadState = useProjectStore((s) => s.loadState);

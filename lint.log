@@ -1,0 +1,142 @@
+
+> token-wand@1.0.0 lint
+> eslint .
+
+
+/Users/mac/Documents/Plugin/Git/ACTM/scripts/build-presets.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): scripts/build-presets.ts
+
+/Users/mac/Documents/Plugin/Git/ACTM/scripts/debug-tokennames.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): scripts/debug-tokennames.ts
+
+/Users/mac/Documents/Plugin/Git/ACTM/scripts/generateThemeCss.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): scripts/generateThemeCss.ts
+
+/Users/mac/Documents/Plugin/Git/ACTM/scripts/test-localbg.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): scripts/test-localbg.ts
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/plugin/canvasPreview.ts
+  24:7  warning  'RT_THEME_FILL_OPACITY' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  33:7  warning  'RT_ROLE_LABEL_SIZE' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  34:7  warning  'RT_ROLE_LABEL_STYLE' is assigned a value but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/plugin/config.ts
+    7:11   warning  'StepNames' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   35:44   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   40:49   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   55:36   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   76:40   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   78:54   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   86:45   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   90:24   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   99:41   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   99:49   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  106:13   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  117:41   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  117:47   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  128:34   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  128:52   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  128:60   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  129:48   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  157:59   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  157:81   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  162:62   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  163:60   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  186:34   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  186:51   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  186:106  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  187:26   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  188:52   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  211:39   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  224:39   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  224:57   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  224:72   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  224:85   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  230:27   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  230:42   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  233:22   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  257:41   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  257:59   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  257:74   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  257:87   warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/plugin/docGen.ts
+  24:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/plugin/exportEng/fmtDTCG.ts
+  50:11  error  Unexpected var, use let or const instead  no-var
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/plugin/exportEng/fmtSCSS.ts
+  59:13  error  Unexpected var, use let or const instead  no-var
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/plugin/exportEng/fmtStyleDictionary.ts
+  50:11  error  Unexpected var, use let or const instead  no-var
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/plugin/figmaVars.ts
+  311:14  warning  '_e' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/plugin/index.ts
+   13:80  warning  'clearPreviewInterrupted' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   15:28  warning  Unexpected any. Specify a different type                                                   @typescript-eslint/no-explicit-any
+  182:45  warning  Unexpected any. Specify a different type                                                   @typescript-eslint/no-explicit-any
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/plugin/variableTracker.ts
+   79:99  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:83  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/App.tsx
+  122:3  error  Definition for rule 'react-hooks/exhaustive-deps' was not found  react-hooks/exhaustive-deps
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/components/CardToolbar.tsx
+  35:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/components/cards/RoleGroupCard.tsx
+  149:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/components/tree/index.tsx
+  201:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  202:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  302:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  303:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/hooks/useFigmaBridge.ts
+   84:40  warning  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   87:51  warning  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  355:5   error    Definition for rule 'react-hooks/exhaustive-deps' was not found  react-hooks/exhaustive-deps
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/hooks/useKeyboardShortcuts.ts
+  87:5  error  Definition for rule 'react-hooks/exhaustive-deps' was not found  react-hooks/exhaustive-deps
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/screens/CanvasPreviewDevOverlay.tsx
+  510:5  error  Definition for rule 'react-hooks/exhaustive-deps' was not found  react-hooks/exhaustive-deps
+  611:5  error  Definition for rule 'react-hooks/exhaustive-deps' was not found  react-hooks/exhaustive-deps
+  719:5  error  Definition for rule 'react-hooks/exhaustive-deps' was not found  react-hooks/exhaustive-deps
+  922:5  error  Definition for rule 'react-hooks/exhaustive-deps' was not found  react-hooks/exhaustive-deps
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/screens/ColorsScreen.tsx
+  383:108  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/screens/PreviewScreen.tsx
+  720:5  error  Definition for rule 'react-hooks/exhaustive-deps' was not found  react-hooks/exhaustive-deps
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/screens/RolesScreen.tsx
+  367:108  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Documents/Plugin/Git/ACTM/src/ui/screens/testLab.tsx
+  303:108  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  542:108  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 83 problems (15 errors, 68 warnings)
+

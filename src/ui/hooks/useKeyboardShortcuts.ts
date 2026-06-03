@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 declare const __RELEASE__: boolean;
 import { useUiStore } from "../store/uiStore";
 import { useProjectStore } from "../store/projectStore";
@@ -84,6 +84,5 @@ export function useKeyboardShortcuts(importRef: React.RefObject<HTMLInputElement
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
     // Store actions are stable Zustand references — safe to omit from deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

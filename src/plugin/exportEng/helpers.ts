@@ -14,7 +14,7 @@ export type EachTokenCallback = (
 
 export function _colorLabel(colorName: string, config: ExportConfig): string {
   if (!config.useShorthandColors) return colorName;
-  for (var i = 0; i < (config.colors || []).length; i++) {
+  for (let i = 0; i < (config.colors || []).length; i++) {
     if (config.colors![i].name === colorName && config.colors![i].shorthand)
       return config.colors![i].shorthand!;
   }
@@ -33,16 +33,16 @@ export function _varLabel(varDef: Variation, config: ExportConfig): string {
 
 export function _stepLabel(stepName: string, config: ExportConfig): string {
   if (!config.useShorthandSteps) return stepName;
-  var sh = config.scaleStepShorthands && config.scaleStepShorthands[stepName];
+  const sh = config.scaleStepShorthands && config.scaleStepShorthands[stepName];
   return sh ? sh : stepName;
 }
 
 export function _tokenSegments(colorLabel: string, roleLabel: string, varLabel: string, config: ExportConfig): string[] {
-  var order = config.tokenNameSegments || ["color", "role", "variation"];
-  var parts: Record<string, string> = { color: colorLabel, role: roleLabel, variation: varLabel };
-  var out: string[] = [];
-  for (var i = 0; i < order.length; i++) {
-    var p = parts[order[i]];
+  const order = config.tokenNameSegments || ["color", "role", "variation"];
+  const parts: Record<string, string> = { color: colorLabel, role: roleLabel, variation: varLabel };
+  const out: string[] = [];
+  for (let i = 0; i < order.length; i++) {
+    const p = parts[order[i]];
     if (p) out.push(p);
   }
   return out;
@@ -63,7 +63,7 @@ export function _slug(str: string | null | undefined): string {
 
 export function _camel(parts: string[]): string {
   return parts.map(function(p, i) {
-    var s = _slug(p).replace(/-([a-z0-9])/g, function(_, c) { return c.toUpperCase(); });
+    const s = _slug(p).replace(/-([a-z0-9])/g, function(_, c) { return c.toUpperCase(); });
     return i === 0 ? s : s.charAt(0).toUpperCase() + s.slice(1);
   }).join("");
 }
@@ -73,7 +73,7 @@ export function _snake(parts: string[]): string {
 }
 
 export function _hexComponents(hex: string): { r: number; g: number; b: number } {
-  var h = hex.replace(/^#/, "");
+  let h = hex.replace(/^#/, "");
   if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
   return {
     r: parseInt(h.substring(0, 2), 16),
@@ -83,33 +83,33 @@ export function _hexComponents(hex: string): { r: number; g: number; b: number }
 }
 
 export function _splitTokenRef(ref: string): { color: string; step: string } {
-  var last = ref.lastIndexOf("-");
+  const last = ref.lastIndexOf("-");
   return { color: ref.substring(0, last), step: ref.substring(last + 1) };
 }
 
 export function _eachToken(result: EngineResult, config: ExportConfig, cb: EachTokenCallback): void {
-  var themeKeys = Object.keys(result.tokens || {});
-  for (var ti = 0; ti < themeKeys.length; ti++) {
-    var theme = themeKeys[ti];
-    var themeTokens = result.tokens[theme];
+  const themeKeys = Object.keys(result.tokens || {});
+  for (let ti = 0; ti < themeKeys.length; ti++) {
+    const theme = themeKeys[ti];
+    const themeTokens = result.tokens[theme];
     if (!themeTokens) continue;
-    var colorNames = Object.keys(themeTokens);
-    for (var ci = 0; ci < colorNames.length; ci++) {
-      var colorName = colorNames[ci];
-      var cLabel = _colorLabel(colorName, config);
-      var roles = themeTokens[colorName];
-      var roleIds = Object.keys(roles);
-      for (var ri = 0; ri < roleIds.length; ri++) {
-        var roleId = roleIds[ri];
-        var roleObj: Role = (config.roles && config.roles[roleId]) || { _id: roleId, name: roleId, shorthand: roleId, mappingMethod: 'contrast', variations: null };
-        var rLabel = _roleLabel(roleObj, config);
-        var varDefs = _variationDefs(roleObj, config);
-        var variations = roles[roleId];
-        for (var vi = 0; vi < varDefs.length; vi++) {
-          var token = variations[String(vi)];
+    const colorNames = Object.keys(themeTokens);
+    for (let ci = 0; ci < colorNames.length; ci++) {
+      const colorName = colorNames[ci];
+      const cLabel = _colorLabel(colorName, config);
+      const roles = themeTokens[colorName];
+      const roleIds = Object.keys(roles);
+      for (let ri = 0; ri < roleIds.length; ri++) {
+        const roleId = roleIds[ri];
+        const roleObj: Role = (config.roles && config.roles[roleId]) || { _id: roleId, name: roleId, shorthand: roleId, mappingMethod: 'contrast', variations: null };
+        const rLabel = _roleLabel(roleObj, config);
+        const varDefs = _variationDefs(roleObj, config);
+        const variations = roles[roleId];
+        for (let vi = 0; vi < varDefs.length; vi++) {
+          const token = variations[String(vi)];
           if (!token) continue;
-          var vLabel = _varLabel(varDefs[vi], config);
-          var segs = _tokenSegments(cLabel, rLabel, vLabel, config);
+          const vLabel = _varLabel(varDefs[vi], config);
+          const segs = _tokenSegments(cLabel, rLabel, vLabel, config);
           cb(theme, colorName, roleObj, varDefs[vi], token, cLabel, rLabel, vLabel, segs);
         }
       }
