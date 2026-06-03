@@ -1,5 +1,6 @@
 import data from './presets.json';
-export type { Preset } from './types';
-import type { Preset } from './types';
+export type { Preset } from '../../screens/ThemeShopOverlay';
+import type { Preset } from '../../screens/ThemeShopOverlay';
 
 export const PRESETS = data as Preset[];
+

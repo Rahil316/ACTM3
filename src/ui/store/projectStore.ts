@@ -193,8 +193,6 @@ export function syncShorthandToName(name: string, shorthand: string): string {
   return [...prefixShorts, leafShort].join("/");
 }
 
-export { csvToNumbers } from "../../shared/utils";
-
 // ── Hex helpers (kept here to avoid circular imports with color engine) ──────
 
 function sanitizeHex(value: string): string {
@@ -277,6 +275,16 @@ export function makeBootstrapState(): ProjectStore {
 // ── ensureVariations ─────────────────────────────────────────────────────────
 
 export function ensureVariations(state: ProjectStore): void {
+  // ── Normalize alphaValues ──
+  if (typeof state.alphaValues === "string") {
+    state.alphaValues = (state.alphaValues as string)
+      .split(",")
+      .map((v) => parseInt(v.trim(), 10))
+      .filter((v) => !isNaN(v) && v >= 0 && v <= 100);
+  } else if (!Array.isArray(state.alphaValues)) {
+    state.alphaValues = [];
+  }
+
   // ── Ensure global variations exist ──
   if (!state.variations || state.variations.length === 0) {
     state.variations = DEFAULT_VARIATIONS.map((d) => ({ ...d, _id: generateId() }));
@@ -311,47 +319,47 @@ export function computeHash(state: ProjectStore): string {
 
 // ── Validation ───────────────────────────────────────────────────────────────
 
-export function validateState(state: ProjectStore): ValidationIssues {
-  if (!state.colors || state.colors.length === 0) return ["Add at least one color before running."];
-  if (!state.roles || state.roles.length === 0) return ["Add at least one role before running."];
+export function validateProjectStore(store: ProjectStore): ValidationIssues {
+  if (!store.colors || store.colors.length === 0) return ["Add at least one color before running."];
+  if (!store.roles || store.roles.length === 0) return ["Add at least one role before running."];
 
   const issues: string[] = [];
   const hasDup = (arr: string[]) => new Set(arr).size !== arr.length;
-  const activeVariations = state.variations ?? [];
+  const activeVariations = store.variations ?? [];
 
-  if (state.colors.some((c) => !c.name?.trim())) issues.push("One or more colors has an empty name.");
-  if (state.roles.some((r) => !r.name?.trim())) issues.push("One or more roles has an empty name.");
+  if (store.colors.some((c) => !c.name?.trim())) issues.push("One or more colors has an empty name.");
+  if (store.roles.some((r) => !r.name?.trim())) issues.push("One or more roles has an empty name.");
   if (activeVariations.some((v) => !v.name?.trim())) issues.push("One or more variations has an empty name.");
 
-  for (const c of state.colors) {
+  for (const c of store.colors) {
     if (c.shorthand && segmentDepth(c.shorthand) !== segmentDepth(c.name)) issues.push(`Color "${c.name}": shorthand segments must match name segments.`);
   }
-  for (const r of state.roles) {
+  for (const r of store.roles) {
     if (r.shorthand && segmentDepth(r.shorthand) !== segmentDepth(r.name)) issues.push(`Role "${r.name}": shorthand segments must match name segments.`);
   }
   for (const v of activeVariations) {
     if (v.shorthand && segmentDepth(v.shorthand) !== segmentDepth(v.name)) issues.push(`Variation "${v.name}": shorthand segments must match name segments.`);
   }
-  for (const r of state.roles) {
+  for (const r of store.roles) {
     if (!r.variations) continue;
     for (const v of r.variations) {
       if (v.shorthand && segmentDepth(v.shorthand) !== segmentDepth(v.name)) issues.push(`Variation "${v.name}" (role "${r.name}"): shorthand segments must match name segments.`);
     }
   }
 
-  const resolvedColorLabels = state.colors.map((c) => (state.useShorthandColors && c.shorthand ? c.shorthand : c.name).toLowerCase());
+  const resolvedColorLabels = store.colors.map((c) => (store.useShorthandColors && c.shorthand ? c.shorthand : c.name).toLowerCase());
   if (hasDup(resolvedColorLabels)) issues.push("Two or more colors resolve to the same Figma path.");
 
-  const resolvedRoleLabels = state.roles.map((r) => (state.useShorthandRoles && r.shorthand ? r.shorthand : r.name).toLowerCase());
+  const resolvedRoleLabels = store.roles.map((r) => (store.useShorthandRoles && r.shorthand ? r.shorthand : r.name).toLowerCase());
   if (hasDup(resolvedRoleLabels)) issues.push("Two or more roles resolve to the same Figma path.");
 
-  const resolvedVarLabels = activeVariations.map((v) => (state.useShorthandVariations && v.shorthand ? v.shorthand : v.name).toLowerCase());
+  const resolvedVarLabels = activeVariations.map((v) => (store.useShorthandVariations && v.shorthand ? v.shorthand : v.name).toLowerCase());
   if (hasDup(resolvedVarLabels)) issues.push("Two or more variations resolve to the same Figma path.");
 
-  const colorNames = state.colors.map((c) => c.name.trim().toLowerCase());
-  const colorShorts = state.colors.map((c) => (c.shorthand || "").trim().toLowerCase()).filter(Boolean);
-  const roleNames = state.roles.map((r) => r.name.trim().toLowerCase());
-  const roleShorts = state.roles.map((r) => (r.shorthand || "").trim().toLowerCase()).filter(Boolean);
+  const colorNames = store.colors.map((c) => c.name.trim().toLowerCase());
+  const colorShorts = store.colors.map((c) => (c.shorthand || "").trim().toLowerCase()).filter(Boolean);
+  const roleNames = store.roles.map((r) => r.name.trim().toLowerCase());
+  const roleShorts = store.roles.map((r) => (r.shorthand || "").trim().toLowerCase()).filter(Boolean);
 
   if (hasDup(colorNames)) issues.push("Two or more colors share the same name.");
   if (colorShorts.length && hasDup(colorShorts)) issues.push("Two or more colors share the same shorthand.");
@@ -391,7 +399,7 @@ export function relativeTime(ts: number): string {
 
 // ── Store shape ───────────────────────────────────────────────────────────────
 
-interface AppStoreState {
+interface projectStoreState {
   projectStore: ProjectStore;
   savedState: ProjectStore | null;
   stateHash: string;
@@ -404,7 +412,7 @@ interface AppStoreState {
   isDirty: () => boolean;
 
   // Global app field setter (used by settings overlay)
-  setAppField: <K extends keyof ProjectStore>(key: K, value: ProjectStore[K]) => void;
+  setProjectField: <K extends keyof ProjectStore>(key: K, value: ProjectStore[K]) => void;
 
   // Project
   updateProjectName: (value: string) => void;
@@ -464,7 +472,7 @@ interface AppStoreState {
 
 const _bootstrap = makeBootstrapState();
 
-export const useAppStore = create<AppStoreState>((set, get) => ({
+export const useProjectStore = create<projectStoreState>((set, get) => ({
   projectStore: _bootstrap,
   savedState: null,
   stateHash: computeHash(_bootstrap),
@@ -498,7 +506,7 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
   // ── Global field setter ──
 
-  setAppField: (key, value) => {
+  setProjectField: (key, value) => {
     set((s) => {
       const next: ProjectStore = { ...s.projectStore, [key]: value };
       if (key === "canEditRoleVariantNames" && value === false) {
@@ -896,5 +904,5 @@ export const useAppStore = create<AppStoreState>((set, get) => ({
 
   // ── Validation ──
 
-  validate: () => validateState(get().projectStore),
+  validate: () => validateProjectStore(get().projectStore),
 }));

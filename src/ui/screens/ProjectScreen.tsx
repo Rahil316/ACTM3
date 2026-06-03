@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { usePersistedToggle } from "../hooks/usePersistedToggle";
-import { useAppStore, ensureIds, ensureVariations, relativeTime } from "../store/appStore";
+import { useProjectStore, ensureIds, ensureVariations, relativeTime } from "../store/projectStore";
 import { toast } from "../store/toastStore";
 import { SectionCollapsible } from "../components/Collapsible";
 import { ActionCard } from "../components/ActionCard";
@@ -19,10 +19,10 @@ import type { ProjectStore } from "../types/state";
 export function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
-  const saveVersion = useAppStore((s) => s.saveVersion);
-  const versionSaveBlockedReason = useAppStore((s) => s.versionSaveBlockedReason);
+  const saveVersion = useProjectStore((s) => s.saveVersion);
+  const versionSaveBlockedReason = useProjectStore((s) => s.versionSaveBlockedReason);
   // Subscribe to projectStore so this re-evaluates reactively when state changes
-  useAppStore((s) => s.projectStore);
+  useProjectStore((s) => s.projectStore);
   const reason = versionSaveBlockedReason();
 
   function handleSave() {
@@ -49,19 +49,19 @@ export function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
 // ── Main Project screen ───────────────────────────────────────────────────────
 
 export function ProjectScreen() {
-  const projectStore = useAppStore((s) => s.projectStore);
-  const updateName = useAppStore((s) => s.updateProjectName);
-  const updateDesc = useAppStore((s) => s.updateProjectDescription);
-  const restoreVersion = useAppStore((s) => s.restoreVersion);
-  const deleteVersion = useAppStore((s) => s.deleteVersion);
-  const loadState = useAppStore((s) => s.loadState);
+  const projectStore = useProjectStore((s) => s.projectStore);
+  const updateName = useProjectStore((s) => s.updateProjectName);
+  const updateDesc = useProjectStore((s) => s.updateProjectDescription);
+  const restoreVersion = useProjectStore((s) => s.restoreVersion);
+  const deleteVersion = useProjectStore((s) => s.deleteVersion);
+  const loadState = useProjectStore((s) => s.loadState);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const themes = useAppStore((s) => s.projectStore.themes);
-  const setTheme = useAppStore((s) => s.setTheme);
-  const addTheme = useAppStore((s) => s.addTheme);
-  const removeTheme = useAppStore((s) => s.removeTheme);
+  const themes = useProjectStore((s) => s.projectStore.themes);
+  const setTheme = useProjectStore((s) => s.setTheme);
+  const addTheme = useProjectStore((s) => s.addTheme);
+  const removeTheme = useProjectStore((s) => s.removeTheme);
 
   const [profileOpen, toggleProfileOpen] = usePersistedToggle("project_profile", true);
   const [versionsOpen, toggleVersionsOpen] = usePersistedToggle("project_versions", true);

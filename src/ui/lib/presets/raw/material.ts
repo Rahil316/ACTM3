@@ -53,7 +53,7 @@
  *   scrim / shadow       16.0   darkest achievable in both themes
  */
 
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 const presets: Preset[] = [
   {
@@ -78,7 +78,7 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: false,
       sourceCollectionName: "global",
-      alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
+      alphaValues: [5, 10, 20, 25, 50, 75, 80, 90, 95],
       tokenGrouping: "color",
       includeColorScalesCollection: true,
       includeDescriptions: true,
@@ -110,17 +110,14 @@ const presets: Preset[] = [
         {
           name: "primary",
           shorthand: "primary",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // --md-sys-color-primary
-            { name: "on", shorthand: "on" }, // --md-sys-color-on-primary
-            { name: "container", shorthand: "container" }, // --md-sys-color-primary-container
-            { name: "on-container", shorthand: "on-container" }, // --md-sys-color-on-primary-container
-            { name: "inverse", shorthand: "inverse" }, // --md-sys-color-inverse-primary
-            { name: "tint", shorthand: "tint" }, // --md-sys-color-surface-tint
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // --md-sys-color-primary
+            { name: "on", shorthand: "on", target: 14.0 }, // --md-sys-color-on-primary
+            { name: "container", shorthand: "container", target: 1.3 }, // --md-sys-color-primary-container
+            { name: "on-container", shorthand: "on-container", target: 12.0 }, // --md-sys-color-on-primary-container
+            { name: "inverse", shorthand: "inverse", target: 2.5 }, // --md-sys-color-inverse-primary
+            { name: "tint", shorthand: "tint", target: 4.5 }, // --md-sys-color-surface-tint
           ],
-          variationTargets: [4.5, 14.0, 1.3, 12.0, 2.5, 4.5],
           description: "Primary color family · fill · on · container · on-container · inverse · tint",
         },
 
@@ -129,15 +126,12 @@ const presets: Preset[] = [
         {
           name: "secondary",
           shorthand: "secondary",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // --md-sys-color-secondary
-            { name: "on", shorthand: "on" }, // --md-sys-color-on-secondary
-            { name: "container", shorthand: "container" }, // --md-sys-color-secondary-container
-            { name: "on-container", shorthand: "on-container" }, // --md-sys-color-on-secondary-container
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // --md-sys-color-secondary
+            { name: "on", shorthand: "on", target: 14.0 }, // --md-sys-color-on-secondary
+            { name: "container", shorthand: "container", target: 1.3 }, // --md-sys-color-secondary-container
+            { name: "on-container", shorthand: "on-container", target: 12.0 }, // --md-sys-color-on-secondary-container
           ],
-          variationTargets: [4.5, 14.0, 1.3, 12.0],
           description: "Secondary color family · fill · on · container · on-container",
         },
 
@@ -146,15 +140,12 @@ const presets: Preset[] = [
         {
           name: "tertiary",
           shorthand: "tertiary",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // --md-sys-color-tertiary
-            { name: "on", shorthand: "on" }, // --md-sys-color-on-tertiary
-            { name: "container", shorthand: "container" }, // --md-sys-color-tertiary-container
-            { name: "on-container", shorthand: "on-container" }, // --md-sys-color-on-tertiary-container
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // --md-sys-color-tertiary
+            { name: "on", shorthand: "on", target: 14.0 }, // --md-sys-color-on-tertiary
+            { name: "container", shorthand: "container", target: 1.3 }, // --md-sys-color-tertiary-container
+            { name: "on-container", shorthand: "on-container", target: 12.0 }, // --md-sys-color-on-tertiary-container
           ],
-          variationTargets: [4.5, 14.0, 1.3, 12.0],
           description: "Tertiary color family · fill · on · container · on-container",
         },
 
@@ -163,15 +154,12 @@ const presets: Preset[] = [
         {
           name: "error",
           shorthand: "error",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // --md-sys-color-error
-            { name: "on", shorthand: "on" }, // --md-sys-color-on-error
-            { name: "container", shorthand: "container" }, // --md-sys-color-error-container
-            { name: "on-container", shorthand: "on-container" }, // --md-sys-color-on-error-container
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // --md-sys-color-error
+            { name: "on", shorthand: "on", target: 14.0 }, // --md-sys-color-on-error
+            { name: "container", shorthand: "container", target: 1.3 }, // --md-sys-color-error-container
+            { name: "on-container", shorthand: "on-container", target: 12.0 }, // --md-sys-color-on-error-container
           ],
-          variationTargets: [4.5, 14.0, 1.3, 12.0],
           description: "Error color family · fill · on · container · on-container",
         },
 
@@ -181,14 +169,11 @@ const presets: Preset[] = [
         {
           name: "surface",
           shorthand: "surface",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // --md-sys-color-surface
-            { name: "dim", shorthand: "dim" }, // --md-sys-color-surface-dim
-            { name: "bright", shorthand: "bright" }, // --md-sys-color-surface-bright
+          variations: [
+            { name: "default", shorthand: "default", target: 1.0 }, // --md-sys-color-surface
+            { name: "dim", shorthand: "dim", target: 1.07 }, // --md-sys-color-surface-dim
+            { name: "bright", shorthand: "bright", target: 1.0 }, // --md-sys-color-surface-bright
           ],
-          variationTargets: [1.0, 1.07, 1.0],
           description: "Surface states · default · dim · bright",
         },
 
@@ -196,16 +181,13 @@ const presets: Preset[] = [
         {
           name: "surface/container",
           shorthand: "surface/container",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "lowest", shorthand: "lowest" }, // --md-sys-color-surface-container-lowest
-            { name: "low", shorthand: "low" }, // --md-sys-color-surface-container-low
-            { name: "default", shorthand: "default" }, // --md-sys-color-surface-container
-            { name: "high", shorthand: "high" }, // --md-sys-color-surface-container-high
-            { name: "highest", shorthand: "highest" }, // --md-sys-color-surface-container-highest
+          variations: [
+            { name: "lowest", shorthand: "lowest", target: 1.0 }, // --md-sys-color-surface-container-lowest
+            { name: "low", shorthand: "low", target: 1.07 }, // --md-sys-color-surface-container-low
+            { name: "default", shorthand: "default", target: 1.15 }, // --md-sys-color-surface-container
+            { name: "high", shorthand: "high", target: 1.22 }, // --md-sys-color-surface-container-high
+            { name: "highest", shorthand: "highest", target: 1.3 }, // --md-sys-color-surface-container-highest
           ],
-          variationTargets: [1.0, 1.07, 1.15, 1.22, 1.3],
           description: "Surface container stack · 5 levels of tint depth",
         },
 
@@ -214,13 +196,10 @@ const presets: Preset[] = [
         {
           name: "background",
           shorthand: "background",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // --md-sys-color-background
-            { name: "on", shorthand: "on" }, // --md-sys-color-on-background
+          variations: [
+            { name: "default", shorthand: "default", target: 1.0 }, // --md-sys-color-background
+            { name: "on", shorthand: "on", target: 10.0 }, // --md-sys-color-on-background
           ],
-          variationTargets: [1.0, 10.0],
           description: "Background · page canvas and body text",
         },
 
@@ -230,12 +209,9 @@ const presets: Preset[] = [
         {
           name: "inverse",
           shorthand: "inverse",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "surface", shorthand: "surface" }, // --md-sys-color-inverse-surface
+          variations: [
+            { name: "surface", shorthand: "surface", target: 12.0 }, // --md-sys-color-inverse-surface
           ],
-          variationTargets: [12.0],
           description: "Inverse surface · snackbar/tooltip background",
         },
 
@@ -244,12 +220,9 @@ const presets: Preset[] = [
         {
           name: "scrim",
           shorthand: "scrim",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // --md-sys-color-scrim
+          variations: [
+            { name: "default", shorthand: "default", target: 16.0 }, // --md-sys-color-scrim
           ],
-          variationTargets: [16.0],
           description: "Scrim · modal overlay, darkest achievable",
         },
 
@@ -258,12 +231,9 @@ const presets: Preset[] = [
         {
           name: "shadow",
           shorthand: "shadow",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // --md-sys-color-shadow
+          variations: [
+            { name: "default", shorthand: "default", target: 16.0 }, // --md-sys-color-shadow
           ],
-          variationTargets: [16.0],
           description: "Shadow · elevation drop shadow, darkest achievable",
         },
 
@@ -273,14 +243,11 @@ const presets: Preset[] = [
         {
           name: "surface",
           shorthand: "surface",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "on", shorthand: "on" }, // --md-sys-color-on-surface
-            { name: "variant", shorthand: "variant" }, // --md-sys-color-surface-variant
-            { name: "on-variant", shorthand: "on-variant" }, // --md-sys-color-on-surface-variant
+          variations: [
+            { name: "on", shorthand: "on", target: 10.0 }, // --md-sys-color-on-surface
+            { name: "variant", shorthand: "variant", target: 1.2 }, // --md-sys-color-surface-variant
+            { name: "on-variant", shorthand: "on-variant", target: 4.5 }, // --md-sys-color-on-surface-variant
           ],
-          variationTargets: [10.0, 1.2, 4.5],
           description: "Surface text and variant · on-surface · surface-variant · on-surface-variant",
         },
 
@@ -288,13 +255,10 @@ const presets: Preset[] = [
         {
           name: "outline",
           shorthand: "outline",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // --md-sys-color-outline
-            { name: "variant", shorthand: "variant" }, // --md-sys-color-outline-variant
+          variations: [
+            { name: "default", shorthand: "default", target: 3.0 }, // --md-sys-color-outline
+            { name: "variant", shorthand: "variant", target: 1.5 }, // --md-sys-color-outline-variant
           ],
-          variationTargets: [3.0, 1.5],
           description: "Outline · interactive border · decorative divider",
         },
 
@@ -302,12 +266,9 @@ const presets: Preset[] = [
         {
           name: "inverse",
           shorthand: "inverse",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "on-surface", shorthand: "on-surface" }, // --md-sys-color-inverse-on-surface
+          variations: [
+            { name: "on-surface", shorthand: "on-surface", target: 1.1 }, // --md-sys-color-inverse-on-surface
           ],
-          variationTargets: [1.1],
           description: "Inverse on-surface · near-white text on snackbar bg",
         },
       ],

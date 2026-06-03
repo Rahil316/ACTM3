@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useUiStore } from "../store/uiStore";
-import { useAppStore, ensureIds, ensureVariations } from "../store/appStore";
+import { useProjectStore, ensureIds, ensureVariations } from "../store/projectStore";
 import { banner } from "../store/bannerStore";
 import { PRESETS } from "../lib/presets/presets";
 import { ShopCard } from "../components/cards/ShopCard";
@@ -22,8 +22,8 @@ export interface Preset {
 export function ThemeShopOverlay() {
   const isOpen = useUiStore((s) => s.activeOverlay === "theme-shop");
   const closeOverlay = useUiStore((s) => s.closeOverlay);
-  const loadState = useAppStore((s) => s.loadState);
-  const presetId = useAppStore((s) => (s.projectStore as ProjectStore & { _presetId?: string })._presetId);
+  const loadState = useProjectStore((s) => s.loadState);
+  const presetId = useProjectStore((s) => (s.projectStore as ProjectStore & { _presetId?: string })._presetId);
 
   const [query, setQuery] = useState("");
 

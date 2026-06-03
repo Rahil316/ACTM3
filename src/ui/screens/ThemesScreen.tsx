@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAppStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/appStore";
+import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/projectStore";
 import { toast } from "../store/toastStore";
 import { SettingsCard } from "../components/SettingsCard";
 import { Badge } from "../components/Badge";
@@ -12,8 +12,8 @@ import type { ProjectStore } from "../types/state";
 // ── Preset shop ───────────────────────────────────────────────────────────────
 
 function PresetShop() {
-  const loadState = useAppStore((s) => s.loadState);
-  const isDirty = useAppStore((s) => s.isDirty);
+  const loadState = useProjectStore((s) => s.loadState);
+  const isDirty = useProjectStore((s) => s.isDirty);
   const [confirmPreset, setConfirmPreset] = useState<Preset | null>(null);
 
   function handlePresetClick(preset: Preset) {

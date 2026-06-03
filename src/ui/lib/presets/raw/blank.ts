@@ -1,4 +1,4 @@
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 const presets: Preset[] = [
   {
@@ -23,7 +23,7 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: false,
       sourceCollectionName: "global",
-      alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
+      alphaValues: [5, 10, 20, 25, 50, 75, 80, 90, 95],
       tokenGrouping: "color",
       includeColorScalesCollection: true,
       includeDescriptions: false,
@@ -35,11 +35,11 @@ const presets: Preset[] = [
       // 5 named variations covering the full perceptual range.
       // These names work for any role — background, border, text, or fill.
       variations: [
-        { name: "Subtle", shorthand: "1" },
-        { name: "Soft", shorthand: "2" },
-        { name: "Default", shorthand: "3" },
-        { name: "Strong", shorthand: "4" },
-        { name: "Bold", shorthand: "5" },
+        { name: "Subtle", shorthand: "1", target: 1.5 },
+        { name: "Soft", shorthand: "2", target: 3.0 },
+        { name: "Default", shorthand: "3", target: 4.5 },
+        { name: "Strong", shorthand: "4", target: 7.0 },
+        { name: "Bold", shorthand: "5", target: 12.0 },
       ],
 
       colors: [],

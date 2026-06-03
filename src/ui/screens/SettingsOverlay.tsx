@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useAppStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS } from "../store/appStore";
+import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS } from "../store/projectStore";
 import { useUiStore, VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
 import { takeSnapshot, restoreSnapshot, clearSnapshot } from "../store/snapshots";
 import { Modal, ModalHeader } from "../components/Modal";
@@ -46,8 +46,8 @@ function SortableSegmentPill({ id }: { id: TokenNameSegment }) {
 // ── Tokens tab ───────────────────────────────────────────────────────────────
 
 function TokensTab() {
-  const projectStore = useAppStore((s) => s.projectStore);
-  const setAppField = useAppStore((s) => s.setAppField);
+  const projectStore = useProjectStore((s) => s.projectStore);
+  const setProjectField = useProjectStore((s) => s.setProjectField);
 
   const pluginMode = projectStore.pluginMode;
   const isScaleMode = pluginMode === "scale";
@@ -62,11 +62,11 @@ function TokensTab() {
     { value: "role", label: "Per Role" },
   ] as const;
 
-  const scaleStepsRaw = useAppStore((s) => s.projectStore.scaleSteps);
+  const scaleStepsRaw = useProjectStore((s) => s.projectStore.scaleSteps);
   const scaleSteps = scaleStepsRaw ?? [];
-  const setScaleStep = useAppStore((s) => s.setScaleStep);
-  const addScaleStep = useAppStore((s) => s.addScaleStep);
-  const removeScaleStep = useAppStore((s) => s.removeScaleStep);
+  const setScaleStep = useProjectStore((s) => s.setScaleStep);
+  const addScaleStep = useProjectStore((s) => s.addScaleStep);
+  const removeScaleStep = useProjectStore((s) => s.removeScaleStep);
   const [stepLabelsCollapsed, setStepLabelsCollapsed] = useState(true);
   const [scaleLengthDraft, setScaleLengthDraft] = useState<string>(String(projectStore.scaleLength));
 
@@ -80,7 +80,7 @@ function TokensTab() {
     const newIdx = tokenNameSegments.indexOf(over.id as TokenNameSegment);
     if (oldIdx === -1 || newIdx === -1) return;
     const reordered = arrayMove([...tokenNameSegments], oldIdx, newIdx);
-    setAppField("tokenNameSegments", reordered);
+    setProjectField("tokenNameSegments", reordered);
   }
 
   // Live preview of resulting token name
@@ -97,32 +97,32 @@ function TokensTab() {
     return isScale ? (
       <SettingsCard>
         <SectionLabel>Color Algorithm</SectionLabel>
-        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
+        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setProjectField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
         {projectStore.useUniformAlgorithm && (
-          <SmallRow label="Algorithm" control={<Select size="md" options={algoOptions} value={projectStore.scaleAlgorithm} onChange={(e) => setAppField("scaleAlgorithm", e.target.value as typeof projectStore.scaleAlgorithm)} />} />
+          <SmallRow label="Algorithm" control={<Select size="md" options={algoOptions} value={projectStore.scaleAlgorithm} onChange={(e) => setProjectField("scaleAlgorithm", e.target.value as typeof projectStore.scaleAlgorithm)} />} />
         )}
         {!projectStore.useUniformAlgorithm && (
           <PanelRow
             label="Algorithm Scope"
             description={projectStore.algorithmScopeLevel == "color" ? "Select Algorithm for each color." : "Select Algorithm for each role."}
-            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />}
+            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setProjectField("algorithmScopeLevel", v as "color" | "role")} />}
           />
         )}
       </SettingsCard>
     ) : (
       <SettingsCard>
         <SectionLabel>Color Algorithm</SectionLabel>
-        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setAppField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
+        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setProjectField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
         {projectStore.useUniformAlgorithm && (
           <SmallRow
             label="Solver Algorithm"
-            control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={projectStore.solverMode} onChange={(e) => setAppField("solverMode", e.target.value as typeof projectStore.solverMode)} />}
+            control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={projectStore.solverMode} onChange={(e) => setProjectField("solverMode", e.target.value as typeof projectStore.solverMode)} />}
           />
         )}
         {!projectStore.useUniformAlgorithm && (
           <SmallRow
             label="Algorithm Scope"
-            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setAppField("algorithmScopeLevel", v as "color" | "role")} />}
+            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setProjectField("algorithmScopeLevel", v as "color" | "role")} />}
           />
         )}
       </SettingsCard>
@@ -136,7 +136,7 @@ function TokensTab() {
         <PanelRow
           label="Plugin Mode"
           description={isScaleMode ? "Generate a full color scale from a seed color." : "Solve token values directly against themes."}
-          control={<SegmentedControl segments={modeSegments as unknown as { value: string; label: string }[]} value={pluginMode} onChange={(v) => setAppField("pluginMode", v as "scale" | "direct")} />}
+          control={<SegmentedControl segments={modeSegments as unknown as { value: string; label: string }[]} value={pluginMode} onChange={(v) => setProjectField("pluginMode", v as "scale" | "direct")} />}
         />
         {isScaleMode && (
           <SmallRow
@@ -153,7 +153,7 @@ function TokensTab() {
                 onChange={(e) => {
                   setScaleLengthDraft(e.target.value);
                   const v = parseInt(e.target.value);
-                  if (!isNaN(v) && v >= 5 && v <= 100) setAppField("scaleLength", v);
+                  if (!isNaN(v) && v >= 5 && v <= 100) setProjectField("scaleLength", v);
                 }}
                 onBlur={() => {
                   const v = parseInt(scaleLengthDraft);
@@ -197,41 +197,32 @@ function TokensTab() {
           {/* Live preview */}
           <HelperText className="font-mono bg-bg-input rounded-[4px] p-2">{namePreview}</HelperText>
         </div>
-        <PanelRow label="Use Shorthand for Colors" control={<Toggle on={projectStore.useShorthandColors} onChange={() => setAppField("useShorthandColors", !projectStore.useShorthandColors)} />} />
-        <PanelRow label="Use Shorthand for Roles" control={<Toggle on={projectStore.useShorthandRoles} onChange={() => setAppField("useShorthandRoles", !projectStore.useShorthandRoles)} />} />
-        <PanelRow label="Use Shorthand for Variations" control={<Toggle on={projectStore.useShorthandVariations} onChange={() => setAppField("useShorthandVariations", !projectStore.useShorthandVariations)} />} />
-        <PanelRow label="Use Shorthand for Steps" control={<Toggle on={projectStore.useShorthandSteps} onChange={() => setAppField("useShorthandSteps", !projectStore.useShorthandSteps)} />} />
-        <PanelRow label="Include Descriptions" control={<Toggle on={projectStore.includeDescriptions} onChange={() => setAppField("includeDescriptions", !projectStore.includeDescriptions)} />} />
+        <PanelRow label="Use Shorthand for Colors" control={<Toggle on={projectStore.useShorthandColors} onChange={() => setProjectField("useShorthandColors", !projectStore.useShorthandColors)} />} />
+        <PanelRow label="Use Shorthand for Roles" control={<Toggle on={projectStore.useShorthandRoles} onChange={() => setProjectField("useShorthandRoles", !projectStore.useShorthandRoles)} />} />
+        <PanelRow label="Use Shorthand for Variations" control={<Toggle on={projectStore.useShorthandVariations} onChange={() => setProjectField("useShorthandVariations", !projectStore.useShorthandVariations)} />} />
+        <PanelRow label="Use Shorthand for Steps" control={<Toggle on={projectStore.useShorthandSteps} onChange={() => setProjectField("useShorthandSteps", !projectStore.useShorthandSteps)} />} />
+        <PanelRow label="Include Descriptions" control={<Toggle on={projectStore.includeDescriptions} onChange={() => setProjectField("includeDescriptions", !projectStore.includeDescriptions)} />} />
       </SettingsCard>
 
       {/* Collections */}
       <SettingsCard>
         <SectionLabel>Figma Collections</SectionLabel>
-        <SmallRow label="Token Collection Name" control={<Input size="md" value={projectStore.tokenCollectionName} onChange={(e) => setAppField("tokenCollectionName", e.target.value)} />} />
+        <SmallRow label="Token Collection Name" control={<Input size="md" value={projectStore.tokenCollectionName} onChange={(e) => setProjectField("tokenCollectionName", e.target.value)} />} />
         {isScaleMode && (
           <>
-            <PanelRow label="Include Scale Collection" control={<Toggle on={projectStore.includeColorScalesCollection} onChange={() => setAppField("includeColorScalesCollection", !projectStore.includeColorScalesCollection)} />} />
-            {projectStore.includeColorScalesCollection && <SmallRow label="Scale Collection Name" control={<Input size="md" value={projectStore.scaleCollectionName} onChange={(e) => setAppField("scaleCollectionName", e.target.value)} />} />}
+            <PanelRow label="Include Scale Collection" control={<Toggle on={projectStore.includeColorScalesCollection} onChange={() => setProjectField("includeColorScalesCollection", !projectStore.includeColorScalesCollection)} />} />
+            {projectStore.includeColorScalesCollection && <SmallRow label="Scale Collection Name" control={<Input size="md" value={projectStore.scaleCollectionName} onChange={(e) => setProjectField("scaleCollectionName", e.target.value)} />} />}
           </>
         )}
         <PanelRow
           label="Include Source Colors"
           description="Creates a separate collection for seed hex values."
-          control={<Toggle on={projectStore.includeSourceColors} onChange={() => setAppField("includeSourceColors", !projectStore.includeSourceColors)} />}
+          control={<Toggle on={projectStore.includeSourceColors} onChange={() => setProjectField("includeSourceColors", !projectStore.includeSourceColors)} />}
         />
         {projectStore.includeSourceColors && (
           <>
-            <SmallRow label="Source Collection Name" control={<Input size="md" value={projectStore.sourceCollectionName} onChange={(e) => setAppField("sourceCollectionName", e.target.value)} />} />
-            <SmallRow
-              label="Alpha Tint Values (%)"
-              control={
-                <TagInput
-                  values={projectStore.alphaValues || []}
-                  placeholder="Type a number and press Enter (e.g. 10, 25, 50)"
-                  onChange={(newValues) => setAppField("alphaValues", newValues)}
-                />
-              }
-            />
+            <SmallRow label="Source Collection Name" control={<Input size="md" value={projectStore.sourceCollectionName} onChange={(e) => setProjectField("sourceCollectionName", e.target.value)} />} />
+            <SmallRow label="Alpha Tint Values (%)" control={<TagInput values={projectStore.alphaValues || []} placeholder="Type a number and press Enter (e.g. 10, 25, 50)" onChange={(newValues) => setProjectField("alphaValues", newValues)} />} />
           </>
         )}
       </SettingsCard>
@@ -275,13 +266,13 @@ function TokensTab() {
 // ── Roles tab ────────────────────────────────────────────────────────────────
 
 function RolesTab() {
-  const projectStore = useAppStore((s) => s.projectStore);
-  const setAppField = useAppStore((s) => s.setAppField);
-  const variationsRaw = useAppStore((s) => s.projectStore.variations);
+  const projectStore = useProjectStore((s) => s.projectStore);
+  const setProjectField = useProjectStore((s) => s.setProjectField);
+  const variationsRaw = useProjectStore((s) => s.projectStore.variations);
   const variations = variationsRaw ?? [];
-  const setVariation = useAppStore((s) => s.setVariation);
-  const addVariation = useAppStore((s) => s.addVariation);
-  const removeVariation = useAppStore((s) => s.removeVariation);
+  const setVariation = useProjectStore((s) => s.setVariation);
+  const addVariation = useProjectStore((s) => s.addVariation);
+  const removeVariation = useProjectStore((s) => s.removeVariation);
 
   return (
     <div className="flex flex-col gap-3">
@@ -294,7 +285,7 @@ function RolesTab() {
             <Toggle
               on={projectStore.canEditRoleVariantNames}
               onChange={() => {
-                setAppField("canEditRoleVariantNames", !projectStore.canEditRoleVariantNames);
+                setProjectField("canEditRoleVariantNames", !projectStore.canEditRoleVariantNames);
                 console.log(!projectStore.canEditRoleVariantNames);
               }}
             />

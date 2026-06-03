@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { ColorGroupCard } from "../../components/cards/ColorGroupCard";
 import { RoleGroupCard } from "../../components/cards/RoleGroupCard";
 import { CardToolbar } from "../../components/CardToolbar";
-import { useAppStore } from "../../store/appStore";
+import { useProjectStore } from "../../store/projectStore";
 import { Button } from "../../components/Button";
 import { Settings } from "lucide-react";
 
@@ -13,7 +13,7 @@ const meta: Meta = {
 export default meta;
 
 function ColorCardStory() {
-  const color = useAppStore((s: ReturnType<typeof useAppStore.getState>) => s.projectStore.colors[0]);
+  const color = useProjectStore((s: ReturnType<typeof useProjectStore.getState>) => s.projectStore.colors[0]);
   if (!color) return <div className="text-text-muted text-[12px]">No color available in store.</div>;
   return (
     <div className="p-4 max-w-sm bg-bg-app border border-border-base rounded-lg">
@@ -23,7 +23,7 @@ function ColorCardStory() {
 }
 
 function RoleCardStory() {
-  const role = useAppStore((s: ReturnType<typeof useAppStore.getState>) => s.projectStore.roles[0]);
+  const role = useProjectStore((s: ReturnType<typeof useProjectStore.getState>) => s.projectStore.roles[0]);
   if (!role) return <div className="text-text-muted text-[12px]">No role available in store.</div>;
   return (
     <div className="p-4 max-w-sm bg-bg-app border border-border-base rounded-lg">

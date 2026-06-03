@@ -52,7 +52,7 @@
  *   status/magic/fg               5.5   elevated for AI brand expression
  */
 
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 const presets: Preset[] = [
   {
@@ -77,7 +77,7 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: false,
       sourceCollectionName: "global",
-      alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
+      alphaValues: [5, 10, 20, 25, 50, 75, 80, 90, 95],
       tokenGrouping: "color",
       includeColorScalesCollection: false,
       includeDescriptions: true,
@@ -94,7 +94,6 @@ const presets: Preset[] = [
         { name: "Neutral", shorthand: "Neutral", value: "8C9196", description: "Polaris neutral gray — surfaces and UI chrome" },
         { name: "Success", shorthand: "Success", value: "007B5E", description: "Polaris success green" },
         { name: "Caution", shorthand: "Caution", value: "916A00", description: "Polaris caution yellow-brown" },
-        { name: "Critical", shorthand: "Critical", value: "CC1515", description: "Polaris critical red — errors, destructive actions" },
         { name: "Magic", shorthand: "Magic", value: "7B2EA8", description: "Polaris magic purple — AI / Shopify Intelligence" },
       ],
 
@@ -104,14 +103,11 @@ const presets: Preset[] = [
         {
           name: "background",
           shorthand: "background",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // page background (near-white/near-black)
-            { name: "subdued", shorthand: "subdued" }, // subdued page section
-            { name: "hover", shorthand: "hover" }, // hover state on background
+          variations: [
+            { name: "default", shorthand: "default", target: 1.0 }, // page background (near-white/near-black)
+            { name: "subdued", shorthand: "subdued", target: 1.15 }, // subdued page section
+            { name: "hover", shorthand: "hover", target: 1.3 }, // hover state on background
           ],
-          variationTargets: [1.0, 1.15, 1.3],
           description: "Page and section background fills · default · subdued · hover",
         },
 
@@ -120,15 +116,12 @@ const presets: Preset[] = [
         {
           name: "surface",
           shorthand: "surface",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // card / popover
-            { name: "raised", shorthand: "raised" }, // elevated card (dragging state)
-            { name: "overlay", shorthand: "overlay" }, // modal / sheet
-            { name: "subdued", shorthand: "subdued" }, // deemphasized panel
+          variations: [
+            { name: "default", shorthand: "default", target: 1.0 }, // card / popover
+            { name: "raised", shorthand: "raised", target: 1.05 }, // elevated card (dragging state)
+            { name: "overlay", shorthand: "overlay", target: 1.1 }, // modal / sheet
+            { name: "subdued", shorthand: "subdued", target: 1.2 }, // deemphasized panel
           ],
-          variationTargets: [1.0, 1.05, 1.1, 1.2],
           description: "Card, popover, and modal surface fills",
         },
 
@@ -137,15 +130,12 @@ const presets: Preset[] = [
         {
           name: "text",
           shorthand: "text",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // body text (AAA)
-            { name: "subdued", shorthand: "subdued" }, // secondary / helper text (AA)
-            { name: "critical", shorthand: "critical" }, // error / destructive text
-            { name: "disabled", shorthand: "disabled" }, // disabled label
+          variations: [
+            { name: "default", shorthand: "default", target: 7.0 }, // body text (AAA)
+            { name: "subdued", shorthand: "subdued", target: 4.5 }, // secondary / helper text (AA)
+            { name: "critical", shorthand: "critical", target: 4.5 }, // error / destructive text
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled label
           ],
-          variationTargets: [7.0, 4.5, 4.5, 2.0],
           description: "Text label hierarchy · body · subdued · critical · disabled",
         },
 
@@ -154,14 +144,11 @@ const presets: Preset[] = [
         {
           name: "border",
           shorthand: "border",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // standard UI border
-            { name: "subdued", shorthand: "subdued" }, // divider / subtle border
-            { name: "interactive", shorthand: "interactive" }, // focus ring
+          variations: [
+            { name: "default", shorthand: "default", target: 2.0 }, // standard UI border
+            { name: "subdued", shorthand: "subdued", target: 1.5 }, // divider / subtle border
+            { name: "interactive", shorthand: "interactive", target: 3.0 }, // focus ring
           ],
-          variationTargets: [2.0, 1.5, 3.0],
           description: "Border and divider strokes · default · subdued · focus ring",
         },
 
@@ -170,15 +157,12 @@ const presets: Preset[] = [
         {
           name: "icon",
           shorthand: "icon",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // standard icon
-            { name: "subdued", shorthand: "subdued" }, // muted / secondary icon
-            { name: "critical", shorthand: "critical" }, // error icon
-            { name: "disabled", shorthand: "disabled" }, // disabled icon
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // standard icon
+            { name: "subtle", shorthand: "subtle", target: 3.0 }, // muted / secondary icon
+            { name: "critical", shorthand: "critical", target: 4.5 }, // error icon
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled icon
           ],
-          variationTargets: [4.5, 3.0, 4.5, 2.0],
           description: "Icon fills · default · subdued · critical · disabled",
         },
 
@@ -187,16 +171,13 @@ const presets: Preset[] = [
         {
           name: "action/primary",
           shorthand: "action/primary",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // resting CTA fill
-            { name: "hover", shorthand: "hover" }, // hover
-            { name: "pressed", shorthand: "pressed" }, // pressed / active
-            { name: "selected", shorthand: "selected" }, // selected / checked
-            { name: "disabled", shorthand: "disabled" }, // disabled
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // resting CTA fill
+            { name: "hover", shorthand: "hover", target: 5.5 }, // hover
+            { name: "pressed", shorthand: "pressed", target: 6.5 }, // pressed / active
+            { name: "selected", shorthand: "selected", target: 7.0 }, // selected / checked
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled
           ],
-          variationTargets: [4.5, 5.5, 6.5, 7.0, 2.0],
           description: "Primary action fills · CTA buttons · 5 interaction states",
         },
 
@@ -205,16 +186,13 @@ const presets: Preset[] = [
         {
           name: "action/secondary",
           shorthand: "action/secondary",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" },
-            { name: "hover", shorthand: "hover" },
-            { name: "pressed", shorthand: "pressed" },
-            { name: "selected", shorthand: "selected" },
-            { name: "disabled", shorthand: "disabled" },
+          variations: [
+            { name: "default", shorthand: "default", target: 3.0 },
+            { name: "hover", shorthand: "hover", target: 4.5 },
+            { name: "pressed", shorthand: "pressed", target: 5.5 },
+            { name: "selected", shorthand: "selected", target: 6.5 },
+            { name: "disabled", shorthand: "disabled", target: 2.0 },
           ],
-          variationTargets: [3.0, 4.5, 5.5, 6.5, 2.0],
           description: "Secondary action fills · outline buttons · 5 interaction states",
         },
 
@@ -222,15 +200,12 @@ const presets: Preset[] = [
         {
           name: "status/success",
           shorthand: "status/success",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg/subtle", shorthand: "bg/subtle" }, // tinted success background
-            { name: "bg/default", shorthand: "bg/default" }, // stronger success fill
-            { name: "fg", shorthand: "fg" }, // success text / icon
-            { name: "border", shorthand: "border" }, // success field border
+          variations: [
+            { name: "bg/subtle", shorthand: "bg/subtle", target: 1.3 }, // tinted success background
+            { name: "bg/default", shorthand: "bg/default", target: 1.8 }, // stronger success fill
+            { name: "fg", shorthand: "fg", target: 4.5 }, // success text / icon
+            { name: "border", shorthand: "border", target: 2.5 }, // success field border
           ],
-          variationTargets: [1.3, 1.8, 4.5, 2.5],
           description: "Success feedback channel · bg/subtle · bg/default · fg · border",
         },
 
@@ -238,15 +213,12 @@ const presets: Preset[] = [
         {
           name: "status/caution",
           shorthand: "status/caution",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg/subtle", shorthand: "bg/subtle" },
-            { name: "bg/default", shorthand: "bg/default" },
-            { name: "fg", shorthand: "fg" },
-            { name: "border", shorthand: "border" },
+          variations: [
+            { name: "bg/subtle", shorthand: "bg/subtle", target: 1.3 },
+            { name: "bg/default", shorthand: "bg/default", target: 1.8 },
+            { name: "fg", shorthand: "fg", target: 4.5 },
+            { name: "border", shorthand: "border", target: 2.5 },
           ],
-          variationTargets: [1.3, 1.8, 4.5, 2.5],
           description: "Caution / warning feedback channel · bg/subtle · bg/default · fg · border",
         },
 
@@ -254,15 +226,12 @@ const presets: Preset[] = [
         {
           name: "status/critical",
           shorthand: "status/critical",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg/subtle", shorthand: "bg/subtle" },
-            { name: "bg/default", shorthand: "bg/default" },
-            { name: "fg", shorthand: "fg" },
-            { name: "border", shorthand: "border" },
+          variations: [
+            { name: "bg/subtle", shorthand: "bg/subtle", target: 1.3 },
+            { name: "bg/default", shorthand: "bg/default", target: 1.8 },
+            { name: "fg", shorthand: "fg", target: 4.5 },
+            { name: "border", shorthand: "border", target: 2.5 },
           ],
-          variationTargets: [1.3, 1.8, 4.5, 2.5],
           description: "Critical / error feedback channel · bg/subtle · bg/default · fg · border",
         },
 
@@ -270,15 +239,12 @@ const presets: Preset[] = [
         {
           name: "status/info",
           shorthand: "status/info",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg/subtle", shorthand: "bg/subtle" },
-            { name: "bg/default", shorthand: "bg/default" },
-            { name: "fg", shorthand: "fg" },
-            { name: "border", shorthand: "border" },
+          variations: [
+            { name: "bg/subtle", shorthand: "bg/subtle", target: 1.3 },
+            { name: "bg/default", shorthand: "bg/default", target: 1.8 },
+            { name: "fg", shorthand: "fg", target: 4.5 },
+            { name: "border", shorthand: "border", target: 2.5 },
           ],
-          variationTargets: [1.3, 1.8, 4.5, 2.5],
           description: "Informational feedback channel · bg/subtle · bg/default · fg · border",
         },
 
@@ -287,15 +253,12 @@ const presets: Preset[] = [
         {
           name: "status/magic",
           shorthand: "status/magic",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg/subtle", shorthand: "bg/subtle" },
-            { name: "bg/default", shorthand: "bg/default" },
-            { name: "fg", shorthand: "fg" },
-            { name: "border", shorthand: "border" },
+          variations: [
+            { name: "bg/subtle", shorthand: "bg/subtle", target: 1.3 },
+            { name: "bg/default", shorthand: "bg/default", target: 1.8 },
+            { name: "fg", shorthand: "fg", target: 5.5 },
+            { name: "border", shorthand: "border", target: 2.5 },
           ],
-          variationTargets: [1.3, 1.8, 5.5, 2.5],
           description: "Magic (Shopify AI) feedback channel · elevated FG contrast for brand expression",
         },
       ],

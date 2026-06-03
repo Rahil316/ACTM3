@@ -5,7 +5,7 @@ import { Settings, X, ChevronDown } from "lucide-react";
 import { Checkbox } from "../Checkbox";
 import type { Color, Theme, RoleLocalBg, RoleLocalBgKind, Role, Variation } from "../../types/state";
 import { CardToolbar } from "../CardToolbar";
-import { useAppStore, SCALE_ALGORITHM_OPTIONS } from "../../store/appStore";
+import { useProjectStore, SCALE_ALGORITHM_OPTIONS } from "../../store/projectStore";
 import { useLocalField } from "../../hooks/useLocalField";
 import { Input } from "../Input";
 import { Button } from "../Button";
@@ -13,7 +13,7 @@ import { Badge } from "../Badge";
 import { Collapsible } from "../Collapsible";
 import { Select } from "../Select";
 import { usePersistedToggle } from "../../hooks/usePersistedToggle";
-import { SOLVER_MODE_OPTIONS } from "../../store/appStore";
+import { SOLVER_MODE_OPTIONS } from "../../store/projectStore";
 
 interface RoleGroupCardProps {
   role: Role;
@@ -76,7 +76,7 @@ function parseDynamicRef(value: string): { role: string; variation: string } {
 }
 
 function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null; onChange: (bg: RoleLocalBg | null) => void }) {
-  const projectStore = useAppStore((s) => s.projectStore);
+  const projectStore = useProjectStore((s) => s.projectStore);
   const isDynamic = localBg?.kind === "token-dynamic";
   const storeVal = typeof localBg?.value === "string" ? localBg.value : "";
   const [query, setQuery] = useState(storeVal);
@@ -327,12 +327,12 @@ const FILL_SCOPES: VariableScope[] = ["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL"];
 const ALL_LEAF_SCOPES: VariableScope[] = ["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL", "STROKE_COLOR", "EFFECT_COLOR"];
 
 function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClose: () => void }) {
-  const colors = useAppStore((s) => s.projectStore.colors);
-  const themes = useAppStore((s) => s.projectStore.themes ?? []);
-  const role = useAppStore((s) => s.projectStore.roles[roleIdx]);
-  const setRoleScope = useAppStore((s) => s.setRoleScope);
-  const setRoleLocalBg = useAppStore((s) => s.setRoleLocalBg);
-  const setRoleScopes = useAppStore((s) => s.setRoleScopes);
+  const colors = useProjectStore((s) => s.projectStore.colors);
+  const themes = useProjectStore((s) => s.projectStore.themes ?? []);
+  const role = useProjectStore((s) => s.projectStore.roles[roleIdx]);
+  const setRoleScope = useProjectStore((s) => s.setRoleScope);
+  const setRoleLocalBg = useProjectStore((s) => s.setRoleLocalBg);
+  const setRoleScopes = useProjectStore((s) => s.setRoleScopes);
 
   type Tab = "colors" | "contrast" | "scope";
   const [activeTab, setActiveTab] = useState<Tab>("colors");
@@ -624,21 +624,21 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
 
   // Actions — stable references, never change
-  const setRole = useAppStore((s) => s.setRole);
-  const removeRole = useAppStore((s) => s.removeRole);
-  const setRoleVariation = useAppStore((s) => s.setRoleVariation);
-  const addRoleVariation = useAppStore((s) => s.addRoleVariation);
-  const removeRoleVariation = useAppStore((s) => s.removeRoleVariation);
-  const toggleRoleCustomVars = useAppStore((s) => s.toggleRoleCustomVariations);
+  const setRole = useProjectStore((s) => s.setRole);
+  const removeRole = useProjectStore((s) => s.removeRole);
+  const setRoleVariation = useProjectStore((s) => s.setRoleVariation);
+  const addRoleVariation = useProjectStore((s) => s.addRoleVariation);
+  const removeRoleVariation = useProjectStore((s) => s.removeRoleVariation);
+  const toggleRoleCustomVars = useProjectStore((s) => s.toggleRoleCustomVariations);
 
   // Scalar selectors — only re-render when the specific value changes
-  const sharedVariations = useAppStore((s) => s.projectStore.variations ?? []);
-  const scaleLength = useAppStore((s) => s.projectStore.scaleLength);
-  const pluginMode = useAppStore((s) => s.projectStore.pluginMode);
-  const useUniformAlgo = useAppStore((s) => s.projectStore.useUniformAlgorithm);
-  const algoScope = useAppStore((s) => s.projectStore.algorithmScopeLevel);
-  const perRoleOverride = useAppStore((s) => s.projectStore.canEditRoleVariantNames);
-  const roleCount = useAppStore((s) => s.projectStore.roles.length);
+  const sharedVariations = useProjectStore((s) => s.projectStore.variations ?? []);
+  const scaleLength = useProjectStore((s) => s.projectStore.scaleLength);
+  const pluginMode = useProjectStore((s) => s.projectStore.pluginMode);
+  const useUniformAlgo = useProjectStore((s) => s.projectStore.useUniformAlgorithm);
+  const algoScope = useProjectStore((s) => s.projectStore.algorithmScopeLevel);
+  const perRoleOverride = useProjectStore((s) => s.projectStore.canEditRoleVariantNames);
+  const roleCount = useProjectStore((s) => s.projectStore.roles.length);
 
   const useCustomVars = role.variations !== null;
   const vars: Variation[] = role.variations ?? sharedVariations;

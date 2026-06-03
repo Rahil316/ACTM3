@@ -144,7 +144,7 @@ export async function generateCanvasPreview(projectStore: AnyObj, result?: AnyOb
   const includeSource = projectStore.includeSourceColors === true;
   const themes: AnyObj[] = projectStore.themes || [];
 
-  const alphaValues: number[] = projectStore.alphaValues?.length ? projectStore.alphaValues : [10, 25, 50, 75, 90];
+  const alphaValues: number[] = projectStore.alphaValues || [];
 
   // ── 4. Master components ──────────────────────────────────────────────────
   // Each master stores the config it was built for as a fingerprint.

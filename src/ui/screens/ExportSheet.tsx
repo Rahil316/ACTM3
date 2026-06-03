@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { FileCode2, FileJson2, FileText, FileSpreadsheet, Smartphone, Tablet, Wind, Braces, Hash, Package, Download, Plus, X, PackageOpen } from "lucide-react";
-import { useAppStore } from "../store/appStore";
+import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { useFigmaBridge, type BridgeCallbacks } from "../hooks/useFigmaBridge";
 import { Sheet } from "../components/Sheet";
@@ -150,7 +150,7 @@ async function downloadFiles(files: Array<{ path: string; content: string }>, zi
 export function ExportSheet() {
   const isOpen = useUiStore((s) => s.activeOverlay === "export-sheet" || s.activeOverlay === "design-lab");
   const closeOverlay = useUiStore((s) => s.closeOverlay);
-  const projectStore = useAppStore((s) => s.projectStore);
+  const projectStore = useProjectStore((s) => s.projectStore);
 
   // Queue = formats added for bulk export
   const [queue, setQueue] = useState<Set<ExportFormat>>(new Set());

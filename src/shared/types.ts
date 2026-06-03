@@ -12,7 +12,7 @@ export type SolverMode = "natural" | "saturated" | "luminance" | "hue-locked" | 
 // ── Entity shapes ────────────────────────────────────────────────────────────
 
 export interface Variation {
-  _id: string;
+  _id?: string;
   name: string;
   shorthand: string;
   target: number;
@@ -20,7 +20,7 @@ export interface Variation {
 
 // User-configured label for a scale step position
 export interface ScaleStep {
-  _id: string;
+  _id?: string;
   name: string;
   shorthand: string;
   index: number;
@@ -28,7 +28,7 @@ export interface ScaleStep {
 
 // Engine-generated output for a scale step — hex value + contrast data
 export interface ScaleStepToken {
-  _id: string;
+  _id?: string;
   value: string;
   stepName: string;
   shorthand: string;
@@ -37,7 +37,7 @@ export interface ScaleStepToken {
 }
 
 export interface Color {
-  _id: string;
+  _id?: string;
   name: string;
   shorthand: string;
   value: string;
@@ -57,10 +57,10 @@ export interface RoleLocalBg {
 }
 
 export interface Role {
-  _id: string;
+  _id?: string;
   name: string;
   shorthand: string;
-  mappingMethod: MappingMethod;
+  mappingMethod?: MappingMethod;
   variations: Variation[] | null; //Use common/default/global Variations if null
   scaleAlgorithm?: ScaleAlgorithm;
   solverMode?: SolverMode;
@@ -76,7 +76,7 @@ export interface Role {
 }
 
 export interface Theme {
-  _id: string;
+  _id?: string;
   name: string;
   bg: string;
 }

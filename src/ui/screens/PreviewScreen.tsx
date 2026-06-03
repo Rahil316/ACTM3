@@ -1,5 +1,5 @@
 import { useState, useEffect, useDeferredValue, useCallback, useMemo } from "react";
-import { useAppStore } from "../store/appStore";
+import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { banner } from "../store/bannerStore";
 import { SectionSpinner } from "../components/Spinner";
@@ -670,7 +670,7 @@ function reportAccessibilityWarnings(result: EngineResult, pluginMode: string): 
 type TabId = "scale" | `theme-${number}` | "source";
 
 function PreviewContent() {
-  const projectStore = useAppStore((s) => s.projectStore);
+  const projectStore = useProjectStore((s) => s.projectStore);
   const deferred = useDeferredValue(projectStore);
 
   const [result, setResult] = useState<EngineResult | null>(null);

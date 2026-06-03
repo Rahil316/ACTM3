@@ -9,7 +9,7 @@
  */
 
 import { useMemo, useEffect, useRef, useState } from "react";
-import { useAppStore } from "../store/appStore";
+import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { variableMaker, resolveTokenRefBgs, translateLocalBg, contrastRatio, contrastRating } from "../lib/colorEngine";
 import { getInkMode, inkColor, normalizeHex } from "../components/preview";
@@ -883,7 +883,7 @@ function ModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (m: ViewMode
 // ── Main overlay ──────────────────────────────────────────────────────────────
 
 export function CanvasPreviewDevOverlay() {
-  const projectStore = useAppStore((s) => s.projectStore);
+  const projectStore = useProjectStore((s) => s.projectStore);
   const closeOverlay = useUiStore((s) => s.closeOverlay);
   const scrollRef = useRef<HTMLDivElement>(null);
 

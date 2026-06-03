@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { useAppStore, makeBootstrapState, ensureIds, ensureVariations, generateId } from "../store/appStore";
+import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations, generateId } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { toast } from "../store/toastStore";
 import { Button } from "../components/Button";
@@ -20,7 +20,7 @@ interface QuickStartProps {
 }
 
 export function QuickStart({ onClose: _onClose }: QuickStartProps) {
-  const loadState = useAppStore((s) => s.loadState);
+  const loadState = useProjectStore((s) => s.loadState);
   const isOpen = useUiStore((s) => s.activeOverlay === "quick-start");
   const close = useUiStore((s) => s.closeOverlay);
   const setActiveSidebarTab = useUiStore((s) => s.setActiveSidebarTab);

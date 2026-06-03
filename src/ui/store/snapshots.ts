@@ -1,4 +1,4 @@
-import { useAppStore, computeHash } from "./appStore";
+import { useProjectStore, computeHash } from "./projectStore";
 import type { ProjectStore } from "../types/state";
 
 // ── Settings cancel/done lifecycle ───────────────────────────────────────────
@@ -10,13 +10,13 @@ import type { ProjectStore } from "../types/state";
 let _settingsSnapshot: ProjectStore | null = null;
 
 export function takeSnapshot(): void {
-  const { projectStore } = useAppStore.getState();
+  const { projectStore } = useProjectStore.getState();
   _settingsSnapshot = JSON.parse(JSON.stringify(projectStore));
 }
 
 export function restoreSnapshot(): void {
   if (!_settingsSnapshot) return;
-  useAppStore.setState({ projectStore: JSON.parse(JSON.stringify(_settingsSnapshot)) });
+  useProjectStore.setState({ projectStore: JSON.parse(JSON.stringify(_settingsSnapshot)) });
 }
 
 export function clearSnapshot(): void {
@@ -33,17 +33,17 @@ export function hasSnapshot(): boolean {
 // markClean() call (which happens after a successful Figma sync).
 
 export function isDirty(): boolean {
-  return useAppStore.getState().isDirty();
+  return useProjectStore.getState().isDirty();
 }
 
 export function markClean(): void {
-  useAppStore.getState().markClean();
+  useProjectStore.getState().markClean();
 }
 
 // ── Persist to Figma / localStorage ─────────────────────────────────────────
 
 export function persistState(): void {
-  const { projectStore } = useAppStore.getState();
+  const { projectStore } = useProjectStore.getState();
   parent.postMessage({ pluginMessage: { type: "save-config", state: projectStore } }, "*");
 }
 

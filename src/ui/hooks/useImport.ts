@@ -1,11 +1,11 @@
 import { useRef, useCallback } from "react";
-import { useAppStore, ensureIds, ensureVariations } from "../store/appStore";
+import { useProjectStore, ensureIds, ensureVariations } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { toast } from "../store/toastStore";
 import type { ProjectStore } from "../types/state";
 
 export function useImport() {
-  const loadState = useAppStore((s) => s.loadState);
+  const loadState = useProjectStore((s) => s.loadState);
   const closeOverlay = useUiStore((s) => s.closeOverlay);
   const ref = useRef<HTMLInputElement>(null);
 

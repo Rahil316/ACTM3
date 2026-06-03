@@ -49,7 +49,7 @@
  *   support/[channel]/icon    4.0   status icon fill
  */
 
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 const presets: Preset[] = [
   {
@@ -74,7 +74,7 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: false,
       sourceCollectionName: "global",
-      alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
+      alphaValues: [5, 10, 20, 25, 50, 75, 80, 90, 95],
       tokenGrouping: "color",
       includeColorScalesCollection: true,
       includeDescriptions: true,
@@ -100,15 +100,12 @@ const presets: Preset[] = [
         {
           name: "interactive",
           shorthand: "interactive",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // resting interactive fill
-            { name: "hover", shorthand: "hover" }, // hover (one stop darker)
-            { name: "active", shorthand: "active" }, // pressed / active
-            { name: "disabled", shorthand: "disabled" }, // disabled (muted)
+          variations: [
+            { name: "default", shorthand: "default", target: 4.0 }, // resting interactive fill
+            { name: "hover", shorthand: "hover", target: 5.5 }, // hover (one stop darker)
+            { name: "active", shorthand: "active", target: 7.5 }, // pressed / active
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled (muted)
           ],
-          variationTargets: [4.0, 5.5, 7.5, 2.0],
           description: "Primary interactive fills · button · link · focus ring · 4 states",
         },
 
@@ -118,30 +115,24 @@ const presets: Preset[] = [
         {
           name: "layer",
           shorthand: "layer",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "01", shorthand: "01" }, // base page surface (Gray-10 equivalent)
-            { name: "02", shorthand: "02" }, // card / panel
-            { name: "03", shorthand: "03" }, // nested content area
+          variations: [
+            { name: "01", shorthand: "01", target: 1.1 }, // base page surface (Gray-10 equivalent)
+            { name: "02", shorthand: "02", target: 1.3 }, // card / panel
+            { name: "03", shorthand: "03", target: 1.6 }, // nested content area
           ],
-          variationTargets: [1.1, 1.3, 1.6],
           description: "Background layer stack · page surface · card · nested panel",
         },
 
         // ── LAYER / HOVER ────────────────────────────────────────────────────────
-        // Hover overlay for each layer — one step darker than the corresponding layer.
+        // Hover overlay for each layer — one stop darker than the corresponding layer.
         {
           name: "layer/hover",
           shorthand: "layer/hover",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "01", shorthand: "01" }, // hover on layer-01
-            { name: "02", shorthand: "02" }, // hover on layer-02
-            { name: "03", shorthand: "03" }, // hover on layer-03
+          variations: [
+            { name: "01", shorthand: "01", target: 1.3 }, // hover on layer-01
+            { name: "02", shorthand: "02", target: 1.6 }, // hover on layer-02
+            { name: "03", shorthand: "03", target: 2.0 }, // hover on layer-03
           ],
-          variationTargets: [1.3, 1.6, 2.0],
           description: "Hover tints for each background layer",
         },
 
@@ -150,15 +141,12 @@ const presets: Preset[] = [
         {
           name: "text",
           shorthand: "text",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "primary", shorthand: "primary" }, // high-contrast body text
-            { name: "secondary", shorthand: "secondary" }, // supporting labels
-            { name: "placeholder", shorthand: "placeholder" }, // input hints
-            { name: "on-color", shorthand: "on-color" }, // white text on dark fills
+          variations: [
+            { name: "primary", shorthand: "primary", target: 11.0 }, // high-contrast body text
+            { name: "secondary", shorthand: "secondary", target: 5.5 }, // supporting labels
+            { name: "placeholder", shorthand: "placeholder", target: 4.0 }, // input hints
+            { name: "on-color", shorthand: "on-color", target: 1.0 }, // white text on dark fills
           ],
-          variationTargets: [11.0, 5.5, 4.0, 1.0],
           description: "Text token hierarchy · primary · secondary · placeholder · on-color",
         },
 
@@ -167,13 +155,10 @@ const presets: Preset[] = [
         {
           name: "field",
           shorthand: "field",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "01", shorthand: "01" }, // field on White theme
-            { name: "02", shorthand: "02" }, // field on Gray-10 theme
+          variations: [
+            { name: "01", shorthand: "01", target: 1.1 }, // field on White theme
+            { name: "02", shorthand: "02", target: 1.3 }, // field on Gray-10 theme
           ],
-          variationTargets: [1.1, 1.3],
           description: "Input field background fills · field-01 and field-02",
         },
 
@@ -182,14 +167,11 @@ const presets: Preset[] = [
         {
           name: "border",
           shorthand: "border",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtle", shorthand: "subtle" }, // hairline divider
-            { name: "strong", shorthand: "strong" }, // form field border
-            { name: "interactive", shorthand: "interactive" }, // focus ring / selection
+          variations: [
+            { name: "subtle", shorthand: "subtle", target: 1.8 }, // hairline divider
+            { name: "strong", shorthand: "strong", target: 4.0 }, // form field border
+            { name: "interactive", shorthand: "interactive", target: 5.5 }, // focus ring / selection
           ],
-          variationTargets: [1.8, 4.0, 5.5],
           description: "Border and divider hierarchy · subtle · strong · interactive",
         },
 
@@ -197,15 +179,12 @@ const presets: Preset[] = [
         {
           name: "support/error",
           shorthand: "support/error",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg", shorthand: "bg" }, // error background tint
-            { name: "fg", shorthand: "fg" }, // error text / icon foreground
-            { name: "border", shorthand: "border" }, // error field border
-            { name: "icon", shorthand: "icon" }, // error icon fill
+          variations: [
+            { name: "bg", shorthand: "bg", target: 1.3 }, // error background tint
+            { name: "fg", shorthand: "fg", target: 5.5 }, // error text / icon foreground
+            { name: "border", shorthand: "border", target: 2.5 }, // error field border
+            { name: "icon", shorthand: "icon", target: 4.0 }, // error icon fill
           ],
-          variationTargets: [1.3, 5.5, 2.5, 4.0],
           description: "Error semantic token stack · bg · fg · border · icon",
         },
 
@@ -213,15 +192,12 @@ const presets: Preset[] = [
         {
           name: "support/warning",
           shorthand: "support/warning",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg", shorthand: "bg" },
-            { name: "fg", shorthand: "fg" },
-            { name: "border", shorthand: "border" },
-            { name: "icon", shorthand: "icon" },
+          variations: [
+            { name: "bg", shorthand: "bg", target: 1.3 },
+            { name: "fg", shorthand: "fg", target: 5.5 },
+            { name: "border", shorthand: "border", target: 2.5 },
+            { name: "icon", shorthand: "icon", target: 4.0 },
           ],
-          variationTargets: [1.3, 5.5, 2.5, 4.0],
           description: "Warning semantic token stack · bg · fg · border · icon",
         },
 
@@ -229,15 +205,12 @@ const presets: Preset[] = [
         {
           name: "support/success",
           shorthand: "support/success",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg", shorthand: "bg" },
-            { name: "fg", shorthand: "fg" },
-            { name: "border", shorthand: "border" },
-            { name: "icon", shorthand: "icon" },
+          variations: [
+            { name: "bg", shorthand: "bg", target: 1.3 },
+            { name: "fg", shorthand: "fg", target: 5.5 },
+            { name: "border", shorthand: "border", target: 2.5 },
+            { name: "icon", shorthand: "icon", target: 4.0 },
           ],
-          variationTargets: [1.3, 5.5, 2.5, 4.0],
           description: "Success semantic token stack · bg · fg · border · icon",
         },
       ],

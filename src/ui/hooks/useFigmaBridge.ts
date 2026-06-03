@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useAppStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/appStore";
+import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/projectStore";
 import { banner } from "../store/bannerStore";
 import { useUiStore } from "../store/uiStore";
 import { VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
@@ -136,7 +136,7 @@ if (isStandalone) {
 // ── Boot: load state from localStorage in standalone mode ────────────────────
 
 function bootStandalone(): void {
-  const { loadState, setSavedState } = useAppStore.getState();
+  const { loadState, setSavedState } = useProjectStore.getState();
   const { applyUiPrefs } = useUiStore.getState();
 
   // Load saved state
@@ -176,7 +176,7 @@ function bootStandalone(): void {
 // ── Incoming message dispatcher ───────────────────────────────────────────────
 
 function handleMessage(msg: PluginToUiMessage, callbacks: BridgeCallbacks): void {
-  const { loadState, setSavedState, markClean } = useAppStore.getState();
+  const { loadState, setSavedState, markClean } = useProjectStore.getState();
   const { applyUiPrefs, openOverlay } = useUiStore.getState();
 
   switch (msg.type) {
@@ -231,7 +231,7 @@ function handleMessage(msg: PluginToUiMessage, callbacks: BridgeCallbacks): void
     }
 
     case "finish": {
-      const { projectStore } = useAppStore.getState();
+      const { projectStore } = useProjectStore.getState();
       setSavedState(projectStore);
       markClean();
       callbacks.onFinish?.(msg.tally, msg.errors);
@@ -329,9 +329,9 @@ export function useFigmaBridge(callbacks: BridgeCallbacks = {}): void {
     // On cleanup (plugin close), the pending timer is flushed immediately so
     // changes are never lost when the user closes before the debounce fires.
     let saveTimer: ReturnType<typeof setTimeout> | null = null;
-    let pendingState: ReturnType<typeof useAppStore.getState>["projectStore"] | null = null;
+    let pendingState: ReturnType<typeof useProjectStore.getState>["projectStore"] | null = null;
 
-    const unsubscribe = useAppStore.subscribe((state, prev) => {
+    const unsubscribe = useProjectStore.subscribe((state, prev) => {
       if (state.projectStore === prev.projectStore) return;
       pendingState = state.projectStore;
       if (saveTimer) clearTimeout(saveTimer);

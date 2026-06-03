@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAppStore, relativeTime } from "../store/appStore";
+import { useProjectStore, relativeTime } from "../store/projectStore";
 import { toast } from "../store/toastStore";
 import { SettingsCard } from "../components/SettingsCard";
 import { Badge } from "../components/Badge";
@@ -16,8 +16,8 @@ import type { Version } from "../types/state";
 function SaveForm({ onSaved }: { onSaved: () => void }) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
-  const saveVersion = useAppStore((s) => s.saveVersion);
-  const blockedReason = useAppStore((s) => s.versionSaveBlockedReason);
+  const saveVersion = useProjectStore((s) => s.saveVersion);
+  const blockedReason = useProjectStore((s) => s.versionSaveBlockedReason);
   const reason = blockedReason();
 
   function handleSave() {
@@ -44,9 +44,9 @@ function SaveForm({ onSaved }: { onSaved: () => void }) {
 // ── SavedStatesScreen ─────────────────────────────────────────────────────────
 
 export function SavedStatesScreen() {
-  const versions = useAppStore((s) => s.projectStore.versions ?? []);
-  const restoreVersion = useAppStore((s) => s.restoreVersion);
-  const deleteVersion = useAppStore((s) => s.deleteVersion);
+  const versions = useProjectStore((s) => s.projectStore.versions ?? []);
+  const restoreVersion = useProjectStore((s) => s.restoreVersion);
+  const deleteVersion = useProjectStore((s) => s.deleteVersion);
 
   const [saveFormOpen, setSaveFormOpen] = useState(false);
   const [confirmRestore, setConfirmRestore] = useState<string | null>(null);

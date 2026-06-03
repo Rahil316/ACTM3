@@ -2,7 +2,7 @@ import { useState, useId, useEffect, useRef, useCallback, useMemo } from "react"
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useAppStore, deriveShorthand, groupedName } from "../store/appStore";
+import { useProjectStore, deriveShorthand, groupedName } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { SuggestSheet, MenuRow } from "../components/MenuSheet";
 import { RoleGroupCard } from "../components/cards/RoleGroupCard";
@@ -83,9 +83,9 @@ function SortableRoleCard({ role, idx, selected, onToggleSelect }: { role: Role;
 // ── RoleTree (grouped view) ───────────────────────────────────────────────────
 
 function RoleTree() {
-  const roles = useAppStore((s) => s.projectStore.roles);
-  const moveRole = useAppStore((s) => s.moveRole);
-  const setRole = useAppStore((s) => s.setRole);
+  const roles = useProjectStore((s) => s.projectStore.roles);
+  const moveRole = useProjectStore((s) => s.moveRole);
+  const setRole = useProjectStore((s) => s.setRole);
   const [committed, flushCommitted] = useCommittedNames(roles);
   const collapsed = useUiStore((s) => s.roleGroupCollapsed);
   const setCollapsed = useUiStore((s) => s.setRoleGroupCollapsed);
@@ -116,7 +116,7 @@ function RoleTree() {
       .map((r, i) => (selectedIds.has(r._id) ? i : -1))
       .filter((i) => i >= 0)
       .reverse();
-    idxs.forEach((i) => useAppStore.getState().removeRole(i));
+    idxs.forEach((i) => useProjectStore.getState().removeRole(i));
     setSelectedIds(new Set());
   }, [roles, selectedIds]);
 
@@ -332,7 +332,7 @@ function RoleTree() {
       .filter(Boolean)
       .map((s) => deriveShorthand(s))
       .join("/");
-    useAppStore.getState().addRoleWith(`${fullPath}/New`, `${prefixShort}/${deriveShorthand("New")}`, 4.5, [500]);
+    useProjectStore.getState().addRoleWith(`${fullPath}/New`, `${prefixShort}/${deriveShorthand("New")}`, 4.5, [500]);
   }
 
   const renderRoleLeaf = useCallback(
@@ -406,11 +406,11 @@ function RoleTree() {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export function RolesScreen() {
-  const roles = useAppStore((s) => s.projectStore.roles);
-  const addRole = useAppStore((s) => s.addRole);
-  const addRoleWith = useAppStore((s) => s.addRoleWith);
-  const moveRole = useAppStore((s) => s.moveRole);
-  const setRole = useAppStore((s) => s.setRole);
+  const roles = useProjectStore((s) => s.projectStore.roles);
+  const addRole = useProjectStore((s) => s.addRole);
+  const addRoleWith = useProjectStore((s) => s.addRoleWith);
+  const moveRole = useProjectStore((s) => s.moveRole);
+  const setRole = useProjectStore((s) => s.setRole);
 
   const [showSuggest, setShowSuggest] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -550,7 +550,7 @@ export function RolesScreen() {
               .map((r, i) => (selectedIds.has(r._id) ? i : -1))
               .filter((i) => i >= 0)
               .reverse();
-            idxs.forEach((i) => useAppStore.getState().removeRole(i));
+            idxs.forEach((i) => useProjectStore.getState().removeRole(i));
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}

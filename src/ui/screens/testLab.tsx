@@ -10,7 +10,7 @@ import { Badge } from "../components/Badge";
 import { FieldLabel } from "../components/typography";
 import { ColorGroupCard } from "../components/cards/ColorGroupCard";
 import { RoleGroupCard } from "../components/cards/RoleGroupCard";
-import { useAppStore } from "../store/appStore";
+import { useProjectStore } from "../store/projectStore";
 import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components/tree";
 
 // ── Section A — Role Scope Picker ─────────────────────────────────────────────
@@ -113,9 +113,9 @@ const DEMO_ROLES = [
 ];
 
 function ColorTree() {
-  const colors = useAppStore((s) => s.projectStore.colors);
-  const moveColor = useAppStore((s) => s.moveColor);
-  const setColor = useAppStore((s) => s.setColor);
+  const colors = useProjectStore((s) => s.projectStore.colors);
+  const moveColor = useProjectStore((s) => s.moveColor);
+  const setColor = useProjectStore((s) => s.setColor);
   const [committed, flushCommitted] = useCommittedNames(colors);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -274,7 +274,7 @@ function ColorTree() {
   }
 
   function addChild(fullPath: string) {
-    useAppStore.getState().addColorWith(`${fullPath}/New`, "#888888", "");
+    useProjectStore.getState().addColorWith(`${fullPath}/New`, "#888888", "");
   }
 
   const renderColorLeaf = useCallback(
@@ -352,7 +352,7 @@ function ColorTree() {
               .map((c, i) => (selectedIds.has(c._id) ? i : -1))
               .filter((i) => i >= 0)
               .reverse();
-            idxs.forEach((i) => useAppStore.getState().removeColor(i));
+            idxs.forEach((i) => useProjectStore.getState().removeColor(i));
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}
@@ -364,9 +364,9 @@ function ColorTree() {
 }
 
 function RoleTree() {
-  const roles = useAppStore((s) => s.projectStore.roles);
-  const moveRole = useAppStore((s) => s.moveRole);
-  const setRole = useAppStore((s) => s.setRole);
+  const roles = useProjectStore((s) => s.projectStore.roles);
+  const moveRole = useProjectStore((s) => s.moveRole);
+  const setRole = useProjectStore((s) => s.setRole);
   const [committed, flushCommitted] = useCommittedNames(roles);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -513,7 +513,7 @@ function RoleTree() {
   }
 
   function addChild(fullPath: string) {
-    useAppStore.getState().addRoleWith(`${fullPath}/New`, "", 4.5, [500]);
+    useProjectStore.getState().addRoleWith(`${fullPath}/New`, "", 4.5, [500]);
   }
 
   const renderRoleLeaf = useCallback(
@@ -591,7 +591,7 @@ function RoleTree() {
               .map((r, i) => (selectedIds.has(r._id) ? i : -1))
               .filter((i) => i >= 0)
               .reverse();
-            idxs.forEach((i) => useAppStore.getState().removeRole(i));
+            idxs.forEach((i) => useProjectStore.getState().removeRole(i));
             setSelectedIds(new Set());
           }}
           onClear={() => setSelectedIds(new Set())}
@@ -670,14 +670,14 @@ function RoleSuggestSheet({ existingNames, onPick, onBlank, onClose }: { existin
 // ── SectionB ──────────────────────────────────────────────────────────────────
 
 function SectionB() {
-  const colors = useAppStore((s) => s.projectStore.colors);
-  const roles = useAppStore((s) => s.projectStore.roles);
-  const addColor = useAppStore((s) => s.addColor);
-  const addColorWith = useAppStore((s) => s.addColorWith);
-  const addRole = useAppStore((s) => s.addRole);
-  const addRoleWith = useAppStore((s) => s.addRoleWith);
-  const removeColor = useAppStore((s) => s.removeColor);
-  const removeRole = useAppStore((s) => s.removeRole);
+  const colors = useProjectStore((s) => s.projectStore.colors);
+  const roles = useProjectStore((s) => s.projectStore.roles);
+  const addColor = useProjectStore((s) => s.addColor);
+  const addColorWith = useProjectStore((s) => s.addColorWith);
+  const addRole = useProjectStore((s) => s.addRole);
+  const addRoleWith = useProjectStore((s) => s.addRoleWith);
+  const removeColor = useProjectStore((s) => s.removeColor);
+  const removeRole = useProjectStore((s) => s.removeRole);
 
   const [showColorSuggest, setShowColorSuggest] = useState(false);
   const [showRoleSuggest, setShowRoleSuggest] = useState(false);

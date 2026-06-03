@@ -48,7 +48,7 @@
  * Themes: Light (#FFFFFF) · Dark (#1D2125) — ADS exact values.
  */
 
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 const presets: Preset[] = [
   {
@@ -73,7 +73,7 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: false,
       sourceCollectionName: "global",
-      alphaValues: "8, 16, 32, 50, 70, 85",
+      alphaValues: [8, 16, 32, 50, 70, 85],
       tokenGrouping: "role",
       includeColorScalesCollection: true,
       includeDescriptions: true,
@@ -112,20 +112,17 @@ const presets: Preset[] = [
         {
           name: "background/brand",
           shorthand: "background/brand",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtlest", shorthand: "subtlest" }, // color.background.brand.subtlest
-            { name: "subtlest/hovered", shorthand: "subtlest/hovered" },
-            { name: "subtlest/pressed", shorthand: "subtlest/pressed" },
-            { name: "bold", shorthand: "bold" }, // color.background.brand.bold
-            { name: "bold/hovered", shorthand: "bold/hovered" },
-            { name: "bold/pressed", shorthand: "bold/pressed" },
-            { name: "boldest", shorthand: "boldest" }, // color.background.brand.boldest
-            { name: "boldest/hovered", shorthand: "boldest/hovered" },
-            { name: "boldest/pressed", shorthand: "boldest/pressed" },
+          variations: [
+            { name: "subtlest", shorthand: "subtlest", target: 1.05 }, // color.background.brand.subtlest
+            { name: "subtlest/hovered", shorthand: "subtlest/hovered", target: 1.1 },
+            { name: "subtlest/pressed", shorthand: "subtlest/pressed", target: 1.15 },
+            { name: "bold", shorthand: "bold", target: 4.5 }, // color.background.brand.bold
+            { name: "bold/hovered", shorthand: "bold/hovered", target: 5.0 },
+            { name: "bold/pressed", shorthand: "bold/pressed", target: 5.5 },
+            { name: "boldest", shorthand: "boldest", target: 8.0 }, // color.background.brand.boldest
+            { name: "boldest/hovered", shorthand: "boldest/hovered", target: 9.0 },
+            { name: "boldest/pressed", shorthand: "boldest/pressed", target: 10.0 },
           ],
-          variationTargets: [1.05, 1.1, 1.15, 4.5, 5.0, 5.5, 8.0, 9.0, 10.0],
           description: "color.background.brand — brand-tinted fills from subtlest wash to boldest container",
         },
 
@@ -133,20 +130,17 @@ const presets: Preset[] = [
         {
           name: "background/neutral",
           shorthand: "background/neutral",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtle", shorthand: "subtle" }, // color.background.neutral.subtle
-            { name: "subtle/hovered", shorthand: "subtle/hovered" },
-            { name: "subtle/pressed", shorthand: "subtle/pressed" },
-            { name: "default", shorthand: "default" }, // color.background.neutral
-            { name: "default/hovered", shorthand: "default/hovered" },
-            { name: "default/pressed", shorthand: "default/pressed" },
-            { name: "bold", shorthand: "bold" }, // color.background.neutral.bold
-            { name: "bold/hovered", shorthand: "bold/hovered" },
-            { name: "bold/pressed", shorthand: "bold/pressed" },
+          variations: [
+            { name: "subtle", shorthand: "subtle", target: 1.05 }, // color.background.neutral.subtle
+            { name: "subtle/hovered", shorthand: "subtle/hovered", target: 1.1 },
+            { name: "subtle/pressed", shorthand: "subtle/pressed", target: 1.15 },
+            { name: "default", shorthand: "default", target: 1.3 }, // color.background.neutral
+            { name: "default/hovered", shorthand: "default/hovered", target: 1.4 },
+            { name: "default/pressed", shorthand: "default/pressed", target: 1.5 },
+            { name: "bold", shorthand: "bold", target: 4.5 }, // color.background.neutral.bold
+            { name: "bold/hovered", shorthand: "bold/hovered", target: 5.0 },
+            { name: "bold/pressed", shorthand: "bold/pressed", target: 5.5 },
           ],
-          variationTargets: [1.05, 1.1, 1.15, 1.3, 1.4, 1.5, 4.5, 5.0, 5.5],
           description: "color.background.neutral — neutral fills: subtle wash · default container · bold",
         },
 
@@ -154,17 +148,14 @@ const presets: Preset[] = [
         {
           name: "background/success",
           shorthand: "background/success",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.background.success
-            { name: "default/hovered", shorthand: "default/hovered" },
-            { name: "default/pressed", shorthand: "default/pressed" },
-            { name: "bold", shorthand: "bold" }, // color.background.success.bold
-            { name: "bold/hovered", shorthand: "bold/hovered" },
-            { name: "bold/pressed", shorthand: "bold/pressed" },
+          variations: [
+            { name: "default", shorthand: "default", target: 1.1 }, // color.background.success
+            { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
+            { name: "default/pressed", shorthand: "default/pressed", target: 1.3 },
+            { name: "bold", shorthand: "bold", target: 4.5 }, // color.background.success.bold
+            { name: "bold/hovered", shorthand: "bold/hovered", target: 5.0 },
+            { name: "bold/pressed", shorthand: "bold/pressed", target: 5.5 },
           ],
-          variationTargets: [1.1, 1.2, 1.3, 4.5, 5.0, 5.5],
           description: "color.background.success — success tinted fills",
         },
 
@@ -172,17 +163,14 @@ const presets: Preset[] = [
         {
           name: "background/warning",
           shorthand: "background/warning",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.background.warning
-            { name: "default/hovered", shorthand: "default/hovered" },
-            { name: "default/pressed", shorthand: "default/pressed" },
-            { name: "bold", shorthand: "bold" }, // color.background.warning.bold
-            { name: "bold/hovered", shorthand: "bold/hovered" },
-            { name: "bold/pressed", shorthand: "bold/pressed" },
+          variations: [
+            { name: "default", shorthand: "default", target: 1.1 }, // color.background.warning
+            { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
+            { name: "default/pressed", shorthand: "default/pressed", target: 1.3 },
+            { name: "bold", shorthand: "bold", target: 3.0 }, // color.background.warning.bold
+            { name: "bold/hovered", shorthand: "bold/hovered", target: 3.5 },
+            { name: "bold/pressed", shorthand: "bold/pressed", target: 4.0 },
           ],
-          variationTargets: [1.1, 1.2, 1.3, 3.0, 3.5, 4.0],
           description: "color.background.warning — warning tinted fills",
         },
 
@@ -190,17 +178,14 @@ const presets: Preset[] = [
         {
           name: "background/danger",
           shorthand: "background/danger",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.background.danger
-            { name: "default/hovered", shorthand: "default/hovered" },
-            { name: "default/pressed", shorthand: "default/pressed" },
-            { name: "bold", shorthand: "bold" }, // color.background.danger.bold
-            { name: "bold/hovered", shorthand: "bold/hovered" },
-            { name: "bold/pressed", shorthand: "bold/pressed" },
+          variations: [
+            { name: "default", shorthand: "default", target: 1.1 }, // color.background.danger
+            { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
+            { name: "default/pressed", shorthand: "default/pressed", target: 1.3 },
+            { name: "bold", shorthand: "bold", target: 4.5 }, // color.background.danger.bold
+            { name: "bold/hovered", shorthand: "bold/hovered", target: 5.0 },
+            { name: "bold/pressed", shorthand: "bold/pressed", target: 5.5 },
           ],
-          variationTargets: [1.1, 1.2, 1.3, 4.5, 5.0, 5.5],
           description: "color.background.danger — danger/error tinted fills",
         },
 
@@ -208,17 +193,14 @@ const presets: Preset[] = [
         {
           name: "background/information",
           shorthand: "background/information",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.background.information
-            { name: "default/hovered", shorthand: "default/hovered" },
-            { name: "default/pressed", shorthand: "default/pressed" },
-            { name: "bold", shorthand: "bold" }, // color.background.information.bold
-            { name: "bold/hovered", shorthand: "bold/hovered" },
-            { name: "bold/pressed", shorthand: "bold/pressed" },
+          variations: [
+            { name: "default", shorthand: "default", target: 1.1 }, // color.background.information
+            { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
+            { name: "default/pressed", shorthand: "default/pressed", target: 1.3 },
+            { name: "bold", shorthand: "bold", target: 4.5 }, // color.background.information.bold
+            { name: "bold/hovered", shorthand: "bold/hovered", target: 5.0 },
+            { name: "bold/pressed", shorthand: "bold/pressed", target: 5.5 },
           ],
-          variationTargets: [1.1, 1.2, 1.3, 4.5, 5.0, 5.5],
           description: "color.background.information — informational tinted fills",
         },
 
@@ -226,17 +208,14 @@ const presets: Preset[] = [
         {
           name: "background/discovery",
           shorthand: "background/discovery",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.background.discovery
-            { name: "default/hovered", shorthand: "default/hovered" },
-            { name: "default/pressed", shorthand: "default/pressed" },
-            { name: "bold", shorthand: "bold" }, // color.background.discovery.bold
-            { name: "bold/hovered", shorthand: "bold/hovered" },
-            { name: "bold/pressed", shorthand: "bold/pressed" },
+          variations: [
+            { name: "default", shorthand: "default", target: 1.1 }, // color.background.discovery
+            { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
+            { name: "default/pressed", shorthand: "default/pressed", target: 1.3 },
+            { name: "bold", shorthand: "bold", target: 4.5 }, // color.background.discovery.bold
+            { name: "bold/hovered", shorthand: "bold/hovered", target: 5.0 },
+            { name: "bold/pressed", shorthand: "bold/pressed", target: 5.5 },
           ],
-          variationTargets: [1.1, 1.2, 1.3, 4.5, 5.0, 5.5],
           description: "color.background.discovery — discovery/feature tinted fills",
         },
 
@@ -244,17 +223,14 @@ const presets: Preset[] = [
         {
           name: "background/selected",
           shorthand: "background/selected",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.background.selected
-            { name: "default/hovered", shorthand: "default/hovered" },
-            { name: "default/pressed", shorthand: "default/pressed" },
-            { name: "bold", shorthand: "bold" }, // color.background.selected.bold
-            { name: "bold/hovered", shorthand: "bold/hovered" },
-            { name: "bold/pressed", shorthand: "bold/pressed" },
+          variations: [
+            { name: "default", shorthand: "default", target: 1.1 }, // color.background.selected
+            { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
+            { name: "default/pressed", shorthand: "default/pressed", target: 1.3 },
+            { name: "bold", shorthand: "bold", target: 4.5 }, // color.background.selected.bold
+            { name: "bold/hovered", shorthand: "bold/hovered", target: 5.0 },
+            { name: "bold/pressed", shorthand: "bold/pressed", target: 5.5 },
           ],
-          variationTargets: [1.1, 1.2, 1.3, 4.5, 5.0, 5.5],
           description: "color.background.selected — selected state fills",
         },
 
@@ -262,14 +238,11 @@ const presets: Preset[] = [
         {
           name: "background/input",
           shorthand: "background/input",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.background.input
-            { name: "default/hovered", shorthand: "default/hovered" },
-            { name: "default/pressed", shorthand: "default/pressed" },
+          variations: [
+            { name: "default", shorthand: "default", target: 1.0 }, // color.background.input
+            { name: "default/hovered", shorthand: "default/hovered", target: 1.05 },
+            { name: "default/pressed", shorthand: "default/pressed", target: 1.1 },
           ],
-          variationTargets: [1.0, 1.05, 1.1],
           description: "color.background.input — form field background",
         },
 
@@ -281,17 +254,14 @@ const presets: Preset[] = [
         {
           name: "text",
           shorthand: "text",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.text
-            { name: "subtle", shorthand: "subtle" }, // color.text.subtle
-            { name: "subtlest", shorthand: "subtlest" }, // color.text.subtlest
-            { name: "disabled", shorthand: "disabled" }, // color.text.disabled
-            { name: "inverse", shorthand: "inverse" }, // color.text.inverse
-            { name: "selected", shorthand: "selected" }, // color.text.selected
+          variations: [
+            { name: "default", shorthand: "default", target: 7.0 }, // color.text
+            { name: "subtle", shorthand: "subtle", target: 4.5 }, // color.text.subtle
+            { name: "subtlest", shorthand: "subtlest", target: 3.0 }, // color.text.subtlest
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // color.text.disabled
+            { name: "inverse", shorthand: "inverse", target: 14.0 }, // color.text.inverse
+            { name: "selected", shorthand: "selected", target: 4.5 }, // color.text.selected
           ],
-          variationTargets: [7.0, 4.5, 3.0, 2.0, 14.0, 4.5],
           description: "color.text — default body text through inverse",
         },
 
@@ -299,68 +269,50 @@ const presets: Preset[] = [
         {
           name: "text/brand",
           shorthand: "text/brand",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.text.brand
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // color.text.brand
           ],
-          variationTargets: [4.5],
           description: "color.text.brand — brand-colored text (AA)",
         },
         {
           name: "text/success",
           shorthand: "text/success",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.text.success
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // color.text.success
           ],
-          variationTargets: [4.5],
           description: "color.text.success — success-colored text (AA)",
         },
         {
           name: "text/warning",
           shorthand: "text/warning",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.text.warning
-            { name: "inverse", shorthand: "inverse" }, // color.text.warning.inverse
+          variations: [
+            { name: "default", shorthand: "default", target: 3.0 }, // color.text.warning
+            { name: "inverse", shorthand: "inverse", target: 14.0 }, // color.text.warning.inverse
           ],
-          variationTargets: [3.0, 14.0],
           description: "color.text.warning — warning text and inverse on bold warning bg",
         },
         {
           name: "text/danger",
           shorthand: "text/danger",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.text.danger
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // color.text.danger
           ],
-          variationTargets: [4.5],
           description: "color.text.danger — danger/error text (AA)",
         },
         {
           name: "text/information",
           shorthand: "text/information",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.text.information
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // color.text.information
           ],
-          variationTargets: [4.5],
           description: "color.text.information — informational text (AA)",
         },
         {
           name: "text/discovery",
           shorthand: "text/discovery",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.text.discovery
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // color.text.discovery
           ],
-          variationTargets: [4.5],
           description: "color.text.discovery — discovery/feature text (AA)",
         },
 
@@ -371,73 +323,62 @@ const presets: Preset[] = [
         {
           name: "icon",
           shorthand: "icon",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.icon
-            { name: "subtle", shorthand: "subtle" }, // color.icon.subtle
-            { name: "subtlest", shorthand: "subtlest" }, // color.icon.subtlest (disabled)
-            { name: "inverse", shorthand: "inverse" }, // color.icon.inverse
-            { name: "selected", shorthand: "selected" }, // color.icon.selected
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // color.icon
+            { name: "subtle", shorthand: "subtle", target: 3.0 }, // color.icon.subtle
+            { name: "subtlest", shorthand: "subtlest", target: 2.0 }, // color.icon.subtlest (disabled)
+            { name: "inverse", shorthand: "inverse", target: 14.0 }, // color.icon.inverse
+            { name: "selected", shorthand: "selected", target: 4.5 }, // color.icon.selected
           ],
-          variationTargets: [4.5, 3.0, 2.0, 14.0, 4.5],
           description: "color.icon — functional · decorative · disabled · inverse · selected",
         },
         {
           name: "icon/brand",
           shorthand: "icon/brand",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [4.5],
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }
+          ],
           description: "color.icon.brand",
         },
         {
           name: "icon/success",
           shorthand: "icon/success",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [4.5],
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }
+          ],
           description: "color.icon.success",
         },
         {
           name: "icon/warning",
           shorthand: "icon/warning",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.icon.warning
-            { name: "inverse", shorthand: "inverse" }, // color.icon.warning.inverse
+          variations: [
+            { name: "default", shorthand: "default", target: 3.0 }, // color.icon.warning
+            { name: "inverse", shorthand: "inverse", target: 14.0 }, // color.icon.warning.inverse
           ],
-          variationTargets: [3.0, 14.0],
           description: "color.icon.warning — warning icon and inverse",
         },
         {
           name: "icon/danger",
           shorthand: "icon/danger",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [4.5],
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }
+          ],
           description: "color.icon.danger",
         },
         {
           name: "icon/information",
           shorthand: "icon/information",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [4.5],
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }
+          ],
           description: "color.icon.information",
         },
         {
           name: "icon/discovery",
           shorthand: "icon/discovery",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [4.5],
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }
+          ],
           description: "color.icon.discovery",
         },
 
@@ -448,72 +389,63 @@ const presets: Preset[] = [
         {
           name: "border",
           shorthand: "border",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.border
-            { name: "bold", shorthand: "bold" }, // color.border.bold
-            { name: "focused", shorthand: "focused" }, // color.border.focused
-            { name: "input", shorthand: "input" }, // color.border.input
-            { name: "inverse", shorthand: "inverse" }, // color.border.inverse
-            { name: "selected", shorthand: "selected" }, // color.border.selected
-            { name: "disabled", shorthand: "disabled" }, // color.border.disabled
+          variations: [
+            { name: "default", shorthand: "default", target: 2.5 }, // color.border
+            { name: "bold", shorthand: "bold", target: 4.5 }, // color.border.bold
+            { name: "focused", shorthand: "focused", target: 3.0 }, // color.border.focused
+            { name: "input", shorthand: "input", target: 2.5 }, // color.border.input
+            { name: "inverse", shorthand: "inverse", target: 14.0 }, // color.border.inverse
+            { name: "selected", shorthand: "selected", target: 4.5 }, // color.border.selected
+            { name: "disabled", shorthand: "disabled", target: 1.5 }, // color.border.disabled
           ],
-          variationTargets: [2.5, 4.5, 3.0, 2.5, 14.0, 4.5, 1.5],
           description: "color.border — default · bold · focused · input · inverse · selected · disabled",
         },
         {
           name: "border/brand",
           shorthand: "border/brand",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [3.0],
+          variations: [
+            { name: "default", shorthand: "default", target: 3.0 }
+          ],
           description: "color.border.brand",
         },
         {
           name: "border/success",
           shorthand: "border/success",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [3.0],
+          variations: [
+            { name: "default", shorthand: "default", target: 3.0 }
+          ],
           description: "color.border.success",
         },
         {
           name: "border/warning",
           shorthand: "border/warning",
-          minContrast: 2.5,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [2.5],
+          variations: [
+            { name: "default", shorthand: "default", target: 2.5 }
+          ],
           description: "color.border.warning",
         },
         {
           name: "border/danger",
           shorthand: "border/danger",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [3.0],
+          variations: [
+            { name: "default", shorthand: "default", target: 3.0 }
+          ],
           description: "color.border.danger",
         },
         {
           name: "border/information",
           shorthand: "border/information",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [3.0],
+          variations: [
+            { name: "default", shorthand: "default", target: 3.0 }
+          ],
           description: "color.border.information",
         },
         {
           name: "border/discovery",
           shorthand: "border/discovery",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [3.0],
+          variations: [
+            { name: "default", shorthand: "default", target: 3.0 }
+          ],
           description: "color.border.discovery",
         },
 
@@ -524,13 +456,10 @@ const presets: Preset[] = [
         {
           name: "link",
           shorthand: "link",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.link (default)
-            { name: "pressed", shorthand: "pressed" }, // color.link.pressed
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // color.link (default)
+            { name: "pressed", shorthand: "pressed", target: 7.0 }, // color.link.pressed
           ],
-          variationTargets: [4.5, 7.0],
           description: "color.link — default and pressed link colors (AA+)",
         },
 
@@ -541,38 +470,32 @@ const presets: Preset[] = [
         {
           name: "elevation/surface",
           shorthand: "elevation/surface",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "sunken", shorthand: "sunken" }, // elevation.surface.sunken
-            { name: "default", shorthand: "default" }, // elevation.surface
-            { name: "default/hovered", shorthand: "default/hovered" },
-            { name: "default/pressed", shorthand: "default/pressed" },
-            { name: "raised", shorthand: "raised" }, // elevation.surface.raised
-            { name: "raised/hovered", shorthand: "raised/hovered" },
-            { name: "raised/pressed", shorthand: "raised/pressed" },
-            { name: "overlay", shorthand: "overlay" }, // elevation.surface.overlay
-            { name: "overlay/hovered", shorthand: "overlay/hovered" },
-            { name: "overlay/pressed", shorthand: "overlay/pressed" },
+          variations: [
+            { name: "sunken", shorthand: "sunken", target: 1.05 }, // elevation.surface.sunken
+            { name: "default", shorthand: "default", target: 1.0 }, // elevation.surface
+            { name: "default/hovered", shorthand: "default/hovered", target: 1.03 },
+            { name: "default/pressed", shorthand: "default/pressed", target: 1.06 },
+            { name: "raised", shorthand: "raised", target: 1.1 }, // elevation.surface.raised
+            { name: "raised/hovered", shorthand: "raised/hovered", target: 1.13 },
+            { name: "raised/pressed", shorthand: "raised/pressed", target: 1.16 },
+            { name: "overlay", shorthand: "overlay", target: 1.2 }, // elevation.surface.overlay
+            { name: "overlay/hovered", shorthand: "overlay/hovered", target: 1.23 },
+            { name: "overlay/pressed", shorthand: "overlay/pressed", target: 1.26 },
           ],
-          variationTargets: [1.05, 1.0, 1.03, 1.06, 1.1, 1.13, 1.16, 1.2, 1.23, 1.26],
           description: "elevation.surface — sunken · default · raised · overlay with hover/press states",
         },
 
         // ══════════════════════════════════════════════════════════════════════
-        // BLANKET  →  color.blanket
+        // Blanket  →  color.blanket
         // ══════════════════════════════════════════════════════════════════════
 
         {
           name: "blanket",
           shorthand: "blanket",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.blanket
-            { name: "selected", shorthand: "selected" }, // color.blanket.selected (blue-tinted)
+          variations: [
+            { name: "default", shorthand: "default", target: 14.0 }, // color.blanket
+            { name: "selected", shorthand: "selected", target: 10.0 }, // color.blanket.selected (blue-tinted)
           ],
-          variationTargets: [14.0, 10.0],
           description: "color.blanket — modal overlay and selection overlay",
         },
 
@@ -583,13 +506,10 @@ const presets: Preset[] = [
         {
           name: "skeleton",
           shorthand: "skeleton",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // color.skeleton
-            { name: "subtle", shorthand: "subtle" }, // color.skeleton.subtle
+          variations: [
+            { name: "default", shorthand: "default", target: 1.15 }, // color.skeleton
+            { name: "subtle", shorthand: "subtle", target: 1.05 }, // color.skeleton.subtle
           ],
-          variationTargets: [1.15, 1.05],
           description: "color.skeleton — shimmer placeholder base and highlight",
         },
 
@@ -600,15 +520,12 @@ const presets: Preset[] = [
         {
           name: "interaction",
           shorthand: "interaction",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "hovered", shorthand: "hovered" }, // color.interaction.hovered
-            { name: "pressed", shorthand: "pressed" }, // color.interaction.pressed
-            { name: "inverse/hovered", shorthand: "inverse/hovered" }, // color.interaction.inverse.hovered
-            { name: "inverse/pressed", shorthand: "inverse/pressed" }, // color.interaction.inverse.pressed
+          variations: [
+            { name: "hovered", shorthand: "hovered", target: 1.1 }, // color.interaction.hovered
+            { name: "pressed", shorthand: "pressed", target: 1.2 }, // color.interaction.pressed
+            { name: "inverse/hovered", shorthand: "inverse/hovered", target: 14.0 }, // color.interaction.inverse.hovered
+            { name: "inverse/pressed", shorthand: "inverse/pressed", target: 16.0 }, // color.interaction.inverse.pressed
           ],
-          variationTargets: [1.1, 1.2, 14.0, 16.0],
           description: "color.interaction — hover/press overlay tones for default and inverse surfaces",
         },
       ],

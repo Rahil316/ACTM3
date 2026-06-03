@@ -2,7 +2,7 @@ import { useState, useId, useEffect, useRef, useCallback, useMemo } from "react"
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useAppStore, deriveShorthand, groupedName } from "../store/appStore";
+import { useProjectStore, deriveShorthand, groupedName } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { ColorGroupCard } from "../components/cards/ColorGroupCard";
 import { SplitActionButton } from "../components/Button";
@@ -83,9 +83,9 @@ function SortableColorCard({ color, idx, selected, onToggleSelect }: { color: Co
 // ── ColorTree (grouped view) ──────────────────────────────────────────────────
 
 function ColorTree() {
-  const colors = useAppStore((s) => s.projectStore.colors);
-  const moveColor = useAppStore((s) => s.moveColor);
-  const setColor = useAppStore((s) => s.setColor);
+  const colors = useProjectStore((s) => s.projectStore.colors);
+  const moveColor = useProjectStore((s) => s.moveColor);
+  const setColor = useProjectStore((s) => s.setColor);
   const [committed, flushCommitted] = useCommittedNames(colors);
   const collapsed = useUiStore((s) => s.colorGroupCollapsed);
   const setCollapsed = useUiStore((s) => s.setColorGroupCollapsed);
@@ -116,7 +116,7 @@ function ColorTree() {
       .map((c, i) => (selectedIds.has(c._id) ? i : -1))
       .filter((i) => i >= 0)
       .reverse();
-    idxs.forEach((i) => useAppStore.getState().removeColor(i));
+    idxs.forEach((i) => useProjectStore.getState().removeColor(i));
     setSelectedIds(new Set());
   }, [colors, selectedIds]);
 
@@ -348,7 +348,7 @@ function ColorTree() {
       .filter(Boolean)
       .map((s) => deriveShorthand(s))
       .join("/");
-    useAppStore.getState().addColorWith(`${fullPath}/New`, "#888888", `${prefixShort}/${deriveShorthand("New")}`);
+    useProjectStore.getState().addColorWith(`${fullPath}/New`, "#888888", `${prefixShort}/${deriveShorthand("New")}`);
   }
 
   const renderColorLeaf = useCallback(
@@ -422,11 +422,11 @@ function ColorTree() {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export function ColorsScreen() {
-  const colors = useAppStore((s) => s.projectStore.colors);
-  const addColor = useAppStore((s) => s.addColor);
-  const addColorWith = useAppStore((s) => s.addColorWith);
-  const moveColor = useAppStore((s) => s.moveColor);
-  const setColor = useAppStore((s) => s.setColor);
+  const colors = useProjectStore((s) => s.projectStore.colors);
+  const addColor = useProjectStore((s) => s.addColor);
+  const addColorWith = useProjectStore((s) => s.addColorWith);
+  const moveColor = useProjectStore((s) => s.moveColor);
+  const setColor = useProjectStore((s) => s.setColor);
 
   const [showSuggest, setShowSuggest] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -455,7 +455,7 @@ export function ColorsScreen() {
       .map((c, i) => (selectedIds.has(c._id) ? i : -1))
       .filter((i) => i >= 0)
       .reverse();
-    idxs.forEach((i) => useAppStore.getState().removeColor(i));
+    idxs.forEach((i) => useProjectStore.getState().removeColor(i));
     setSelectedIds(new Set());
   }, [colors, selectedIds]);
 

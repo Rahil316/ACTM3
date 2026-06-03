@@ -12,7 +12,7 @@
  *   Spare/Indigo · Spare/Fuchsia · Spare/Sand
  */
 
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 // ── Stable color IDs ──────────────────────────────────────────────────────────
 // Used for scopedColorIds on status roles so they only apply to their own color.
@@ -86,16 +86,13 @@ function statusRole(name: string, shorthand: string, colorId: string, descriptio
   return {
     name,
     shorthand,
-    minContrast: 1.0,
-    customVariationList: true as const,
-    customVariations: [
-      { name: "bg", shorthand: "bg" }, // subtle tinted background
-      { name: "tint", shorthand: "ti" }, // stronger tinted fill
-      { name: "fill", shorthand: "fi" }, // solid AA fill for chips/badges
-      { name: "text", shorthand: "tx" }, // AA body text
-      { name: "border", shorthand: "bo" }, // AA-large border
+    variations: [
+      { name: "bg", shorthand: "bg", target: 1.2 }, // subtle tinted background
+      { name: "tint", shorthand: "ti", target: 1.8 }, // stronger tinted fill
+      { name: "fill", shorthand: "fi", target: 4.5 }, // solid AA fill for chips/badges
+      { name: "text", shorthand: "tx", target: 4.5 }, // AA body text
+      { name: "border", shorthand: "bo", target: 3.0 }, // AA-large border
     ],
-    variationTargets: [1.2, 1.8, 4.5, 4.5, 3.0],
     scopedColorIds: [colorId],
     description,
   };
@@ -129,18 +126,17 @@ const scaleShowcase: Preset = {
 
     includeSourceColors: true,
     sourceCollectionName: "palette/source",
-    alphaValues: "10, 20, 40, 60, 80",
-    tokenGrouping: "color",
+    alphaValues: [10, 20, 40, 60, 80],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "palette/scale",
     tokenCollectionName: "tokens",
 
-    scaleStepNames: null,
+    scaleSteps: null,
     canEditRoleVariantNames: true,
 
-    // Global variations — fallback only; all roles override with customVariationList.
-    variations: [{ name: "default", shorthand: "default" }],
+    // Global variations — fallback only; all roles override with custom variation arrays.
+    variations: [{ name: "default", shorthand: "default", target: 1 }],
 
     colors: makeColors(SCALE_IDS),
 
@@ -150,17 +146,15 @@ const scaleShowcase: Preset = {
       {
         name: "background",
         shorthand: "bg",
-        minContrast: 1.0,
-        customVariationList: true,
-        customVariations: [
-          { name: "subtle", shorthand: "subtle" }, // barely-there page wash
-          { name: "soft", shorthand: "soft" }, // light section tint
-          { name: "default", shorthand: "default" }, // standard section bg
-          { name: "raised", shorthand: "raised" }, // slightly elevated
-          { name: "overlay", shorthand: "overlay" }, // hover/focus overlay
+        variations: [
+          { name: "subtle", shorthand: "subtle", target: 1.05 }, // barely-there page wash
+          { name: "soft", shorthand: "soft", target: 1.1 }, // light section tint
+          { name: "default", shorthand: "default", target: 1.2 }, // standard section bg
+          { name: "raised", shorthand: "raised", target: 1.35 }, // slightly elevated
+          { name: "overlay", shorthand: "overlay", target: 1.6 }, // hover/focus overlay
         ],
-        variationTargets: [1.05, 1.1, 1.2, 1.35, 1.6],
         description: "Page and section backgrounds · 5 depth steps",
+        mappingMethod: "contrast",
       },
 
       // ── Surface ─────────────────────────────────────────────────────────────
@@ -168,17 +162,15 @@ const scaleShowcase: Preset = {
       {
         name: "surface",
         shorthand: "sf",
-        minContrast: 1.0,
-        customVariationList: true,
-        customVariations: [
-          { name: "sunken", shorthand: "sunken" }, // recessed well / input bg
-          { name: "default", shorthand: "default" }, // card / panel canvas
-          { name: "raised", shorthand: "raised" }, // elevated card
-          { name: "elevated", shorthand: "elevated" }, // popover / dropdown
-          { name: "scrim", shorthand: "scrim" }, // modal backdrop
+        variations: [
+          { name: "sunken", shorthand: "sunken", target: 1.03 }, // recessed well / input bg
+          { name: "default", shorthand: "default", target: 1.07 }, // card / panel canvas
+          { name: "raised", shorthand: "raised", target: 1.15 }, // elevated card
+          { name: "elevated", shorthand: "elevated", target: 1.3 }, // popover / dropdown
+          { name: "scrim", shorthand: "scrim", target: 14.0 }, // modal backdrop
         ],
-        variationTargets: [1.03, 1.07, 1.15, 1.3, 14.0],
         description: "Surface elevation stack · sunken → card → popover → modal scrim",
+        mappingMethod: "contrast",
       },
 
       // ── Fill ────────────────────────────────────────────────────────────────
@@ -186,17 +178,15 @@ const scaleShowcase: Preset = {
       {
         name: "fill",
         shorthand: "fi",
-        minContrast: 1.3,
-        customVariationList: true,
-        customVariations: [
-          { name: "subtle", shorthand: "subtle" }, // very light tint / badge bg
-          { name: "tint", shorthand: "tint" }, // light tinted fill
-          { name: "default", shorthand: "default" }, // AA interactive fill
-          { name: "strong", shorthand: "strong" }, // AAA fill / CTA
-          { name: "bold", shorthand: "bold" }, // maximum contrast fill
+        variations: [
+          { name: "subtle", shorthand: "subtle", target: 1.5 }, // very light tint / badge bg
+          { name: "tint", shorthand: "tint", target: 2.2 }, // light tinted fill
+          { name: "default", shorthand: "default", target: 4.5 }, // AA interactive fill
+          { name: "strong", shorthand: "strong", target: 7.0 }, // AAA fill / CTA
+          { name: "bold", shorthand: "bold", target: 12.0 }, // maximum contrast fill
         ],
-        variationTargets: [1.5, 2.2, 4.5, 7.0, 12.0],
         description: "Colored fills · tint → AA → AAA · badges, chips, CTAs",
+        mappingMethod: "contrast",
       },
 
       // ── Text ────────────────────────────────────────────────────────────────
@@ -204,17 +194,15 @@ const scaleShowcase: Preset = {
       {
         name: "text",
         shorthand: "tx",
-        minContrast: 2.0,
-        customVariationList: true,
-        customVariations: [
-          { name: "disabled", shorthand: "disabled" }, // disabled / placeholder
-          { name: "muted", shorthand: "muted" }, // hint / caption
-          { name: "subtle", shorthand: "subtle" }, // secondary body text
-          { name: "default", shorthand: "default" }, // AA primary body
-          { name: "strong", shorthand: "strong" }, // AAA headings
+        variations: [
+          { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled / placeholder
+          { name: "muted", shorthand: "muted", target: 3.0 }, // hint / caption
+          { name: "subtle", shorthand: "subtle", target: 4.5 }, // secondary body text
+          { name: "default", shorthand: "default", target: 7.0 }, // AA primary body
+          { name: "strong", shorthand: "strong", target: 11.5 }, // AAA headings
         ],
-        variationTargets: [2.0, 3.0, 4.5, 7.0, 11.5],
         description: "Text hierarchy · disabled → hint → secondary → AA → AAA",
+        mappingMethod: "contrast",
       },
 
       // ── Stroke ──────────────────────────────────────────────────────────────
@@ -222,17 +210,15 @@ const scaleShowcase: Preset = {
       {
         name: "stroke",
         shorthand: "st",
-        minContrast: 1.3,
-        customVariationList: true,
-        customVariations: [
-          { name: "ghost", shorthand: "ghost" }, // decorative hairline
-          { name: "subtle", shorthand: "subtle" }, // light divider
-          { name: "default", shorthand: "default" }, // standard UI border
-          { name: "strong", shorthand: "strong" }, // emphasis outline
-          { name: "focus", shorthand: "focus" }, // keyboard focus ring
+        variations: [
+          { name: "ghost", shorthand: "ghost", target: 1.4 }, // decorative hairline
+          { name: "subtle", shorthand: "subtle", target: 1.8 }, // light divider
+          { name: "default", shorthand: "default", target: 2.5 }, // standard UI border
+          { name: "strong", shorthand: "strong", target: 3.5 }, // emphasis outline
+          { name: "focus", shorthand: "focus", target: 4.5 }, // keyboard focus ring
         ],
-        variationTargets: [1.4, 1.8, 2.5, 3.5, 4.5],
         description: "Borders and dividers · hairline → focus ring",
+        mappingMethod: "contrast",
       },
 
       // ── Status roles — scoped to their own color ────────────────────────────
@@ -277,17 +263,16 @@ const directShowcase: Preset = {
 
     includeSourceColors: true,
     sourceCollectionName: "palette/source",
-    alphaValues: "10, 20, 40, 60, 80",
-    tokenGrouping: "color",
+    alphaValues: [10, 20, 40, 60, 80],
     includeColorScalesCollection: false,
     includeDescriptions: true,
     scaleCollectionName: "palette/scale",
     tokenCollectionName: "tokens",
 
-    scaleStepNames: null,
+    scaleSteps: null,
     canEditRoleVariantNames: true,
 
-    variations: [{ name: "default", shorthand: "default" }],
+    variations: [{ name: "default", shorthand: "default", target: 1 }],
 
     colors: makeColors(DIRECT_IDS),
 
@@ -296,36 +281,32 @@ const directShowcase: Preset = {
       {
         name: "surface",
         shorthand: "sf",
-        minContrast: 1.0,
         solverMode: "natural",
-        customVariationList: true,
-        customVariations: [
-          { name: "page", shorthand: "page" }, // page canvas
-          { name: "card", shorthand: "card" }, // card / panel
-          { name: "raised", shorthand: "raised" }, // elevated card
-          { name: "overlay", shorthand: "overlay" }, // popover / dropdown
-          { name: "scrim", shorthand: "scrim" }, // modal backdrop
+        variations: [
+          { name: "page", shorthand: "page", target: 1.03 }, // page canvas
+          { name: "card", shorthand: "card", target: 1.08 }, // card / panel
+          { name: "raised", shorthand: "raised", target: 1.18 }, // elevated card
+          { name: "overlay", shorthand: "overlay", target: 1.35 }, // popover / dropdown
+          { name: "scrim", shorthand: "scrim", target: 14.0 }, // modal backdrop
         ],
-        variationTargets: [1.03, 1.08, 1.18, 1.35, 14.0],
         description: "Surface elevation · page → card → popover → modal scrim",
+        mappingMethod: "contrast",
       },
 
       // ── Fill ────────────────────────────────────────────────────────────────
       {
         name: "fill",
         shorthand: "fi",
-        minContrast: 1.3,
         solverMode: "natural",
-        customVariationList: true,
-        customVariations: [
-          { name: "subtle", shorthand: "subtle" }, // tinted wash
-          { name: "soft", shorthand: "soft" }, // light interactive fill
-          { name: "default", shorthand: "default" }, // AA fill (main CTA)
-          { name: "strong", shorthand: "strong" }, // AAA fill
-          { name: "inverse", shorthand: "inverse" }, // near-maximum fill
+        variations: [
+          { name: "subtle", shorthand: "subtle", target: 1.5 }, // tinted wash
+          { name: "soft", shorthand: "soft", target: 2.5 }, // light interactive fill
+          { name: "default", shorthand: "default", target: 4.5 }, // AA fill (main CTA)
+          { name: "strong", shorthand: "strong", target: 7.0 }, // AAA fill
+          { name: "inverse", shorthand: "inverse", target: 14.0 }, // near-maximum fill
         ],
-        variationTargets: [1.5, 2.5, 4.5, 7.0, 14.0],
         description: "Solid fills · subtle tint → AA → AAA → inverse",
+        mappingMethod: "contrast",
       },
 
       // ── On/Fill — localBg: dynamic token ref ────────────────────────────────
@@ -334,129 +315,114 @@ const directShowcase: Preset = {
       {
         name: "on/fill",
         shorthand: "onfi",
-        minContrast: 2.0,
         solverMode: "luminance",
-        customVariationList: true,
-        customVariations: [
-          { name: "disabled", shorthand: "disabled" }, // disabled label on fill
-          { name: "muted", shorthand: "muted" }, // secondary label on fill
-          { name: "subtle", shorthand: "subtle" }, // tertiary label on fill
-          { name: "default", shorthand: "default" }, // AA label on fill
-          { name: "strong", shorthand: "strong" }, // AAA label on fill
+        variations: [
+          { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled label on fill
+          { name: "muted", shorthand: "muted", target: 3.0 }, // secondary label on fill
+          { name: "subtle", shorthand: "subtle", target: 4.5 }, // tertiary label on fill
+          { name: "default", shorthand: "default", target: 7.0 }, // AA label on fill
+          { name: "strong", shorthand: "strong", target: 11.5 }, // AAA label on fill
         ],
-        variationTargets: [2.0, 3.0, 4.5, 7.0, 11.5],
         localBg: {
-          kind: "token",
+          kind: "token-dynamic",
           value: "[color]/fill/default",
-          dynamic: true,
         },
         description: "Text / icon on fill · contrast vs fill/default per color · luminance solver",
+        mappingMethod: "contrast",
       },
 
       // ── Text ────────────────────────────────────────────────────────────────
       {
         name: "text",
         shorthand: "tx",
-        minContrast: 2.0,
         solverMode: "natural",
-        customVariationList: true,
-        customVariations: [
-          { name: "disabled", shorthand: "disabled" },
-          { name: "muted", shorthand: "muted" },
-          { name: "subtle", shorthand: "subtle" },
-          { name: "default", shorthand: "default" },
-          { name: "strong", shorthand: "strong" },
+        variations: [
+          { name: "disabled", shorthand: "disabled", target: 2.0 },
+          { name: "muted", shorthand: "muted", target: 3.0 },
+          { name: "subtle", shorthand: "subtle", target: 4.5 },
+          { name: "default", shorthand: "default", target: 7.0 },
+          { name: "strong", shorthand: "strong", target: 11.5 },
         ],
-        variationTargets: [2.0, 3.0, 4.5, 7.0, 11.5],
         description: "Text hierarchy · disabled → hint → secondary → AA → AAA",
+        mappingMethod: "contrast",
       },
 
       // ── Border ──────────────────────────────────────────────────────────────
       {
         name: "border",
         shorthand: "bo",
-        minContrast: 1.3,
         solverMode: "natural",
-        customVariationList: true,
-        customVariations: [
-          { name: "ghost", shorthand: "ghost" },
-          { name: "subtle", shorthand: "subtle" },
-          { name: "default", shorthand: "default" },
-          { name: "strong", shorthand: "strong" },
-          { name: "focus", shorthand: "focus" },
+        variations: [
+          { name: "ghost", shorthand: "ghost", target: 1.4 },
+          { name: "subtle", shorthand: "subtle", target: 1.8 },
+          { name: "default", shorthand: "default", target: 2.5 },
+          { name: "strong", shorthand: "strong", target: 3.5 },
+          { name: "focus", shorthand: "focus", target: 4.5 },
         ],
-        variationTargets: [1.4, 1.8, 2.5, 3.5, 4.5],
         description: "Borders and dividers · hairline → focus ring",
+        mappingMethod: "contrast",
       },
 
       // ── Status roles — scoped + chroma-maximized solver ─────────────────────
       {
         name: "status/success",
         shorthand: "ss",
-        minContrast: 1.0,
         solverMode: "chroma-maximized",
-        customVariationList: true,
-        customVariations: [
-          { name: "bg", shorthand: "bg" },
-          { name: "tint", shorthand: "ti" },
-          { name: "fill", shorthand: "fi" },
-          { name: "text", shorthand: "tx" },
-          { name: "border", shorthand: "bo" },
+        variations: [
+          { name: "bg", shorthand: "bg", target: 1.2 },
+          { name: "tint", shorthand: "ti", target: 1.8 },
+          { name: "fill", shorthand: "fi", target: 4.5 },
+          { name: "text", shorthand: "tx", target: 4.5 },
+          { name: "border", shorthand: "bo", target: 3.0 },
         ],
-        variationTargets: [1.2, 1.8, 4.5, 4.5, 3.0],
         scopedColorIds: [DIRECT_IDS.statusSuccess],
         description: "Success channel · chroma-maximized · scoped to Status/Success",
+        mappingMethod: "contrast",
       },
       {
         name: "status/warning",
         shorthand: "sw",
-        minContrast: 1.0,
         solverMode: "chroma-maximized",
-        customVariationList: true,
-        customVariations: [
-          { name: "bg", shorthand: "bg" },
-          { name: "tint", shorthand: "ti" },
-          { name: "fill", shorthand: "fi" },
-          { name: "text", shorthand: "tx" },
-          { name: "border", shorthand: "bo" },
+        variations: [
+          { name: "bg", shorthand: "bg", target: 1.2 },
+          { name: "tint", shorthand: "ti", target: 1.8 },
+          { name: "fill", shorthand: "fi", target: 4.5 },
+          { name: "text", shorthand: "tx", target: 4.5 },
+          { name: "border", shorthand: "bo", target: 3.0 },
         ],
-        variationTargets: [1.2, 1.8, 4.5, 4.5, 3.0],
         scopedColorIds: [DIRECT_IDS.statusWarning],
         description: "Warning channel · chroma-maximized · scoped to Status/Warning",
+        mappingMethod: "contrast",
       },
       {
         name: "status/danger",
         shorthand: "sd",
-        minContrast: 1.0,
         solverMode: "chroma-maximized",
-        customVariationList: true,
-        customVariations: [
-          { name: "bg", shorthand: "bg" },
-          { name: "tint", shorthand: "ti" },
-          { name: "fill", shorthand: "fi" },
-          { name: "text", shorthand: "tx" },
-          { name: "border", shorthand: "bo" },
+        variations: [
+          { name: "bg", shorthand: "bg", target: 1.2 },
+          { name: "tint", shorthand: "ti", target: 1.8 },
+          { name: "fill", shorthand: "fi", target: 4.5 },
+          { name: "text", shorthand: "tx", target: 4.5 },
+          { name: "border", shorthand: "bo", target: 3.0 },
         ],
-        variationTargets: [1.2, 1.8, 4.5, 4.5, 3.0],
         scopedColorIds: [DIRECT_IDS.statusDanger],
         description: "Danger / error channel · chroma-maximized · scoped to Status/Danger",
+        mappingMethod: "contrast",
       },
       {
         name: "status/info",
         shorthand: "si",
-        minContrast: 1.0,
         solverMode: "chroma-maximized",
-        customVariationList: true,
-        customVariations: [
-          { name: "bg", shorthand: "bg" },
-          { name: "tint", shorthand: "ti" },
-          { name: "fill", shorthand: "fi" },
-          { name: "text", shorthand: "tx" },
-          { name: "border", shorthand: "bo" },
+        variations: [
+          { name: "bg", shorthand: "bg", target: 1.2 },
+          { name: "tint", shorthand: "ti", target: 1.8 },
+          { name: "fill", shorthand: "fi", target: 4.5 },
+          { name: "text", shorthand: "tx", target: 4.5 },
+          { name: "border", shorthand: "bo", target: 3.0 },
         ],
-        variationTargets: [1.2, 1.8, 4.5, 4.5, 3.0],
         scopedColorIds: [DIRECT_IDS.statusInfo],
         description: "Info channel · chroma-maximized · scoped to Status/Info",
+        mappingMethod: "contrast",
       },
     ],
 

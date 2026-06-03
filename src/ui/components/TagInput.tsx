@@ -10,10 +10,19 @@ interface TagInputProps {
 export function TagInput({ values = [], onChange, placeholder }: TagInputProps) {
   const [inputValue, setInputValue] = useState("");
 
+  const safeValues = Array.isArray(values)
+    ? values
+    : typeof values === "string"
+    ? (values as string)
+        .split(",")
+        .map((v) => parseInt(v.trim(), 10))
+        .filter((v) => !isNaN(v) && v >= 0 && v <= 100)
+    : [];
+
   const addTag = (text: string) => {
     const val = parseInt(text.trim(), 10);
-    if (!isNaN(val) && val >= 0 && val <= 100 && !values.includes(val)) {
-      const next = [...values, val].sort((a, b) => a - b);
+    if (!isNaN(val) && val >= 0 && val <= 100 && !safeValues.includes(val)) {
+      const next = [...safeValues, val].sort((a, b) => a - b);
       onChange(next);
     }
     setInputValue("");
@@ -23,22 +32,22 @@ export function TagInput({ values = [], onChange, placeholder }: TagInputProps) 
     if (e.key === "Enter" || e.key === "," || e.key === " ") {
       e.preventDefault();
       addTag(inputValue);
-    } else if (e.key === "Backspace" && !inputValue && values.length > 0) {
-      onChange(values.slice(0, -1));
+    } else if (e.key === "Backspace" && !inputValue && safeValues.length > 0) {
+      onChange(safeValues.slice(0, -1));
     }
   };
 
   return (
     <div className="w-full min-h-[36px] bg-bg-input border border-border-input focus-within:border-border-focus rounded-[7px] px-2 py-1.5 flex flex-wrap gap-1.5 items-center transition-colors">
-      {values.map((v, i) => (
-        <Badge key={i} size="sm" variant="accent" onRemove={() => onChange(values.filter((_, idx) => idx !== i))}>
+      {safeValues.map((v, i) => (
+        <Badge key={i} size="sm" variant="accent" onRemove={() => onChange(safeValues.filter((_, idx) => idx !== i))}>
           {v}%
         </Badge>
       ))}
       <input
         type="text"
         value={inputValue}
-        placeholder={values.length === 0 ? placeholder : ""}
+        placeholder={safeValues.length === 0 ? placeholder : ""}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={() => {

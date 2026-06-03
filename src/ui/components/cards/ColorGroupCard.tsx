@@ -1,12 +1,12 @@
 import React from "react";
-import { useAppStore } from "../../store/appStore";
+import { useProjectStore } from "../../store/projectStore";
 import { useLocalField } from "../../hooks/useLocalField";
 import { Input } from "../Input";
 import { ColorInput } from "../ColorInput";
 import { Select } from "../Select";
 import { CardToolbar } from "../CardToolbar";
 import type { Color } from "../../types/state";
-import { SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS } from "../../store/appStore";
+import { SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS } from "../../store/projectStore";
 import { ControlLabel } from "../typography";
 
 interface ColorGroupCardProps {
@@ -17,13 +17,13 @@ interface ColorGroupCardProps {
 }
 
 export const ColorGroupCard = React.memo(function ColorGroupCard({ color, idx, dragListeners, dragAttributes }: ColorGroupCardProps) {
-  const setColor = useAppStore((s) => s.setColor);
-  const removeColor = useAppStore((s) => s.removeColor);
-  const colorCount = useAppStore((s) => s.projectStore.colors.length);
-  const pluginMode = useAppStore((s) => s.projectStore.pluginMode);
-  const useUniformAlgo = useAppStore((s) => s.projectStore.useUniformAlgorithm);
-  const algoScope = useAppStore((s) => s.projectStore.algorithmScopeLevel);
-  const includeDescriptions = useAppStore((s) => s.projectStore.includeDescriptions);
+  const setColor = useProjectStore((s) => s.setColor);
+  const removeColor = useProjectStore((s) => s.removeColor);
+  const colorCount = useProjectStore((s) => s.projectStore.colors.length);
+  const pluginMode = useProjectStore((s) => s.projectStore.pluginMode);
+  const useUniformAlgo = useProjectStore((s) => s.projectStore.useUniformAlgorithm);
+  const algoScope = useProjectStore((s) => s.projectStore.algorithmScopeLevel);
+  const includeDescriptions = useProjectStore((s) => s.projectStore.includeDescriptions);
 
   const showAlgoRow = pluginMode === "scale" && !useUniformAlgo && algoScope !== "role";
   const showSolverRow = pluginMode === "direct" && !useUniformAlgo && algoScope !== "role";

@@ -1,9 +1,9 @@
 // ── TOKEN WAND PRESETS ────────────────────────────────────────────────────────
 // Three house presets: Regular (professional scale), Pro (direct, all channels),
 // Funk (chroma-maximized, bold creative).
-// variationTargets = WCAG contrast ratios (1.0 – 21.0).
+// WCAG contrast ratios (1.0 – 21.0).
 
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 const presets: Preset[] = [
   // ── TW Regular ──────────────────────────────────────────────────────────────
@@ -29,19 +29,19 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: true,
       sourceCollectionName: "global",
-      alphaValues: "10, 25, 50, 75, 90",
+      alphaValues: [10, 25, 50, 75, 90],
       includeColorScalesCollection: true,
       includeDescriptions: false,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
+
       // Global variations — 5 semantic intensity levels used by all 12 roles.
-      // Flat names work universally across backgrounds, borders, fills, and text.
       variations: [
-        { name: "Subtle", shorthand: "1" },
-        { name: "Soft", shorthand: "2" },
-        { name: "Default", shorthand: "3" },
-        { name: "Strong", shorthand: "4" },
-        { name: "Bold", shorthand: "5" },
+        { name: "Subtle", shorthand: "1", target: 1 },
+        { name: "Soft", shorthand: "2", target: 1 },
+        { name: "Default", shorthand: "3", target: 1 },
+        { name: "Strong", shorthand: "4", target: 1 },
+        { name: "Bold", shorthand: "5", target: 1 },
       ],
       colors: [
         {
@@ -63,91 +63,157 @@ const presets: Preset[] = [
           description: "Accent — violet for highlights and CTAs",
         },
       ],
-      // variationTargets = WCAG contrast ratios for 5 global variations.
-      // Step reference for Natural algo, 25 steps:
-      //   0–4   ≈ page wash  (1.0–1.5:1 on white)
-      //   5–9   ≈ surface    (1.5–2.5:1)
-      //  10–14  ≈ border/fill(2.5–5.5:1)
-      //  15–19  ≈ text AA    (5.5–13:1)
-      //  20–24  ≈ near-black (13–21:1)
+
       roles: [
         // Backgrounds — lightest wash of the scale. Page and off-white variants.
         {
           name: "Background",
           shorthand: "bg",
-          minContrast: 1.05,
-          variationTargets: [1.0, 1.05, 1.1, 1.2, 1.35],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 1.0 },
+            { name: "Soft", shorthand: "2", target: 1.05 },
+            { name: "Default", shorthand: "3", target: 1.1 },
+            { name: "Strong", shorthand: "4", target: 1.2 },
+            { name: "Bold", shorthand: "5", target: 1.35 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Background/Subtle",
           shorthand: "bgs",
-          minContrast: 1.1,
-          variationTargets: [1.1, 1.2, 1.35, 1.5, 1.8],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 1.1 },
+            { name: "Soft", shorthand: "2", target: 1.2 },
+            { name: "Default", shorthand: "3", target: 1.35 },
+            { name: "Strong", shorthand: "4", target: 1.5 },
+            { name: "Bold", shorthand: "5", target: 1.8 },
+          ],
+          mappingMethod: "contrast",
         },
         // Surfaces — card and raised element backgrounds.
         {
           name: "Surface",
           shorthand: "sf",
-          minContrast: 1.15,
-          variationTargets: [1.35, 1.5, 1.8, 2.2, 2.7],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 1.35 },
+            { name: "Soft", shorthand: "2", target: 1.5 },
+            { name: "Default", shorthand: "3", target: 1.8 },
+            { name: "Strong", shorthand: "4", target: 2.2 },
+            { name: "Bold", shorthand: "5", target: 2.7 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Surface/Raised",
           shorthand: "sfr",
-          minContrast: 1.25,
-          variationTargets: [1.8, 2.2, 2.7, 3.2, 4.0],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 1.8 },
+            { name: "Soft", shorthand: "2", target: 2.2 },
+            { name: "Default", shorthand: "3", target: 2.7 },
+            { name: "Strong", shorthand: "4", target: 3.2 },
+            { name: "Bold", shorthand: "5", target: 4.0 },
+          ],
+          mappingMethod: "contrast",
         },
         // Borders — subtle to strong outlines.
         {
           name: "Border",
           shorthand: "bd",
-          minContrast: 1.6,
-          variationTargets: [2.7, 3.2, 4.0, 4.8, 5.8],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 2.7 },
+            { name: "Soft", shorthand: "2", target: 3.2 },
+            { name: "Default", shorthand: "3", target: 4.0 },
+            { name: "Strong", shorthand: "4", target: 4.8 },
+            { name: "Bold", shorthand: "5", target: 5.8 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Border/Strong",
           shorthand: "bds",
-          minContrast: 2.5,
-          variationTargets: [4.0, 4.8, 5.8, 7.0, 8.5],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 4.0 },
+            { name: "Soft", shorthand: "2", target: 4.8 },
+            { name: "Default", shorthand: "3", target: 5.8 },
+            { name: "Strong", shorthand: "4", target: 7.0 },
+            { name: "Bold", shorthand: "5", target: 8.5 },
+          ],
+          mappingMethod: "contrast",
         },
         // Fills — interactive component fills and solid CTAs.
         {
           name: "Fill",
           shorthand: "fi",
-          minContrast: 3.0,
-          variationTargets: [2.7, 4.0, 5.8, 8.5, 11.5],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 2.7 },
+            { name: "Soft", shorthand: "2", target: 4.0 },
+            { name: "Default", shorthand: "3", target: 5.8 },
+            { name: "Strong", shorthand: "4", target: 8.5 },
+            { name: "Bold", shorthand: "5", target: 11.5 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Fill/Strong",
           shorthand: "fis",
-          minContrast: 4.5,
-          variationTargets: [4.0, 5.8, 8.5, 11.5, 14.5],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 4.0 },
+            { name: "Soft", shorthand: "2", target: 5.8 },
+            { name: "Default", shorthand: "3", target: 8.5 },
+            { name: "Strong", shorthand: "4", target: 11.5 },
+            { name: "Bold", shorthand: "5", target: 14.5 },
+          ],
+          mappingMethod: "contrast",
         },
         // Text — from placeholder/muted through to AAA headings.
         {
           name: "Text/Muted",
           shorthand: "txm",
-          minContrast: 3.0,
-          variationTargets: [7.0, 8.5, 10.0, 11.5, 13.0],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 7.0 },
+            { name: "Soft", shorthand: "2", target: 8.5 },
+            { name: "Default", shorthand: "3", target: 10.0 },
+            { name: "Strong", shorthand: "4", target: 11.5 },
+            { name: "Bold", shorthand: "5", target: 13.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Text",
           shorthand: "tx",
-          minContrast: 4.5,
-          variationTargets: [10.0, 11.5, 13.0, 14.5, 16.0],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 10.0 },
+            { name: "Soft", shorthand: "2", target: 11.5 },
+            { name: "Default", shorthand: "3", target: 13.0 },
+            { name: "Strong", shorthand: "4", target: 14.5 },
+            { name: "Bold", shorthand: "5", target: 16.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Text/Strong",
           shorthand: "txs",
-          minContrast: 7.0,
-          variationTargets: [13.0, 14.5, 16.0, 17.5, 19.0],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 13.0 },
+            { name: "Soft", shorthand: "2", target: 14.5 },
+            { name: "Default", shorthand: "3", target: 16.0 },
+            { name: "Strong", shorthand: "4", target: 17.5 },
+            { name: "Bold", shorthand: "5", target: 19.0 },
+          ],
+          mappingMethod: "contrast",
         },
         // Inverse — text or fill used against a dark/colored background.
         {
           name: "Text/Inverse",
           shorthand: "txi",
-          minContrast: 4.5,
-          variationTargets: [1.1, 1.2, 1.35, 1.5, 1.8],
+          variations: [
+            { name: "Subtle", shorthand: "1", target: 1.1 },
+            { name: "Soft", shorthand: "2", target: 1.2 },
+            { name: "Default", shorthand: "3", target: 1.35 },
+            { name: "Strong", shorthand: "4", target: 1.5 },
+            { name: "Bold", shorthand: "5", target: 1.8 },
+          ],
+          mappingMethod: "contrast",
         },
       ],
       themes: [
@@ -181,19 +247,17 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: true,
       sourceCollectionName: "brand",
-      alphaValues: "10, 20, 40, 60, 80, 90",
+      alphaValues: [10, 20, 40, 60, 80, 90],
       includeColorScalesCollection: false,
       includeDescriptions: true,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
       // Global variations — interaction states. Used by Primary, Secondary, and Action roles.
-      // variationTargets (adaptive) = WCAG contrast ratios.
-      // Rest:4.5 Hover:6.0 Pressed:7.0 Disabled:2.0
       variations: [
-        { name: "State/Rest", shorthand: "r" },
-        { name: "State/Hover", shorthand: "h" },
-        { name: "State/Pressed", shorthand: "p" },
-        { name: "State/Disabled", shorthand: "d" },
+        { name: "State/Rest", shorthand: "r", target: 4.5 },
+        { name: "State/Hover", shorthand: "h", target: 6.0 },
+        { name: "State/Pressed", shorthand: "p", target: 7.0 },
+        { name: "State/Disabled", shorthand: "d", target: 2.0 },
       ],
       colors: [
         {
@@ -226,40 +290,58 @@ const presets: Preset[] = [
         {
           name: "Primary",
           shorthand: "pr",
-          minContrast: 4.5,
-          variationTargets: [4.5, 6.0, 7.0, 2.0],
+          variations: [
+            { name: "State/Rest", shorthand: "r", target: 4.5 },
+            { name: "State/Hover", shorthand: "h", target: 6.0 },
+            { name: "State/Pressed", shorthand: "p", target: 7.0 },
+            { name: "State/Disabled", shorthand: "d", target: 2.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Primary/Container",
           shorthand: "prc",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "Layer/01", shorthand: "l1" },
-            { name: "Layer/02", shorthand: "l2" },
-            { name: "Layer/03", shorthand: "l3" },
-            { name: "Layer/04", shorthand: "l4" },
-            { name: "Layer/Scrim", shorthand: "ls" },
+          variations: [
+            { name: "Layer/01", shorthand: "l1", target: 1.05 },
+            { name: "Layer/02", shorthand: "l2", target: 1.2 },
+            { name: "Layer/03", shorthand: "l3", target: 1.4 },
+            { name: "Layer/04", shorthand: "l4", target: 1.7 },
+            { name: "Layer/Scrim", shorthand: "ls", target: 2.5 },
           ],
-          variationTargets: [1.05, 1.2, 1.4, 1.7, 2.5],
+          mappingMethod: "contrast",
         },
         {
           name: "On/Primary",
           shorthand: "op",
-          minContrast: 7.0,
-          variationTargets: [4.5, 6.0, 7.0, 2.0],
+          variations: [
+            { name: "State/Rest", shorthand: "r", target: 4.5 },
+            { name: "State/Hover", shorthand: "h", target: 6.0 },
+            { name: "State/Pressed", shorthand: "p", target: 7.0 },
+            { name: "State/Disabled", shorthand: "d", target: 2.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Secondary",
           shorthand: "sc",
-          minContrast: 4.5,
-          variationTargets: [4.5, 6.0, 7.0, 2.0],
+          variations: [
+            { name: "State/Rest", shorthand: "r", target: 4.5 },
+            { name: "State/Hover", shorthand: "h", target: 6.0 },
+            { name: "State/Pressed", shorthand: "p", target: 7.0 },
+            { name: "State/Disabled", shorthand: "d", target: 2.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "On/Secondary",
           shorthand: "os",
-          minContrast: 7.0,
-          variationTargets: [4.5, 6.0, 7.0, 2.0],
+          variations: [
+            { name: "State/Rest", shorthand: "r", target: 4.5 },
+            { name: "State/Hover", shorthand: "h", target: 6.0 },
+            { name: "State/Pressed", shorthand: "p", target: 7.0 },
+            { name: "State/Disabled", shorthand: "d", target: 2.0 },
+          ],
+          mappingMethod: "contrast",
         },
 
         // Surface family — 5-layer depth model with "/" naming → nested Figma folders.
@@ -267,65 +349,74 @@ const presets: Preset[] = [
         {
           name: "Surface",
           shorthand: "sf",
-          minContrast: 1.05,
-          customVariationList: true,
-          customVariations: [
-            { name: "Layer/01", shorthand: "l1" },
-            { name: "Layer/02", shorthand: "l2" },
-            { name: "Layer/03", shorthand: "l3" },
-            { name: "Layer/04", shorthand: "l4" },
-            { name: "Layer/Scrim", shorthand: "ls" },
+          variations: [
+            { name: "Layer/01", shorthand: "l1", target: 1.05 },
+            { name: "Layer/02", shorthand: "l2", target: 1.2 },
+            { name: "Layer/03", shorthand: "l3", target: 1.4 },
+            { name: "Layer/04", shorthand: "l4", target: 1.7 },
+            { name: "Layer/Scrim", shorthand: "ls", target: 2.5 },
           ],
-          variationTargets: [1.05, 1.2, 1.4, 1.7, 2.5],
+          mappingMethod: "contrast",
         },
 
         // Text family — Emphasis hierarchy from accessible body copy to disabled.
         {
           name: "On/Surface",
           shorthand: "ons",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "Emphasis/High", shorthand: "eh" },
-            { name: "Emphasis/Medium", shorthand: "em" },
-            { name: "Emphasis/Low", shorthand: "el" },
-            { name: "Emphasis/Disabled", shorthand: "ed" },
+          variations: [
+            { name: "Emphasis/High", shorthand: "eh", target: 7.0 },
+            { name: "Emphasis/Medium", shorthand: "em", target: 4.5 },
+            { name: "Emphasis/Low", shorthand: "el", target: 3.0 },
+            { name: "Emphasis/Disabled", shorthand: "ed", target: 2.0 },
           ],
-          variationTargets: [7.0, 4.5, 3.0, 2.0],
+          mappingMethod: "contrast",
         },
 
         // Outline — three weights of border/separator.
         {
           name: "Outline",
           shorthand: "ol",
-          minContrast: 2.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "Weight/Subtle", shorthand: "ws" },
-            { name: "Weight/Default", shorthand: "wd" },
-            { name: "Weight/Strong", shorthand: "wst" },
+          variations: [
+            { name: "Weight/Subtle", shorthand: "ws", target: 1.8 },
+            { name: "Weight/Default", shorthand: "wd", target: 2.5 },
+            { name: "Weight/Strong", shorthand: "wst", target: 3.5 },
           ],
-          variationTargets: [1.8, 2.5, 3.5],
+          mappingMethod: "contrast",
         },
 
         // Action roles — 4 interaction states via global variations.
         {
           name: "Action/Primary",
           shorthand: "ap",
-          minContrast: 4.5,
-          variationTargets: [4.5, 6.0, 7.0, 2.0],
+          variations: [
+            { name: "State/Rest", shorthand: "r", target: 4.5 },
+            { name: "State/Hover", shorthand: "h", target: 6.0 },
+            { name: "State/Pressed", shorthand: "p", target: 7.0 },
+            { name: "State/Disabled", shorthand: "d", target: 2.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Action/Secondary",
           shorthand: "as",
-          minContrast: 3.0,
-          variationTargets: [3.0, 4.5, 6.0, 2.0],
+          variations: [
+            { name: "State/Rest", shorthand: "r", target: 3.0 },
+            { name: "State/Hover", shorthand: "h", target: 4.5 },
+            { name: "State/Pressed", shorthand: "p", target: 6.0 },
+            { name: "State/Disabled", shorthand: "d", target: 2.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Action/Destructive",
           shorthand: "ade",
-          minContrast: 4.5,
-          variationTargets: [4.5, 6.0, 7.0, 2.0],
+          variations: [
+            { name: "State/Rest", shorthand: "r", target: 4.5 },
+            { name: "State/Hover", shorthand: "h", target: 6.0 },
+            { name: "State/Pressed", shorthand: "p", target: 7.0 },
+            { name: "State/Disabled", shorthand: "d", target: 2.0 },
+          ],
+          mappingMethod: "contrast",
         },
 
         // Status / Error — 4 semantic token slots per status color.
@@ -333,34 +424,35 @@ const presets: Preset[] = [
         {
           name: "Status/Error",
           shorthand: "se",
-          minContrast: 4.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "BG/Subtle", shorthand: "bgs" },
-            { name: "BG/Default", shorthand: "bgd" },
-            { name: "FG/Default", shorthand: "fgd" },
-            { name: "Border", shorthand: "bor" },
+          variations: [
+            { name: "BG/Subtle", shorthand: "bgs", target: 1.3 },
+            { name: "BG/Default", shorthand: "bgd", target: 1.8 },
+            { name: "FG/Default", shorthand: "fgd", target: 4.5 },
+            { name: "Border", shorthand: "bor", target: 2.5 },
           ],
-          variationTargets: [1.3, 1.8, 4.5, 2.5],
+          mappingMethod: "contrast",
         },
 
         // Inverse — near-max contrast pair for high-contrast surfaces or dark tooltips.
         {
           name: "Inverse/Surface",
           shorthand: "is",
-          minContrast: 12.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "Default", shorthand: "df" },
-            { name: "Muted", shorthand: "mu" },
+          variations: [
+            { name: "Default", shorthand: "df", target: 12.0 },
+            { name: "Muted", shorthand: "mu", target: 4.5 },
           ],
-          variationTargets: [12.0, 4.5],
+          mappingMethod: "contrast",
         },
         {
           name: "Inverse/On/Surface",
           shorthand: "ios",
-          minContrast: 4.5,
-          variationTargets: [4.5, 6.0, 7.0, 2.0],
+          variations: [
+            { name: "State/Rest", shorthand: "r", target: 4.5 },
+            { name: "State/Hover", shorthand: "h", target: 6.0 },
+            { name: "State/Pressed", shorthand: "p", target: 7.0 },
+            { name: "State/Disabled", shorthand: "d", target: 2.0 },
+          ],
+          mappingMethod: "contrast",
         },
       ],
       themes: [
@@ -395,7 +487,8 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: true,
       sourceCollectionName: "electric",
-      alphaValues: "10, 25, 50, 75, 90",
+      alphaValues: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95],
+
       includeColorScalesCollection: false,
       includeDescriptions: false,
       scaleCollectionName: "_scale",
@@ -403,11 +496,11 @@ const presets: Preset[] = [
       // Ghost=barely visible tint, Whisper=hover, Core=primary, Loud=bold, Max=near-black.
       // Contrast targets: 1.5 / 2.5 / 4.5 / 7.0 / 12.0
       variations: [
-        { name: "Ghost", shorthand: "1" },
-        { name: "Whisper", shorthand: "2" },
-        { name: "Core", shorthand: "3" },
-        { name: "Loud", shorthand: "4" },
-        { name: "Max", shorthand: "5" },
+        { name: "Ghost", shorthand: "1", target: 1.5 },
+        { name: "Whisper", shorthand: "2", target: 2.5 },
+        { name: "Core", shorthand: "3", target: 4.5 },
+        { name: "Loud", shorthand: "4", target: 7.0 },
+        { name: "Max", shorthand: "5", target: 12.0 },
       ],
       colors: [
         {
@@ -434,91 +527,175 @@ const presets: Preset[] = [
         {
           name: "Canvas",
           shorthand: "ca",
-          minContrast: 1.05,
-          variationTargets: [1.05, 1.2, 1.5, 2.0, 3.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 1.05 },
+            { name: "Whisper", shorthand: "2", target: 1.2 },
+            { name: "Core", shorthand: "3", target: 1.5 },
+            { name: "Loud", shorthand: "4", target: 2.0 },
+            { name: "Max", shorthand: "5", target: 3.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Canvas/Raised",
           shorthand: "cr",
-          minContrast: 1.2,
-          variationTargets: [1.1, 1.3, 1.6, 2.5, 4.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 1.1 },
+            { name: "Whisper", shorthand: "2", target: 1.3 },
+            { name: "Core", shorthand: "3", target: 1.6 },
+            { name: "Loud", shorthand: "4", target: 2.5 },
+            { name: "Max", shorthand: "5", target: 4.0 },
+          ],
+          mappingMethod: "contrast",
         },
         // Glow — color-tinted fills, from subtle aura to heavy overlay.
         {
           name: "Glow",
           shorthand: "gl",
-          minContrast: 1.5,
-          variationTargets: [1.5, 2.0, 3.0, 4.5, 7.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 1.5 },
+            { name: "Whisper", shorthand: "2", target: 2.0 },
+            { name: "Core", shorthand: "3", target: 3.0 },
+            { name: "Loud", shorthand: "4", target: 4.5 },
+            { name: "Max", shorthand: "5", target: 7.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Glow/Strong",
           shorthand: "gls",
-          minContrast: 3.0,
-          variationTargets: [2.0, 2.5, 3.5, 5.5, 9.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 2.0 },
+            { name: "Whisper", shorthand: "2", target: 2.5 },
+            { name: "Core", shorthand: "3", target: 3.5 },
+            { name: "Loud", shorthand: "4", target: 5.5 },
+            { name: "Max", shorthand: "5", target: 9.0 },
+          ],
+          mappingMethod: "contrast",
         },
         // Edge — borders and outlines.
         {
           name: "Edge",
           shorthand: "eg",
-          minContrast: 2.0,
-          variationTargets: [1.5, 2.0, 2.5, 3.5, 5.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 1.5 },
+            { name: "Whisper", shorthand: "2", target: 2.0 },
+            { name: "Core", shorthand: "3", target: 2.5 },
+            { name: "Loud", shorthand: "4", target: 3.5 },
+            { name: "Max", shorthand: "5", target: 5.0 },
+          ],
+          mappingMethod: "contrast",
         },
         // Fill — interactive component fills.
         {
           name: "Fill/Soft",
           shorthand: "fs",
-          minContrast: 2.5,
-          variationTargets: [1.8, 2.2, 3.0, 4.5, 6.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 1.8 },
+            { name: "Whisper", shorthand: "2", target: 2.2 },
+            { name: "Core", shorthand: "3", target: 3.0 },
+            { name: "Loud", shorthand: "4", target: 4.5 },
+            { name: "Max", shorthand: "5", target: 6.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Fill/Core",
           shorthand: "fc",
-          minContrast: 4.0,
-          variationTargets: [2.5, 3.5, 4.5, 6.5, 9.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 2.5 },
+            { name: "Whisper", shorthand: "2", target: 3.5 },
+            { name: "Core", shorthand: "3", target: 4.5 },
+            { name: "Loud", shorthand: "4", target: 6.5 },
+            { name: "Max", shorthand: "5", target: 9.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Fill/Pop",
           shorthand: "fp",
-          minContrast: 6.5,
-          variationTargets: [4.5, 5.5, 7.0, 10.0, 14.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 4.5 },
+            { name: "Whisper", shorthand: "2", target: 5.5 },
+            { name: "Core", shorthand: "3", target: 7.0 },
+            { name: "Loud", shorthand: "4", target: 10.0 },
+            { name: "Max", shorthand: "5", target: 14.0 },
+          ],
+          mappingMethod: "contrast",
         },
         // Ink — text from dim to maximum.
         {
           name: "Ink/Dim",
           shorthand: "id",
-          minContrast: 2.5,
-          variationTargets: [1.5, 2.5, 3.0, 4.5, 6.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 1.5 },
+            { name: "Whisper", shorthand: "2", target: 2.5 },
+            { name: "Core", shorthand: "3", target: 3.0 },
+            { name: "Loud", shorthand: "4", target: 4.5 },
+            { name: "Max", shorthand: "5", target: 6.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Ink",
           shorthand: "ik",
-          minContrast: 4.0,
-          variationTargets: [2.5, 3.5, 4.5, 7.0, 10.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 2.5 },
+            { name: "Whisper", shorthand: "2", target: 3.5 },
+            { name: "Core", shorthand: "3", target: 4.5 },
+            { name: "Loud", shorthand: "4", target: 7.0 },
+            { name: "Max", shorthand: "5", target: 10.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Ink/Loud",
           shorthand: "il",
-          minContrast: 6.5,
-          variationTargets: [4.5, 5.5, 7.0, 10.0, 14.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 4.5 },
+            { name: "Whisper", shorthand: "2", target: 5.5 },
+            { name: "Core", shorthand: "3", target: 7.0 },
+            { name: "Loud", shorthand: "4", target: 10.0 },
+            { name: "Max", shorthand: "5", target: 14.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Ink/Max",
           shorthand: "im",
-          minContrast: 12.0,
-          variationTargets: [7.0, 10.0, 14.0, 18.0, 21.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 7.0 },
+            { name: "Whisper", shorthand: "2", target: 10.0 },
+            { name: "Core", shorthand: "3", target: 14.0 },
+            { name: "Loud", shorthand: "4", target: 18.0 },
+            { name: "Max", shorthand: "5", target: 21.0 },
+          ],
+          mappingMethod: "contrast",
         },
         // Highlight — decorative accent washes and pops.
         {
           name: "Highlight",
           shorthand: "hl",
-          minContrast: 2.5,
-          variationTargets: [1.5, 2.0, 3.0, 4.5, 7.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 1.5 },
+            { name: "Whisper", shorthand: "2", target: 2.0 },
+            { name: "Core", shorthand: "3", target: 3.0 },
+            { name: "Loud", shorthand: "4", target: 4.5 },
+            { name: "Max", shorthand: "5", target: 7.0 },
+          ],
+          mappingMethod: "contrast",
         },
         {
           name: "Highlight/Strong",
           shorthand: "hls",
-          minContrast: 4.5,
-          variationTargets: [3.0, 4.0, 5.0, 7.0, 10.0],
+          variations: [
+            { name: "Ghost", shorthand: "1", target: 3.0 },
+            { name: "Whisper", shorthand: "2", target: 4.0 },
+            { name: "Core", shorthand: "3", target: 5.0 },
+            { name: "Loud", shorthand: "4", target: 7.0 },
+            { name: "Max", shorthand: "5", target: 10.0 },
+          ],
+          mappingMethod: "contrast",
         },
       ],
       themes: [
@@ -556,17 +733,16 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: true,
       sourceCollectionName: "palette/source",
-      alphaValues: "10, 20, 40, 60, 80, 90",
-      tokenGrouping: "color",
+      alphaValues: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95],
       includeColorScalesCollection: true,
       includeDescriptions: true,
       scaleCollectionName: "palette",
       tokenCollectionName: "tokens",
 
-      scaleStepNames: null,
+      scaleSteps: null,
 
-      // Global variations — not used directly (all roles use customVariationList).
-      variations: [{ name: "default", shorthand: "default" }],
+      // Global variations — not used directly (all roles use custom variation arrays).
+      variations: [{ name: "default", shorthand: "default", target: 1 }],
 
       // ── 7 palette colors ─────────────────────────────────────────────────────
       colors: [
@@ -616,20 +792,18 @@ const presets: Preset[] = [
 
       roles: [
         // ── BG ────────────────────────────────────────────────────────────────
-        // Page and section background fills. 3 steps: barely-there → light → section.
+        // Background fills. 3 steps: barely-there → light → section.
         // Neutral drives page bg. Brand/status colors drive tinted section bgs.
         {
           name: "bg",
           shorthand: "bg",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtle", shorthand: "subtle" }, // barely-there page wash
-            { name: "default", shorthand: "default" }, // light section background
-            { name: "strong", shorthand: "strong" }, // stronger section divider
+          variations: [
+            { name: "subtle", shorthand: "subtle", target: 1.05 }, // barely-there page wash
+            { name: "default", shorthand: "default", target: 1.15 }, // light section background
+            { name: "strong", shorthand: "strong", target: 1.3 }, // stronger section divider
           ],
-          variationTargets: [1.05, 1.15, 1.3],
           description: "Background fills · subtle wash · default section · strong divider",
+          mappingMethod: "contrast",
         },
 
         // ── SURFACE ───────────────────────────────────────────────────────────
@@ -638,16 +812,14 @@ const presets: Preset[] = [
         {
           name: "surface",
           shorthand: "surface",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "sunken", shorthand: "sunken" }, // recessed well / inset area
-            { name: "default", shorthand: "default" }, // card / panel canvas
-            { name: "raised", shorthand: "raised" }, // elevated card / popover
-            { name: "overlay", shorthand: "overlay" }, // modal / sheet / drawer
+          variations: [
+            { name: "sunken", shorthand: "sunken", target: 1.05 }, // recessed well / inset area
+            { name: "default", shorthand: "default", target: 1.0 }, // card / panel canvas
+            { name: "raised", shorthand: "raised", target: 1.08 }, // elevated card / popover
+            { name: "overlay", shorthand: "overlay", target: 1.15 }, // modal / sheet / drawer
           ],
-          variationTargets: [1.05, 1.0, 1.08, 1.15],
           description: "Surface elevation · sunken · card · raised · modal overlay",
+          mappingMethod: "contrast",
         },
 
         // ── FILL ──────────────────────────────────────────────────────────────
@@ -656,15 +828,13 @@ const presets: Preset[] = [
         {
           name: "fill",
           shorthand: "fill",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // AA solid fill
-            { name: "hover", shorthand: "hover" }, // hover — one step darker
-            { name: "disabled", shorthand: "disabled" }, // clearly inactive
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // AA solid fill
+            { name: "hover", shorthand: "hover", target: 5.5 }, // hover — one step darker
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // clearly inactive
           ],
-          variationTargets: [4.5, 5.5, 2.0],
           description: "Solid fills · badge · chip · tag · 3 states",
+          mappingMethod: "contrast",
         },
 
         // ── TEXT ──────────────────────────────────────────────────────────────
@@ -672,16 +842,14 @@ const presets: Preset[] = [
         {
           name: "text",
           shorthand: "text",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "base", shorthand: "base" }, // AAA body copy
-            { name: "subtle", shorthand: "subtle" }, // AA secondary text
-            { name: "muted", shorthand: "muted" }, // AA-large placeholder/hint
-            { name: "disabled", shorthand: "disabled" }, // disabled label
+          variations: [
+            { name: "base", shorthand: "base", target: 7.0 }, // AAA body copy
+            { name: "subtle", shorthand: "subtle", target: 4.5 }, // AA secondary text
+            { name: "muted", shorthand: "muted", target: 3.0 }, // AA-large placeholder/hint
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled label
           ],
-          variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
+          mappingMethod: "contrast",
         },
 
         // ── STROKE ────────────────────────────────────────────────────────────
@@ -689,15 +857,13 @@ const presets: Preset[] = [
         {
           name: "stroke",
           shorthand: "stroke",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtle", shorthand: "subtle" }, // decorative separator / hairline
-            { name: "default", shorthand: "default" }, // standard UI border
-            { name: "strong", shorthand: "strong" }, // focus ring / emphasis outline
+          variations: [
+            { name: "subtle", shorthand: "subtle", target: 1.5 }, // decorative separator / hairline
+            { name: "default", shorthand: "default", target: 2.5 }, // standard UI border
+            { name: "strong", shorthand: "strong", target: 4.0 }, // focus ring / emphasis outline
           ],
-          variationTargets: [1.5, 2.5, 4.0],
           description: "Borders and dividers · subtle hairline · UI border · focus ring",
+          mappingMethod: "contrast",
         },
 
         // ── ICON ──────────────────────────────────────────────────────────────
@@ -705,15 +871,13 @@ const presets: Preset[] = [
         {
           name: "icon",
           shorthand: "icon",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // AA standard icon
-            { name: "subtle", shorthand: "subtle" }, // AA-large secondary icon
-            { name: "disabled", shorthand: "disabled" }, // disabled icon
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // AA standard icon
+            { name: "subtle", shorthand: "subtle", target: 3.0 }, // AA-large secondary icon
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled icon
           ],
-          variationTargets: [4.5, 3.0, 2.0],
           description: "Icon fills · default (AA) · subtle (AA-large) · disabled",
+          mappingMethod: "contrast",
         },
 
         // ── BUTTON ────────────────────────────────────────────────────────────
@@ -721,17 +885,15 @@ const presets: Preset[] = [
         {
           name: "button",
           shorthand: "button",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // AA resting fill
-            { name: "hover", shorthand: "hover" }, // hover — one step darker
-            { name: "active", shorthand: "active" }, // pressed / mouse-down
-            { name: "selected", shorthand: "selected" }, // toggled / checked
-            { name: "disabled", shorthand: "disabled" }, // below action threshold
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // AA resting fill
+            { name: "hover", shorthand: "hover", target: 5.5 }, // hover — one step darker
+            { name: "active", shorthand: "active", target: 6.5 }, // pressed / mouse-down
+            { name: "selected", shorthand: "selected", target: 7.0 }, // toggled / checked
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // below action threshold
           ],
-          variationTargets: [4.5, 5.5, 6.5, 7.0, 2.0],
           description: "Button fills · 5 interaction states · default → hover → active → selected → disabled",
+          mappingMethod: "contrast",
         },
 
         // ── LINK ──────────────────────────────────────────────────────────────
@@ -739,15 +901,13 @@ const presets: Preset[] = [
         {
           name: "link",
           shorthand: "link",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // AA resting link
-            { name: "hover", shorthand: "hover" }, // hover emphasis
-            { name: "visited", shorthand: "visited" }, // de-emphasized visited
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // AA resting link
+            { name: "hover", shorthand: "hover", target: 5.5 }, // hover emphasis
+            { name: "visited", shorthand: "visited", target: 3.5 }, // de-emphasized visited
           ],
-          variationTargets: [4.5, 5.5, 3.5],
           description: "Inline links · default · hover · visited",
+          mappingMethod: "contrast",
         },
 
         // ── OVERLAY ───────────────────────────────────────────────────────────
@@ -755,13 +915,9 @@ const presets: Preset[] = [
         {
           name: "overlay",
           shorthand: "overlay",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" }, // modal backdrop / scrim
-          ],
-          variationTargets: [14.0],
+          variations: [{ name: "default", shorthand: "default", target: 14.0 }],
           description: "Modal scrim · darkest achievable from palette hue",
+          mappingMethod: "contrast",
         },
       ],
 
@@ -779,8 +935,6 @@ const presets: Preset[] = [
   // Result: richer, more saturated tokens that stay true to the seed hue.
   // Best for brand-forward products where you want vivid fills and clear colors
   // rather than the muted tints a tonal ramp produces.
-  //
-  // includeSourceColors: true  → raw hex values in "palette/source"
   {
     id: "tw-native-direct",
     name: "TW Native Direct",
@@ -803,17 +957,15 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: true,
       sourceCollectionName: "palette/source",
-      alphaValues: "10, 20, 40, 60, 80, 90",
-      tokenGrouping: "color",
+      alphaValues: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95],
       includeColorScalesCollection: false,
       includeDescriptions: true,
       scaleCollectionName: "palette",
       tokenCollectionName: "tokens",
+      scaleSteps: null,
 
-      scaleStepNames: null,
-
-      // Global variations — not used directly (all roles use customVariationList).
-      variations: [{ name: "default", shorthand: "default" }],
+      // Global variations — not used directly (all roles use custom variation arrays).
+      variations: [{ name: "default", shorthand: "default", target: 1 }],
 
       // ── 7 palette colors ─────────────────────────────────────────────────────
       colors: [
@@ -863,138 +1015,132 @@ const presets: Preset[] = [
 
       roles: [
         // ── BG ────────────────────────────────────────────────────────────────
+        // Background fills. 3 steps: barely-there → light → section.
+        // Neutral drives page bg. Brand/status colors drive tinted section bgs.
         {
           name: "bg",
           shorthand: "bg",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtle", shorthand: "subtle" },
-            { name: "default", shorthand: "default" },
-            { name: "strong", shorthand: "strong" },
+          variations: [
+            { name: "subtle", shorthand: "subtle", target: 1.05 }, // barely-there page wash
+            { name: "default", shorthand: "default", target: 1.15 }, // light section background
+            { name: "strong", shorthand: "strong", target: 1.3 }, // stronger section divider
           ],
-          variationTargets: [1.05, 1.15, 1.3],
           description: "Background fills · subtle wash · default section · strong divider",
+          mappingMethod: "contrast",
         },
 
         // ── SURFACE ───────────────────────────────────────────────────────────
+        // Card, popover, modal surfaces. 4 elevation steps.
+        // Neutral drives all surface elevation; brand colors tint cards.
         {
           name: "surface",
           shorthand: "surface",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "sunken", shorthand: "sunken" },
-            { name: "default", shorthand: "default" },
-            { name: "raised", shorthand: "raised" },
-            { name: "overlay", shorthand: "overlay" },
+          variations: [
+            { name: "sunken", shorthand: "sunken", target: 1.05 }, // recessed well / inset area
+            { name: "default", shorthand: "default", target: 1.0 }, // card / panel canvas
+            { name: "raised", shorthand: "raised", target: 1.08 }, // elevated card / popover
+            { name: "overlay", shorthand: "overlay", target: 1.15 }, // modal / sheet / drawer
           ],
-          variationTargets: [1.05, 1.0, 1.08, 1.15],
           description: "Surface elevation · sunken · card · raised · modal overlay",
+          mappingMethod: "contrast",
         },
 
         // ── FILL ──────────────────────────────────────────────────────────────
+        // Solid color fills for badges, chips, tags. 3 states.
+        // Not a button (no full 5-state model) — use for decorative filled elements.
         {
           name: "fill",
           shorthand: "fill",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" },
-            { name: "hover", shorthand: "hover" },
-            { name: "disabled", shorthand: "disabled" },
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // AA solid fill
+            { name: "hover", shorthand: "hover", target: 5.5 }, // hover — one step darker
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // clearly inactive
           ],
-          variationTargets: [4.5, 5.5, 2.0],
           description: "Solid fills · badge · chip · tag · 3 states",
+          mappingMethod: "contrast",
         },
 
         // ── TEXT ──────────────────────────────────────────────────────────────
+        // All readable copy. 4 contrast tiers: AAA body → disabled placeholder.
         {
           name: "text",
           shorthand: "text",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "base", shorthand: "base" },
-            { name: "subtle", shorthand: "subtle" },
-            { name: "muted", shorthand: "muted" },
-            { name: "disabled", shorthand: "disabled" },
+          variations: [
+            { name: "base", shorthand: "base", target: 7.0 }, // AAA body copy
+            { name: "subtle", shorthand: "subtle", target: 4.5 }, // AA secondary text
+            { name: "muted", shorthand: "muted", target: 3.0 }, // AA-large placeholder/hint
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled label
           ],
-          variationTargets: [7.0, 4.5, 3.0, 2.0],
           description: "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
+          mappingMethod: "contrast",
         },
 
         // ── STROKE ────────────────────────────────────────────────────────────
+        // Borders, outlines, separators. 3 weights.
         {
           name: "stroke",
           shorthand: "stroke",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtle", shorthand: "subtle" },
-            { name: "default", shorthand: "default" },
-            { name: "strong", shorthand: "strong" },
+          variations: [
+            { name: "subtle", shorthand: "subtle", target: 1.5 }, // decorative separator / hairline
+            { name: "default", shorthand: "default", target: 2.5 }, // standard UI border
+            { name: "strong", shorthand: "strong", target: 4.0 }, // focus ring / emphasis outline
           ],
-          variationTargets: [1.5, 2.5, 4.0],
           description: "Borders and dividers · subtle hairline · UI border · focus ring",
+          mappingMethod: "contrast",
         },
 
         // ── ICON ──────────────────────────────────────────────────────────────
+        // Icon fills. 3 tiers mirroring text hierarchy.
         {
           name: "icon",
           shorthand: "icon",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" },
-            { name: "subtle", shorthand: "subtle" },
-            { name: "disabled", shorthand: "disabled" },
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // AA standard icon
+            { name: "subtle", shorthand: "subtle", target: 3.0 }, // AA-large secondary icon
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled icon
           ],
-          variationTargets: [4.5, 3.0, 2.0],
           description: "Icon fills · default (AA) · subtle (AA-large) · disabled",
+          mappingMethod: "contrast",
         },
 
         // ── BUTTON ────────────────────────────────────────────────────────────
+        // Full 5-state interactive CTA model. The primary use of brand/accent colors.
         {
           name: "button",
           shorthand: "button",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" },
-            { name: "hover", shorthand: "hover" },
-            { name: "active", shorthand: "active" },
-            { name: "selected", shorthand: "selected" },
-            { name: "disabled", shorthand: "disabled" },
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // AA resting fill
+            { name: "hover", shorthand: "hover", target: 5.5 }, // hover — one step darker
+            { name: "active", shorthand: "active", target: 6.5 }, // pressed / mouse-down
+            { name: "selected", shorthand: "selected", target: 7.0 }, // toggled / checked
+            { name: "disabled", shorthand: "disabled", target: 2.0 }, // below action threshold
           ],
-          variationTargets: [4.5, 5.5, 6.5, 7.0, 2.0],
-          description: "Button fills · 5 interaction states",
+          description: "Button fills · 5 interaction states · default → hover → active → selected → disabled",
+          mappingMethod: "contrast",
         },
 
         // ── LINK ──────────────────────────────────────────────────────────────
+        // Inline text links. 3 states.
         {
           name: "link",
           shorthand: "link",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "default", shorthand: "default" },
-            { name: "hover", shorthand: "hover" },
-            { name: "visited", shorthand: "visited" },
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // AA resting link
+            { name: "hover", shorthand: "hover", target: 5.5 }, // hover emphasis
+            { name: "visited", shorthand: "visited", target: 3.5 }, // de-emphasized visited
           ],
-          variationTargets: [4.5, 5.5, 3.5],
           description: "Inline links · default · hover · visited",
+          mappingMethod: "contrast",
         },
 
         // ── OVERLAY ───────────────────────────────────────────────────────────
+        // Modal scrim / backdrop. Single slot, near-max contrast (darkest achievable).
         {
           name: "overlay",
           shorthand: "overlay",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [{ name: "default", shorthand: "default" }],
-          variationTargets: [14.0],
+          variations: [{ name: "default", shorthand: "default", target: 14.0 }],
           description: "Modal scrim · darkest achievable from palette hue",
+          mappingMethod: "contrast",
         },
       ],
 

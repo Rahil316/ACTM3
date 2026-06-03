@@ -22,7 +22,7 @@
  * No descriptions. Variation shorthands are always numeric 1–5.
  */
 
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 // ── Stable color IDs ──────────────────────────────────────────────────────────
 
@@ -50,17 +50,14 @@ function statusRole(name: string, shorthand: string, colorId: string) {
   return {
     name,
     shorthand,
-    minContrast: 1.0,
     solverMode: "chroma-maximized" as const,
-    customVariationList: true as const,
-    customVariations: [
-      { name: "Bg", shorthand: "1" },
-      { name: "Tint", shorthand: "2" },
-      { name: "Fill", shorthand: "3" },
-      { name: "Text", shorthand: "4" },
-      { name: "Border", shorthand: "5" },
+    variations: [
+      { name: "Bg", shorthand: "1", target: 1.15 },
+      { name: "Tint", shorthand: "2", target: 1.8 },
+      { name: "Fill", shorthand: "3", target: 4.5 },
+      { name: "Text", shorthand: "4", target: 4.5 },
+      { name: "Border", shorthand: "5", target: 3.0 },
     ],
-    variationTargets: [1.15, 1.8, 4.5, 4.5, 3.0],
     scopedColorIds: [colorId],
   };
 }
@@ -96,7 +93,7 @@ const nclarity: Preset = {
     // ── Output ──────────────────────────────────────────────────────────────
     includeSourceColors: true,
     sourceCollectionName: "nclarity/source",
-    alphaValues: "5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95",
+    alphaValues: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95],
     includeColorScalesCollection: false,
     includeDescriptions: false,
     scaleCollectionName: "nclarity/scale",
@@ -139,17 +136,14 @@ const nclarity: Preset = {
       {
         name: "background",
         shorthand: "bg",
-        minContrast: 1.0,
         solverMode: "natural",
-        customVariationList: true,
-        customVariations: [
-          { name: "Base", shorthand: "1" },
-          { name: "Raised", shorthand: "2" },
-          { name: "Float", shorthand: "3" },
-          { name: "Overlay", shorthand: "4" },
-          { name: "Scrim", shorthand: "5" },
+        variations: [
+          { name: "Base", shorthand: "1", target: 1.03 },
+          { name: "Raised", shorthand: "2", target: 1.08 },
+          { name: "Float", shorthand: "3", target: 1.18 },
+          { name: "Overlay", shorthand: "4", target: 1.35 },
+          { name: "Scrim", shorthand: "5", target: 14.0 },
         ],
-        variationTargets: [1.03, 1.08, 1.18, 1.35, 14.0],
       },
 
       // ── Stroke ─────────────────────────────────────────────────────────────
@@ -157,17 +151,14 @@ const nclarity: Preset = {
       {
         name: "stroke",
         shorthand: "sk",
-        minContrast: 1.3,
         solverMode: "natural",
-        customVariationList: true,
-        customVariations: [
-          { name: "Hairline", shorthand: "1" },
-          { name: "Subtle", shorthand: "2" },
-          { name: "Default", shorthand: "3" },
-          { name: "Strong", shorthand: "4" },
-          { name: "Focus", shorthand: "5" },
+        variations: [
+          { name: "Hairline", shorthand: "1", target: 1.4 },
+          { name: "Subtle", shorthand: "2", target: 1.8 },
+          { name: "Default", shorthand: "3", target: 2.5 },
+          { name: "Strong", shorthand: "4", target: 3.5 },
+          { name: "Focus", shorthand: "5", target: 4.5 },
         ],
-        variationTargets: [1.4, 1.8, 2.5, 3.5, 4.5],
       },
 
       // ── Fill ───────────────────────────────────────────────────────────────
@@ -175,17 +166,14 @@ const nclarity: Preset = {
       {
         name: "fill/fill",
         shorthand: "fl/fi",
-        minContrast: 1.3,
         solverMode: "natural",
-        customVariationList: true,
-        customVariations: [
-          { name: "Wash", shorthand: "1" },
-          { name: "Tint", shorthand: "2" },
-          { name: "Default", shorthand: "3" },
-          { name: "Strong", shorthand: "4" },
-          { name: "Bold", shorthand: "5" },
+        variations: [
+          { name: "Wash", shorthand: "1", target: 1.5 },
+          { name: "Tint", shorthand: "2", target: 2.2 },
+          { name: "Default", shorthand: "3", target: 4.5 },
+          { name: "Strong", shorthand: "4", target: 7.0 },
+          { name: "Bold", shorthand: "5", target: 12.0 },
         ],
-        variationTargets: [1.5, 2.2, 4.5, 7.0, 12.0],
       },
 
       // ── Fill/Button ────────────────────────────────────────────────────────
@@ -195,17 +183,14 @@ const nclarity: Preset = {
       {
         name: "fill/button",
         shorthand: "fi/btn",
-        minContrast: 1.3,
         solverMode: "saturated",
-        customVariationList: true,
-        customVariations: [
-          { name: "Disabled", shorthand: "1" },
-          { name: "Subtle", shorthand: "2" },
-          { name: "Default", shorthand: "3" },
-          { name: "Hovered", shorthand: "4" },
-          { name: "Pressed", shorthand: "5" },
+        variations: [
+          { name: "Disabled", shorthand: "1", target: 1.3 },
+          { name: "Subtle", shorthand: "2", target: 2.0 },
+          { name: "Default", shorthand: "3", target: 4.5 },
+          { name: "Hovered", shorthand: "4", target: 6.0 },
+          { name: "Pressed", shorthand: "5", target: 8.0 },
         ],
-        variationTargets: [1.3, 2.0, 4.5, 6.0, 8.0],
       },
 
       // ── Text/ButtonLabel ───────────────────────────────────────────────────
@@ -215,17 +200,14 @@ const nclarity: Preset = {
       {
         name: "text/buttonLabel",
         shorthand: "tx/btn",
-        minContrast: 1.5,
         solverMode: "luminance",
-        customVariationList: true,
-        customVariations: [
-          { name: "Disabled", shorthand: "1" },
-          { name: "Subtle", shorthand: "2" },
-          { name: "Default", shorthand: "3" },
-          { name: "Hovered", shorthand: "4" },
-          { name: "Pressed", shorthand: "5" },
+        variations: [
+          { name: "Disabled", shorthand: "1", target: 1.5 },
+          { name: "Subtle", shorthand: "2", target: 3.0 },
+          { name: "Default", shorthand: "3", target: 4.5 },
+          { name: "Hovered", shorthand: "4", target: 6.0 },
+          { name: "Pressed", shorthand: "5", target: 8.0 },
         ],
-        variationTargets: [1.5, 3.0, 4.5, 6.0, 8.0],
         localBg: {
           kind: "token",
           value: "[color]/fill/button/default",
@@ -239,17 +221,14 @@ const nclarity: Preset = {
       {
         name: "text/text",
         shorthand: "tx/tx",
-        minContrast: 2.0,
         solverMode: "natural",
-        customVariationList: true,
-        customVariations: [
-          { name: "Faint", shorthand: "1" },
-          { name: "Muted", shorthand: "2" },
-          { name: "Secondary", shorthand: "3" },
-          { name: "Primary", shorthand: "4" },
-          { name: "Emphasis", shorthand: "5" },
+        variations: [
+          { name: "Faint", shorthand: "1", target: 2.0 },
+          { name: "Muted", shorthand: "2", target: 3.0 },
+          { name: "Secondary", shorthand: "3", target: 4.5 },
+          { name: "Primary", shorthand: "4", target: 7.0 },
+          { name: "Emphasis", shorthand: "5", target: 11.5 },
         ],
-        variationTargets: [2.0, 3.0, 4.5, 7.0, 11.5],
       },
 
       // ── Status roles ───────────────────────────────────────────────────────

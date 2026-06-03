@@ -20,7 +20,7 @@
  *   status/warning/ bg · border · text
  *   status/error/   bg · border · text
  *
- * Figma variable path examples:
+ * Variable path examples:
  *   Slate/background/subtle    Blue/fill/default    Rose/text/strong
  *
  * Contrast targets per slot (solved against theme bg #FFFFFF light / #0F172A dark):
@@ -42,7 +42,7 @@
  *   status/[channel]/text    4.5   status text / icon
  */
 
-import type { Preset } from "../types";
+import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
 
 const presets: Preset[] = [
   {
@@ -67,17 +67,15 @@ const presets: Preset[] = [
       useShorthandSteps: false,
       includeSourceColors: false,
       sourceCollectionName: "global",
-      alphaValues: "5, 10, 20, 25, 50, 75, 80, 90, 95",
-      tokenGrouping: "color",
+      alphaValues: [5, 10, 20, 25, 50, 75, 80, 90, 95],
       includeColorScalesCollection: true,
       includeDescriptions: true,
       scaleCollectionName: "palette",
       tokenCollectionName: "tokens",
+      scaleSteps: null,
 
-      scaleStepNames: null,
-
-      // Global variations — not used directly (all roles use customVariationList).
-      variations: [{ name: "default", shorthand: "default" }],
+      // Global variations — not used directly (all roles use custom variation arrays).
+      variations: [{ name: "default", shorthand: "default", target: 1 }],
 
       colors: [
         { name: "Slate", shorthand: "Slate", value: "64748B", description: "Slate — blue-gray neutral" },
@@ -92,15 +90,13 @@ const presets: Preset[] = [
         {
           name: "background",
           shorthand: "background",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtle", shorthand: "subtle" }, // ≈ TW 50  — off-white tint
-            { name: "default", shorthand: "default" }, // ≈ TW 100 — light surface
-            { name: "raised", shorthand: "raised" }, // ≈ TW 200 — raised card
+          variations: [
+            { name: "subtle", shorthand: "subtle", target: 1.05 }, // ≈ TW 50  — off-white tint
+            { name: "default", shorthand: "default", target: 1.15 }, // ≈ TW 100 — light surface
+            { name: "raised", shorthand: "raised", target: 1.3 }, // ≈ TW 200 — raised card
           ],
-          variationTargets: [1.05, 1.15, 1.3],
           description: "Background fills · subtle tint · surface · raised card",
+          mappingMethod: "contrast",
         },
 
         // ── BORDER ──────────────────────────────────────────────────────────────
@@ -108,15 +104,13 @@ const presets: Preset[] = [
         {
           name: "border",
           shorthand: "border",
-          minContrast: 1.5,
-          customVariationList: true,
-          customVariations: [
-            { name: "subtle", shorthand: "subtle" }, // ≈ TW 300 — decorative separator
-            { name: "default", shorthand: "default" }, // ≈ TW 400 — UI border
-            { name: "strong", shorthand: "strong" }, // ≈ TW 500 — strong outline / focus ring
+          variations: [
+            { name: "subtle", shorthand: "subtle", target: 1.6 }, // ≈ TW 300 — decorative separator
+            { name: "default", shorthand: "default", target: 2.5 }, // ≈ TW 400 — UI border
+            { name: "strong", shorthand: "strong", target: 3.5 }, // ≈ TW 500 — strong outline / focus ring
           ],
-          variationTargets: [1.6, 2.5, 3.5],
           description: "Border strokes · subtle separator · UI border · strong outline",
+          mappingMethod: "contrast",
         },
 
         // ── FILL ────────────────────────────────────────────────────────────────
@@ -124,15 +118,13 @@ const presets: Preset[] = [
         {
           name: "fill",
           shorthand: "fill",
-          minContrast: 2.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "muted", shorthand: "muted" }, // ≈ TW 400 — icon / muted fill
-            { name: "default", shorthand: "default" }, // ≈ TW 500 — AA solid fill (button)
-            { name: "strong", shorthand: "strong" }, // ≈ TW 700 — high-emphasis fill
+          variations: [
+            { name: "muted", shorthand: "muted", target: 2.5 }, // ≈ TW 400 — icon / muted fill
+            { name: "default", shorthand: "default", target: 4.5 }, // ≈ TW 500 — AA solid fill (button)
+            { name: "strong", shorthand: "strong", target: 7.0 }, // ≈ TW 700 — high-emphasis fill
           ],
-          variationTargets: [2.5, 4.5, 7.0],
           description: "Solid fills · muted icon · AA button fill · strong emphasis",
+          mappingMethod: "contrast",
         },
 
         // ── TEXT ────────────────────────────────────────────────────────────────
@@ -140,61 +132,53 @@ const presets: Preset[] = [
         {
           name: "text",
           shorthand: "text",
-          minContrast: 3.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "muted", shorthand: "muted" }, // ≈ TW 500 — placeholder / hint text
-            { name: "default", shorthand: "default" }, // ≈ TW 600 — AA body text
-            { name: "strong", shorthand: "strong" }, // ≈ TW 800 — AAA heading
-            { name: "inverse", shorthand: "inverse" }, // ≈ TW 50  — text on colored fill
+          variations: [
+            { name: "muted", shorthand: "muted", target: 3.0 }, // ≈ TW 500 — placeholder / hint text
+            { name: "default", shorthand: "default", target: 4.5 }, // ≈ TW 600 — AA body text
+            { name: "strong", shorthand: "strong", target: 7.0 }, // ≈ TW 800 — AAA heading
+            { name: "inverse", shorthand: "inverse", target: 1.1 }, // ≈ TW 50  — text on colored fill
           ],
-          variationTargets: [3.0, 4.5, 7.0, 1.1],
           description: "Text hierarchy · muted placeholder · AA body · AAA heading · inverse on fill",
+          mappingMethod: "contrast",
         },
 
         // ── STATUS / SUCCESS ─────────────────────────────────────────────────────
         {
           name: "status/success",
           shorthand: "status/success",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg", shorthand: "bg" }, // tinted success background
-            { name: "border", shorthand: "border" }, // success field border
-            { name: "text", shorthand: "text" }, // success text / icon
+          variations: [
+            { name: "bg", shorthand: "bg", target: 1.15 }, // tinted success background
+            { name: "border", shorthand: "border", target: 2.5 }, // success field border
+            { name: "text", shorthand: "text", target: 4.5 }, // success text / icon
           ],
-          variationTargets: [1.15, 2.5, 4.5],
           description: "Success feedback · tinted bg · border · text",
+          mappingMethod: "contrast",
         },
 
         // ── STATUS / WARNING ─────────────────────────────────────────────────────
         {
           name: "status/warning",
           shorthand: "status/warning",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg", shorthand: "bg" },
-            { name: "border", shorthand: "border" },
-            { name: "text", shorthand: "text" },
+          variations: [
+            { name: "bg", shorthand: "bg", target: 1.15 },
+            { name: "border", shorthand: "border", target: 2.5 },
+            { name: "text", shorthand: "text", target: 4.5 },
           ],
-          variationTargets: [1.15, 2.5, 4.5],
           description: "Warning feedback · tinted bg · border · text",
+          mappingMethod: "contrast",
         },
 
         // ── STATUS / ERROR ───────────────────────────────────────────────────────
         {
           name: "status/error",
           shorthand: "status/error",
-          minContrast: 1.0,
-          customVariationList: true,
-          customVariations: [
-            { name: "bg", shorthand: "bg" },
-            { name: "border", shorthand: "border" },
-            { name: "text", shorthand: "text" },
+          variations: [
+            { name: "bg", shorthand: "bg", target: 1.15 },
+            { name: "border", shorthand: "border", target: 2.5 },
+            { name: "text", shorthand: "text", target: 4.5 },
           ],
-          variationTargets: [1.15, 2.5, 4.5],
           description: "Error feedback · tinted bg · border · text",
+          mappingMethod: "contrast",
         },
       ],
 

@@ -64,7 +64,7 @@ export function translateConfig(projectStore: ProjectStore): PluginConfig {
     sourceCollectionName: projectStore.sourceCollectionName || "_constants",
     scaleCollectionName: projectStore.scaleCollectionName || "_scale",
     tokenCollectionName: projectStore.tokenCollectionName || "color tokens",
-    alphaValues: projectStore.alphaValues ?? [],
+    alphaValues: projectStore.alphaValues || [],
     includeDescriptions: projectStore.includeDescriptions !== false,
     includeColorScalesCollection: projectStore.includeColorScalesCollection !== false,
     useUniformAlgorithm: projectStore.useUniformAlgorithm !== false,
@@ -345,8 +345,8 @@ export function detectStructuralChanges(savedState: any, newState: any): Structu
     changes.push({ kind: "source-removed", detail: "Source colors disabled. The source constants collection will become orphaned.", orphanedCollection: oldSourceCol });
   }
 
-  const oldAlpha: number[] = savedState.alphaValues ?? [];
-  const newAlpha: number[] = newState.alphaValues ?? [];
+  const oldAlpha: number[] = savedState.alphaValues || [];
+  const newAlpha: number[] = newState.alphaValues || [];
   if (oldAlpha.length > 0 && newAlpha.length === 0) {
     changes.push({ kind: "alpha-removed", detail: "Alpha tints disabled. Existing opacity variables will become orphaned." });
   } else if (oldAlpha.length > 0 && newAlpha.length > 0 && oldAlpha.join(",") !== newAlpha.join(",")) {

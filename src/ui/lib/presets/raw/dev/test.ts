@@ -11,7 +11,7 @@
  * │ TEST-01         │ Scale mode · Natural algo · 11-step · global variations   │
  * │                 │ contrast mapping · 2 themes · alphaValues · descriptions  │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
- * │                 │ role-scoped solver overrides (5 solvers used) · 2 themes  │
+ * │ TEST-02         │ role-scoped solver overrides (5 solvers used) · 2 themes  │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
  * │ TEST-03         │ localBg hex kind · per-theme hex map on role              │
  * │                 │ contrast calculated vs explicit bg, not page bg           │
@@ -19,8 +19,8 @@
  * │ TEST-04         │ localBg color kind · bg hex taken from named color entity │
  * │                 │ same hex for all themes (color entity = static hex)       │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
- * │ TEST-05         │ localBg token kind (fixed) · points to a static token    │
- * │                 │ two-pass engine: resolveTokenRefBgs resolves once        │
+ * │ TEST-05         │ localBg token kind (fixed) · points to a static token     │
+ * │                 │ two-pass engine: resolveTokenRefBgs resolves once         │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
  * │ TEST-06         │ localBg token kind (dynamic) · [color] placeholder        │
  * │                 │ per-color bg map computed by resolveTokenRefBgs           │
@@ -29,43 +29,36 @@
  * │                 │ 3 roles × 3 colors to exercise all three modes           │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
  * │ TEST-08         │ index mapping method · explicit step indices             │
- * │                 │ vs contrast mapping on same color · scale mode only      │
+ * │                 │ vs contrast mapping on same color · scale mode only       │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
  * │ TEST-09         │ customVariationList=true on roles · per-role variations   │
- * │                 │ global fallback variations also present                  │
+ * │                 │ global fallback variations also present                   │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
  * │ TEST-10         │ tokenNameSegments all 6 permutations of [c,r,v]          │
  * │                 │ useShorthandColors/Roles/Variations/Steps all=true        │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
- * │ TEST-11         │ Named step names · custom shorthand map                  │
+ * │ TEST-11         │ Named step names · custom shorthand map                   │
  * │                 │ useShorthandSteps=true · 7-step named scale              │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
  * │ TEST-12         │ Multiple scale algorithms on different colors             │
- * │                 │ algorithmScopeLevel=color · all 7 algorithms used        │
+ * │                 │ algorithmScopeLevel=color · all 7 algorithms used         │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
- * │ TEST-13         │ 3 themes · theme deduplication (duplicate names)         │
+ * │ TEST-13         │ 3 themes · theme deduplication (duplicate names)          │
  * │                 │ tokenGrouping='role' · multi-mode token collection        │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
- * │ TEST-14         │ includeSourceColors=true · sourceCollectionName custom   │
- * │                 │ includeAlphaTints=true · full alphaValues string         │
+ * │ TEST-14         │ includeSourceColors=true · sourceCollectionName custom    │
+ * │                 │ includeAlphaTints=true · full alphaValues string          │
  * ├─────────────────┼───────────────────────────────────────────────────────────┤
  * │ TEST-15         │ Minimal: 1 color · 1 role · 1 variation · 1 theme        │
- * │                 │ all optional features disabled · stress test defaults    │
+ * │                 │ all optional features disabled · stress test defaults     │
  * └─────────────────┴───────────────────────────────────────────────────────────┘
  */
 
-import type { Preset } from "../../types";
+import type { Preset } from "../../../../../ui/screens/ThemeShopOverlay";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-01 — Scale mode baseline
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   pluginMode='scale', scaleAlgorithm='Natural', scaleLength=11
-//   contrast mapping (variationTargets), global variations (no overrides)
-//   2 themes (Light + Dark), includeAlphaTints, includeDescriptions
-//   tokenGrouping='color', tokenNameSegments=['color','role','variation']
-//   includeColorScalesCollection=true, useUniformAlgorithm=true
-//   algorithmScopeLevel='color', solverMode='natural'
 
 const test01: Preset = {
   id: "test-01-scale-baseline",
@@ -90,20 +83,17 @@ const test01: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 25, 50, 75, 90",
-    tokenGrouping: "color",
+    alphaValues: [10, 25, 50, 75, 90],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "Subtle", shorthand: "1" },
-      { name: "Default", shorthand: "2" },
-      { name: "Strong", shorthand: "3" },
+      { name: "Subtle", shorthand: "1", target: 1.0 },
+      { name: "Default", shorthand: "2", target: 4.5 },
+      { name: "Strong", shorthand: "3", target: 7.0 },
     ],
 
     colors: [
@@ -115,17 +105,23 @@ const test01: Preset = {
       {
         name: "text",
         shorthand: "tx",
-        minContrast: 2.0,
         mappingMethod: "contrast",
-        variationTargets: [3.0, 4.5, 7.0],
+        variations: [
+          { name: "Subtle", shorthand: "1", target: 3.0 },
+          { name: "Default", shorthand: "2", target: 4.5 },
+          { name: "Strong", shorthand: "3", target: 7.0 },
+        ],
         description: "Body text AA→AAA",
       },
       {
         name: "fill",
         shorthand: "fi",
-        minContrast: 1.0,
         mappingMethod: "contrast",
-        variationTargets: [1.5, 4.5, 7.0],
+        variations: [
+          { name: "Subtle", shorthand: "1", target: 1.5 },
+          { name: "Default", shorthand: "2", target: 4.5 },
+          { name: "Strong", shorthand: "3", target: 7.0 },
+        ],
         description: "Interactive fills",
       },
     ],
@@ -140,9 +136,6 @@ const test01: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-02 — Direct mode · resolver solvers
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   per-role solverMode overrides: natural, saturated, luminance, hue-locked, chroma-maximized
-//   includeColorScalesCollection=false, 2 themes
 
 const test02: Preset = {
   id: "test-02-direct-solvers",
@@ -166,19 +159,16 @@ const test02: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 25, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 25, 50],
     includeColorScalesCollection: false,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "default", shorthand: "d" },
-      { name: "strong", shorthand: "s" },
+      { name: "default", shorthand: "d", target: 4.5 },
+      { name: "strong", shorthand: "s", target: 7.0 },
     ],
 
     colors: [
@@ -190,42 +180,57 @@ const test02: Preset = {
       {
         name: "role-natural",
         shorthand: "nat",
-        minContrast: 1.0,
         solverMode: "natural",
-        variationTargets: [4.5, 7.0],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "solver=natural — default perceptual solver",
+        mappingMethod: "contrast",
       },
       {
         name: "role-saturated",
         shorthand: "sat",
-        minContrast: 1.0,
         solverMode: "saturated",
-        variationTargets: [4.5, 7.0],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "solver=saturated — maximises chroma while hitting contrast",
+        mappingMethod: "contrast",
       },
       {
         name: "role-luminance",
         shorthand: "lum",
-        minContrast: 1.0,
         solverMode: "luminance",
-        variationTargets: [4.5, 7.0],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "solver=luminance — adjusts lightness only, preserves hue+chroma",
+        mappingMethod: "contrast",
       },
       {
         name: "role-hue-locked",
         shorthand: "hlo",
-        minContrast: 1.0,
         solverMode: "hue-locked",
-        variationTargets: [4.5, 7.0],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "solver=hue-locked — never shifts hue angle",
+        mappingMethod: "contrast",
       },
       {
         name: "role-chroma-max",
         shorthand: "crm",
-        minContrast: 1.0,
         solverMode: "chroma-maximized",
-        variationTargets: [4.5, 7.0],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "solver=chroma-maximized — pushes chroma to gamut limit",
+        mappingMethod: "contrast",
       },
     ],
 
@@ -239,11 +244,6 @@ const test02: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-03 — localBg hex kind
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   localBg.kind='hex', value={Light:'#E5E7EB', Dark:'#1F2937'}
-//   Contrast on 'on-surface' role calculated vs explicit hex per theme
-//   NOT the page bg — so on Light theme: vs #E5E7EB, on Dark: vs #1F2937
-//   Other roles have no localBg for comparison
 
 const test03: Preset = {
   id: "test-03-localbg-hex",
@@ -268,44 +268,47 @@ const test03: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "subtle", shorthand: "1" },
-      { name: "default", shorthand: "2" },
-      { name: "strong", shorthand: "3" },
+      { name: "subtle", shorthand: "1", target: 1.5 },
+      { name: "default", shorthand: "2", target: 4.5 },
+      { name: "strong", shorthand: "3", target: 7.0 },
     ],
 
     colors: [{ _id: "t03-c1", name: "Blue", shorthand: "bl", value: "2563EB", description: "Blue — primary" }],
 
     roles: [
       {
-        // No localBg — contrast vs page bg (FFFFFF / 0F172A)
         name: "text-page",
         shorthand: "tp",
-        minContrast: 2.0,
-        variationTargets: [3.0, 4.5, 7.0],
+        variations: [
+          { name: "subtle", shorthand: "1", target: 3.0 },
+          { name: "default", shorthand: "2", target: 4.5 },
+          { name: "strong", shorthand: "3", target: 7.0 },
+        ],
         description: "Contrast vs page bg · no localBg · baseline comparison",
+        mappingMethod: "contrast",
       },
       {
-        // localBg hex: contrast vs #E5E7EB (light) / #1F2937 (dark) — a card surface
         name: "text-on-surface",
         shorthand: "ts",
-        minContrast: 2.0,
-        variationTargets: [3.0, 4.5, 7.0],
         localBg: {
           kind: "hex",
           value: { light: "#E5E7EB", dark: "#1F2937" },
         },
+        variations: [
+          { name: "subtle", shorthand: "1", target: 3.0 },
+          { name: "default", shorthand: "2", target: 4.5 },
+          { name: "strong", shorthand: "3", target: 7.0 },
+        ],
         description: "Contrast vs #E5E7EB (Light) / #1F2937 (Dark) — card surface hex localBg",
+        mappingMethod: "contrast",
       },
     ],
 
@@ -319,10 +322,6 @@ const test03: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-04 — localBg color kind
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   localBg.kind='color', value='Sand' (a named color in colors array)
-//   _resolveLocalBg looks up the color entity, maps to { theme → color.value }
-//   Same hex for all themes because Color entities hold a single hex value
 
 const test04: Preset = {
   id: "test-04-localbg-color",
@@ -347,19 +346,16 @@ const test04: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "default", shorthand: "d" },
-      { name: "strong", shorthand: "s" },
+      { name: "default", shorthand: "d", target: 4.5 },
+      { name: "strong", shorthand: "s", target: 7.0 },
     ],
 
     colors: [
@@ -371,21 +367,26 @@ const test04: Preset = {
       {
         name: "text-base",
         shorthand: "tb",
-        minContrast: 2.0,
-        variationTargets: [4.5, 7.0],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "Text vs page bg · no localBg · baseline",
+        mappingMethod: "contrast",
       },
       {
-        // localBg kind='color' → looks up 'Sand' in colors array → uses its hex for all themes
         name: "text-on-sand",
         shorthand: "tos",
-        minContrast: 2.0,
-        variationTargets: [4.5, 7.0],
         localBg: {
           kind: "color",
           value: "Sand",
         },
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: 'Text on Sand surface · localBg.kind=color, value="Sand" → same hex (#A8956A) for all themes',
+        mappingMethod: "contrast",
       },
     ],
 
@@ -397,20 +398,14 @@ const test04: Preset = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TEST-05 — localBg token kind (fixed, non-dynamic)
+// TEST-05 — localBg token-static kind (fixed, non-dynamic)
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   localBg.kind='token', dynamic=false, value='Blue-fill-1'
-//   The engine tokenName format is "{Color}-{role}-{variationIndex}" e.g. "Blue-fill-1"
-//   config._mapRoles sets localBgTokenRef='Blue-fill-1'
-//   After engine pass 1: resolveTokenRefBgs() finds token, sets localBg={theme→hex}
-//   Engine reruns with resolved localBg. Contrast on 'on/fill' vs fill token hex.
 
 const test05: Preset = {
   id: "test-05-localbg-token-fixed",
   name: "TEST-05 localBg Token (Fixed)",
   badge: "T05",
-  description: 'localBg.kind="token", dynamic=false · value="Blue/fill/default" → localBgTokenRef set · two-pass engine: resolveTokenRefBgs() resolves token per theme · on/fill contrast vs fill/default hex',
+  description: 'localBg.kind="token-static" · value="Blue-fill-1" → localBgTokenRef set · two-pass engine: resolveTokenRefBgs() resolves token per theme · on/fill contrast vs fill/default hex',
   tags: ["test", "localBg", "token", "two-pass"],
   swatches: ["1D4ED8", "93C5FD"],
   config: {
@@ -429,47 +424,48 @@ const test05: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "subtle", shorthand: "1" },
-      { name: "default", shorthand: "2" },
-      { name: "strong", shorthand: "3" },
+      { name: "subtle", shorthand: "1", target: 1.5 },
+      { name: "default", shorthand: "2", target: 4.5 },
+      { name: "strong", shorthand: "3", target: 7.0 },
     ],
 
     colors: [{ _id: "t05-c1", name: "Blue", shorthand: "bl", value: "1D4ED8", description: "Deep blue" }],
 
     roles: [
       {
-        // Produces fill/default token — this is what on/fill points to
         name: "fill",
         shorthand: "fi",
-        minContrast: 1.0,
-        variationTargets: [1.5, 4.5, 7.0],
+        variations: [
+          { name: "subtle", shorthand: "1", target: 1.5 },
+          { name: "default", shorthand: "2", target: 4.5 },
+          { name: "strong", shorthand: "3", target: 7.0 },
+        ],
         description: "Fill role — produces Blue/fill/default which on/fill references",
+        mappingMethod: "contrast",
       },
       {
-        // Fixed token ref. tokenName format = "{Color}-{role}-{variationIndex}".
-        // fill role has 3 variations (subtle=0, default=1, strong=2) → default = index 1
         name: "on/fill",
         shorthand: "onfi",
-        minContrast: 2.0,
         solverMode: "luminance",
-        variationTargets: [3.0, 4.5, 7.0],
         localBg: {
-          kind: "token",
+          kind: "token-static",
           value: "Blue-fill-1",
-          dynamic: false,
         },
-        description: 'on/fill · localBg.kind=token, dynamic=false · ref "Blue-fill-1" = fill/default · two-pass resolves per theme',
+        variations: [
+          { name: "subtle", shorthand: "1", target: 3.0 },
+          { name: "default", shorthand: "2", target: 4.5 },
+          { name: "strong", shorthand: "3", target: 7.0 },
+        ],
+        description: 'on/fill · localBg.kind=token-static · ref "Blue-fill-1" = fill/default · two-pass resolves per theme',
+        mappingMethod: "contrast",
       },
     ],
 
@@ -481,21 +477,14 @@ const test05: Preset = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TEST-06 — localBg token kind (dynamic, [color] placeholder)
+// TEST-06 — localBg token-dynamic kind (dynamic, [color] placeholder)
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   localBg.kind='token', dynamic=true, value='[color]-fill-1'
-//   tokenName format = "{Color}-{role}-{variationIndex}" so default fill = "{Color}-fill-1"
-//   config._mapRoles sets localBgDynamicRef='[color]-fill-1'
-//   resolveTokenRefBgs replaces [color] with each color name → per-color bg map
-//   Blue/on/fill is vs Blue-fill-1; Red/on/fill is vs Red-fill-1
-//   Multiple colors make the per-color separation observable
 
 const test06: Preset = {
   id: "test-06-localbg-token-dynamic",
   name: "TEST-06 localBg Token (Dynamic)",
   badge: "T06",
-  description: 'localBg.kind="token", dynamic=true · value="[color]/fill/default" → localBgDynamicRef set · resolveTokenRefBgs replaces [color] per color → localBgPerColor · Blue on/fill vs Blue fill/default, Red on/fill vs Red fill/default',
+  description: 'localBg.kind="token-dynamic" · value="[color]-fill-1" → localBgDynamicRef set · resolveTokenRefBgs replaces [color] per color → localBgPerColor · Blue on/fill vs Blue fill/default, Red on/fill vs Red fill/default',
   tags: ["test", "localBg", "dynamic", "two-pass"],
   swatches: ["1D4ED8", "DC2626"],
   config: {
@@ -514,20 +503,17 @@ const test06: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "subtle", shorthand: "1" },
-      { name: "default", shorthand: "2" },
-      { name: "strong", shorthand: "3" },
+      { name: "subtle", shorthand: "1", target: 1.5 },
+      { name: "default", shorthand: "2", target: 4.5 },
+      { name: "strong", shorthand: "3", target: 7.0 },
     ],
 
     colors: [
@@ -537,27 +523,31 @@ const test06: Preset = {
 
     roles: [
       {
-        // Produces fill tokens that on/fill references per color
         name: "fill",
         shorthand: "fi",
-        minContrast: 1.0,
-        variationTargets: [1.5, 4.5, 7.0],
+        variations: [
+          { name: "subtle", shorthand: "1", target: 1.5 },
+          { name: "default", shorthand: "2", target: 4.5 },
+          { name: "strong", shorthand: "3", target: 7.0 },
+        ],
         description: "Fill role — Blue/fill/default and Red/fill/default are resolved as localBg",
+        mappingMethod: "contrast",
       },
       {
-        // Dynamic ref: [color] → Blue for Blue tokens, Red for Red tokens.
-        // tokenName = "{Color}-fill-{idx}", default variation = index 1 → "[color]-fill-1"
         name: "on/fill",
         shorthand: "onfi",
-        minContrast: 2.0,
         solverMode: "luminance",
-        variationTargets: [3.0, 4.5, 7.0],
         localBg: {
-          kind: "token",
+          kind: "token-dynamic",
           value: "[color]-fill-1",
-          dynamic: true,
         },
-        description: 'on/fill · localBg.kind=token, dynamic=true · "[color]-fill-1" placeholder → per-color localBgPerColor',
+        variations: [
+          { name: "subtle", shorthand: "1", target: 3.0 },
+          { name: "default", shorthand: "2", target: 4.5 },
+          { name: "strong", shorthand: "3", target: 7.0 },
+        ],
+        description: 'on/fill · localBg.kind=token-dynamic · "[color]-fill-1" placeholder → per-color localBgPerColor',
+        mappingMethod: "contrast",
       },
     ],
 
@@ -571,10 +561,6 @@ const test06: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-07 — scopedColorIds (null / [] / [specific])
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   role A: scopedColorIds=null  → applies to all 3 colors
-//   role B: scopedColorIds=[]    → applies to no colors (zero token output)
-//   role C: scopedColorIds=['t07-c2'] → applies only to Green
 
 const test07: Preset = {
   id: "test-07-scoped-color-ids",
@@ -599,19 +585,16 @@ const test07: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "default", shorthand: "d" },
-      { name: "strong", shorthand: "s" },
+      { name: "default", shorthand: "d", target: 4.5 },
+      { name: "strong", shorthand: "s", target: 7.0 },
     ],
 
     colors: [
@@ -622,31 +605,37 @@ const test07: Preset = {
 
     roles: [
       {
-        // scopedColorIds=null → generates tokens for Blue, Green, Red
         name: "text-all",
         shorthand: "ta",
-        minContrast: 2.0,
-        variationTargets: [4.5, 7.0],
         scopedColorIds: null,
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "scopedColorIds=null → all 3 colors get tokens",
+        mappingMethod: "contrast",
       },
       {
-        // scopedColorIds=[] → generates no tokens for any color
         name: "text-none",
         shorthand: "tn",
-        minContrast: 2.0,
-        variationTargets: [4.5, 7.0],
         scopedColorIds: [],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "scopedColorIds=[] → zero token output",
+        mappingMethod: "contrast",
       },
       {
-        // scopedColorIds=['t07-c2'] → only Green gets tokens
         name: "text-green-only",
         shorthand: "tg",
-        minContrast: 2.0,
-        variationTargets: [4.5, 7.0],
         scopedColorIds: ["t07-c2"],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: 'scopedColorIds=["t07-c2"] → Green only',
+        mappingMethod: "contrast",
       },
     ],
 
@@ -660,11 +649,6 @@ const test07: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-08 — Index mapping method
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   mappingMethod='index', indexTargets=[2] and [8]
-//   Token always references the scale step at the given 0-based index
-//   Companion contrast-mapped role for comparison
-//   Scale mode only (index mapping references scale steps)
 
 const test08: Preset = {
   id: "test-08-index-mapping",
@@ -689,41 +673,42 @@ const test08: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "light", shorthand: "L" },
-      { name: "mid", shorthand: "M" },
-      { name: "dark", shorthand: "D" },
+      { name: "light", shorthand: "L", target: 1.0 },
+      { name: "mid", shorthand: "M", target: 1.0 },
+      { name: "dark", shorthand: "D", target: 1.0 },
     ],
 
     colors: [{ _id: "t08-c1", name: "Violet", shorthand: "vi", value: "7C3AED", description: "Violet" }],
 
     roles: [
       {
-        // index mapping: always picks step[2] for variation 0, step[8] for variation 2
         name: "indexed",
         shorthand: "ix",
-        minContrast: 1.0,
         mappingMethod: "index",
-        variationTargets: [2, 5, 8],
+        variations: [
+          { name: "light", shorthand: "L", target: 2 },
+          { name: "mid", shorthand: "M", target: 5 },
+          { name: "dark", shorthand: "D", target: 8 },
+        ],
         description: "mappingMethod=index · picks scale steps at indices 2, 5, 8",
       },
       {
-        // contrast mapping for same color — shows the difference
         name: "contrast",
         shorthand: "cx",
-        minContrast: 1.0,
         mappingMethod: "contrast",
-        variationTargets: [2.0, 4.5, 7.0],
+        variations: [
+          { name: "light", shorthand: "L", target: 2.0 },
+          { name: "mid", shorthand: "M", target: 4.5 },
+          { name: "dark", shorthand: "D", target: 7.0 },
+        ],
         description: "mappingMethod=contrast · finds closest step meeting contrast target",
       },
     ],
@@ -738,11 +723,6 @@ const test08: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-09 — customVariationList per role
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   canEditRoleVariantNames=true
-//   role A: customVariationList=true, 3 custom variations
-//   role B: customVariationList=false, falls back to global 5 variations
-//   Both on same color — shows different variation counts in output
 
 const test09: Preset = {
   id: "test-09-custom-variations",
@@ -767,50 +747,48 @@ const test09: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: true,
 
     // Global fallback variations (5)
     variations: [
-      { name: "v1", shorthand: "v1" },
-      { name: "v2", shorthand: "v2" },
-      { name: "v3", shorthand: "v3" },
-      { name: "v4", shorthand: "v4" },
-      { name: "v5", shorthand: "v5" },
+      { name: "v1", shorthand: "v1", target: 1.5 },
+      { name: "v2", shorthand: "v2", target: 2.0 },
+      { name: "v3", shorthand: "v3", target: 3.0 },
+      { name: "v4", shorthand: "v4", target: 4.5 },
+      { name: "v5", shorthand: "v5", target: 7.0 },
     ],
 
     colors: [{ _id: "t09-c1", name: "Cyan", shorthand: "cy", value: "0891B2", description: "Cyan" }],
 
     roles: [
       {
-        // Custom 3-variation role
         name: "status",
         shorthand: "st",
-        minContrast: 1.0,
-        customVariationList: true,
-        customVariations: [
-          { name: "bg", shorthand: "bg" },
-          { name: "fill", shorthand: "fi" },
-          { name: "text", shorthand: "tx" },
+        variations: [
+          { name: "bg", shorthand: "bg", target: 1.3 },
+          { name: "fill", shorthand: "fi", target: 4.5 },
+          { name: "text", shorthand: "tx", target: 4.5 },
         ],
-        variationTargets: [1.3, 4.5, 4.5],
         description: "customVariationList=true · 3 variations: bg, fill, text",
+        mappingMethod: "contrast",
       },
       {
-        // Falls back to 5 global variations
         name: "text",
         shorthand: "tx",
-        minContrast: 1.0,
-        customVariationList: false,
-        variationTargets: [1.5, 2.0, 3.0, 4.5, 7.0],
+        variations: [
+          { name: "v1", shorthand: "v1", target: 1.5 },
+          { name: "v2", shorthand: "v2", target: 2.0 },
+          { name: "v3", shorthand: "v3", target: 3.0 },
+          { name: "v4", shorthand: "v4", target: 4.5 },
+          { name: "v5", shorthand: "v5", target: 7.0 },
+        ],
         description: "customVariationList=false · uses 5 global variations",
+        mappingMethod: "contrast",
       },
     ],
 
@@ -824,11 +802,6 @@ const test09: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-10 — All shorthand flags + role/variation ordering
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   useShorthandColors=true, useShorthandRoles=true
-//   useShorthandVariations=true, useShorthandSteps=true (with scaleStepNames)
-//   tokenNameSegments=['role','color','variation'] (non-default ordering)
-//   All labels in output should use shorthands
 
 const test10: Preset = {
   id: "test-10-all-shorthands",
@@ -846,7 +819,6 @@ const test10: Preset = {
     algorithmScopeLevel: "color",
     solverMode: "natural",
 
-    // Role-first token ordering: role/color/variation
     tokenNameSegments: ["role", "color", "variation"],
     useShorthandColors: true,
     useShorthandRoles: true,
@@ -854,28 +826,18 @@ const test10: Preset = {
     useShorthandSteps: true,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "role",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: false,
     scaleCollectionName: "_scale",
     tokenCollectionName: "tokens",
 
-    // 5 named steps with shorthands
-    scaleStepNames: [
-      { name: "lightest", shorthand: "xl" },
-      { name: "light", shorthand: "l" },
-      { name: "mid", shorthand: "m" },
-      { name: "dark", shorthand: "d" },
-      { name: "darkest", shorthand: "xd" },
-    ],
-
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "subtle", shorthand: "s" },
-      { name: "default", shorthand: "d" },
-      { name: "strong", shorthand: "x" },
+      { name: "subtle", shorthand: "s", target: 1.1 },
+      { name: "default", shorthand: "d", target: 1.3 },
+      { name: "strong", shorthand: "x", target: 1.6 },
     ],
 
     colors: [
@@ -887,16 +849,24 @@ const test10: Preset = {
       {
         name: "background",
         shorthand: "bg",
-        minContrast: 1.0,
-        variationTargets: [1.1, 1.3, 1.6],
+        variations: [
+          { name: "subtle", shorthand: "s", target: 1.1 },
+          { name: "default", shorthand: "d", target: 1.3 },
+          { name: "strong", shorthand: "x", target: 1.6 },
+        ],
         description: "Shorthand: bg",
+        mappingMethod: "contrast",
       },
       {
         name: "text",
         shorthand: "tx",
-        minContrast: 2.0,
-        variationTargets: [3.0, 4.5, 7.0],
+        variations: [
+          { name: "subtle", shorthand: "s", target: 3.0 },
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "x", target: 7.0 },
+        ],
         description: "Shorthand: tx",
+        mappingMethod: "contrast",
       },
     ],
 
@@ -907,11 +877,6 @@ const test10: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-11 — Named scale steps with shorthands
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   scaleStepNames array with name+shorthand pairs
-//   useShorthandSteps=true → export uses shorthands
-//   scaleLength matches step names count
-//   Step names shorter than scaleLength → padding with auto-numbered names
 
 const test11: Preset = {
   id: "test-11-named-steps",
@@ -936,29 +901,17 @@ const test11: Preset = {
     useShorthandSteps: true,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
 
-    // 7 named steps (T-shirt sizing)
-    scaleStepNames: [
-      { name: "50", shorthand: "xs" },
-      { name: "100", shorthand: "s" },
-      { name: "200", shorthand: "sm" },
-      { name: "400", shorthand: "m" },
-      { name: "600", shorthand: "l" },
-      { name: "800", shorthand: "xl" },
-      { name: "900", shorthand: "2xl" },
-    ],
-
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "default", shorthand: "d" },
-      { name: "strong", shorthand: "s" },
+      { name: "default", shorthand: "d", target: 4.5 },
+      { name: "strong", shorthand: "s", target: 7.0 },
     ],
 
     colors: [
@@ -970,9 +923,12 @@ const test11: Preset = {
       {
         name: "text",
         shorthand: "tx",
-        minContrast: 2.0,
-        variationTargets: [4.5, 7.0],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "Text using named + shorthand step labels",
+        mappingMethod: "contrast",
       },
     ],
 
@@ -986,11 +942,6 @@ const test11: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-12 — Per-color scale algorithms
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   algorithmScopeLevel='color'
-//   Each color has a different scaleAlgorithm override
-//   7 algorithms covered: Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear
-//   Different output shapes despite same source hex
 
 const test12: Preset = {
   id: "test-12-scale-algorithms",
@@ -1015,17 +966,14 @@ const test12: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "color",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: false,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
-    variations: [{ name: "default", shorthand: "d" }],
+    variations: [{ name: "default", shorthand: "d", target: 4.5 }],
 
     colors: [
       { _id: "t12-c1", name: "Natural", shorthand: "na", value: "3B82F6", scaleAlgorithm: "Natural", description: "Natural algorithm" },
@@ -1041,9 +989,9 @@ const test12: Preset = {
       {
         name: "text",
         shorthand: "tx",
-        minContrast: 2.0,
-        variationTargets: [4.5],
+        variations: [{ name: "default", shorthand: "d", target: 4.5 }],
         description: "Single variation to show algorithm difference clearly",
+        mappingMethod: "contrast",
       },
     ],
 
@@ -1054,11 +1002,6 @@ const test12: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-13 — 3 themes + tokenGrouping='role' + theme deduplication
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   3 themes (Light, Dark, Brand)
-//   tokenGrouping='role' → token output keyed by role first
-//   Duplicate theme name 'Light' appears twice → deduplication → 'Light 2'
-//   scaleCollectionName and tokenCollectionName customised
 
 const test13: Preset = {
   id: "test-13-themes-grouping",
@@ -1083,20 +1026,17 @@ const test13: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "10, 50",
-    tokenGrouping: "role",
+    alphaValues: [10, 50],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "brand/scale",
     tokenCollectionName: "brand/tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "subtle", shorthand: "1" },
-      { name: "default", shorthand: "2" },
-      { name: "strong", shorthand: "3" },
+      { name: "subtle", shorthand: "1", target: 3.0 },
+      { name: "default", shorthand: "2", target: 4.5 },
+      { name: "strong", shorthand: "3", target: 7.0 },
     ],
 
     colors: [{ _id: "t13-c1", name: "Brand", shorthand: "br", value: "0055CC", description: "Brand blue" }],
@@ -1105,13 +1045,16 @@ const test13: Preset = {
       {
         name: "text",
         shorthand: "tx",
-        minContrast: 2.0,
-        variationTargets: [3.0, 4.5, 7.0],
+        variations: [
+          { name: "subtle", shorthand: "1", target: 3.0 },
+          { name: "default", shorthand: "2", target: 4.5 },
+          { name: "strong", shorthand: "3", target: 7.0 },
+        ],
         description: "Text across 3 themes + 1 deduped",
+        mappingMethod: "contrast",
       },
     ],
 
-    // 4 themes — 'Light' appears twice → second becomes 'Light 2'
     themes: [
       { name: "Light", bg: "FFFFFF" },
       { name: "Dark", bg: "0F172A" },
@@ -1124,12 +1067,6 @@ const test13: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-14 — Source colors + alpha tints
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   includeSourceColors=true → syncGlobalColors creates _constants collection
-//   sourceCollectionName custom value
-//   includeAlphaTints=true with full alphaValues string (7 values)
-//   All 7 alpha opacity variants created per color
-//   includeDescriptions=true on source color entries
 
 const test14: Preset = {
   id: "test-14-source-alpha",
@@ -1155,19 +1092,16 @@ const test14: Preset = {
 
     includeSourceColors: true,
     sourceCollectionName: "palette/raw",
-    alphaValues: "5, 10, 20, 30, 50, 75, 90",
-    tokenGrouping: "color",
+    alphaValues: [5, 10, 20, 30, 50, 75, 90],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
     variations: [
-      { name: "default", shorthand: "d" },
-      { name: "strong", shorthand: "s" },
+      { name: "default", shorthand: "d", target: 4.5 },
+      { name: "strong", shorthand: "s", target: 7.0 },
     ],
 
     colors: [
@@ -1180,9 +1114,12 @@ const test14: Preset = {
       {
         name: "text",
         shorthand: "tx",
-        minContrast: 2.0,
-        variationTargets: [4.5, 7.0],
+        variations: [
+          { name: "default", shorthand: "d", target: 4.5 },
+          { name: "strong", shorthand: "s", target: 7.0 },
+        ],
         description: "Semantic text tokens alongside source constants",
+        mappingMethod: "contrast",
       },
     ],
 
@@ -1196,12 +1133,6 @@ const test14: Preset = {
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST-15 — Minimal (all optional features off)
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercises:
-//   1 color · 1 role · 1 variation · 1 theme
-//   All optional flags false/off
-//   Default collection names
-//   No shorthands, no alpha, no source colors, no step names
-//   Stress test: engine runs with minimum viable config and produces output
 
 const test15: Preset = {
   id: "test-15-minimal",
@@ -1226,17 +1157,14 @@ const test15: Preset = {
     useShorthandSteps: false,
 
     includeSourceColors: false,
-    alphaValues: "",
-    tokenGrouping: "color",
+    alphaValues: [],
     includeColorScalesCollection: true,
     includeDescriptions: false,
     scaleCollectionName: "_scale",
     tokenCollectionName: "color tokens",
-
-    scaleStepNames: null,
     canEditRoleVariantNames: false,
 
-    variations: [{ name: "default", shorthand: "d" }],
+    variations: [{ name: "default", shorthand: "d", target: 4.5 }],
 
     colors: [{ _id: "t15-c1", name: "Blue", shorthand: "bl", value: "3B82F6", description: "" }],
 
@@ -1244,17 +1172,15 @@ const test15: Preset = {
       {
         name: "text",
         shorthand: "tx",
-        minContrast: 2.0,
-        variationTargets: [4.5],
+        variations: [{ name: "default", shorthand: "d", target: 4.5 }],
         description: "",
+        mappingMethod: "contrast",
       },
     ],
 
     themes: [{ name: "Light", bg: "FFFFFF" }],
   },
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 const presets: Preset[] = [test01, test02, test03, test04, test05, test06, test07, test08, test09, test10, test11, test12, test13, test14, test15];
 

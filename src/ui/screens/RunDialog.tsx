@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAppStore } from "../store/appStore";
+import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { useFigmaBridge, type BridgeCallbacks } from "../hooks/useFigmaBridge";
 import { Modal, ModalHeader } from "../components/Modal";
@@ -28,9 +28,9 @@ export function RunDialog() {
   const closeOverlay = useUiStore((s) => s.closeOverlay);
   const multiMode = useUiStore((s) => s.multiMode);
   const isPreviewSelected = useUiStore((s) => s.isPreviewSelected);
-  const projectStore = useAppStore((s) => s.projectStore);
-  const savedState = useAppStore((s) => s.savedState);
-  const validate = useAppStore((s) => s.validate);
+  const projectStore = useProjectStore((s) => s.projectStore);
+  const savedState = useProjectStore((s) => s.savedState);
+  const validate = useProjectStore((s) => s.validate);
 
   const [phase, setPhase] = useState<RunPhase>("config");
   const [scope, setScope] = useState<SyncScope>("all");

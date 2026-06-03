@@ -4,7 +4,7 @@ import { useFigmaBridge } from "./hooks/useFigmaBridge";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useUiPrefs } from "./hooks/useUiPrefs";
 import { useUiStore } from "./store/uiStore";
-import { useAppStore, makeBootstrapState, ensureIds, ensureVariations, UI_DIMS } from "./store/appStore";
+import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations, UI_DIMS } from "./store/projectStore";
 import { toast } from "./store/toastStore";
 import { BannerSlot } from "./components/Banner";
 import { ToastHub } from "./components/Toast";
@@ -81,9 +81,9 @@ export default function App() {
   const openOverlay = useUiStore((s) => s.openOverlay);
   const activeOverlay = useUiStore((s) => s.activeOverlay);
 
-  const loadState = useAppStore((s) => s.loadState);
-  const saveBlocked = useAppStore((s) => s.versionSaveBlockedReason);
-  const projectStore = useAppStore((s) => s.projectStore);
+  const loadState = useProjectStore((s) => s.loadState);
+  const saveBlocked = useProjectStore((s) => s.versionSaveBlockedReason);
+  const projectStore = useProjectStore((s) => s.projectStore);
 
   const importRef = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -205,7 +205,7 @@ export default function App() {
             onClick={() => !saveBlockedReason && openOverlay("save-version")}
             title={saveBlockedReason ?? "Save state  (Alt+S)"}
             aria-label="Save state"
-            disabled={saveBlockedReason}
+            disabled={!!saveBlockedReason}
           />
           <Button variant="ghost" size="sm" square icon={<Settings size={14} strokeWidth={1.75} />} onClick={() => openOverlay("settings")} title="Settings  (Alt+K)" aria-label="Settings" />
         </div>

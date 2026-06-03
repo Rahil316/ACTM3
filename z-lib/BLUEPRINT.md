@@ -39,7 +39,7 @@ if (savedConfigStr) {
 if (state === null) {
   show QuickStart overlay              // first-launch wizard
 } else {
-  appStore.loadState(state)            // hydrate store from saved JSON
+  projectStore.loadState(state)            // hydrate store from saved JSON
   ensureIds(state)                     // fill any missing _id fields
   ensureVariations(state)              // backfill global variations if absent
 }
@@ -49,7 +49,7 @@ if (state === null) {
 
 ## 2. ProjectStore — The Source of Truth
 
-All user configuration lives in a single Zustand store (`appStore`).
+All user configuration lives in a single Zustand store (`projectStore`).
 
 ```ts
 interface ProjectStore {
@@ -745,7 +745,7 @@ user opens Theme Shop → selects preset:
   next = { ...preset.config, _presetId: preset.id }
   ensureIds(next)         // fill any missing _id fields (preserves stable ids)
   ensureVariations(next)  // backfill variations if absent
-  appStore.loadState(next)
+  projectStore.loadState(next)
   closeOverlay()
   // state is now live; no engine run triggered — user runs manually
 ```
