@@ -7,7 +7,7 @@ import { PageTitle, BodyText, ItemTitle, Caption } from "../components/typograph
 import { Badge } from "../components/Badge";
 import { SelectableCard } from "../components/SelectableCard";
 import { CentredOverlay } from "../components/ResultOverlay";
-import { PRESETS, type Preset } from "../lib/presets/presets";
+import { PRESETS, type Preset } from "../lib/presets/themeShop";
 import type { ProjectStore } from "../types/state";
 
 // ── Quick Start overlay ───────────────────────────────────────────────────────

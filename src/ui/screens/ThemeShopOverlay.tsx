@@ -2,22 +2,13 @@ import { useState, useEffect } from "react";
 import { useUiStore } from "../store/uiStore";
 import { useProjectStore, ensureIds, ensureVariations } from "../store/projectStore";
 import { banner } from "../store/bannerStore";
-import { PRESETS } from "../lib/presets/presets";
+import { PRESETS, type Preset } from "../lib/presets/themeShop";
 import { ShopCard } from "../components/cards/ShopCard";
 import { Button } from "../components/Button";
 import { IconChevronLeft } from "../components/icons";
 import { FullscreenOverlay } from "../components/FullscreenOverlay";
-import type { ProjectStore, ProjectStoreSnapshot } from "../types/state";
+import type { ProjectStore } from "../types/state";
 
-export interface Preset {
-  id: string;
-  name: string;
-  description?: string;
-  tags?: string[];
-  badge?: string;
-  swatches?: string[];
-  config: Partial<ProjectStoreSnapshot>;
-}
 
 export function ThemeShopOverlay() {
   const isOpen = useUiStore((s) => s.activeOverlay === "theme-shop");
