@@ -52,7 +52,7 @@ export function useKeyboardShortcuts(importRef: React.RefObject<HTMLInputElement
           break;
         case "Digit3":
           e.preventDefault();
-          setActiveTab("themes");
+          openOverlay("theme-shop");
           break;
         case "KeyP":
           e.preventDefault();

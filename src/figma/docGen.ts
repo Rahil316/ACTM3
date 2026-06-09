@@ -1,4 +1,4 @@
-import type { EngineResult, ExportConfig, Role } from "./exportEng/types";
+import type { EngineResult, ExportConfig, Role } from "../shared/exportEng/types";
 
 function cssSlug(str: string): string {
   if (!str) return "";
@@ -18,28 +18,29 @@ export const ExportFormatter = {
   toCSV(result: EngineResult, config: ExportConfig): string {
     const lines: string[] = [];
 
-    lines.push("COLOR SCALES");
     const scaleEntries = Object.values(result.scales || {});
-    const firstStep = scaleEntries.length ? Object.values(scaleEntries[0])[0] : null;
-    const contrastKeys = firstStep ? Object.keys(firstStep.contrast || {}) : [];
-    const scaleHeader = ["Group", "Step", "Hex", ...contrastKeys.flatMap((k) => [k + " Contrast", k + " Rating"])].join(",");
-    lines.push(scaleHeader);
-    for (const [colorName, scale] of Object.entries(result.scales || {})) {
-      for (const [step, entry] of Object.entries(scale)) {
-        const contrast = entry.contrast;
-        const contrastCols = contrastKeys.flatMap((k) => [csvField(contrast && contrast[k] ? contrast[k].ratio : ""), csvField(contrast && contrast[k] ? contrast[k].rating : "")]);
-        lines.push([csvField(colorName), csvField(step), csvField(entry.value), ...contrastCols].join(","));
+    if (scaleEntries.length > 0) {
+      const firstStep = Object.values(scaleEntries[0])[0];
+      const contrastKeys = firstStep ? Object.keys(firstStep.contrast || {}) : [];
+      const scaleHeader = ["Group", "Step", "Hex", ...contrastKeys.flatMap((k) => [k + " Contrast", k + " Rating"])].join(",");
+      lines.push("COLOR SCALES");
+      lines.push(scaleHeader);
+      for (const [colorName, scale] of Object.entries(result.scales || {})) {
+        for (const [step, entry] of Object.entries(scale)) {
+          const contrast = entry.contrast;
+          const contrastCols = contrastKeys.flatMap((k) => [csvField(contrast && contrast[k] ? contrast[k].ratio : ""), csvField(contrast && contrast[k] ? contrast[k].rating : "")]);
+          lines.push([csvField(colorName), csvField(step), csvField(entry.value), ...contrastCols].join(","));
+        }
       }
+      lines.push("");
     }
-
-    lines.push("");
     lines.push("ROLE TOKENS");
     lines.push("Color,Role,Variation,Theme,Hex,Contrast,Rating,Adjusted");
     for (const theme of Object.keys(result.tokens || {})) {
       const themeTokens = result.tokens[theme];
       if (!themeTokens) continue;
       for (const [colorName, roles] of Object.entries(themeTokens)) {
-        for (const [roleId, variations] of Object.entries(roles)) {
+        for (const [roleId, variations] of Object.entries(roles as Record<string, Record<string, import("../shared/exportEng/types").TokenEntry>>)) {
           const roleObj: Role = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
           const roleName = roleObj.name || roleId;
           const variationDefs = roleObj.variations ?? config.variations ?? [];
@@ -81,7 +82,7 @@ export const ExportFormatter = {
       css += `\n/* ── ${theme.toUpperCase()} Semantic Tokens ── */\n${selector} {\n`;
       for (const [colorName, roles] of Object.entries(themeTokens)) {
         css += `\n  /* ${colorName} */\n`;
-        for (const [roleId, variations] of Object.entries(roles)) {
+        for (const [roleId, variations] of Object.entries(roles as Record<string, Record<string, import("../shared/exportEng/types").TokenEntry>>)) {
           const roleObj: Role = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
           const roleName = roleObj.name || roleId;
           const variationDefs = roleObj.variations ?? config.variations ?? [];
@@ -101,7 +102,7 @@ export const ExportFormatter = {
       const darkTokens = result.tokens[darkThemeKey];
       css += `\n/* ── OS Dark Mode Fallback ── */\n@media (prefers-color-scheme: dark) {\n  :root:not([data-theme]) {\n`;
       for (const [colorName, roles] of Object.entries(darkTokens)) {
-        for (const [roleId, variations] of Object.entries(roles)) {
+        for (const [roleId, variations] of Object.entries(roles as Record<string, Record<string, import("../shared/exportEng/types").TokenEntry>>)) {
           const roleObj: Role = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
           const roleName = roleObj.name || roleId;
           const variationDefs = roleObj.variations ?? config.variations ?? [];
@@ -159,7 +160,7 @@ export function generateScss(result: EngineResult, config: ExportConfig): string
     scss += `$tokens-${cssSlug(theme)}: (\n`;
     for (const [colorName, roles] of Object.entries(themeTokens)) {
       scss += `  // ${colorName}\n`;
-      for (const [roleId, variations] of Object.entries(roles)) {
+      for (const [roleId, variations] of Object.entries(roles as Record<string, Record<string, import("../shared/exportEng/types").TokenEntry>>)) {
         const roleObj: Role = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
         const roleName = roleObj.name || roleId;
         const variationDefs = roleObj.variations ?? configVariations ?? [];

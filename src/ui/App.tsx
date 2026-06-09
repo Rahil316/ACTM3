@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import logoSvg from "./assets/logo.svg";
 import clsx from "clsx";
 import { useFigmaBridge } from "./hooks/useFigmaBridge";
+import { useLocalField } from "./hooks/useLocalField";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useUiPrefs } from "./hooks/useUiPrefs";
 import { useUiStore } from "./store/uiStore";
@@ -19,7 +21,6 @@ import { RunDialog } from "./screens/RunDialog";
 import { ProjectScreen } from "./screens/ProjectScreen";
 import { SaveVersionOverlay } from "./screens/SaveVersionOverlay";
 import { QuickStart } from "./screens/QuickStart";
-import { ThemesScreen } from "./screens/ThemesScreen";
 import { ThemeShopOverlay } from "./screens/ThemeShopOverlay";
 import { CanvasPreviewDevOverlay } from "./screens/CanvasPreviewDevOverlay";
  
@@ -70,6 +71,28 @@ function ResizeHandle() {
   );
 }
 
+// ── Project name inline editor ────────────────────────────────────────────────
+
+function ProjectNameInput({ projectStore }: { projectStore: ProjectStore }) {
+  const updateProjectName = useProjectStore((s) => s.updateProjectName);
+  const [localName, onNameChange, onNameBlur] = useLocalField(projectStore.name, updateProjectName);
+
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <img src={logoSvg} alt="Token Wand" className="h-[18px] w-auto shrink-0" />
+      <input
+        type="text"
+        value={localName}
+        onChange={onNameChange}
+        onBlur={onNameBlur}
+        aria-label="Project name"
+        className="text-[13px] font-semibold text-text-primary bg-transparent border border-transparent outline-none min-w-0 w-full max-w-[160px] truncate hover:bg-bg-hover focus:bg-bg-input focus:border-border-focus rounded-[4px] px-1 -mx-1 py-0.5 transition-colors cursor-text"
+        title="Click to rename project"
+      />
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -113,7 +136,10 @@ export default function App() {
   }
 
   function handleReset() {
-    loadState(makeBootstrapState());
+    const blank = makeBootstrapState();
+    blank.colors = [];
+    blank.roles = [];
+    loadState(blank);
     openOverlay("quick-start");
   }
 
@@ -130,7 +156,7 @@ export default function App() {
       <ConfirmDialog
         open={confirmReset}
         title="Reset everything?"
-        body="This will clear all colors, roles, themes and versions. You'll be taken to the Quick Start screen."
+        body="This will remove all colors, roles, themes and versions. The plugin will start completely empty."
         confirmLabel="Reset"
         confirmVariant="danger-solid"
         onConfirm={() => {
@@ -152,7 +178,7 @@ export default function App() {
 
       {/* ── Header ── */}
       <header className="shrink-0 px-3 py-2 flex items-center justify-between border-b border-border-base bg-bg-app sticky top-0 z-10">
-        <h1 className="text-[15px] font-bold text-text-primary">Token Wand</h1>
+        <ProjectNameInput projectStore={projectStore} />
 
         <div className="flex items-center gap-1.5">
           <Button variant="secondary" size="md" leftIcon={<Eye size={13} strokeWidth={2} />} label="Preview" onClick={() => openOverlay("preview")} title="Preview  (Alt+P)" />
@@ -215,7 +241,6 @@ export default function App() {
         {activeTab === "color-groups" && <ColorsScreen />}
         {activeTab === "roles" && <RolesScreen />}
         {activeTab === "project" && <ProjectScreen />}
-        {activeTab === "themes" && <ThemesScreen />}
       </main>
 
       <ToastHub />

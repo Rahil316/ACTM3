@@ -9,7 +9,7 @@ const presets: Preset[] = [
     tags: ["starter", "minimal", "blank", "simple", "beginner"],
     swatches: ["3B82F6", "94A3B8"],
     config: {
-      name: "My Design System",
+      name: "Token Wand Design System",
       pluginMode: "scale",
       scaleAlgorithm: "Natural",
       scaleLength: 25,

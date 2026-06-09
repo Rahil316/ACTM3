@@ -30,7 +30,8 @@ export const fmtSCSS = {
   },
 
   tokens(result: EngineResult, config: ExportConfig): string {
-    const lines = ["// " + (config.name || "tokens") + " — semantic token maps", "@use 'sass:map';\n", "@forward 'scale';\n"];
+    const hasScales = Object.keys(result.scales || {}).length > 0;
+    const lines = ["// " + (config.name || "tokens") + " — semantic token maps", "@use 'sass:map';\n", ...(hasScales ? ["@forward 'scale';\n"] : [])];
     const themeKeys = Object.keys(result.tokens || {});
     for (let ti = 0; ti < themeKeys.length; ti++) {
       const theme = themeKeys[ti];
@@ -42,7 +43,7 @@ export const fmtSCSS = {
         const colorName = colorNames[ci];
         const cLabel = _colorLabel(colorName, config);
         lines.push("  // " + colorName);
-        const roles = themeTokens[colorName];
+        const roles = themeTokens[colorName] as Record<string, Record<string, import("./types").TokenEntry>>;
         const roleIds = Object.keys(roles);
         for (let ri = 0; ri < roleIds.length; ri++) {
           const roleId = roleIds[ri];

@@ -97,7 +97,7 @@ export function _eachToken(result: EngineResult, config: ExportConfig, cb: EachT
     for (let ci = 0; ci < colorNames.length; ci++) {
       const colorName = colorNames[ci];
       const cLabel = _colorLabel(colorName, config);
-      const roles = themeTokens[colorName];
+      const roles = themeTokens[colorName] as Record<string, Record<string, TokenEntry>>;
       const roleIds = Object.keys(roles);
       for (let ri = 0; ri < roleIds.length; ri++) {
         const roleId = roleIds[ri];

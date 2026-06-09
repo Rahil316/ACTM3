@@ -1,7 +1,7 @@
 // resolver
 import type { Role } from "./types";
 import type { EngineInput } from "./clrEngine";
-import type { EngineResult } from "../figma/exportEng/types";
+import type { EngineResult } from "./exportEng/types";
 
 /**
  * After a first engine pass, resolve any roles with localBgTokenRef /

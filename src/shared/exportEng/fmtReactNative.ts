@@ -33,7 +33,7 @@ export const fmtReactNative = {
         const colorName2 = colorNames[ci2];
         const cLabel2 = _colorLabel(colorName2, config);
         lines.push("    " + _camel([cLabel2]) + ": {");
-        const roles = themeTokens[colorName2];
+        const roles = themeTokens[colorName2] as Record<string, Record<string, import("./types").TokenEntry>>;
         const roleIds = Object.keys(roles);
         for (let ri = 0; ri < roleIds.length; ri++) {
           const roleId = roleIds[ri];

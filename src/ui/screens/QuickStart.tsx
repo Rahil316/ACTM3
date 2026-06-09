@@ -23,7 +23,7 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
   const loadState = useProjectStore((s) => s.loadState);
   const isOpen = useUiStore((s) => s.activeOverlay === "quick-start");
   const close = useUiStore((s) => s.closeOverlay);
-  const setActiveSidebarTab = useUiStore((s) => s.setActiveSidebarTab);
+  const openOverlay = useUiStore((s) => s.openOverlay);
   const importRef = useRef<HTMLInputElement>(null);
 
   const quickPresets = QUICK_START_PRESET_IDS.map((id) => PRESETS.find((p) => p.id === id)).filter(Boolean) as Preset[];
@@ -39,10 +39,9 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
 
   function startBlank() {
     const state = makeBootstrapState();
-    state.colors = [
-      { _id: generateId(), name: "Brand", shorthand: "br", value: "0066FF", description: "", scaleAlgorithm: state.scaleAlgorithm, solverMode: state.solverMode },
-      { _id: generateId(), name: "Neutral", shorthand: "nt", value: "6B7280", description: "", scaleAlgorithm: state.scaleAlgorithm, solverMode: state.solverMode },
-    ];
+    state.colors = [];
+    state.roles = [];
+    state.themes = [{ _id: generateId(), name: "Light", bg: "FFFFFF" }];
     ensureIds(state);
     ensureVariations(state);
     loadState(state);
@@ -103,7 +102,7 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
           label="Browse Presets"
           onClick={() => {
             close();
-            setActiveSidebarTab("themes");
+            openOverlay("theme-shop");
           }}
           className="flex-1"
         />

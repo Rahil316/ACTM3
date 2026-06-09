@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { FileCode2, FileJson2, FileText, FileSpreadsheet, Smartphone, Tablet, Wind, Braces, Hash, Package, Download, Plus, X, PackageOpen } from "lucide-react";
 import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
@@ -103,6 +103,21 @@ const EXPORT_FORMATS: FormatDef[] = [
   },
 ];
 
+// ── Naming helpers ────────────────────────────────────────────────────────────
+
+function fmtTimestamp(ts: number): string {
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    d.getUTCFullYear().toString() +
+    pad(d.getUTCMonth() + 1) +
+    pad(d.getUTCDate()) +
+    "-" +
+    pad(d.getUTCHours()) +
+    pad(d.getUTCMinutes())
+  );
+}
+
 // ── Download helpers ──────────────────────────────────────────────────────────
 
 function downloadBlob(content: string, filename: string) {
@@ -157,6 +172,9 @@ export function ExportSheet() {
   const [building, setBuilding] = useState(false);
   const [downloading, setDownloading] = useState<ExportFormat | null>(null);
 
+  // Holds the zip filename decided at request time so the response handler can use it
+  const pendingZipName = useRef<string>("");
+
   // ── Bridge callbacks ──────────────────────────────────────────────────────
 
   const handleExportBundle = useCallback(
@@ -168,14 +186,13 @@ export function ExportSheet() {
         toast.error("Export returned no files.");
         return;
       }
-      const projectSlug = (projectStore.name || "tokens").replace(/\s+/g, "-").toLowerCase();
-      downloadFiles(files, projectSlug + "-tokens").then(() => {
+      downloadFiles(files, pendingZipName.current).then(() => {
         const label = wasBulk ? `Exported ${files.length} file${files.length > 1 ? "s" : ""}` : `Downloaded ${files.length > 1 ? files.length + " files" : files[0].path.split("/").pop()}`;
         toast.success(label);
         if (wasBulk) setQueue(new Set());
       });
     },
-    [projectStore.name, building],
+    [building],
   );
 
   const handleError = useCallback((message: string) => {
@@ -193,17 +210,26 @@ export function ExportSheet() {
 
   function handleSingleDownload(format: ExportFormat) {
     if (downloading) return;
+    const ts = Date.now();
+    const projectSlug = (projectStore.name || "tokens").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    pendingZipName.current = `${projectSlug}_${format}_${fmtTimestamp(ts)}`;
     setDownloading(format);
-    sendToPlugin({ type: "request-processed-data", exportType: format, state: projectStore });
+    sendToPlugin({ type: "request-processed-data", exportType: format, state: projectStore, timestamp: ts });
   }
 
   function handleBulkExport() {
     if (queue.size === 0) return;
+    const ts = Date.now();
+    const projectSlug = (projectStore.name || "tokens").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const formats = Array.from(queue);
+    const techSuffix = formats.length <= 2 ? formats.join("-") : `${formats.length}-formats`;
+    pendingZipName.current = `${projectSlug}_${techSuffix}_${fmtTimestamp(ts)}`;
     setBuilding(true);
     sendToPlugin({
       type: "request-export-bundle",
-      formats: Array.from(queue),
+      formats,
       state: projectStore,
+      timestamp: ts,
     });
   }
 
@@ -218,11 +244,25 @@ export function ExportSheet() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  const hasColors = (projectStore.colors ?? []).length > 0;
+  const hasRoles = (projectStore.roles ?? []).length > 0;
+  const isEmpty = !hasColors || !hasRoles;
+
   return (
     <>
       <Backdrop open={isOpen} onClick={closeOverlay} />
       <Sheet open={isOpen}>
         <ModalHeader title="Export Tokens" subtitle="Download formats individually or queue for bulk export" actions={<Button variant="ghost" size="sm" label="Close" onClick={closeOverlay} />} />
+
+        {isEmpty && (
+          <div className="mx-3 mt-3 px-3 py-2.5 rounded-[8px] bg-warning-subtle border border-warning text-[11px] text-text-muted leading-relaxed">
+            {!hasColors && !hasRoles
+              ? "Add colors and roles before exporting."
+              : !hasColors
+              ? "Add at least one color before exporting."
+              : "Add at least one role before exporting."}
+          </div>
+        )}
 
         {/* Format list */}
         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
@@ -247,9 +287,11 @@ export function ExportSheet() {
                   <button
                     type="button"
                     onClick={() => toggleQueue(format)}
+                    disabled={isEmpty}
                     title={inQueue ? "Remove from bulk export" : "Add to bulk export"}
                     className={[
-                      "w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors cursor-pointer",
+                      "w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors",
+                      isEmpty ? "opacity-30 cursor-default" : "cursor-pointer",
                       inQueue ? "bg-accent text-text-on-accent hover:opacity-80" : "bg-bg-input border border-border-base text-text-muted hover:bg-bg-hover hover:text-text-primary",
                     ].join(" ")}
                   >
@@ -260,7 +302,7 @@ export function ExportSheet() {
                   <button
                     type="button"
                     onClick={() => handleSingleDownload(format)}
-                    disabled={downloading !== null}
+                    disabled={downloading !== null || isEmpty}
                     title={`Download ${label}`}
                     className="h-6 px-2 rounded-[6px] flex items-center gap-1 text-[10px] font-semibold bg-bg-input border border-border-base text-text-primary hover:bg-bg-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default"
                   >
@@ -291,7 +333,7 @@ export function ExportSheet() {
                   </button>
                 )}
               </div>
-              <Button variant="primary" size="md" label="Export All" leftIcon={<Package size={13} strokeWidth={2} />} onClick={handleBulkExport} disabled={queue.size === 0} />
+              <Button variant="primary" size="md" label="Export All" leftIcon={<Package size={13} strokeWidth={2} />} onClick={handleBulkExport} disabled={queue.size === 0 || isEmpty} />
             </div>
           )}
         </div>

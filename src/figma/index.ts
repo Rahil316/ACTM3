@@ -8,10 +8,10 @@ import { translateConfig, buildVariableRenameMap, resolveTokenRefBgs, detectStru
 import { VariableManager, saveUiState } from "./figmaVars";
 import { variableMaker, type EngineResult } from "../shared/clrEngine.js";
 import { ExportFormatter } from "./docGen";
-import { buildExportBundle } from "./exportEng/bundler";
+import { buildExportBundle } from "../shared/exportEng/bundler";
 import { analyzeNameConflicts, computeSyncPreview } from "./variableTracker";
 import { generateCanvasPreview, wasPreviewInterrupted, markPreviewInterrupted } from "./canvasPreview";
-import type { ExportConfig } from "./exportEng/types";
+import type { ExportConfig } from "../shared/exportEng/types";
 import type { Role } from "../shared/types";
 
 function toExportConfig(config: PluginConfig): ExportConfig {
@@ -179,7 +179,7 @@ figma.ui.onmessage = async (msg: any) => {
         const et: string = msg.exportType;
 
         // Build files[] via bundler, then fill in docGen formats
-        const files = buildExportBundle(result, toExportConfig(config), [et], msg.state);
+        const files = buildExportBundle(result, toExportConfig(config), [et], msg.state, msg.timestamp);
 
         // Fill content for docGen-owned formats (bundler leaves content empty)
         if (et === "csv") {
@@ -195,7 +195,14 @@ figma.ui.onmessage = async (msg: any) => {
       case "request-export-bundle": {
         const bConfig = translateConfig(msg.state);
         const bResult = runEngine(bConfig);
-        const bFiles = buildExportBundle(bResult, toExportConfig(bConfig), msg.formats || [], msg.state);
+        const bFiles = buildExportBundle(bResult, toExportConfig(bConfig), msg.formats || [], msg.state, msg.timestamp);
+        for (const f of bFiles) {
+          if (f.content === "" && f.path.endsWith(".csv")) {
+            f.content = ExportFormatter.toCSV(bResult, toExportConfig(bConfig));
+          } else if (f.content === "" && f.path.endsWith(".json") && !f.path.includes("/")) {
+            f.content = JSON.stringify({ scales: bResult.scales, tokens: bResult.tokens, errors: bResult.errors }, null, 2);
+          }
+        }
         figma.ui.postMessage({ type: "export-bundle-response", files: bFiles });
         break;
       }

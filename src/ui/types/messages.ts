@@ -1,8 +1,8 @@
 import type { ProjectStore, UiPrefs } from "./state";
-import type { ExportFile } from "../../figma/exportEng/types";
+import type { ExportFile } from "../../shared/exportEng/types";
 import type { NameConflict, SyncPreview } from "../../figma/variableTracker";
 import type { StructuralChange } from "../../figma/config";
-export type { ExportFile } from "../../figma/exportEng/types";
+export type { ExportFile } from "../../shared/exportEng/types";
 export type { NameConflict, SyncPreview } from "../../figma/variableTracker";
 export type { StructuralChangeKind, StructuralChange } from "../../figma/config";
 
@@ -118,12 +118,14 @@ export interface RequestProcessedDataMessage {
   type: "request-processed-data";
   exportType: ExportFormat;
   state: ProjectStore;
+  timestamp: number;
 }
 
 export interface RequestExportBundleMessage {
   type: "request-export-bundle";
   formats: ExportFormat[];
   state: ProjectStore;
+  timestamp: number;
 }
 
 export interface SaveConfigMessage {

@@ -12,12 +12,15 @@ import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations } from
 
 const isStandalone = window.parent === window;
 
+// Saved before the patch below so stubs can post responses without re-entering the patch.
+const _nativePost = window.postMessage.bind(window);
+
 function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: string]: unknown } }): void {
   const pm = msg.pluginMessage;
 
   if (pm.type === "check-collections") {
     setTimeout(() => {
-      window.postMessage(
+      _nativePost(
         {
           pluginMessage: {
             type: "collection-check-result",
@@ -42,7 +45,7 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
   if (pm.type === "run-creator") {
     localStorage.setItem("tw_state", JSON.stringify(pm.state));
     setTimeout(() => {
-      window.postMessage(
+      _nativePost(
         {
           pluginMessage: {
             type: "finish",
@@ -59,7 +62,7 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
 
   if (pm.type === "run-preview") {
     setTimeout(() => {
-      window.postMessage({ pluginMessage: { type: "preview-done" } }, "*");
+      _nativePost({ pluginMessage: { type: "preview-done" } }, "*");
     }, 800);
     return;
   }
@@ -79,8 +82,14 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
     return;
   }
 
-  if (pm.type === "request-processed-data") {
-    Promise.all([import("../../shared/clrEngine"), import("../../shared/clrUtils"), import("../../shared/clrUtils")]).then(([{ variableMaker }, { resolveTokenRefBgs }, { translateLocalBg }]) => {
+  if (pm.type === "request-processed-data" || pm.type === "request-export-bundle") {
+    const formats: string[] = pm.type === "request-processed-data" ? [pm.exportType as string] : (pm.formats as string[]) ?? [];
+    Promise.all([
+      import("../../shared/clrEngine"),
+      import("../../shared/clrUtils"),
+      import("../../shared/exportEng/bundler"),
+      import("../../figma/docGen"),
+    ]).then(([{ variableMaker }, { resolveTokenRefBgs, translateLocalBg }, { buildExportBundle }, { ExportFormatter }]) => {
       const projectStore = pm.state as ProjectStore;
       const config = {
         ...projectStore,
@@ -91,45 +100,34 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
       } as Parameters<typeof variableMaker>[0];
       const pass1 = variableMaker(config);
       const result = resolveTokenRefBgs(config, pass1) ? variableMaker(config) : pass1;
-      window.postMessage(
-        {
-          pluginMessage: {
-            type: "processed-data-response",
-            exportType: pm.exportType,
-            content: JSON.stringify({ scales: result.scales, tokens: result.tokens }, null, 2),
-          },
-        },
-        "*",
-      );
+      const rolesRecord: Record<string, Role> = {};
+      (projectStore.roles ?? []).forEach((r, i) => { rolesRecord[String(i)] = r; });
+      const exportConfig = { ...projectStore, roles: rolesRecord } as Parameters<typeof buildExportBundle>[1];
+      const files = buildExportBundle(result, exportConfig, formats, projectStore as unknown as Record<string, unknown>, pm.timestamp as number | undefined);
+      for (const f of files) {
+        if (f.content === "" && f.path.endsWith(".csv")) {
+          f.content = ExportFormatter.toCSV(result, exportConfig);
+        } else if (f.content === "" && f.path.endsWith(".json") && !f.path.includes("/")) {
+          f.content = JSON.stringify({ scales: result.scales, tokens: result.tokens, errors: result.errors }, null, 2);
+        }
+      }
+      _nativePost({ pluginMessage: { type: "export-bundle-response", files } }, "*");
+    }).catch((err) => {
+      console.error("[export] failed:", err);
+      _nativePost({ pluginMessage: { type: "error", message: String(err) } }, "*");
     });
-    return;
-  }
-
-  if (pm.type === "request-export-bundle") {
-    setTimeout(() => {
-      window.postMessage(
-        {
-          pluginMessage: {
-            type: "export-bundle-response",
-            files: [],
-          },
-        },
-        "*",
-      );
-    }, 300);
     return;
   }
 }
 
 // Patch postMessage in standalone mode so outgoing messages are intercepted
 if (isStandalone) {
-  const _origPost = window.parent.postMessage.bind(window.parent);
   window.parent.postMessage = (data: unknown, ...args: unknown[]) => {
     if (data && typeof data === "object" && "pluginMessage" in (data as object)) {
       standaloneHandleOutgoing(data as { pluginMessage: { type: string; [key: string]: unknown } });
       return;
     }
-    (_origPost as (...a: unknown[]) => void)(data, ...args);
+    (_nativePost as (...a: unknown[]) => void)(data, ...args);
   };
 }
 

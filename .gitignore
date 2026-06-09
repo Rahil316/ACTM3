@@ -4,10 +4,18 @@ node_modules/
 # Build outputs — generated, do not edit directly.
 dist/
 dist-release/
+
+# Storybook
 .storybook/
-
-# Generated preset bundle — built from src/lib/presets/raw/*.js
-src/lib/presets/presets.json
-
+storybook-static/
 *storybook.log
-storybook-static
+
+# Generated preset bundle — built from src/ui/presets/raw/*.ts
+src/ui/presets/presets.json
+
+# Export output folders
+lib/*/
+
+# Logs and system files
+typecheck.log
+.DS_Store

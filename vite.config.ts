@@ -1,10 +1,11 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
 const isDev     = process.env.VITE_DEV === 'true';
 const isRelease = process.env.VITE_OUT_DIR === 'dist-release';
 const outDir    = process.env.VITE_OUT_DIR ? `../../${process.env.VITE_OUT_DIR}` : '../../dist';
+
 
 export default defineConfig({
   plugins: isDev ? [react()] : [react(), viteSingleFile()],
@@ -15,7 +16,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: '/ui.html',
+    open: '/',
   },
   build: {
     outDir,
@@ -24,7 +25,7 @@ export default defineConfig({
     assetsInlineLimit: 100000000,
     cssCodeSplit: false,
     rollupOptions: {
-      input: 'src/ui/ui.html',
+      input: 'src/ui/index.html',
       // Drop all console.log calls (not warn/error) in release
       ...(isRelease && {
         plugins: [{
@@ -35,10 +36,5 @@ export default defineConfig({
         }],
       }),
     },
-  },
-  test: {
-    root: '.',
-    include: ['src/ui/**/*.test.ts', 'src/ui/**/*.test.tsx'],
-    environment: 'node',
   },
 });

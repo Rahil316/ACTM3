@@ -8,10 +8,15 @@ function _toARGB(hex: string): string {
 }
 
 export const fmtAndroid = {
-  file(result: EngineResult, config: ExportConfig, themeName: string): string {
+  file(result: EngineResult, config: ExportConfig, themeName: string, isNonStandardQualifier = false): string {
     const themeTokens = result.tokens && result.tokens[themeName];
     const lines: string[] = [];
     lines.push("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+    if (isNonStandardQualifier) {
+      lines.push("<!-- Theme: " + themeName + " -->");
+      lines.push("<!-- Note: '" + themeName + "' is not a standard Android resource qualifier.");
+      lines.push("     Apply these tokens programmatically using a custom theme overlay. -->");
+    }
     lines.push("<resources>");
     lines.push("");
     const scaleNames = Object.keys(result.scales || {});
@@ -40,7 +45,7 @@ export const fmtAndroid = {
         const colorName2 = colorNames[ci2];
         const cLabel2 = _colorLabel(colorName2, config);
         lines.push("    <!-- " + colorName2 + " -->");
-        const roles = themeTokens[colorName2];
+        const roles = themeTokens[colorName2] as Record<string, Record<string, import("./types").TokenEntry>>;
         const roleIds = Object.keys(roles);
         for (let ri = 0; ri < roleIds.length; ri++) {
           const roleId = roleIds[ri];

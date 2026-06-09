@@ -33,7 +33,7 @@ export const fmtCSS = {
       const colorName = colorNames[ci];
       const cLabel = _colorLabel(colorName, config);
       lines.push("\n  /* " + colorName + " */");
-      const roles = themeTokens[colorName];
+      const roles = themeTokens[colorName] as Record<string, Record<string, import("./types").TokenEntry>>;
       const roleIds = Object.keys(roles);
       for (let ri = 0; ri < roleIds.length; ri++) {
         const roleId = roleIds[ri];
@@ -60,7 +60,7 @@ export const fmtCSS = {
         for (let dci = 0; dci < dcNames.length; dci++) {
           const dcName = dcNames[dci];
           const dcLabel = _colorLabel(dcName, config);
-          const dRoles = darkTokens[dcName];
+          const dRoles = darkTokens[dcName] as Record<string, Record<string, import("./types").TokenEntry>>;
           const dRoleIds = Object.keys(dRoles);
           for (let dri = 0; dri < dRoleIds.length; dri++) {
             const dRoleId = dRoleIds[dri];

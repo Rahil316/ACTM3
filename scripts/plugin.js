@@ -31,12 +31,12 @@ const esbuildConfig = {
   external:    [],
   logLevel:    'info',
   define:      { __RELEASE__: String(isRelease) },
-  ...(isRelease && { drop: ['debugger'], pure: ['console.log'] }),
+  ...(isRelease && { drop: ['debugger'], pure: ['console.log'], minify: true }),
 };
 
 function emitManifest() {
   const src  = JSON.parse(fs.readFileSync(path.resolve(root, 'manifest.json'), 'utf8'));
-  const dist = { ...src, main: 'scripts.js', ui: 'ui.html' };
+  const dist = { ...src, main: 'scripts.js', ui: 'index.html' };
   fs.writeFileSync(path.resolve(outDir, 'manifest.json'), JSON.stringify(dist, null, 2));
 }
 
