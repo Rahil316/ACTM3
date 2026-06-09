@@ -7,7 +7,7 @@ import { EmptyState } from "../components/EmptyState";
 import { Modal, ModalHeader } from "../components/Modal";
 import { Button } from "../components/Button";
 import { SegmentedControl } from "../components/SegmentedControl";
-import { variableMaker, resolveTokenRefBgs, translateLocalBg, type EngineConfig, type EngineResult } from "../lib/colorEngine";
+import { variableMaker, resolveTokenRefBgs, translateLocalBg, type EngineConfig, type EngineResult } from "../../plugin/ThemShopItems/colorEngine";
 import { CardTitle, MicroText } from "../components/typography";
 import type { ProjectStore } from "../types/state";
 import { RatingBadge, TokenTile, ScaleStepSlice, SourceColorCard, getInkMode, inkColor, normalizeHex, copyText } from "../components/preview";
@@ -411,23 +411,7 @@ function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
 
 const TREE_INDENT = 16;
 
-function TreeRow({
-  depth,
-  label,
-  hex,
-  meta,
-  defaultOpen = true,
-  children,
-  ink,
-}: {
-  depth: number;
-  label: string;
-  hex?: string;
-  meta?: React.ReactNode;
-  defaultOpen?: boolean;
-  children?: React.ReactNode;
-  ink: "light" | "dark";
-}) {
+function TreeRow({ depth, label, hex, meta, defaultOpen = true, children, ink }: { depth: number; label: string; hex?: string; meta?: React.ReactNode; defaultOpen?: boolean; children?: React.ReactNode; ink: "light" | "dark" }) {
   const [open, setOpen] = useState(defaultOpen);
   const hasChildren = !!children;
   const fontWeight = depth === 0 ? "font-bold" : depth === 1 ? "font-semibold" : "font-normal";
@@ -435,17 +419,11 @@ function TreeRow({
 
   return (
     <div>
-      <div
-        className={`flex items-center gap-1.5 py-[3px] pr-2 rounded-[4px] ${hasChildren ? "cursor-pointer" : ""}`}
-        style={{ paddingLeft: depth * TREE_INDENT + 8 }}
-        onClick={hasChildren ? () => setOpen((o) => !o) : undefined}
-      >
+      <div className={`flex items-center gap-1.5 py-[3px] pr-2 rounded-[4px] ${hasChildren ? "cursor-pointer" : ""}`} style={{ paddingLeft: depth * TREE_INDENT + 8 }} onClick={hasChildren ? () => setOpen((o) => !o) : undefined}>
         <span className="w-[10px] shrink-0 text-[8px] leading-none select-none" style={{ color: inkColor(ink, 0.3) }}>
           {hasChildren ? (open ? "▼" : "▶") : ""}
         </span>
-        {hex && (
-          <div className="w-3 h-3 rounded-[2px] shrink-0" style={{ background: hex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.15)}` }} />
-        )}
+        {hex && <div className="w-3 h-3 rounded-[2px] shrink-0" style={{ background: hex, boxShadow: `0 0 0 1px ${inkColor(ink, 0.15)}` }} />}
         <span className={`${fontSize} ${fontWeight} flex-1 truncate`} style={{ color: inkColor(ink, depth === 2 ? 0.75 : 1) }}>
           {label}
         </span>
@@ -512,9 +490,7 @@ function TreeSection({ result, projectStore, themeIdx, groupBy, ink }: TreeSecti
                     {Object.entries(vars).map(([varIdxStr, token]) => {
                       const v = roleVars[parseInt(varIdxStr)];
                       const varLabel = v ? v.shorthand || v.name : varIdxStr;
-                      return (
-                        <TreeRow key={varIdxStr} depth={2} label={varLabel} hex={normalizeHex(token.value)} meta={varMeta(token)} ink={ink} />
-                      );
+                      return <TreeRow key={varIdxStr} depth={2} label={varLabel} hex={normalizeHex(token.value)} meta={varMeta(token)} ink={ink} />;
                     })}
                   </TreeRow>
                 );
@@ -552,9 +528,7 @@ function TreeSection({ result, projectStore, themeIdx, groupBy, ink }: TreeSecti
                   {Object.entries(vars).map(([varIdxStr, token]) => {
                     const v = roleVars[parseInt(varIdxStr)];
                     const varLabel = v ? v.shorthand || v.name : varIdxStr;
-                    return (
-                      <TreeRow key={varIdxStr} depth={2} label={varLabel} hex={normalizeHex(token.value)} meta={varMeta(token)} ink={ink} />
-                    );
+                    return <TreeRow key={varIdxStr} depth={2} label={varLabel} hex={normalizeHex(token.value)} meta={varMeta(token)} ink={ink} />;
                   })}
                 </TreeRow>
               );

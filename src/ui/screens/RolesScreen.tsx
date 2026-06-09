@@ -9,7 +9,7 @@ import { RoleGroupCard } from "../components/cards/RoleGroupCard";
 import { SplitActionButton } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import type { Role } from "../types/state";
-import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components/tree";
+import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components";
 
 // ── Suggested roles ───────────────────────────────────────────────────────────
 

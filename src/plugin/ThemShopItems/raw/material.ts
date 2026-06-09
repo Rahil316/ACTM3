@@ -53,7 +53,7 @@
  *   scrim / shadow       16.0   darkest achievable in both themes
  */
 
-import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
+import type { Preset } from "../../../shared/themeShop";
 
 const presets: Preset[] = [
   {

@@ -1,24 +1,24 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import React from 'react';
-import { createPortal } from 'react-dom';
-import { useDroppable } from '@dnd-kit/core';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useState, useEffect, useRef, useCallback } from "react";
+import React from "react";
+import { createPortal } from "react-dom";
+import { useDroppable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 // CSS is used in SortableLeafWrapper via CSS.Transform.toString
-import { ChevronRight, ChevronDown, GripVertical, Plus, FolderMinus, Trash2, Check, X, CheckSquare } from 'lucide-react';
-import { Button } from '../Button';
+import { ChevronRight, ChevronDown, GripVertical, Plus, FolderMinus, Trash2, Check, X, CheckSquare } from "lucide-react";
+import { Button } from "./Button";
 
 // ── Tree types ────────────────────────────────────────────────────────────────
 
 export interface GroupNode<T> {
-  kind: 'group';
+  kind: "group";
   segment: string;
   fullPath: string;
   children: TreeNode<T>[];
   leafCount: number;
 }
 export interface LeafNode<T> {
-  kind: 'leaf';
+  kind: "leaf";
   item: T;
   idx: number;
 }
@@ -26,24 +26,20 @@ export type TreeNode<T> = GroupNode<T> | LeafNode<T>;
 
 // ── Tree builder ──────────────────────────────────────────────────────────────
 
-function buildTreeRecursive<T extends { name: string }>(
-  items: T[],
-  prefix: string,
-  originalIndices: number[],
-): TreeNode<T>[] {
+function buildTreeRecursive<T extends { name: string }>(items: T[], prefix: string, originalIndices: number[]): TreeNode<T>[] {
   const groupMap = new Map<string, number[]>();
   const directLeaves: LeafNode<T>[] = [];
 
   for (const idx of originalIndices) {
     const item = items[idx];
     const rest = prefix ? item.name.slice(prefix.length + 1) : item.name;
-    const slash = rest.indexOf('/');
+    const slash = rest.indexOf("/");
     if (slash > 0) {
       const seg = rest.slice(0, slash);
       if (!groupMap.has(seg)) groupMap.set(seg, []);
       groupMap.get(seg)!.push(idx);
     } else {
-      directLeaves.push({ kind: 'leaf', item, idx });
+      directLeaves.push({ kind: "leaf", item, idx });
     }
   }
 
@@ -52,19 +48,19 @@ function buildTreeRecursive<T extends { name: string }>(
     const fullPath = prefix ? `${prefix}/${seg}` : seg;
     const children = buildTreeRecursive(items, fullPath, childIndices);
     const leafCount = countLeaves(children);
-    result.push({ kind: 'group', segment: seg, fullPath, children, leafCount });
+    result.push({ kind: "group", segment: seg, fullPath, children, leafCount });
   }
   result.push(...directLeaves);
   return result;
 }
 
 export function countLeaves<T>(nodes: TreeNode<T>[]): number {
-  return nodes.reduce((sum, n) => sum + (n.kind === 'leaf' ? 1 : n.leafCount), 0);
+  return nodes.reduce((sum, n) => sum + (n.kind === "leaf" ? 1 : n.leafCount), 0);
 }
 
 export function buildTree<T extends { name: string }>(items: T[]): TreeNode<T>[] {
   const allIndices = items.map((_, i) => i);
-  return buildTreeRecursive(items, '', allIndices);
+  return buildTreeRecursive(items, "", allIndices);
 }
 
 // ── useCommittedNames ─────────────────────────────────────────────────────────
@@ -77,8 +73,8 @@ export function useCommittedNames<T extends { _id: string; name: string }>(items
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
-  const namesKey = items.map((i) => i._id + ':' + i.name).join('|');
-  const prevKey = useRef('');
+  const namesKey = items.map((i) => i._id + ":" + i.name).join("|");
+  const prevKey = useRef("");
   useEffect(() => {
     if (namesKey === prevKey.current) return;
     prevKey.current = namesKey;
@@ -101,21 +97,7 @@ export function useCommittedNames<T extends { _id: string; name: string }>(items
 
 // ── MultiSelectToolbar ────────────────────────────────────────────────────────
 
-export function MultiSelectToolbar({
-  count,
-  onGroup,
-  onUngroup,
-  onDelete,
-  onClear,
-  onSelectAll,
-}: {
-  count: number;
-  onGroup: () => void;
-  onUngroup: () => void;
-  onDelete: () => void;
-  onClear: () => void;
-  onSelectAll: () => void;
-}) {
+export function MultiSelectToolbar({ count, onGroup, onUngroup, onDelete, onClear, onSelectAll }: { count: number; onGroup: () => void; onUngroup: () => void; onDelete: () => void; onClear: () => void; onSelectAll: () => void }) {
   return createPortal(
     <div className="fixed bottom-4 inset-x-0 flex justify-center z-50 pointer-events-none">
       <div className="flex items-center gap-1 bg-bg-card border border-border-strong rounded-[10px] shadow-xl px-2 py-1.5 pointer-events-auto">
@@ -162,13 +144,7 @@ export function DroppableGroupHeader({
   onUngroup: () => void;
 }) {
   const { setNodeRef: setDropRef } = useDroppable({ id: `group::${fullPath}` });
-  const {
-    attributes,
-    listeners,
-    setNodeRef: setSortRef,
-    transform,
-    transition,
-  } = useSortable({ id: `group::${fullPath}` });
+  const { attributes, listeners, setNodeRef: setSortRef, transform, transition } = useSortable({ id: `group::${fullPath}` });
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(segment);
 
@@ -187,10 +163,7 @@ export function DroppableGroupHeader({
     <div
       ref={setRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDraggingThis ? 0.4 : 1 }}
-      className={[
-        'group flex items-center gap-1.5 px-2 py-1.5 rounded-t-[8px] select-none transition-colors cursor-pointer',
-        isOver && !isDraggingThis ? 'bg-accent-subtle' : 'hover:bg-bg-hover',
-      ].join(' ')}
+      className={["group flex items-center gap-1.5 px-2 py-1.5 rounded-t-[8px] select-none transition-colors cursor-pointer", isOver && !isDraggingThis ? "bg-accent-subtle" : "hover:bg-bg-hover"].join(" ")}
       onClick={onToggle}
     >
       {/* Group drag handle */}
@@ -206,9 +179,7 @@ export function DroppableGroupHeader({
       />
 
       {/* Collapse chevron */}
-      <span className="text-text-muted shrink-0">
-        {collapsed ? <ChevronRight size={13} strokeWidth={2.5} /> : <ChevronDown size={13} strokeWidth={2.5} />}
-      </span>
+      <span className="text-text-muted shrink-0">{collapsed ? <ChevronRight size={13} strokeWidth={2.5} /> : <ChevronDown size={13} strokeWidth={2.5} />}</span>
 
       {/* Name / edit */}
       {editing ? (
@@ -218,8 +189,8 @@ export function DroppableGroupHeader({
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') commit();
-            if (e.key === 'Escape') {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") {
               setDraft(segment);
               setEditing(false);
             }
@@ -241,19 +212,24 @@ export function DroppableGroupHeader({
       )}
 
       {/* Count pill */}
-      <span className="text-[10px] font-semibold tabular-nums bg-border-strong text-text-primary rounded-full px-1.5 py-0.5 shrink-0 group-hover/treegroup:bg-accent group-hover/treegroup:text-text-on-accent transition-colors">
-        {leafCount}
-      </span>
+      <span className="text-[10px] font-semibold tabular-nums bg-border-strong text-text-primary rounded-full px-1.5 py-0.5 shrink-0 group-hover/treegroup:bg-accent group-hover/treegroup:text-text-on-accent transition-colors">{leafCount}</span>
 
       {/* Action buttons */}
-      <div
-        className="flex items-center gap-0.5 shrink-0"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
         {editing ? (
           <>
             <Button variant="icon" size="sm" onClick={commit} title="Confirm rename" icon={<Check size={12} strokeWidth={2.5} />} className="text-accent hover:text-accent hover:bg-accent-subtle" />
-            <Button variant="icon" size="sm" onClick={() => { setDraft(segment); setEditing(false); }} title="Cancel rename" icon={<X size={12} strokeWidth={2} />} className="text-text-muted hover:text-text-primary hover:bg-bg-hover" />
+            <Button
+              variant="icon"
+              size="sm"
+              onClick={() => {
+                setDraft(segment);
+                setEditing(false);
+              }}
+              title="Cancel rename"
+              icon={<X size={12} strokeWidth={2} />}
+              className="text-text-muted hover:text-text-primary hover:bg-bg-hover"
+            />
           </>
         ) : (
           <>
@@ -312,20 +288,16 @@ export const SortableLeafWrapper = React.memo(function SortableLeafWrapper({
           selected
             ? {
                 borderRadius: 12,
-                outline: '2px solid var(--accent)',
+                outline: "2px solid var(--accent)",
                 outlineOffset: 2,
-                boxShadow: '0 0 0 4px var(--accent-glow)',
+                boxShadow: "0 0 0 4px var(--accent-glow)",
               }
             : undefined
         }
       >
         {renderContent(contentListeners as Record<string, unknown>, selected ? {} : (attributes as unknown as Record<string, unknown>))}
         {/* Multi-drag count badge — shown on the card being dragged */}
-        {isDragging && multiDragCount && multiDragCount > 1 && (
-          <div className="absolute -top-2 -right-2 bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md z-10">
-            {multiDragCount}
-          </div>
-        )}
+        {isDragging && multiDragCount && multiDragCount > 1 && <div className="absolute -top-2 -right-2 bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md z-10">{multiDragCount}</div>}
       </div>
     </div>
   );
@@ -361,31 +333,20 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
   onRenameGroup: (fullPath: string, newSegment: string) => void;
   onAddChild: (fullPath: string) => void;
   onUngroup: (fullPath: string) => void;
-  renderLeaf: (
-    item: T,
-    idx: number,
-    selected: boolean,
-    multiDragCount: number,
-    onToggleSelect: (id: string, meta: boolean, shift?: boolean) => void,
-  ) => React.ReactNode;
+  renderLeaf: (item: T, idx: number, selected: boolean, multiDragCount: number, onToggleSelect: (id: string, meta: boolean, shift?: boolean) => void) => React.ReactNode;
   depth: number;
 }) {
   return (
     <div className="flex flex-col gap-2">
       {nodes.map((node) => {
-        if (node.kind === 'group') {
+        if (node.kind === "group") {
           const isCollapsed = collapsed[node.fullPath] ?? false;
           const isDragging = activeGroupPath === node.fullPath;
           const isDropTarget = overGroupPath === node.fullPath && !isDragging;
           return (
             <div
               key={node.fullPath}
-              className={[
-                'group/treegroup rounded-[10px] border transition-all',
-                isDropTarget
-                  ? 'border-accent bg-accent-subtle/40 shadow-[0_0_0_3px_var(--accent-glow)]'
-                  : 'border-border-base bg-bg-app hover:border-border-strong hover:shadow-sm',
-              ].join(' ')}
+              className={["group/treegroup rounded-[10px] border transition-all", isDropTarget ? "border-accent bg-accent-subtle/40 shadow-[0_0_0_3px_var(--accent-glow)]" : "border-border-base bg-bg-app hover:border-border-strong hover:shadow-sm"].join(" ")}
             >
               <DroppableGroupHeader
                 segment={node.segment}
@@ -421,11 +382,7 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
             </div>
           );
         }
-        return (
-          <div key={node.item._id}>
-            {renderLeaf(node.item, node.idx, selectedIds.has(node.item._id), multiDragCount, onToggleSelect)}
-          </div>
-        );
+        return <div key={node.item._id}>{renderLeaf(node.item, node.idx, selectedIds.has(node.item._id), multiDragCount, onToggleSelect)}</div>;
       })}
     </div>
   );

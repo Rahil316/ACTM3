@@ -35,7 +35,7 @@
  *   separator/opaque      2.5   solid separator (screenshot-safe)
  */
 
-import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
+import type { Preset } from "../../../shared/themeShop";
 
 const presets: Preset[] = [
   {

@@ -48,7 +48,7 @@
  * Themes: Light (#FFFFFF) · Dark (#1D2125) — ADS exact values.
  */
 
-import type { Preset } from "../../../../ui/screens/ThemeShopOverlay";
+import type { Preset } from "../../../shared/themeShop";
 
 const presets: Preset[] = [
   {

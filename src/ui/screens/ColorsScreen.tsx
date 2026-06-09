@@ -10,7 +10,7 @@ import { EmptyState } from "../components/EmptyState";
 import { SuggestSheet, MenuRow } from "../components/MenuSheet";
 import { ColorSwatch } from "../components/ColorSwatch";
 import type { Color } from "../types/state";
-import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components/tree";
+import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components";
 
 // ── Suggested colors ──────────────────────────────────────────────────────────
 
@@ -87,7 +87,7 @@ function ColorTree() {
   const colors = useProjectStore((s) => s.projectStore.colors);
   const moveColor = useProjectStore((s) => s.moveColor);
   const setColor = useProjectStore((s) => s.setColor);
-  const committedColors = useMemo(() => colors.map(c => ({ ...c, _id: c._id ?? "" })), [colors]);
+  const committedColors = useMemo(() => colors.map((c) => ({ ...c, _id: c._id ?? "" })), [colors]);
   const [committed, flushCommitted] = useCommittedNames(committedColors);
   const collapsed = useUiStore((s) => s.colorGroupCollapsed);
   const setCollapsed = useUiStore((s) => s.setColorGroupCollapsed);

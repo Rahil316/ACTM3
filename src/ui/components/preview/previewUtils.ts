@@ -1,4 +1,4 @@
-import { contrastRatio } from '../../lib/colorEngine';
+import { contrastRatio } from '../../../plugin/ThemShopItems/colorEngine';
 import { toast } from '../../store/toastStore';
 
 export function getInkMode(hex: string): 'light' | 'dark' {

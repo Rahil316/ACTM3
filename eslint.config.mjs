@@ -30,7 +30,7 @@ export default tseslint.config(
   // TypeScript + React source
   ...tseslint.configs.recommended.map((config) => ({
     ...config,
-    files: ['src/ui/**/*.{ts,tsx}', 'src/plugin/**/*.ts', 'src/shared/**/*.ts', 'scripts/**/*.ts'],
+    files: ['src/ui/**/*.{ts,tsx}', 'src/plugin/**/*.ts', 'src/shared/**/*.ts', 'scripts/**/*.ts', 'lib/**/*.ts'],
   })),
 
   // Language options and parser settings for type information
@@ -78,7 +78,7 @@ export default tseslint.config(
   },
 
   {
-    files: ['src/ui/**/*.{ts,tsx}', 'src/plugin/**/*.ts', 'src/shared/**/*.ts', 'scripts/**/*.ts'],
+    files: ['src/ui/**/*.{ts,tsx}', 'src/plugin/**/*.ts', 'src/shared/**/*.ts', 'scripts/**/*.ts', 'lib/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unused-vars': ['warn', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',

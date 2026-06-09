@@ -5,7 +5,7 @@ import { SettingsCard } from "../components/SettingsCard";
 import { Badge } from "../components/Badge";
 import { SelectableCard } from "../components/SelectableCard";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { PRESETS, type Preset } from "../lib/presets/themeShop";
+import { PRESETS, type Preset } from "../../shared/themeShop";
 import { HelperText } from "../components/typography";
 import type { ProjectStore } from "../types/state";
 

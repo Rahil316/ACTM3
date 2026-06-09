@@ -17,24 +17,24 @@ import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
-import wandPresets      from '../src/ui/lib/presets/raw/wand';
-import nclarityPresets  from '../src/ui/lib/presets/raw/nclarity';
-import showcasePresets  from '../src/ui/lib/presets/raw/showcase';
-import materialPresets  from '../src/ui/lib/presets/raw/material';
-import atlassianPresets from '../src/ui/lib/presets/raw/atlassian';
-import radixPresets     from '../src/ui/lib/presets/raw/radix';
-import applePresets     from '../src/ui/lib/presets/raw/apple';
-import tailwindPresets  from '../src/ui/lib/presets/raw/tailwind';
-import carbonPresets    from '../src/ui/lib/presets/raw/carbon';
-import polarisPresets   from '../src/ui/lib/presets/raw/polaris';
-import blankPresets     from '../src/ui/lib/presets/raw/blank';
+import wandPresets      from '../src/plugin/ThemShopItems/raw/wand';
+import nclarityPresets  from '../src/plugin/ThemShopItems/raw/nclarity';
+import showcasePresets  from '../src/plugin/ThemShopItems/raw/showcase';
+import materialPresets  from '../src/plugin/ThemShopItems/raw/material';
+import atlassianPresets from '../src/plugin/ThemShopItems/raw/atlassian';
+import radixPresets     from '../src/plugin/ThemShopItems/raw/radix';
+import applePresets     from '../src/plugin/ThemShopItems/raw/apple';
+import tailwindPresets  from '../src/plugin/ThemShopItems/raw/tailwind';
+import carbonPresets    from '../src/plugin/ThemShopItems/raw/carbon';
+import polarisPresets   from '../src/plugin/ThemShopItems/raw/polaris';
+import blankPresets     from '../src/plugin/ThemShopItems/raw/blank';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPreset = Record<string, any>;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUT_FILE  = path.resolve(__dirname, '../src/ui/lib/presets/presets.json');
-const DEV_DIR   = path.resolve(__dirname, '../src/ui/lib/presets/raw/dev');
+const OUT_FILE  = path.resolve(__dirname, '../src/plugin/ThemShopItems/presets.json');
+const DEV_DIR   = path.resolve(__dirname, '../src/plugin/ThemShopItems/raw/dev');
 const isRelease = process.argv.includes('--release');
 
 async function main() {

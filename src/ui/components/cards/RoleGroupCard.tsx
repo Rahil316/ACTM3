@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { variableMaker } from "../../lib/colorEngine";
+import { variableMaker } from "../../../plugin/ThemShopItems/colorEngine";
 import { Settings, X, ChevronDown } from "lucide-react";
 import { Checkbox } from "../Checkbox";
 import type { Color, Theme, RoleLocalBg, RoleLocalBgKind, Role, Variation, VariableScope } from "../../types/state";
@@ -616,6 +616,8 @@ const VariationTable = React.memo(function VariationTable({ variations: vars, ca
   );
 });
 
+const EMPTY_VARIATIONS: Variation[] = [];
+
 // ── Card ──────────────────────────────────────────────────────────────────────
 
 export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, dragListeners, dragAttributes }: RoleGroupCardProps) {
@@ -641,7 +643,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const scopedIds = useProjectStore((s) => s.projectStore.roles[idx]?.scopedColorIds ?? null);
   const roleLocalBg = useProjectStore((s) => s.projectStore.roles[idx]?.localBg);
 
-  const vars: Variation[] = useProjectStore((s) => s.projectStore.roles[idx]?.variations ?? []);
+  const vars: Variation[] = useProjectStore((s) => s.projectStore.roles[idx]?.variations ?? EMPTY_VARIATIONS);
 
   const showAlgoRow = pluginMode === "scale" && !useUniformAlgo && algoScope === "role";
   const showSolverRow = pluginMode === "direct" && !useUniformAlgo && algoScope === "role";
