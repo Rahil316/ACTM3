@@ -180,12 +180,12 @@ export function findVariable(
   allVariables: Variable[]
 ): Variable | null {
   // 1. Primary: Lookup via metadata
-  let variable = metadataMap.get(tokenRef);
+  let variable: Variable | null = metadataMap.get(tokenRef) ?? null;
   if (variable) return variable;
 
   // 2. Fallback: Lookup by name in same collection for legacy migration
   const colVars = allVariables.filter((v) => v.variableCollectionId === collection.id);
-  variable = colVars.find((v) => v.name === expectedName) || null;
+  variable = colVars.find((v) => v.name === expectedName) ?? null;
 
   if (variable) {
     // Migrate legacy variable by setting tokenRef metadata
