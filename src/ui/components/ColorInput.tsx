@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import clsx from 'clsx';
 
 // Sanitizes a hex string: strips #, keeps only hex chars, returns uppercase, max 6 chars.
@@ -38,6 +38,13 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
   const initial = sanitizeHex(value);
   const hexRef = useRef<HTMLInputElement>(null);
   const pickerRef = useRef<HTMLInputElement>(null);
+
+  // Sync inputs when the value prop changes externally (e.g. preset load, undo).
+  useEffect(() => {
+    const clean = sanitizeHex(value);
+    if (hexRef.current && hexRef.current !== document.activeElement) hexRef.current.value = clean;
+    if (pickerRef.current && pickerRef.current !== document.activeElement) pickerRef.current.value = normalizeHex(clean) || '#000000';
+  }, [value]);
 
   // Buffer picker drags — update the hex text immediately for visual feedback,
   // but only commit to the store on pointerup to avoid ~60 store writes/sec.

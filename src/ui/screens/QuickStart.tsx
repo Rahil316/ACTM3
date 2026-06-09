@@ -41,7 +41,7 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
     const state = makeBootstrapState();
     state.colors = [];
     state.roles = [];
-    state.themes = [{ _id: generateId(), name: "Light", bg: "FFFFFF" }];
+    state.themes = [{ _id: generateId(), name: "Light", bg: "#FFFFFF" }];
     ensureIds(state);
     ensureVariations(state);
     loadState(state);

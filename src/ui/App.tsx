@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import logoSvg from "./assets/logo.svg";
 import clsx from "clsx";
 import { useFigmaBridge } from "./hooks/useFigmaBridge";
@@ -105,7 +105,7 @@ export default function App() {
   const activeOverlay = useUiStore((s) => s.activeOverlay);
 
   const loadState = useProjectStore((s) => s.loadState);
-  const saveBlocked = useProjectStore((s) => s.versionSaveBlockedReason);
+  const saveBlockedReason = useProjectStore((s) => s.versionSaveBlockedReason());
   const projectStore = useProjectStore((s) => s.projectStore);
 
   const importRef = useRef<HTMLInputElement>(null);
@@ -139,13 +139,12 @@ export default function App() {
     const blank = makeBootstrapState();
     blank.colors = [];
     blank.roles = [];
+    blank.themes = [{ _id: blank.themes[0]._id, name: "Light", bg: "#FFFFFF" }];
     loadState(blank);
     openOverlay("quick-start");
   }
 
   useKeyboardShortcuts(importRef);
-
-  const saveBlockedReason = useMemo(() => saveBlocked(), [projectStore]);
 
   return (
     <div className="relative flex flex-col h-full bg-bg-app text-text-primary font-sans text-xs overflow-hidden">

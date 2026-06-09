@@ -3,6 +3,12 @@ import type { Role } from "./types";
 import type { EngineInput } from "./clrEngine";
 import type { EngineResult } from "./exportEng/types";
 
+/** Matches the [color] placeholder in dynamic token refs. */
+export const COLOR_PLACEHOLDER_RE = /\[color\]/i;
+
+/** Matches the "[color]/" prefix at the start of a dynamic token ref. */
+export const DYNAMIC_REF_PREFIX_RE = /^\[color\]\//i;
+
 /**
  * After a first engine pass, resolve any roles with localBgTokenRef /
  * localBgDynamicRef by looking up their hex values in the result.
@@ -246,12 +252,6 @@ export function sanitizeHex(val: string): string {
 }
 
 import type { RoleLocalBg, Color, Theme } from "./types";
-
-/** Matches the [color] placeholder in dynamic token refs. */
-export const COLOR_PLACEHOLDER_RE = /\[color\]/i;
-
-/** Matches the "[color]/" prefix at the start of a dynamic token ref. */
-export const DYNAMIC_REF_PREFIX_RE = /^\[color\]\//i;
 
 /**
  * Translate a UI-state localBg shape into the three engine runtime fields.
