@@ -8,11 +8,9 @@ All commands are run from the project root via `npm run <command>`.
 
 | Command | What it does |
 |---|---|
-| `build` | Full dev build → `dist/`. Generates theme CSS, compiles presets (with dev presets), bundles UI via Vite, compiles plugin via esbuild. |
-| `build:release` | Full release build → `dist-release/`. Same pipeline but: dev presets excluded (`raw/dev/` skipped), `__RELEASE__=true` strips dev overlay + console.logs, writes `manifest.json`. |
-| `build:plugin` | Plugin only (`src/plugin/index.ts` → `dist/scripts.js`). Skips UI. |
-| `build:plugin:release` | Plugin only → `dist-release/scripts.js` + `manifest.json`. Release flags apply. |
-| `build:storybook` | Builds Storybook static site. |
+| `build` | typecheck → lint → theme CSS → presets (with dev presets) → UI bundle via Vite → figma bundle via esbuild → `dist/` |
+| `build:release` | Same pipeline, release mode: dev presets excluded, `__RELEASE__=true` strips dev overlay + console.logs, writes `manifest.json` → `dist-release/` |
+| `build:storybook` | Builds Storybook as a static site |
 
 ---
 
@@ -20,22 +18,9 @@ All commands are run from the project root via `npm run <command>`.
 
 | Command | What it does |
 |---|---|
-| `dev` | Vite dev server on `localhost:3000` with HMR. Plugin code not watched — use `watch` in parallel for full live reload. |
-| `watch` | Watches both plugin (`src/plugin/**`) and UI (`src/ui/**`), rebuilds to `dist/` on save. Run alongside Figma desktop for live development. |
-| `watch:release` | Same as `watch` but outputs to `dist-release/` with release flags (dev overlay stripped, manifest updated on each rebuild). |
-
----
-
-## QA
-
-| Command | What it does |
-|---|---|
-| `test` | Run all unit tests once via Vitest. |
-| `test:watch` | Run tests in watch mode — re-runs affected tests on save. |
-| `typecheck` | TypeScript type-check only (`tsc --noEmit`). No emit. |
-| `lint` | ESLint across the whole project. |
-| `lint:fix` | ESLint with auto-fix. |
-| `check` | Runs `typecheck` + `lint` + `test` in sequence. Use before committing. |
+| `dev` | Vite dev server on `localhost:3000` with HMR. Figma sandbox code not watched — use `watch` for full live reload. |
+| `watch` | typecheck → lint → then watches both `src/figma/**` and `src/ui/**`, rebuilds to `dist/` on save |
+| `watch:release` | Same as `watch` but targets `dist-release/` with release flags — manifest updated on each rebuild |
 
 ---
 
@@ -43,17 +28,20 @@ All commands are run from the project root via `npm run <command>`.
 
 | Command | What it does |
 |---|---|
-| `theme:gen` | Regenerates `src/ui/theme/generated.css` from the theme definition source. Run when theme tokens change. |
+| `theme:gen` | Regenerates `src/ui/theme/theme.generated.css` from `src/ui/theme/tokens.ts`. Use during `dev` sessions when only token values changed. |
 
 ---
 
-## Release & Packaging
+## QA
 
 | Command | What it does |
 |---|---|
-| `release` | Bumps version (minor), tags, and packages `dist-release/` into a distributable zip. |
-| `release:patch` | Same as `release` but bumps patch version. |
-| `release:flag` | Marks the current build as a flagged/beta release without bumping the version. |
+| `test` | Run all tests once via Vitest (unit + component projects) |
+| `test:watch` | Run tests in watch mode — re-runs affected tests on save |
+| `typecheck` | `tsc --noEmit` only — no output files written |
+| `lint` | ESLint across the whole project |
+| `lint:fix` | ESLint with auto-fix |
+| `check` | `typecheck` + `lint` + `test` in sequence — run before committing |
 
 ---
 
@@ -61,21 +49,25 @@ All commands are run from the project root via `npm run <command>`.
 
 | Command | What it does |
 |---|---|
-| `storybook` | Starts Storybook dev server on port 6006. |
-| `build:storybook` | Builds Storybook as a static site. |
+| `storybook` | Storybook dev server on port 6006 |
+| `build:storybook` | Build static Storybook |
 
 ---
 
-## Notes
+## Build outputs
 
-- `build:release` and `watch:release` automatically exclude:
-  - Dev presets from `src/ui/lib/presets/raw/dev/`
-  - `CanvasPreviewDevOverlay` and `CanvasPreviewDevTree` (tree-shaken via `__RELEASE__`)
-  - `Alt+Shift+P` dev shortcut
-  - All `console.log` calls (plugin via esbuild `pure`, UI via Rollup plugin)
-  - `debugger` statements
+| Command | Output dir | manifest.json | Dev presets | console.log |
+|---|---|---|---|---|
+| `build` | `dist/` | no | included | kept |
+| `build:release` | `dist-release/` | yes | excluded | stripped |
 
-- To add new dev/test presets: drop a `.ts` file in `src/ui/lib/presets/raw/dev/`. No script edits needed — `build-presets.ts` picks up all files in that folder dynamically.
+---
 
-- `dist/` is the dev output (used with Figma desktop during development).  
-  `dist-release/` is the release output (what gets zipped and shipped).
+## Script files
+
+| File | Used by |
+|---|---|
+| `scripts/plugin.js` | `build`, `build:release`, `watch`, `watch:release` — bundles `src/figma/index.ts` via esbuild |
+| `scripts/watch-ui.js` | `watch`, `watch:release` — spawns `vite build --watch` |
+| `scripts/build-presets.ts` | `build`, `build:release`, `theme:gen` — compiles preset TS files → `src/ui/presets/presets.json` |
+| `scripts/generateThemeCss.ts` | `build`, `build:release`, `theme:gen` — writes `src/ui/theme/theme.generated.css` from `tokens.ts` |

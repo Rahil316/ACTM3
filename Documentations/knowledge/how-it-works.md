@@ -4,8 +4,8 @@
 
 A Figma plugin runs in two isolated JavaScript contexts that communicate by message-passing.
 
-- **UI thread** — the `<iframe>` loaded from `dist/ui.html`. It holds all application state, renders the interface, handles user interaction, and posts messages to the main thread when the user triggers a sync.
-- **Main thread** (`dist/scripts.js`) — runs inside Figma's sandbox with access to the Figma API. It receives messages from the UI, calls the color engine, writes variables to the document, and posts results back.
+- **UI thread** — the `<iframe>` loaded from `dist/ui.html`. Built from `src/ui/` via Vite. It holds all application state, renders the interface, handles user interaction, and posts messages to the main thread when the user triggers a sync.
+- **Figma sandbox thread** (`dist/scripts.js`) — built from `src/figma/` via esbuild. Runs inside Figma's sandbox with access to the Figma API. It receives messages from the UI, calls the color engine, writes variables to the document, and posts results back.
 
 No shared memory exists between threads. Every data exchange is a serialized message via `figma.ui.postMessage` (main → UI) and `parent.postMessage` (UI → main).
 
@@ -82,11 +82,7 @@ By default, every role uses the global `variations` list.
 
 When a role has `customVariationList: true` and a non-empty `customVariations` array, the engine substitutes that array in place of the global list for that role only. The number of entries in `customVariations` must match the number of entries in the role's `variationTargets`.
 
-This path is taken in both `_processScaleMode` and `_solveDirectMode` via the same guard in `store.js`:
-
-```js
-const roleVars = role.customVariationList && role.customVariations && role.customVariations.length > 0 ? role.customVariations : projectStore.variations;
-```
+This path is taken in both `_processScaleMode` and `_solveDirectMode` via the same guard in `src/ui/store/projectStore.ts`.
 
 ---
 
@@ -149,7 +145,7 @@ Hex values are written directly into token variables. The `_scale` collection is
 
 ### `includeColorScalesCollection: false`
 
-Same result as Direct mode above — the `_scale` collection is suppressed even in Scale mode. Tokens still alias scale variables; the scale collection just isn't written. (This flag is wired in `config.js` and checked in `figmaVars.js`.)
+Same result as Direct mode above — the `_scale` collection is suppressed even in Scale mode. Tokens still alias scale variables; the scale collection just isn't written. (This flag is wired in `src/figma/config.ts` and checked in `src/figma/figmaVars.ts`.)
 
 ---
 
@@ -167,7 +163,7 @@ Same result as Direct mode above — the `_scale` collection is suppressed even 
 
 ## Rename-Safety: The `_id` System
 
-Every color, role, and theme carries a stable `_id` field generated at creation time (`generateId()` in `store.js`). The rename-safety system in `buildVariableRenameMap()` uses `_id` — not array position — to track identity.
+Every color, role, and theme carries a stable `_id` field generated at creation time (`generateId()` in `src/ui/store/projectStore.ts`). The rename-safety system in `buildVariableRenameMap()` uses `_id` — not array position — to track identity.
 
 When the user renames a color from "Primary" to "Brand/Primary", the function compares saved state to new state by matching `_id` values, detects the label change, and produces a rename map:
 

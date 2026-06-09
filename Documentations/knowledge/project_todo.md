@@ -70,15 +70,15 @@ Last updated: 2026-05-22
 - [x] Settings migrated to full-screen 2-tab panel (Token Settings, Plugin)
 - [x] `inputsUI.btn()` — universal button primitive with 5 variants + sizes
 - [x] `RoleGroupCard` fixed — was returning single element, `.forEach` expected array
-- [x] `DEFAULT_VARIATION_TARGETS` duplicate `const` removed from `config.js`
+- [x] `DEFAULT_VARIATION_TARGETS` duplicate `const` removed
 - [x] `setRole()` and `setRoleVariation()` — bounds checks added
 - [x] `syncInputsFromState()` — now calls plugin tab values sync
 - [x] `uiPrefs` load — validated against allowed scales/themes before applying
-- [x] Dead code cleanup: removed `_demoConfigStr`, removed dead mutation branches in `setRole()`, fixed `run-creater` typo → `run-creator`, fixed Burgundy shorthand collision, removed stale numbering from config.js header
+- [x] Dead code cleanup: removed `_demoConfigStr`, removed dead mutation branches in `setRole()`, fixed `run-creater` typo → `run-creator`, fixed Burgundy shorthand collision
 - [x] Terminology refactor: `pluginMode: "tonal"` → `"scale"`, `"adaptiveEngine"` → `"direct"`; `tonalScales`/`colorTokens` → `scales`/`tokens`; `tknName`/`tknRef` → `tokenName`/`tokenRef`; all "ramp" → "scale" references updated
 - [x] Renamed config fields: `tonalScaleCollectionName` → `scaleCollectionName`, `tokenNameOrder` → `tokenNameSegments`, `useGlobalAlgo` → `useUniformAlgorithm`, `perColorAlgoScope` → `algorithmScopeLevel`, `includeGlobalColors` → `includeSourceColors`, `globalColorsCollectionName` → `sourceCollectionName`, `embedDirectly` → `resolveTokensDirectly`
-- [x] `includeColorScalesCollection` verified wired: config.js line 55 forwards it; figmaVars.js line 46 checks it in `skipScales` condition
-- [x] `useUniformAlgorithm` / `algorithmScopeLevel` verified wired: config.js forwards; clrEngine.js reads at lines 237, 265, 289–290
+- [x] `includeColorScalesCollection` verified wired: `src/figma/config.ts` forwards it; `src/figma/figmaVars.ts` checks it in `skipScales` condition
+- [x] `useUniformAlgorithm` / `algorithmScopeLevel` verified wired: `src/figma/config.ts` forwards; `src/shared/clrEngine.ts` reads them
 - [x] `scaleStepNames` verified wired end-to-end
 - [x] `alphaValues` verified wired end-to-end
 - [x] `ctm.js` preset deleted — no longer referenced

@@ -1,4 +1,5 @@
-export type { PluginMode, MappingMethod, AlgorithmScopeLevel, TokenNameSegment, ScaleAlgorithm, SolverMode, Variation, ScaleStep, Color, RoleLocalBgKind, RoleLocalBg, Role, Theme, VariableScope } from "../../shared/types";
+export type { PluginMode, MappingMethod, AlgorithmScopeLevel, TokenNameSegment, ScaleAlgorithm, SolverMode, Variation, ScaleStep, Color, RoleLocalBgKind, RoleLocalBg, Role, Theme, VariableScope, ScaleStepToken } from "../../shared/types";
+export type { EngineResult, TokenEntry, EngineInput } from "../../shared/clrEngine";
 
 // ── Root app state ───────────────────────────────────────────────────────────
 

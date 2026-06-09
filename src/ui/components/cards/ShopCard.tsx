@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import type { Preset } from '../../../shared/themeShop';
+import type { Preset } from '../../presets/themeShop';
 
 interface ShopCardProps {
   preset: Preset;

@@ -42,11 +42,11 @@ interface SectionCollapsibleProps {
 export function SectionCollapsible({ open, onToggle, label, badge, children, className }: SectionCollapsibleProps) {
   return (
     <div className={className}>
-      <div className="flex items-center align-center justify-between cursor-pointer select-none py-1" onClick={onToggle}>
+      <div className="flex items-center align-center justify-between cursor-pointer select-none py-1 gap-2" onClick={onToggle}>
         <SectionLabel className="mb-0">{label}</SectionLabel>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-3">
           {badge}
-          <span className="text-text-muted transition-transform duration-150 flex items-center" style={{ display: "inline-flex", transform: open ? "rotate(0deg)" : "rotate(180deg)" }}>
+          <span className="text-text-muted transition-transform duration-150 flex items-center" style={{ display: "inline-flex", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
             <IconChevronDown className="w-3 h-3" />
           </span>
         </div>

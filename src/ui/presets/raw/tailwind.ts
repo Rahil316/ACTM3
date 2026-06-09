@@ -42,7 +42,7 @@
  *   status/[channel]/text    4.5   status text / icon
  */
 
-import type { Preset } from "../../../shared/themeShop";
+import type { Preset } from "../themeShop";
 
 const presets: Preset[] = [
   {

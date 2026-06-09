@@ -80,7 +80,7 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
   }
 
   if (pm.type === "request-processed-data") {
-    import("../../plugin/ThemShopItems/colorEngine").then(({ variableMaker, resolveTokenRefBgs, translateLocalBg }) => {
+    Promise.all([import("../../shared/clrEngine"), import("../../shared/clrUtils"), import("../../shared/clrUtils")]).then(([{ variableMaker }, { resolveTokenRefBgs }, { translateLocalBg }]) => {
       const projectStore = pm.state as ProjectStore;
       const config = {
         ...projectStore,

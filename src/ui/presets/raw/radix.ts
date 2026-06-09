@@ -39,7 +39,7 @@
  *   overlay/default     14.0   scrim / backdrop overlay
  */
 
-import type { Preset } from "../../../shared/themeShop";
+import type { Preset } from "../themeShop";
 
 const presets: Preset[] = [
   {

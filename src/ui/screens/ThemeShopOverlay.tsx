@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useUiStore } from "../store/uiStore";
 import { useProjectStore, ensureIds, ensureVariations } from "../store/projectStore";
 import { banner } from "../store/bannerStore";
-import { PRESETS, type Preset } from "../../shared/themeShop";
+import { PRESETS, type Preset } from "../presets/themeShop";
 import { ShopCard } from "../components/cards/ShopCard";
 import { Button } from "../components/Button";
 import { IconChevronLeft } from "../components/icons";

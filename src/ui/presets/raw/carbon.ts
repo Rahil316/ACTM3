@@ -49,7 +49,7 @@
  *   support/[channel]/icon    4.0   status icon fill
  */
 
-import type { Preset } from "../../../shared/themeShop";
+import type { Preset } from "../themeShop";
 
 const presets: Preset[] = [
   {

@@ -1,6 +1,10 @@
 import type { ProjectStore, UiPrefs } from "./state";
-import type { ExportFile } from "../../plugin/exportEng/types";
-export type { ExportFile } from "../../plugin/exportEng/types";
+import type { ExportFile } from "../../figma/exportEng/types";
+import type { NameConflict, SyncPreview } from "../../figma/variableTracker";
+import type { StructuralChange } from "../../figma/config";
+export type { ExportFile } from "../../figma/exportEng/types";
+export type { NameConflict, SyncPreview } from "../../figma/variableTracker";
+export type { StructuralChangeKind, StructuralChange } from "../../figma/config";
 
 // ── Plugin → UI messages ─────────────────────────────────────────────────────
 
@@ -13,40 +17,6 @@ export interface LoadConfigMessage {
 export interface LoadUiPrefsMetaMessage {
   type: "load-ui-prefs-meta";
   prefs: Partial<UiPrefs>;
-}
-
-export interface NameConflict {
-  tokenRef: string;
-  figmaName: string;
-  suggestedName: string;
-  type: "token" | "scale" | "source";
-}
-
-export interface SyncPreview {
-  toCreate: number;
-  toUpdate: number;
-  toRename: number;
-  total: number;
-}
-
-export type StructuralChangeKind =
-  | "mode-direct-to-scale"
-  | "mode-scale-to-direct"
-  | "scale-shrunk"
-  | "scale-collection-renamed"
-  | "token-collection-renamed"
-  | "source-collection-renamed"
-  | "source-removed"
-  | "alpha-removed"
-  | "alpha-changed"
-  | "scale-collection-removed";
-
-export interface StructuralChange {
-  kind: StructuralChangeKind;
-  detail: string;
-  oldValue?: string;
-  newValue?: string;
-  orphanedCollection?: string;
 }
 
 export interface CollectionCheckResultMessage {

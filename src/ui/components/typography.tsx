@@ -45,7 +45,7 @@ export function ItemTitle({ children, className }: TypoProps) {
 
 /** Uppercase section divider in sidebars and settings panels (11px bold) */
 export function SectionLabel({ children, className }: TypoProps) {
-  return <p className={clsx("text-[11px] font-bold tracking-[0.6px] text-text-secondary", className)}>{children}</p>;
+  return <p className={clsx("text-[12px] text-text-primary", className)}>{children}</p>;
 }
 
 /** Form group header or input group label — renders a <label> (11px bold uppercase) */

@@ -7,14 +7,15 @@ import { EmptyState } from "../components/EmptyState";
 import { Modal, ModalHeader } from "../components/Modal";
 import { Button } from "../components/Button";
 import { SegmentedControl } from "../components/SegmentedControl";
-import { variableMaker, resolveTokenRefBgs, translateLocalBg, type EngineConfig, type EngineResult } from "../../plugin/ThemShopItems/colorEngine";
+import { variableMaker, resolveTokenRefBgs, translateLocalBg } from "../utils/engine";
+import type { EngineInput, EngineResult } from "../types/state";
 import { CardTitle, MicroText } from "../components/typography";
 import type { ProjectStore } from "../types/state";
 import { RatingBadge, TokenTile, ScaleStepSlice, SourceColorCard, getInkMode, inkColor, normalizeHex, copyText } from "../components/preview";
 
 // ── Engine call ───────────────────────────────────────────────────────────────
 
-function buildEngineConfig(projectStore: ProjectStore): EngineConfig {
+function buildEngineConfig(projectStore: ProjectStore): EngineInput {
   return {
     colors: projectStore.colors.map((c) => ({
       _id: c._id,

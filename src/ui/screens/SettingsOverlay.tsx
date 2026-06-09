@@ -139,11 +139,13 @@ function TokensTab() {
           control={<SegmentedControl segments={modeSegments as unknown as { value: string; label: string }[]} value={pluginMode} onChange={(v) => setProjectField("pluginMode", v as "scale" | "direct")} />}
         />
         {isScaleMode && (
-          <SmallRow
+          <PanelRow
             label="Scale Length"
+            description="Number of steps in the scale of each color."
             control={
               <Input
-                size="sm"
+                className="w-[100px]"
+                size="md"
                 type="number"
                 value={scaleLengthDraft}
                 min="5"

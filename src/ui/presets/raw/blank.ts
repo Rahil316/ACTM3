@@ -1,4 +1,4 @@
-import type { Preset } from "../../../shared/themeShop";
+import type { Preset } from "../themeShop";
 
 const presets: Preset[] = [
   {

@@ -17,13 +17,8 @@ function yieldFrame(): Promise<void> {
 // CANVAS LAYOUT CONTROLS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TOKEN_COL_GAP = 40;
-const RT_THEME_PADDING = 24;
-const RT_THEME_GAP = 24;
-const RT_THEME_RADIUS = 8;
 const TREE_INDENT = 16;
 const TREE_LINE_WIDTH = 1;
-const TREE_LINE_OPACITY = 0.18;
 const RT_COLOR_GAP = 12;
 const RT_COLOR_LABEL_SIZE = 12;
 const RT_COLOR_LABEL_STYLE = "Bold" as const;
@@ -257,7 +252,7 @@ export async function generateCanvasPreview(projectStore: AnyObj, result?: AnyOb
     line.name = "│";
     line.resize(TREE_LINE_WIDTH, 8);
     line.layoutAlign = "STRETCH";
-    line.fills = [{ type: "SOLID", color: lineColor, opacity: TREE_LINE_OPACITY }];
+    line.fills = [{ type: "SOLID", color: lineColor, opacity: 0.2 }];
     row.appendChild(line);
 
     const content = figma.createFrame();
@@ -439,7 +434,7 @@ export async function generateCanvasPreview(projectStore: AnyObj, result?: AnyOb
     f.layoutMode = "HORIZONTAL";
     f.primaryAxisSizingMode = "AUTO";
     f.counterAxisSizingMode = "AUTO";
-    f.itemSpacing = TOKEN_COL_GAP;
+    f.itemSpacing = 40;
     f.fills = [];
   });
 
@@ -462,12 +457,12 @@ export async function generateCanvasPreview(projectStore: AnyObj, result?: AnyOb
       themeFrame.layoutMode = "VERTICAL";
       themeFrame.primaryAxisSizingMode = "AUTO";
       themeFrame.counterAxisSizingMode = "AUTO";
-      themeFrame.cornerRadius = RT_THEME_RADIUS;
-      themeFrame.itemSpacing = RT_THEME_GAP;
-      themeFrame.paddingLeft = RT_THEME_PADDING;
-      themeFrame.paddingRight = RT_THEME_PADDING;
-      themeFrame.paddingTop = RT_THEME_PADDING;
-      themeFrame.paddingBottom = RT_THEME_PADDING;
+      themeFrame.cornerRadius = 8;
+      themeFrame.itemSpacing = 24;
+      themeFrame.paddingLeft = 24;
+      themeFrame.paddingRight = 24;
+      themeFrame.paddingTop = 24;
+      themeFrame.paddingBottom = 24;
       themeFrame.fills = [];
       roleTokensWrapper.appendChild(themeFrame);
       if (tokenCol) {

@@ -51,7 +51,6 @@ export function SaveVersionForm({ onSaved }: { onSaved: () => void }) {
 export function ProjectScreen() {
   const projectStore = useProjectStore((s) => s.projectStore);
   const updateName = useProjectStore((s) => s.updateProjectName);
-  const updateDesc = useProjectStore((s) => s.updateProjectDescription);
   const restoreVersion = useProjectStore((s) => s.restoreVersion);
   const deleteVersion = useProjectStore((s) => s.deleteVersion);
   const loadState = useProjectStore((s) => s.loadState);
@@ -149,25 +148,27 @@ export function ProjectScreen() {
       {/* Project Profile */}
       <SettingsCard>
         <SectionCollapsible open={profileOpen} onToggle={toggleProfileOpen} label="Project Profile">
-          <div className="flex flex-col gap-2 pt-2">
-            <Input label="Project Name" size="lg" value={projectStore.name} onChange={(e) => updateName(e.target.value)} />
-            <Input label="Description" size="lg" placeholder="Optional…" value={projectStore.description} onChange={(e) => updateDesc(e.target.value)} />
-          </div>
-          <div className="flex flex-col gap-2 pt-2 mt-2">
-            <SectionLabel className="mb-1 text-[14px] text-text-primary">Theme Modes</SectionLabel>
-            <HelperText className="mb-1">Each theme defines a background color used for contrast calculation.</HelperText>
+          {/* themes */}
+          <div className="flex flex-col gap-2 pt-2 mt-4">
+            <div className="flex flex-row justify-between items-center">
+              <div className="flex flex-col">
+                <SectionLabel className="mb-1 text-[14px] text-text-primary">Theme Modes</SectionLabel>
+                <HelperText className="mb-1">Each theme defines a background color used for contrast calculation.</HelperText>
+              </div>
+              <ActionButton label="+ Add Theme" className="w-[128px]" onClick={addTheme} />
+            </div>
             {themes.length > 0 && (
               <>
                 <ListHeader columns={["Name", "Background"]} withRemoveButton />
                 {themes.map((theme, i) => (
                   <ListRow key={theme._id} onRemove={() => removeTheme(i)} removeDisabled={themes.length <= 1} removeAriaLabel="Remove theme">
-                    <Input size="sm" value={theme.name} placeholder="Theme name" onChange={(e) => setTheme(i, "name", e.target.value)} />
-                    <ColorInput value={theme.bg} onUpdate={(hex) => setTheme(i, "bg", hex)} idPrefix={`theme-${theme._id}`} size="sm" />
+                    <Input size="md" value={theme.name} placeholder="Theme name" onChange={(e) => setTheme(i, "name", e.target.value)} />
+                    <ColorInput value={theme.bg} onUpdate={(hex) => setTheme(i, "bg", hex)} idPrefix={`theme-${theme._id}`} size="md" />
                   </ListRow>
                 ))}
+                <Input label="Project Name" size="lg" value={projectStore.name} onChange={(e) => updateName(e.target.value)} />
               </>
             )}
-            <ActionButton label="+ Add Theme" onClick={addTheme} />
           </div>
         </SectionCollapsible>
       </SettingsCard>

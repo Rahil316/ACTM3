@@ -14,8 +14,7 @@
 import { useState, useMemo } from "react";
 import { normalizeHex } from "../components/preview";
 import type { ProjectStore } from "../types/state";
-import type { EngineResult, TokenEntry } from "../../shared/clrEngine";
-import type { ScaleStepToken } from "../../shared/types";
+import type { EngineResult, TokenEntry, ScaleStepToken } from "../types/state";
 
 // ── Colour helpers ────────────────────────────────────────────────────────────
 

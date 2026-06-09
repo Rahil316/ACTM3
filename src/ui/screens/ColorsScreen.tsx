@@ -10,7 +10,7 @@ import { EmptyState } from "../components/EmptyState";
 import { SuggestSheet, MenuRow } from "../components/MenuSheet";
 import { ColorSwatch } from "../components/ColorSwatch";
 import type { Color } from "../types/state";
-import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components";
+import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components/Tree";
 
 // ── Suggested colors ──────────────────────────────────────────────────────────
 

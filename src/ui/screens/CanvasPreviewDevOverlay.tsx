@@ -11,7 +11,7 @@
 import { useMemo, useEffect, useRef, useState } from "react";
 import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
-import { variableMaker, resolveTokenRefBgs, translateLocalBg, contrastRatio, contrastRating } from "../../plugin/ThemShopItems/colorEngine";
+import { variableMaker, contrastRatio, contrastRating, resolveTokenRefBgs, translateLocalBg } from "../utils/engine";
 import { getInkMode, inkColor, normalizeHex } from "../components/preview";
 import type { ProjectStore } from "../types/state";
 import { CanvasPreviewDevTree } from "./CanvasPreviewDevTree";

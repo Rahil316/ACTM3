@@ -1,4 +1,4 @@
-// Builds or watches src/plugin/index.ts → <outDir>/scripts.js via esbuild.
+// Builds or watches src/figma/index.ts → <outDir>/scripts.js via esbuild.
 //
 // Usage:
 //   node scripts/plugin.js [outDir] [--watch] [--manifest]
@@ -22,7 +22,7 @@ const outDir = path.resolve(root, outDirName);
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
 const esbuildConfig = {
-  entryPoints: [path.resolve(root, 'src/plugin/index.ts')],
+  entryPoints: [path.resolve(root, 'src/figma/index.ts')],
   bundle:      true,
   outfile:     path.resolve(outDir, 'scripts.js'),
   target:      'es2017',
@@ -85,7 +85,7 @@ async function run() {
     });
     if (writeManifest) emitManifest();
     await ctx.watch();
-    console.log(`[plugin] watching src/plugin/** → ${outDirName}${writeManifest ? ' (with manifest)' : ''}`);
+    console.log(`[plugin] watching src/figma/** → ${outDirName}${writeManifest ? ' (with manifest)' : ''}`);
   } else {
     await esbuild.build(esbuildConfig);
     console.log(`✓ ${outDirName}/scripts.js built`);

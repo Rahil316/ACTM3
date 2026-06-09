@@ -52,7 +52,7 @@
  *   status/magic/fg               5.5   elevated for AI brand expression
  */
 
-import type { Preset } from "../../../shared/themeShop";
+import type { Preset } from "../themeShop";
 
 const presets: Preset[] = [
   {

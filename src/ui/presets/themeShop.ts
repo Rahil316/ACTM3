@@ -1,4 +1,4 @@
-import data from "../plugin/ThemShopItems/presets.json";
+import data from "./presets.json";
 import { ProjectStoreSnapshot } from "@/types/state";
 
 export interface Preset {

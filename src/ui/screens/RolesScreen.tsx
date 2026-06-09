@@ -9,7 +9,7 @@ import { RoleGroupCard } from "../components/cards/RoleGroupCard";
 import { SplitActionButton } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import type { Role } from "../types/state";
-import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components";
+import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components/Tree";
 
 // ── Suggested roles ───────────────────────────────────────────────────────────
 
@@ -87,7 +87,7 @@ function RoleTree() {
   const roles = useProjectStore((s) => s.projectStore.roles);
   const moveRole = useProjectStore((s) => s.moveRole);
   const setRole = useProjectStore((s) => s.setRole);
-  const committedRoles = useMemo(() => roles.map(r => ({ ...r, _id: r._id ?? "" })), [roles]);
+  const committedRoles = useMemo(() => roles.map((r) => ({ ...r, _id: r._id ?? "" })), [roles]);
   const [committed, flushCommitted] = useCommittedNames(committedRoles);
   const collapsed = useUiStore((s) => s.roleGroupCollapsed);
   const setCollapsed = useUiStore((s) => s.setRoleGroupCollapsed);

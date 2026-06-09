@@ -5,7 +5,7 @@ type: project
 ---
 
 Last updated: 2026-05-22
-Source: settings.js, store.js, config.js — direct code audit
+Source: `src/ui/screens/SettingsOverlay.tsx`, `src/ui/store/projectStore.ts`, `src/figma/config.ts` — direct code audit
 
 ---
 

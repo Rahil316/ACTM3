@@ -30,7 +30,7 @@ export default tseslint.config(
   // TypeScript + React source
   ...tseslint.configs.recommended.map((config) => ({
     ...config,
-    files: ['src/ui/**/*.{ts,tsx}', 'src/plugin/**/*.ts', 'src/shared/**/*.ts', 'scripts/**/*.ts', 'lib/**/*.ts'],
+    files: ['src/ui/**/*.{ts,tsx}', 'src/figma/**/*.ts', 'src/shared/**/*.ts', 'scripts/**/*.ts', 'lib/**/*.ts'],
   })),
 
   // Language options and parser settings for type information
@@ -38,7 +38,7 @@ export default tseslint.config(
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.json', './src/plugin/tsconfig.json', './tsconfig.node.json'],
+        project: ['./tsconfig.json', './src/figma/tsconfig.json', './tsconfig.node.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -61,7 +61,7 @@ export default tseslint.config(
 
   // Figma Plugin sandbox code configuration
   {
-    files: ['src/plugin/**/*.ts'],
+    files: ['src/figma/**/*.ts'],
     languageOptions: {
       globals: {
         figma: 'readonly',
@@ -77,8 +77,22 @@ export default tseslint.config(
     },
   },
 
+  // Ban direct shared/ imports from UI — use @/types or @/utils/engine instead
   {
-    files: ['src/ui/**/*.{ts,tsx}', 'src/plugin/**/*.ts', 'src/shared/**/*.ts', 'scripts/**/*.ts', 'lib/**/*.ts'],
+    files: ['src/ui/**/*.{ts,tsx}'],
+    ignores: ['src/ui/types/**', 'src/ui/utils/**'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['**/shared/**'],
+          message: 'Import from @/types/state, @/types/messages, or @/utils/engine instead of shared/ directly.',
+        }],
+      }],
+    },
+  },
+
+  {
+    files: ['src/ui/**/*.{ts,tsx}', 'src/figma/**/*.ts', 'src/shared/**/*.ts', 'scripts/**/*.ts', 'lib/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unused-vars': ['warn', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',

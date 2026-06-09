@@ -19,14 +19,14 @@ Last updated: 2026-05-22
 - Semantic role mapping — roles mapped to tonal steps by contrast or by index
 - Variation levels — shared global variation list (name + shorthand) per slot
 - Per-role variation override — `customVariationList: true` on a role substitutes `customVariations[]` for the global list
-- `scaleStepNames` — list of `{name, shorthand}` entries; config.js parses and passes to engine for step naming
-- `alphaValues` CSV — parsed to int array; figmaVars.js uses for alpha tint generation
-- Algorithm scoping — `useUniformAlgorithm` (one algo for all colors) + `algorithmScopeLevel` (`"color"` / `"role"`) — both are wired through config.js and read by clrEngine.js
+- `scaleStepNames` — list of `{name, shorthand}` entries; `src/figma/config.ts` parses and passes to engine for step naming
+- `alphaValues` CSV — parsed to int array; `src/figma/figmaVars.ts` uses for alpha tint generation
+- Algorithm scoping — `useUniformAlgorithm` (one algo for all colors) + `algorithmScopeLevel` (`"color"` / `"role"`) — both are wired through `src/figma/config.ts` and read by `src/shared/clrEngine.ts`
 
 ### Figma variable output
 
 - Palette collection (`_scale`) — full tonal ramp per color as Figma variables
-- `includeColorScalesCollection` toggle — gates whether `_scale` collection is written; wired in config.js and checked in figmaVars.js ✅ verified
+- `includeColorScalesCollection` toggle — gates whether `_scale` collection is written; wired in `src/figma/config.ts` and checked in `src/figma/figmaVars.ts` ✅ verified
 - Token collection — contextual role variables referencing palette steps (aliases) or embedded hex
 - `resolveTokensDirectly` — writes hex values instead of Figma aliases; suppresses `_scale` creation
 - Source colors collection (`_constants`) — raw brand hex values, no theme processing; enabled by `includeSourceColors`
@@ -72,9 +72,9 @@ Last updated: 2026-05-22
 
 ### Build
 
-- `npm run build` — concatenates JS, strips comments, inlines CSS, produces `dist/scripts.js` + `dist/ui.html`
+- `npm run build` — typecheck + lint + theme CSS + presets + Vite UI bundle + esbuild figma bundle → `dist/scripts.js` + `dist/ui.html`
+- `npm run build:release` — same, release mode: dev presets excluded, console.logs stripped, manifest written → `dist-release/`
 - Tailwind CSS inlined at build — no CDN dependency at runtime
-- `npm run release -- v3.x` — packages for marketplace
 
 ---
 

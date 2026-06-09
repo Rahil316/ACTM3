@@ -16,9 +16,21 @@ export default mergeConfig(
         {
           extends: true,
           test: {
+            name: 'unit',
             root: '.',
-            include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+            include: ['tests/shared/**/*.test.ts', 'tests/ui/store/**/*.test.ts'],
             environment: 'node',
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: 'components',
+            root: '.',
+            include: ['tests/ui/components/**/*.test.tsx'],
+            environment: 'jsdom',
+            globals: true,
+            setupFiles: ['./tests/setup.ts'],
           },
         },
         {

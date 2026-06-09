@@ -20,6 +20,6 @@
     },
     "types": ["@figma/plugin-typings", "node"]
   },
-  "include": ["src/ui", "src/shared", "src/plugin/ThemShopItems", "scripts"],
+  "include": ["src/ui", "src/shared", "scripts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
