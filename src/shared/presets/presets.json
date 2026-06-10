@@ -1,0 +1,2970 @@
+[
+  {
+    "id": "material-3",
+    "name": "Material Design 3",
+    "badge": "M3",
+    "description": "Role = color family. Variations = M3 token slots. Figma folders mirror M3's hierarchy. Contrast calibrated per slot use case.",
+    "tags": [
+      "google",
+      "material",
+      "m3",
+      "tonal",
+      "hct",
+      "design-system"
+    ],
+    "swatches": [
+      "6750A4",
+      "625B71",
+      "7D5260",
+      "B3261E",
+      "605D62",
+      "7D7279"
+    ],
+    "config": {
+      "name": "Material Design 3",
+      "pluginMode": "scale",
+      "scaleAlgorithm": "Material",
+      "scaleLength": 25,
+      "useUniformAlgorithm": true,
+      "algorithmScopeLevel": "color",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": false,
+      "useShorthandRoles": false,
+      "useShorthandVariations": false,
+      "useShorthandSteps": false,
+      "includeSourceColors": false,
+      "sourceCollectionName": "global",
+      "alphaValues": [
+        5,
+        10,
+        20,
+        25,
+        50,
+        75,
+        80,
+        90,
+        95
+      ],
+      "includeColorScalesCollection": true,
+      "includeDescriptions": true,
+      "scaleCollectionName": "_scale",
+      "tokenCollectionName": "color tokens",
+      "scaleSteps": null,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "default"
+        }
+      ],
+      "colors": [
+        {
+          "name": "primary",
+          "shorthand": "primary",
+          "value": "6750A4",
+          "description": "M3 Primary key color"
+        },
+        {
+          "name": "secondary",
+          "shorthand": "secondary",
+          "value": "625B71",
+          "description": "M3 Secondary key color"
+        },
+        {
+          "name": "tertiary",
+          "shorthand": "tertiary",
+          "value": "7D5260",
+          "description": "M3 Tertiary key color"
+        },
+        {
+          "name": "error",
+          "shorthand": "error",
+          "value": "B3261E",
+          "description": "M3 Error key color"
+        },
+        {
+          "name": "neutral",
+          "shorthand": "neutral",
+          "value": "605D62",
+          "description": "M3 Neutral — surfaces, backgrounds, shadow"
+        },
+        {
+          "name": "neutral-variant",
+          "shorthand": "neutral-variant",
+          "value": "7D7279",
+          "description": "M3 Neutral Variant — on-surface, outline"
+        }
+      ],
+      "roles": [
+        {
+          "name": "primary",
+          "shorthand": "primary",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "on",
+              "shorthand": "on",
+              "target": 14
+            },
+            {
+              "name": "container",
+              "shorthand": "container",
+              "target": 1.3
+            },
+            {
+              "name": "on-container",
+              "shorthand": "on-container",
+              "target": 12
+            },
+            {
+              "name": "inverse",
+              "shorthand": "inverse",
+              "target": 2.5
+            },
+            {
+              "name": "tint",
+              "shorthand": "tint",
+              "target": 4.5
+            }
+          ],
+          "description": "Primary color family · fill · on · container · on-container · inverse · tint"
+        },
+        {
+          "name": "secondary",
+          "shorthand": "secondary",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "on",
+              "shorthand": "on",
+              "target": 14
+            },
+            {
+              "name": "container",
+              "shorthand": "container",
+              "target": 1.3
+            },
+            {
+              "name": "on-container",
+              "shorthand": "on-container",
+              "target": 12
+            }
+          ],
+          "description": "Secondary color family · fill · on · container · on-container"
+        },
+        {
+          "name": "tertiary",
+          "shorthand": "tertiary",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "on",
+              "shorthand": "on",
+              "target": 14
+            },
+            {
+              "name": "container",
+              "shorthand": "container",
+              "target": 1.3
+            },
+            {
+              "name": "on-container",
+              "shorthand": "on-container",
+              "target": 12
+            }
+          ],
+          "description": "Tertiary color family · fill · on · container · on-container"
+        },
+        {
+          "name": "error",
+          "shorthand": "error",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "on",
+              "shorthand": "on",
+              "target": 14
+            },
+            {
+              "name": "container",
+              "shorthand": "container",
+              "target": 1.3
+            },
+            {
+              "name": "on-container",
+              "shorthand": "on-container",
+              "target": 12
+            }
+          ],
+          "description": "Error color family · fill · on · container · on-container"
+        },
+        {
+          "name": "surface",
+          "shorthand": "surface",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1
+            },
+            {
+              "name": "dim",
+              "shorthand": "dim",
+              "target": 1.07
+            },
+            {
+              "name": "bright",
+              "shorthand": "bright",
+              "target": 1
+            },
+            {
+              "name": "on",
+              "shorthand": "on",
+              "target": 10
+            },
+            {
+              "name": "variant",
+              "shorthand": "variant",
+              "target": 1.2
+            },
+            {
+              "name": "on-variant",
+              "shorthand": "on-variant",
+              "target": 4.5
+            }
+          ],
+          "description": "Surface states and text · default · dim · bright · on · variant · on-variant"
+        },
+        {
+          "name": "surface/container",
+          "shorthand": "surface/container",
+          "variations": [
+            {
+              "name": "lowest",
+              "shorthand": "lowest",
+              "target": 1
+            },
+            {
+              "name": "low",
+              "shorthand": "low",
+              "target": 1.07
+            },
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.15
+            },
+            {
+              "name": "high",
+              "shorthand": "high",
+              "target": 1.22
+            },
+            {
+              "name": "highest",
+              "shorthand": "highest",
+              "target": 1.3
+            }
+          ],
+          "description": "Surface container stack · 5 levels of tint depth"
+        },
+        {
+          "name": "background",
+          "shorthand": "background",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1
+            },
+            {
+              "name": "on",
+              "shorthand": "on",
+              "target": 10
+            }
+          ],
+          "description": "Background · page canvas and body text"
+        },
+        {
+          "name": "inverse",
+          "shorthand": "inverse",
+          "variations": [
+            {
+              "name": "surface",
+              "shorthand": "surface",
+              "target": 12
+            },
+            {
+              "name": "on-surface",
+              "shorthand": "on-surface",
+              "target": 1.1
+            }
+          ],
+          "description": "Inverse surface · snackbar/tooltip bg and text"
+        },
+        {
+          "name": "scrim",
+          "shorthand": "scrim",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 16
+            }
+          ],
+          "description": "Scrim · modal overlay, darkest achievable"
+        },
+        {
+          "name": "shadow",
+          "shorthand": "shadow",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 16
+            }
+          ],
+          "description": "Shadow · elevation drop shadow, darkest achievable"
+        },
+        {
+          "name": "outline",
+          "shorthand": "outline",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 3
+            },
+            {
+              "name": "variant",
+              "shorthand": "variant",
+              "target": 1.5
+            }
+          ],
+          "description": "Outline · interactive border · decorative divider"
+        }
+      ],
+      "themes": [
+        {
+          "name": "Light",
+          "bg": "FFFBFE"
+        },
+        {
+          "name": "Dark",
+          "bg": "1C1B1F"
+        }
+      ]
+    }
+  },
+  {
+    "id": "atlassian-ds",
+    "name": "Atlassian Design System",
+    "badge": "ADS",
+    "description": "Property-first token hierarchy matching color.background.brand.bold and --ds-* CSS variables. Collection names match ADS: 'color-palette' + 'color'.",
+    "tags": [
+      "atlassian",
+      "ads",
+      "jira",
+      "confluence",
+      "semantic",
+      "design-system"
+    ],
+    "swatches": [
+      "0C66E4",
+      "44546F",
+      "22A06B",
+      "E2B203",
+      "C9372C",
+      "8270DB"
+    ],
+    "config": {
+      "name": "Atlassian Design System",
+      "pluginMode": "scale",
+      "scaleAlgorithm": "Natural",
+      "scaleLength": 25,
+      "useUniformAlgorithm": true,
+      "algorithmScopeLevel": "color",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": false,
+      "useShorthandRoles": false,
+      "useShorthandVariations": false,
+      "useShorthandSteps": false,
+      "includeSourceColors": false,
+      "sourceCollectionName": "global",
+      "alphaValues": [
+        8,
+        16,
+        32,
+        50,
+        70,
+        85
+      ],
+      "includeColorScalesCollection": true,
+      "includeDescriptions": true,
+      "scaleCollectionName": "color-palette",
+      "tokenCollectionName": "color",
+      "scaleSteps": null,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "default"
+        }
+      ],
+      "colors": [
+        {
+          "name": "brand",
+          "shorthand": "brand",
+          "value": "0C66E4",
+          "description": "Atlassian brand blue — primary action, links, focus"
+        },
+        {
+          "name": "neutral",
+          "shorthand": "neutral",
+          "value": "44546F",
+          "description": "Neutral slate — surfaces, borders, default text"
+        },
+        {
+          "name": "success",
+          "shorthand": "success",
+          "value": "22A06B",
+          "description": "Success green — positive states, confirmations"
+        },
+        {
+          "name": "warning",
+          "shorthand": "warning",
+          "value": "E2B203",
+          "description": "Warning yellow — caution, alert states"
+        },
+        {
+          "name": "danger",
+          "shorthand": "danger",
+          "value": "C9372C",
+          "description": "Danger red — errors, destructive actions"
+        },
+        {
+          "name": "information",
+          "shorthand": "information",
+          "value": "0055CC",
+          "description": "Information blue — informational banners and messages"
+        },
+        {
+          "name": "discovery",
+          "shorthand": "discovery",
+          "value": "8270DB",
+          "description": "Discovery purple — new features, onboarding, spotlights"
+        }
+      ],
+      "roles": [
+        {
+          "name": "background/brand",
+          "shorthand": "background/brand",
+          "variations": [
+            {
+              "name": "subtlest",
+              "shorthand": "subtlest",
+              "target": 1.05
+            },
+            {
+              "name": "subtlest/hovered",
+              "shorthand": "subtlest/hovered",
+              "target": 1.1
+            },
+            {
+              "name": "subtlest/pressed",
+              "shorthand": "subtlest/pressed",
+              "target": 1.15
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold",
+              "target": 4.5
+            },
+            {
+              "name": "bold/hovered",
+              "shorthand": "bold/hovered",
+              "target": 5
+            },
+            {
+              "name": "bold/pressed",
+              "shorthand": "bold/pressed",
+              "target": 5.5
+            },
+            {
+              "name": "boldest",
+              "shorthand": "boldest",
+              "target": 8
+            },
+            {
+              "name": "boldest/hovered",
+              "shorthand": "boldest/hovered",
+              "target": 9
+            },
+            {
+              "name": "boldest/pressed",
+              "shorthand": "boldest/pressed",
+              "target": 10
+            }
+          ],
+          "description": "color.background.brand — brand-tinted fills from subtlest wash to boldest container"
+        },
+        {
+          "name": "background/neutral",
+          "shorthand": "background/neutral",
+          "variations": [
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 1.05
+            },
+            {
+              "name": "subtle/hovered",
+              "shorthand": "subtle/hovered",
+              "target": 1.1
+            },
+            {
+              "name": "subtle/pressed",
+              "shorthand": "subtle/pressed",
+              "target": 1.15
+            },
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.3
+            },
+            {
+              "name": "default/hovered",
+              "shorthand": "default/hovered",
+              "target": 1.4
+            },
+            {
+              "name": "default/pressed",
+              "shorthand": "default/pressed",
+              "target": 1.5
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold",
+              "target": 4.5
+            },
+            {
+              "name": "bold/hovered",
+              "shorthand": "bold/hovered",
+              "target": 5
+            },
+            {
+              "name": "bold/pressed",
+              "shorthand": "bold/pressed",
+              "target": 5.5
+            }
+          ],
+          "description": "color.background.neutral — neutral fills: subtle wash · default container · bold"
+        },
+        {
+          "name": "background/success",
+          "shorthand": "background/success",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.1
+            },
+            {
+              "name": "default/hovered",
+              "shorthand": "default/hovered",
+              "target": 1.2
+            },
+            {
+              "name": "default/pressed",
+              "shorthand": "default/pressed",
+              "target": 1.3
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold",
+              "target": 4.5
+            },
+            {
+              "name": "bold/hovered",
+              "shorthand": "bold/hovered",
+              "target": 5
+            },
+            {
+              "name": "bold/pressed",
+              "shorthand": "bold/pressed",
+              "target": 5.5
+            }
+          ],
+          "description": "color.background.success — success tinted fills"
+        },
+        {
+          "name": "background/warning",
+          "shorthand": "background/warning",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.1
+            },
+            {
+              "name": "default/hovered",
+              "shorthand": "default/hovered",
+              "target": 1.2
+            },
+            {
+              "name": "default/pressed",
+              "shorthand": "default/pressed",
+              "target": 1.3
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold",
+              "target": 3
+            },
+            {
+              "name": "bold/hovered",
+              "shorthand": "bold/hovered",
+              "target": 3.5
+            },
+            {
+              "name": "bold/pressed",
+              "shorthand": "bold/pressed",
+              "target": 4
+            }
+          ],
+          "description": "color.background.warning — warning tinted fills"
+        },
+        {
+          "name": "background/danger",
+          "shorthand": "background/danger",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.1
+            },
+            {
+              "name": "default/hovered",
+              "shorthand": "default/hovered",
+              "target": 1.2
+            },
+            {
+              "name": "default/pressed",
+              "shorthand": "default/pressed",
+              "target": 1.3
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold",
+              "target": 4.5
+            },
+            {
+              "name": "bold/hovered",
+              "shorthand": "bold/hovered",
+              "target": 5
+            },
+            {
+              "name": "bold/pressed",
+              "shorthand": "bold/pressed",
+              "target": 5.5
+            }
+          ],
+          "description": "color.background.danger — danger/error tinted fills"
+        },
+        {
+          "name": "background/information",
+          "shorthand": "background/information",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.1
+            },
+            {
+              "name": "default/hovered",
+              "shorthand": "default/hovered",
+              "target": 1.2
+            },
+            {
+              "name": "default/pressed",
+              "shorthand": "default/pressed",
+              "target": 1.3
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold",
+              "target": 4.5
+            },
+            {
+              "name": "bold/hovered",
+              "shorthand": "bold/hovered",
+              "target": 5
+            },
+            {
+              "name": "bold/pressed",
+              "shorthand": "bold/pressed",
+              "target": 5.5
+            }
+          ],
+          "description": "color.background.information — informational tinted fills"
+        },
+        {
+          "name": "background/discovery",
+          "shorthand": "background/discovery",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.1
+            },
+            {
+              "name": "default/hovered",
+              "shorthand": "default/hovered",
+              "target": 1.2
+            },
+            {
+              "name": "default/pressed",
+              "shorthand": "default/pressed",
+              "target": 1.3
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold",
+              "target": 4.5
+            },
+            {
+              "name": "bold/hovered",
+              "shorthand": "bold/hovered",
+              "target": 5
+            },
+            {
+              "name": "bold/pressed",
+              "shorthand": "bold/pressed",
+              "target": 5.5
+            }
+          ],
+          "description": "color.background.discovery — discovery/feature tinted fills"
+        },
+        {
+          "name": "background/selected",
+          "shorthand": "background/selected",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.1
+            },
+            {
+              "name": "default/hovered",
+              "shorthand": "default/hovered",
+              "target": 1.2
+            },
+            {
+              "name": "default/pressed",
+              "shorthand": "default/pressed",
+              "target": 1.3
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold",
+              "target": 4.5
+            },
+            {
+              "name": "bold/hovered",
+              "shorthand": "bold/hovered",
+              "target": 5
+            },
+            {
+              "name": "bold/pressed",
+              "shorthand": "bold/pressed",
+              "target": 5.5
+            }
+          ],
+          "description": "color.background.selected — selected state fills"
+        },
+        {
+          "name": "background/input",
+          "shorthand": "background/input",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1
+            },
+            {
+              "name": "default/hovered",
+              "shorthand": "default/hovered",
+              "target": 1.05
+            },
+            {
+              "name": "default/pressed",
+              "shorthand": "default/pressed",
+              "target": 1.1
+            }
+          ],
+          "description": "color.background.input — form field background"
+        },
+        {
+          "name": "text",
+          "shorthand": "text",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 7
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 4.5
+            },
+            {
+              "name": "subtlest",
+              "shorthand": "subtlest",
+              "target": 3
+            },
+            {
+              "name": "disabled",
+              "shorthand": "disabled",
+              "target": 2
+            },
+            {
+              "name": "inverse",
+              "shorthand": "inverse",
+              "target": 14
+            },
+            {
+              "name": "selected",
+              "shorthand": "selected",
+              "target": 4.5
+            }
+          ],
+          "description": "color.text — default body text through inverse"
+        },
+        {
+          "name": "text/brand",
+          "shorthand": "text/brand",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.text.brand — brand-colored text (AA)"
+        },
+        {
+          "name": "text/success",
+          "shorthand": "text/success",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.text.success — success-colored text (AA)"
+        },
+        {
+          "name": "text/warning",
+          "shorthand": "text/warning",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 3
+            },
+            {
+              "name": "inverse",
+              "shorthand": "inverse",
+              "target": 14
+            }
+          ],
+          "description": "color.text.warning — warning text and inverse on bold warning bg"
+        },
+        {
+          "name": "text/danger",
+          "shorthand": "text/danger",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.text.danger — danger/error text (AA)"
+        },
+        {
+          "name": "text/information",
+          "shorthand": "text/information",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.text.information — informational text (AA)"
+        },
+        {
+          "name": "text/discovery",
+          "shorthand": "text/discovery",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.text.discovery — discovery/feature text (AA)"
+        },
+        {
+          "name": "icon",
+          "shorthand": "icon",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 3
+            },
+            {
+              "name": "subtlest",
+              "shorthand": "subtlest",
+              "target": 2
+            },
+            {
+              "name": "inverse",
+              "shorthand": "inverse",
+              "target": 14
+            },
+            {
+              "name": "selected",
+              "shorthand": "selected",
+              "target": 4.5
+            }
+          ],
+          "description": "color.icon — functional · decorative · disabled · inverse · selected"
+        },
+        {
+          "name": "icon/brand",
+          "shorthand": "icon/brand",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.icon.brand"
+        },
+        {
+          "name": "icon/success",
+          "shorthand": "icon/success",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.icon.success"
+        },
+        {
+          "name": "icon/warning",
+          "shorthand": "icon/warning",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 3
+            },
+            {
+              "name": "inverse",
+              "shorthand": "inverse",
+              "target": 14
+            }
+          ],
+          "description": "color.icon.warning — warning icon and inverse"
+        },
+        {
+          "name": "icon/danger",
+          "shorthand": "icon/danger",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.icon.danger"
+        },
+        {
+          "name": "icon/information",
+          "shorthand": "icon/information",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.icon.information"
+        },
+        {
+          "name": "icon/discovery",
+          "shorthand": "icon/discovery",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            }
+          ],
+          "description": "color.icon.discovery"
+        },
+        {
+          "name": "border",
+          "shorthand": "border",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 2.5
+            },
+            {
+              "name": "bold",
+              "shorthand": "bold",
+              "target": 4.5
+            },
+            {
+              "name": "focused",
+              "shorthand": "focused",
+              "target": 3
+            },
+            {
+              "name": "input",
+              "shorthand": "input",
+              "target": 2.5
+            },
+            {
+              "name": "inverse",
+              "shorthand": "inverse",
+              "target": 14
+            },
+            {
+              "name": "selected",
+              "shorthand": "selected",
+              "target": 4.5
+            },
+            {
+              "name": "disabled",
+              "shorthand": "disabled",
+              "target": 1.5
+            }
+          ],
+          "description": "color.border — default · bold · focused · input · inverse · selected · disabled"
+        },
+        {
+          "name": "border/brand",
+          "shorthand": "border/brand",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 3
+            }
+          ],
+          "description": "color.border.brand"
+        },
+        {
+          "name": "border/success",
+          "shorthand": "border/success",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 3
+            }
+          ],
+          "description": "color.border.success"
+        },
+        {
+          "name": "border/warning",
+          "shorthand": "border/warning",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 2.5
+            }
+          ],
+          "description": "color.border.warning"
+        },
+        {
+          "name": "border/danger",
+          "shorthand": "border/danger",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 3
+            }
+          ],
+          "description": "color.border.danger"
+        },
+        {
+          "name": "border/information",
+          "shorthand": "border/information",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 3
+            }
+          ],
+          "description": "color.border.information"
+        },
+        {
+          "name": "border/discovery",
+          "shorthand": "border/discovery",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 3
+            }
+          ],
+          "description": "color.border.discovery"
+        },
+        {
+          "name": "link",
+          "shorthand": "link",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "pressed",
+              "shorthand": "pressed",
+              "target": 7
+            },
+            {
+              "name": "visited",
+              "shorthand": "visited",
+              "target": 4.5
+            }
+          ],
+          "description": "color.link — default · pressed · visited link colors"
+        },
+        {
+          "name": "text/accent",
+          "shorthand": "text/accent",
+          "variations": [
+            {
+              "name": "blue",
+              "shorthand": "blue",
+              "target": 4.5
+            },
+            {
+              "name": "red",
+              "shorthand": "red",
+              "target": 4.5
+            },
+            {
+              "name": "orange",
+              "shorthand": "orange",
+              "target": 4.5
+            },
+            {
+              "name": "yellow",
+              "shorthand": "yellow",
+              "target": 3
+            },
+            {
+              "name": "green",
+              "shorthand": "green",
+              "target": 4.5
+            },
+            {
+              "name": "purple",
+              "shorthand": "purple",
+              "target": 4.5
+            },
+            {
+              "name": "teal",
+              "shorthand": "teal",
+              "target": 4.5
+            },
+            {
+              "name": "magenta",
+              "shorthand": "magenta",
+              "target": 4.5
+            },
+            {
+              "name": "gray",
+              "shorthand": "gray",
+              "target": 4.5
+            }
+          ],
+          "description": "color.text.accent — colored label text for tags, lozenges, and search highlights"
+        },
+        {
+          "name": "elevation/surface",
+          "shorthand": "elevation/surface",
+          "variations": [
+            {
+              "name": "sunken",
+              "shorthand": "sunken",
+              "target": 1.05
+            },
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1
+            },
+            {
+              "name": "default/hovered",
+              "shorthand": "default/hovered",
+              "target": 1.03
+            },
+            {
+              "name": "default/pressed",
+              "shorthand": "default/pressed",
+              "target": 1.06
+            },
+            {
+              "name": "raised",
+              "shorthand": "raised",
+              "target": 1.1
+            },
+            {
+              "name": "raised/hovered",
+              "shorthand": "raised/hovered",
+              "target": 1.13
+            },
+            {
+              "name": "raised/pressed",
+              "shorthand": "raised/pressed",
+              "target": 1.16
+            },
+            {
+              "name": "overlay",
+              "shorthand": "overlay",
+              "target": 1.2
+            },
+            {
+              "name": "overlay/hovered",
+              "shorthand": "overlay/hovered",
+              "target": 1.23
+            },
+            {
+              "name": "overlay/pressed",
+              "shorthand": "overlay/pressed",
+              "target": 1.26
+            }
+          ],
+          "description": "elevation.surface — sunken · default · raised · overlay with hover/press states"
+        },
+        {
+          "name": "blanket",
+          "shorthand": "blanket",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 14
+            },
+            {
+              "name": "selected",
+              "shorthand": "selected",
+              "target": 10
+            }
+          ],
+          "description": "color.blanket — modal overlay and selection overlay"
+        },
+        {
+          "name": "skeleton",
+          "shorthand": "skeleton",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.15
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 1.05
+            }
+          ],
+          "description": "color.skeleton — shimmer placeholder base and highlight"
+        },
+        {
+          "name": "interaction",
+          "shorthand": "interaction",
+          "variations": [
+            {
+              "name": "hovered",
+              "shorthand": "hovered",
+              "target": 1.1
+            },
+            {
+              "name": "pressed",
+              "shorthand": "pressed",
+              "target": 1.2
+            },
+            {
+              "name": "inverse/hovered",
+              "shorthand": "inverse/hovered",
+              "target": 14
+            },
+            {
+              "name": "inverse/pressed",
+              "shorthand": "inverse/pressed",
+              "target": 16
+            }
+          ],
+          "description": "color.interaction — hover/press overlay tones for default and inverse surfaces"
+        }
+      ],
+      "themes": [
+        {
+          "name": "Light",
+          "bg": "FFFFFF"
+        },
+        {
+          "name": "Dark",
+          "bg": "1D2125"
+        }
+      ]
+    }
+  },
+  {
+    "id": "radix-ui",
+    "name": "Radix UI",
+    "badge": "Radix",
+    "description": "Radix's 12-step semantic scale. Role = purpose layer (background, element, border, solid, text). Variation = named slot within that layer. Matches Radix Themes and shadcn/ui token namespace.",
+    "tags": [
+      "radix",
+      "shadcn",
+      "oklch",
+      "12-step",
+      "react"
+    ],
+    "swatches": [
+      "0091FF",
+      "8E8096",
+      "EB5757",
+      "30A46C"
+    ],
+    "config": {
+      "name": "Radix UI",
+      "pluginMode": "scale",
+      "scaleAlgorithm": "Natural",
+      "scaleLength": 12,
+      "useUniformAlgorithm": true,
+      "algorithmScopeLevel": "color",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "color",
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": false,
+      "useShorthandRoles": false,
+      "useShorthandVariations": false,
+      "useShorthandSteps": false,
+      "includeSourceColors": false,
+      "sourceCollectionName": "global",
+      "alphaValues": [
+        5,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        95
+      ],
+      "includeColorScalesCollection": true,
+      "includeDescriptions": true,
+      "scaleCollectionName": "primitives",
+      "tokenCollectionName": "tokens",
+      "scaleSteps": null,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "default"
+        }
+      ],
+      "colors": [
+        {
+          "name": "Blue",
+          "shorthand": "Blue",
+          "value": "0091FF",
+          "description": "Radix blue — primary interactive tint"
+        },
+        {
+          "name": "Mauve",
+          "shorthand": "Mauve",
+          "value": "8E8096",
+          "description": "Radix mauve neutral (purple-tinted gray)"
+        },
+        {
+          "name": "Red",
+          "shorthand": "Red",
+          "value": "EB5757",
+          "description": "Radix red — error / destructive"
+        },
+        {
+          "name": "Green",
+          "shorthand": "Green",
+          "value": "30A46C",
+          "description": "Radix green — success / positive"
+        }
+      ],
+      "roles": [
+        {
+          "name": "background",
+          "shorthand": "background",
+          "variations": [
+            {
+              "name": "app",
+              "shorthand": "app",
+              "target": 1
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 1.05
+            }
+          ],
+          "description": "Page background fills · app canvas and subtle tint"
+        },
+        {
+          "name": "element",
+          "shorthand": "element",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.1
+            },
+            {
+              "name": "hover",
+              "shorthand": "hover",
+              "target": 1.15
+            },
+            {
+              "name": "active",
+              "shorthand": "active",
+              "target": 1.2
+            }
+          ],
+          "description": "UI element fills · resting · hover · active"
+        },
+        {
+          "name": "border",
+          "shorthand": "border",
+          "variations": [
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 1.5
+            },
+            {
+              "name": "ui",
+              "shorthand": "ui",
+              "target": 2.5
+            },
+            {
+              "name": "hover",
+              "shorthand": "hover",
+              "target": 3
+            }
+          ],
+          "description": "Borders and separators · subtle divider · UI border · hover border"
+        },
+        {
+          "name": "solid",
+          "shorthand": "solid",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "hover",
+              "shorthand": "hover",
+              "target": 5.5
+            }
+          ],
+          "description": "Solid fills · button/badge backgrounds · resting and hover"
+        },
+        {
+          "name": "text",
+          "shorthand": "text",
+          "variations": [
+            {
+              "name": "low",
+              "shorthand": "low",
+              "target": 3
+            },
+            {
+              "name": "high",
+              "shorthand": "high",
+              "target": 7
+            }
+          ],
+          "description": "Text contrast tiers · low-contrast muted · high-contrast body"
+        },
+        {
+          "name": "overlay",
+          "shorthand": "overlay",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 14
+            }
+          ],
+          "description": "Overlay scrim · modal and drawer backdrop"
+        }
+      ],
+      "themes": [
+        {
+          "name": "Light",
+          "bg": "FFFFFF"
+        },
+        {
+          "name": "Dark",
+          "bg": "111113"
+        }
+      ]
+    }
+  },
+  {
+    "id": "apple-hig",
+    "name": "Apple HIG",
+    "badge": "Apple",
+    "description": "iOS/macOS adaptive semantic colors. Role = Apple color family (label, fill, background, separator). Variation = tier (primary → quaternary). Fixed system color primitives in a separate collection.",
+    "tags": [
+      "apple",
+      "ios",
+      "macos",
+      "hig",
+      "adaptive",
+      "system-colors"
+    ],
+    "swatches": [
+      "007AFF",
+      "FF3B30",
+      "34C759",
+      "FF9500",
+      "8E8E93"
+    ],
+    "config": {
+      "name": "Apple HIG",
+      "pluginMode": "direct",
+      "scaleAlgorithm": "Natural",
+      "scaleLength": 25,
+      "useUniformAlgorithm": true,
+      "algorithmScopeLevel": "color",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "color",
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": false,
+      "useShorthandRoles": false,
+      "useShorthandVariations": false,
+      "useShorthandSteps": false,
+      "includeSourceColors": true,
+      "sourceCollectionName": "system-colors",
+      "alphaValues": [
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35,
+        40,
+        45,
+        50,
+        55,
+        60,
+        65,
+        70,
+        75,
+        80,
+        85,
+        90,
+        95
+      ],
+      "includeColorScalesCollection": false,
+      "includeDescriptions": true,
+      "scaleCollectionName": "system-colors",
+      "tokenCollectionName": "semantic-colors",
+      "scaleSteps": null,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "default",
+          "target": 1
+        }
+      ],
+      "colors": [
+        {
+          "name": "System/Blue",
+          "shorthand": "System/Blue",
+          "value": "007AFF",
+          "description": "systemBlue — primary interactive tint"
+        },
+        {
+          "name": "System/Red",
+          "shorthand": "System/Red",
+          "value": "FF3B30",
+          "description": "systemRed — destructive actions"
+        },
+        {
+          "name": "System/Green",
+          "shorthand": "System/Green",
+          "value": "34C759",
+          "description": "systemGreen — success / go"
+        },
+        {
+          "name": "System/Orange",
+          "shorthand": "System/Orange",
+          "value": "FF9500",
+          "description": "systemOrange — warnings / attention"
+        },
+        {
+          "name": "System/Gray",
+          "shorthand": "System/Gray",
+          "value": "8E8E93",
+          "description": "systemGray — neutral fills and borders"
+        }
+      ],
+      "roles": [
+        {
+          "name": "label",
+          "shorthand": "label",
+          "variations": [
+            {
+              "name": "primary",
+              "shorthand": "primary",
+              "target": 7
+            },
+            {
+              "name": "secondary",
+              "shorthand": "secondary",
+              "target": 4.5
+            },
+            {
+              "name": "tertiary",
+              "shorthand": "tertiary",
+              "target": 3
+            },
+            {
+              "name": "quaternary",
+              "shorthand": "quaternary",
+              "target": 2
+            }
+          ],
+          "description": "Text label hierarchy · primary → secondary → tertiary → quaternary"
+        },
+        {
+          "name": "fill",
+          "shorthand": "fill",
+          "variations": [
+            {
+              "name": "primary",
+              "shorthand": "primary",
+              "target": 2.5
+            },
+            {
+              "name": "secondary",
+              "shorthand": "secondary",
+              "target": 2
+            },
+            {
+              "name": "tertiary",
+              "shorthand": "tertiary",
+              "target": 1.7
+            },
+            {
+              "name": "quaternary",
+              "shorthand": "quaternary",
+              "target": 1.4
+            }
+          ],
+          "description": "System fill hierarchy · interactive control surfaces · 4 tiers"
+        },
+        {
+          "name": "background",
+          "shorthand": "background",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1
+            },
+            {
+              "name": "secondary",
+              "shorthand": "secondary",
+              "target": 1.1
+            },
+            {
+              "name": "tertiary",
+              "shorthand": "tertiary",
+              "target": 1.2
+            }
+          ],
+          "description": "System background · page / grouped / nested surface"
+        },
+        {
+          "name": "background/grouped",
+          "shorthand": "background/grouped",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1
+            },
+            {
+              "name": "secondary",
+              "shorthand": "secondary",
+              "target": 1.15
+            },
+            {
+              "name": "tertiary",
+              "shorthand": "tertiary",
+              "target": 1.3
+            }
+          ],
+          "description": "Grouped-style (insetGrouped) background hierarchy"
+        },
+        {
+          "name": "separator",
+          "shorthand": "separator",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.5
+            },
+            {
+              "name": "opaque",
+              "shorthand": "opaque",
+              "target": 2.5
+            }
+          ],
+          "description": "Separator lines · translucent hairline and opaque fallback"
+        },
+        {
+          "name": "tint",
+          "shorthand": "tint",
+          "variations": [
+            {
+              "name": "primary",
+              "shorthand": "primary",
+              "target": 4.5
+            },
+            {
+              "name": "secondary",
+              "shorthand": "secondary",
+              "target": 3.5
+            },
+            {
+              "name": "tertiary",
+              "shorthand": "tertiary",
+              "target": 3
+            },
+            {
+              "name": "quaternary",
+              "shorthand": "quaternary",
+              "target": 2
+            }
+          ],
+          "description": "Interactive tint · primary accent in four rendering tiers"
+        },
+        {
+          "name": "status/error",
+          "shorthand": "status/error",
+          "variations": [
+            {
+              "name": "primary",
+              "shorthand": "primary",
+              "target": 7
+            },
+            {
+              "name": "secondary",
+              "shorthand": "secondary",
+              "target": 4.5
+            },
+            {
+              "name": "tertiary",
+              "shorthand": "tertiary",
+              "target": 3
+            },
+            {
+              "name": "quaternary",
+              "shorthand": "quaternary",
+              "target": 2
+            }
+          ],
+          "description": "Error / destructive semantic hierarchy · 4 rendering tiers"
+        },
+        {
+          "name": "status/success",
+          "shorthand": "status/success",
+          "variations": [
+            {
+              "name": "primary",
+              "shorthand": "primary",
+              "target": 7
+            },
+            {
+              "name": "secondary",
+              "shorthand": "secondary",
+              "target": 4.5
+            },
+            {
+              "name": "tertiary",
+              "shorthand": "tertiary",
+              "target": 3
+            },
+            {
+              "name": "quaternary",
+              "shorthand": "quaternary",
+              "target": 2
+            }
+          ],
+          "description": "Success / confirmation semantic hierarchy · 4 rendering tiers"
+        },
+        {
+          "name": "status/warning",
+          "shorthand": "status/warning",
+          "variations": [
+            {
+              "name": "primary",
+              "shorthand": "primary",
+              "target": 7
+            },
+            {
+              "name": "secondary",
+              "shorthand": "secondary",
+              "target": 4.5
+            },
+            {
+              "name": "tertiary",
+              "shorthand": "tertiary",
+              "target": 3
+            },
+            {
+              "name": "quaternary",
+              "shorthand": "quaternary",
+              "target": 2
+            }
+          ],
+          "description": "Warning / attention semantic hierarchy · 4 rendering tiers"
+        }
+      ],
+      "themes": [
+        {
+          "name": "Light",
+          "bg": "F2F2F7"
+        },
+        {
+          "name": "Dark",
+          "bg": "000000"
+        }
+      ]
+    }
+  },
+  {
+    "id": "tailwind-css",
+    "name": "Tailwind CSS",
+    "badge": "TW",
+    "description": "Tailwind's 11-stop palette with a semantic layer on top. Role = use case (background, border, fill, text, status). Variation = intensity/state within that role. Collection names match Tailwind conventions.",
+    "tags": [
+      "tailwind",
+      "utility",
+      "11-step",
+      "css",
+      "react",
+      "nextjs"
+    ],
+    "swatches": [
+      "64748B",
+      "3B82F6",
+      "8B5CF6",
+      "F43F5E"
+    ],
+    "config": {
+      "name": "Tailwind CSS",
+      "pluginMode": "scale",
+      "scaleAlgorithm": "Natural",
+      "scaleLength": 11,
+      "useUniformAlgorithm": true,
+      "algorithmScopeLevel": "color",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "color",
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": false,
+      "useShorthandRoles": false,
+      "useShorthandVariations": false,
+      "useShorthandSteps": false,
+      "includeSourceColors": false,
+      "sourceCollectionName": "global",
+      "alphaValues": [
+        5,
+        10,
+        20,
+        25,
+        50,
+        75,
+        80,
+        90,
+        95
+      ],
+      "includeColorScalesCollection": true,
+      "includeDescriptions": true,
+      "scaleCollectionName": "palette",
+      "tokenCollectionName": "tokens",
+      "scaleSteps": null,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "default",
+          "target": 1
+        }
+      ],
+      "colors": [
+        {
+          "name": "Slate",
+          "shorthand": "Slate",
+          "value": "64748B",
+          "description": "Slate — blue-gray neutral"
+        },
+        {
+          "name": "Blue",
+          "shorthand": "Blue",
+          "value": "3B82F6",
+          "description": "Blue — primary interactive"
+        },
+        {
+          "name": "Violet",
+          "shorthand": "Violet",
+          "value": "8B5CF6",
+          "description": "Violet — accent"
+        },
+        {
+          "name": "Rose",
+          "shorthand": "Rose",
+          "value": "F43F5E",
+          "description": "Rose — error / destructive"
+        }
+      ],
+      "roles": [
+        {
+          "name": "background",
+          "shorthand": "background",
+          "variations": [
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 1.05
+            },
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1.15
+            },
+            {
+              "name": "raised",
+              "shorthand": "raised",
+              "target": 1.3
+            }
+          ],
+          "description": "Background fills · subtle tint · surface · raised card",
+          "mappingMethod": "contrast"
+        },
+        {
+          "name": "border",
+          "shorthand": "border",
+          "variations": [
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 1.6
+            },
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 2.5
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong",
+              "target": 3.5
+            }
+          ],
+          "description": "Border strokes · subtle separator · UI border · strong outline",
+          "mappingMethod": "contrast"
+        },
+        {
+          "name": "fill",
+          "shorthand": "fill",
+          "variations": [
+            {
+              "name": "muted",
+              "shorthand": "muted",
+              "target": 2.5
+            },
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong",
+              "target": 7
+            }
+          ],
+          "description": "Solid fills · muted icon · AA button fill · strong emphasis",
+          "mappingMethod": "contrast"
+        },
+        {
+          "name": "text",
+          "shorthand": "text",
+          "variations": [
+            {
+              "name": "muted",
+              "shorthand": "muted",
+              "target": 3
+            },
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong",
+              "target": 7
+            },
+            {
+              "name": "inverse",
+              "shorthand": "inverse",
+              "target": 1.1
+            }
+          ],
+          "description": "Text hierarchy · muted placeholder · AA body · AAA heading · inverse on fill",
+          "mappingMethod": "contrast"
+        },
+        {
+          "name": "status/success",
+          "shorthand": "status/success",
+          "variations": [
+            {
+              "name": "bg",
+              "shorthand": "bg",
+              "target": 1.15
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            },
+            {
+              "name": "text",
+              "shorthand": "text",
+              "target": 4.5
+            }
+          ],
+          "description": "Success feedback · tinted bg · border · text",
+          "mappingMethod": "contrast"
+        },
+        {
+          "name": "status/warning",
+          "shorthand": "status/warning",
+          "variations": [
+            {
+              "name": "bg",
+              "shorthand": "bg",
+              "target": 1.15
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            },
+            {
+              "name": "text",
+              "shorthand": "text",
+              "target": 4.5
+            }
+          ],
+          "description": "Warning feedback · tinted bg · border · text",
+          "mappingMethod": "contrast"
+        },
+        {
+          "name": "status/error",
+          "shorthand": "status/error",
+          "variations": [
+            {
+              "name": "bg",
+              "shorthand": "bg",
+              "target": 1.15
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            },
+            {
+              "name": "text",
+              "shorthand": "text",
+              "target": 4.5
+            }
+          ],
+          "description": "Error feedback · tinted bg · border · text",
+          "mappingMethod": "contrast"
+        }
+      ],
+      "themes": [
+        {
+          "name": "Light",
+          "bg": "FFFFFF"
+        },
+        {
+          "name": "Dark",
+          "bg": "0F172A"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ibm-carbon",
+    "name": "IBM Carbon",
+    "badge": "Carbon",
+    "description": "IBM Carbon enterprise token architecture. Role = semantic layer group. Variation = named slot within that group. All four Carbon themes (White, Gray-10, Gray-90, Gray-100) with full Interactive/Layer/Text/Field/Border/Support coverage.",
+    "tags": [
+      "ibm",
+      "carbon",
+      "enterprise",
+      "uniform",
+      "10-step"
+    ],
+    "swatches": [
+      "0F62FE",
+      "8D8D8D",
+      "DA1E28",
+      "F1C21B",
+      "198038"
+    ],
+    "config": {
+      "name": "IBM Carbon",
+      "pluginMode": "scale",
+      "scaleAlgorithm": "Uniform",
+      "scaleLength": 10,
+      "useUniformAlgorithm": true,
+      "algorithmScopeLevel": "color",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "color",
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": false,
+      "useShorthandRoles": false,
+      "useShorthandVariations": false,
+      "useShorthandSteps": false,
+      "includeSourceColors": false,
+      "sourceCollectionName": "global",
+      "alphaValues": [
+        5,
+        10,
+        20,
+        25,
+        50,
+        75,
+        80,
+        90,
+        95
+      ],
+      "includeColorScalesCollection": true,
+      "includeDescriptions": true,
+      "scaleCollectionName": "ibm-colors",
+      "tokenCollectionName": "carbon",
+      "scaleSteps": null,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "default"
+        }
+      ],
+      "colors": [
+        {
+          "name": "Interactive/Blue",
+          "shorthand": "Interactive/Blue",
+          "value": "0F62FE",
+          "description": "Carbon interactive blue — primary actions"
+        },
+        {
+          "name": "Neutral/Gray",
+          "shorthand": "Neutral/Gray",
+          "value": "8D8D8D",
+          "description": "Carbon neutral gray — surfaces, borders, text"
+        },
+        {
+          "name": "Support/Error",
+          "shorthand": "Support/Error",
+          "value": "DA1E28",
+          "description": "Carbon support error (red)"
+        },
+        {
+          "name": "Support/Warning",
+          "shorthand": "Support/Warning",
+          "value": "F1C21B",
+          "description": "Carbon support warning (yellow)"
+        },
+        {
+          "name": "Support/Success",
+          "shorthand": "Support/Success",
+          "value": "198038",
+          "description": "Carbon support success (green)"
+        }
+      ],
+      "roles": [
+        {
+          "name": "interactive",
+          "shorthand": "interactive",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4
+            },
+            {
+              "name": "hover",
+              "shorthand": "hover",
+              "target": 5.5
+            },
+            {
+              "name": "active",
+              "shorthand": "active",
+              "target": 7.5
+            },
+            {
+              "name": "disabled",
+              "shorthand": "disabled",
+              "target": 2
+            }
+          ],
+          "description": "Primary interactive fills · button · link · focus ring · 4 states"
+        },
+        {
+          "name": "layer",
+          "shorthand": "layer",
+          "variations": [
+            {
+              "name": "01",
+              "shorthand": "01",
+              "target": 1.1
+            },
+            {
+              "name": "02",
+              "shorthand": "02",
+              "target": 1.3
+            },
+            {
+              "name": "03",
+              "shorthand": "03",
+              "target": 1.6
+            }
+          ],
+          "description": "Background layer stack · page surface · card · nested panel"
+        },
+        {
+          "name": "layer/hover",
+          "shorthand": "layer/hover",
+          "variations": [
+            {
+              "name": "01",
+              "shorthand": "01",
+              "target": 1.3
+            },
+            {
+              "name": "02",
+              "shorthand": "02",
+              "target": 1.6
+            },
+            {
+              "name": "03",
+              "shorthand": "03",
+              "target": 2
+            }
+          ],
+          "description": "Hover tints for each background layer"
+        },
+        {
+          "name": "text",
+          "shorthand": "text",
+          "variations": [
+            {
+              "name": "primary",
+              "shorthand": "primary",
+              "target": 11
+            },
+            {
+              "name": "secondary",
+              "shorthand": "secondary",
+              "target": 5.5
+            },
+            {
+              "name": "placeholder",
+              "shorthand": "placeholder",
+              "target": 4
+            },
+            {
+              "name": "on-color",
+              "shorthand": "on-color",
+              "target": 1
+            }
+          ],
+          "description": "Text token hierarchy · primary · secondary · placeholder · on-color"
+        },
+        {
+          "name": "field",
+          "shorthand": "field",
+          "variations": [
+            {
+              "name": "01",
+              "shorthand": "01",
+              "target": 1.1
+            },
+            {
+              "name": "02",
+              "shorthand": "02",
+              "target": 1.3
+            }
+          ],
+          "description": "Input field background fills · field-01 and field-02"
+        },
+        {
+          "name": "border",
+          "shorthand": "border",
+          "variations": [
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 1.8
+            },
+            {
+              "name": "strong",
+              "shorthand": "strong",
+              "target": 4
+            },
+            {
+              "name": "interactive",
+              "shorthand": "interactive",
+              "target": 5.5
+            }
+          ],
+          "description": "Border and divider hierarchy · subtle · strong · interactive"
+        },
+        {
+          "name": "focus",
+          "shorthand": "focus",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "inset",
+              "shorthand": "inset",
+              "target": 14
+            }
+          ],
+          "description": "Focus ring · default keyboard outline · inset ring on dark fills"
+        },
+        {
+          "name": "support/error",
+          "shorthand": "support/error",
+          "variations": [
+            {
+              "name": "bg",
+              "shorthand": "bg",
+              "target": 1.3
+            },
+            {
+              "name": "fg",
+              "shorthand": "fg",
+              "target": 5.5
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            },
+            {
+              "name": "icon",
+              "shorthand": "icon",
+              "target": 4
+            }
+          ],
+          "description": "Error semantic token stack · bg · fg · border · icon"
+        },
+        {
+          "name": "support/warning",
+          "shorthand": "support/warning",
+          "variations": [
+            {
+              "name": "bg",
+              "shorthand": "bg",
+              "target": 1.3
+            },
+            {
+              "name": "fg",
+              "shorthand": "fg",
+              "target": 5.5
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            },
+            {
+              "name": "icon",
+              "shorthand": "icon",
+              "target": 4
+            }
+          ],
+          "description": "Warning semantic token stack · bg · fg · border · icon"
+        },
+        {
+          "name": "support/success",
+          "shorthand": "support/success",
+          "variations": [
+            {
+              "name": "bg",
+              "shorthand": "bg",
+              "target": 1.3
+            },
+            {
+              "name": "fg",
+              "shorthand": "fg",
+              "target": 5.5
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            },
+            {
+              "name": "icon",
+              "shorthand": "icon",
+              "target": 4
+            }
+          ],
+          "description": "Success semantic token stack · bg · fg · border · icon"
+        }
+      ],
+      "themes": [
+        {
+          "name": "White",
+          "bg": "FFFFFF"
+        },
+        {
+          "name": "Gray-10",
+          "bg": "F4F4F4"
+        },
+        {
+          "name": "Gray-90",
+          "bg": "262626"
+        },
+        {
+          "name": "Gray-100",
+          "bg": "161616"
+        }
+      ]
+    }
+  },
+  {
+    "id": "shopify-polaris",
+    "name": "Shopify Polaris",
+    "badge": "Polaris",
+    "description": "Shopify Polaris commerce token architecture. Role = semantic group (background, surface, text, border, icon, action, status). Variation = named slot. Brand/Info/Success/Caution/Critical/Magic channels with full interaction state coverage.",
+    "tags": [
+      "shopify",
+      "polaris",
+      "commerce",
+      "adaptive",
+      "ecommerce"
+    ],
+    "swatches": [
+      "303ADE",
+      "8C9196",
+      "007B5E",
+      "916A00",
+      "CC1515",
+      "7B2EA8"
+    ],
+    "config": {
+      "name": "Shopify Polaris",
+      "pluginMode": "direct",
+      "scaleAlgorithm": "Natural",
+      "scaleLength": 25,
+      "useUniformAlgorithm": true,
+      "algorithmScopeLevel": "color",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "color",
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": false,
+      "useShorthandRoles": false,
+      "useShorthandVariations": false,
+      "useShorthandSteps": false,
+      "includeSourceColors": false,
+      "sourceCollectionName": "global",
+      "alphaValues": [
+        5,
+        10,
+        20,
+        25,
+        50,
+        75,
+        80,
+        90,
+        95
+      ],
+      "includeColorScalesCollection": false,
+      "includeDescriptions": true,
+      "scaleCollectionName": "color-palette",
+      "tokenCollectionName": "color",
+      "scaleSteps": null,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "default"
+        }
+      ],
+      "colors": [
+        {
+          "name": "Brand",
+          "shorthand": "Brand",
+          "value": "303ADE",
+          "description": "Polaris brand blue — primary actions"
+        },
+        {
+          "name": "Neutral",
+          "shorthand": "Neutral",
+          "value": "8C9196",
+          "description": "Polaris neutral gray — surfaces and UI chrome"
+        },
+        {
+          "name": "Success",
+          "shorthand": "Success",
+          "value": "007B5E",
+          "description": "Polaris success green"
+        },
+        {
+          "name": "Caution",
+          "shorthand": "Caution",
+          "value": "916A00",
+          "description": "Polaris caution yellow-brown"
+        },
+        {
+          "name": "Magic",
+          "shorthand": "Magic",
+          "value": "7B2EA8",
+          "description": "Polaris magic purple — AI / Shopify Intelligence"
+        }
+      ],
+      "roles": [
+        {
+          "name": "background",
+          "shorthand": "background",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1
+            },
+            {
+              "name": "subdued",
+              "shorthand": "subdued",
+              "target": 1.15
+            },
+            {
+              "name": "hover",
+              "shorthand": "hover",
+              "target": 1.3
+            }
+          ],
+          "description": "Page and section background fills · default · subdued · hover"
+        },
+        {
+          "name": "surface",
+          "shorthand": "surface",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 1
+            },
+            {
+              "name": "raised",
+              "shorthand": "raised",
+              "target": 1.05
+            },
+            {
+              "name": "overlay",
+              "shorthand": "overlay",
+              "target": 1.1
+            },
+            {
+              "name": "subdued",
+              "shorthand": "subdued",
+              "target": 1.2
+            }
+          ],
+          "description": "Card, popover, and modal surface fills"
+        },
+        {
+          "name": "text",
+          "shorthand": "text",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 7
+            },
+            {
+              "name": "subdued",
+              "shorthand": "subdued",
+              "target": 4.5
+            },
+            {
+              "name": "critical",
+              "shorthand": "critical",
+              "target": 4.5
+            },
+            {
+              "name": "disabled",
+              "shorthand": "disabled",
+              "target": 2
+            }
+          ],
+          "description": "Text label hierarchy · body · subdued · critical · disabled"
+        },
+        {
+          "name": "border",
+          "shorthand": "border",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 2
+            },
+            {
+              "name": "subdued",
+              "shorthand": "subdued",
+              "target": 1.5
+            },
+            {
+              "name": "interactive",
+              "shorthand": "interactive",
+              "target": 3
+            }
+          ],
+          "description": "Border and divider strokes · default · subdued · focus ring"
+        },
+        {
+          "name": "icon",
+          "shorthand": "icon",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "subtle",
+              "shorthand": "subtle",
+              "target": 3
+            },
+            {
+              "name": "critical",
+              "shorthand": "critical",
+              "target": 4.5
+            },
+            {
+              "name": "disabled",
+              "shorthand": "disabled",
+              "target": 2
+            }
+          ],
+          "description": "Icon fills · default · subdued · critical · disabled"
+        },
+        {
+          "name": "action/primary",
+          "shorthand": "action/primary",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 4.5
+            },
+            {
+              "name": "hover",
+              "shorthand": "hover",
+              "target": 5.5
+            },
+            {
+              "name": "pressed",
+              "shorthand": "pressed",
+              "target": 6.5
+            },
+            {
+              "name": "selected",
+              "shorthand": "selected",
+              "target": 7
+            },
+            {
+              "name": "disabled",
+              "shorthand": "disabled",
+              "target": 2
+            }
+          ],
+          "description": "Primary action fills · CTA buttons · 5 interaction states"
+        },
+        {
+          "name": "action/secondary",
+          "shorthand": "action/secondary",
+          "variations": [
+            {
+              "name": "default",
+              "shorthand": "default",
+              "target": 3
+            },
+            {
+              "name": "hover",
+              "shorthand": "hover",
+              "target": 4.5
+            },
+            {
+              "name": "pressed",
+              "shorthand": "pressed",
+              "target": 5.5
+            },
+            {
+              "name": "selected",
+              "shorthand": "selected",
+              "target": 6.5
+            },
+            {
+              "name": "disabled",
+              "shorthand": "disabled",
+              "target": 2
+            }
+          ],
+          "description": "Secondary action fills · outline buttons · 5 interaction states"
+        },
+        {
+          "name": "status/success",
+          "shorthand": "status/success",
+          "variations": [
+            {
+              "name": "bg/subtle",
+              "shorthand": "bg/subtle",
+              "target": 1.3
+            },
+            {
+              "name": "bg/default",
+              "shorthand": "bg/default",
+              "target": 1.8
+            },
+            {
+              "name": "fg",
+              "shorthand": "fg",
+              "target": 4.5
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            }
+          ],
+          "description": "Success feedback channel · bg/subtle · bg/default · fg · border"
+        },
+        {
+          "name": "status/caution",
+          "shorthand": "status/caution",
+          "variations": [
+            {
+              "name": "bg/subtle",
+              "shorthand": "bg/subtle",
+              "target": 1.3
+            },
+            {
+              "name": "bg/default",
+              "shorthand": "bg/default",
+              "target": 1.8
+            },
+            {
+              "name": "fg",
+              "shorthand": "fg",
+              "target": 4.5
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            }
+          ],
+          "description": "Caution / warning feedback channel · bg/subtle · bg/default · fg · border"
+        },
+        {
+          "name": "status/critical",
+          "shorthand": "status/critical",
+          "variations": [
+            {
+              "name": "bg/subtle",
+              "shorthand": "bg/subtle",
+              "target": 1.3
+            },
+            {
+              "name": "bg/default",
+              "shorthand": "bg/default",
+              "target": 1.8
+            },
+            {
+              "name": "fg",
+              "shorthand": "fg",
+              "target": 4.5
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            }
+          ],
+          "description": "Critical / error feedback channel · bg/subtle · bg/default · fg · border"
+        },
+        {
+          "name": "status/info",
+          "shorthand": "status/info",
+          "variations": [
+            {
+              "name": "bg/subtle",
+              "shorthand": "bg/subtle",
+              "target": 1.3
+            },
+            {
+              "name": "bg/default",
+              "shorthand": "bg/default",
+              "target": 1.8
+            },
+            {
+              "name": "fg",
+              "shorthand": "fg",
+              "target": 4.5
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            }
+          ],
+          "description": "Informational feedback channel · bg/subtle · bg/default · fg · border"
+        },
+        {
+          "name": "status/magic",
+          "shorthand": "status/magic",
+          "variations": [
+            {
+              "name": "bg/subtle",
+              "shorthand": "bg/subtle",
+              "target": 1.3
+            },
+            {
+              "name": "bg/default",
+              "shorthand": "bg/default",
+              "target": 1.8
+            },
+            {
+              "name": "fg",
+              "shorthand": "fg",
+              "target": 5.5
+            },
+            {
+              "name": "border",
+              "shorthand": "border",
+              "target": 2.5
+            }
+          ],
+          "description": "Magic (Shopify AI) feedback channel · elevated FG contrast for brand expression"
+        }
+      ],
+      "themes": [
+        {
+          "name": "Light",
+          "bg": "FAFBFB"
+        },
+        {
+          "name": "Dark",
+          "bg": "1A1A1A"
+        },
+        {
+          "name": "Inverse",
+          "bg": "1A1F36"
+        }
+      ]
+    }
+  }
+]

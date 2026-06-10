@@ -434,10 +434,29 @@ const presets: Preset[] = [
           name: "link",
           shorthand: "link",
           variations: [
-            { name: "default", shorthand: "default", target: 4.5 }, // color.link (default)
-            { name: "pressed", shorthand: "pressed", target: 7.0 }, // color.link.pressed
+            { name: "default", shorthand: "default", target: 4.5 },  // color.link
+            { name: "pressed", shorthand: "pressed", target: 7.0 },  // color.link.pressed
+            { name: "visited", shorthand: "visited", target: 4.5 },  // color.link.visited
           ],
-          description: "color.link — default and pressed link colors (AA+)",
+          description: "color.link — default · pressed · visited link colors",
+        },
+
+        // color.text.accent — highlighted text, e.g. search matches
+        {
+          name: "text/accent",
+          shorthand: "text/accent",
+          variations: [
+            { name: "blue", shorthand: "blue", target: 4.5 },        // color.text.accent.blue
+            { name: "red", shorthand: "red", target: 4.5 },          // color.text.accent.red
+            { name: "orange", shorthand: "orange", target: 4.5 },    // color.text.accent.orange
+            { name: "yellow", shorthand: "yellow", target: 3.0 },    // color.text.accent.yellow (light hue)
+            { name: "green", shorthand: "green", target: 4.5 },      // color.text.accent.green
+            { name: "purple", shorthand: "purple", target: 4.5 },    // color.text.accent.purple
+            { name: "teal", shorthand: "teal", target: 4.5 },        // color.text.accent.teal
+            { name: "magenta", shorthand: "magenta", target: 4.5 },  // color.text.accent.magenta
+            { name: "gray", shorthand: "gray", target: 4.5 },        // color.text.accent.gray
+          ],
+          description: "color.text.accent — colored label text for tags, lozenges, and search highlights",
         },
 
         // ══════════════════════════════════════════════════════════════════════

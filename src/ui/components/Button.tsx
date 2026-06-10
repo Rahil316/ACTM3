@@ -126,11 +126,7 @@ export function Button({ variant = "secondary", size = "lg", radius = "md", squa
   const isDisabled = disabled || loading;
 
   return (
-    <button
-      {...rest}
-      disabled={isDisabled}
-      className={clsx("inline-flex items-center justify-center font-medium transition-all border select-none outline-none", sizeCls, radCls, VARIANT[variant], isDisabled && "opacity-40 cursor-not-allowed pointer-events-none", fullWidth && "w-full", className)}
-    >
+    <button {...rest} disabled={isDisabled} className={clsx("inline-flex items-center justify-center font-medium transition-all border select-none outline-none", sizeCls, radCls, VARIANT[variant], isDisabled && "opacity-40 cursor-not-allowed pointer-events-none", fullWidth && "w-full", className)}>
       {loading ? (
         <Spinner size={size} />
       ) : (

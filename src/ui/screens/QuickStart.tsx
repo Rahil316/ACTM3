@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations, generateId } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { toast } from "../store/toastStore";
@@ -7,7 +7,7 @@ import { PageTitle, BodyText, ItemTitle, Caption } from "../components/typograph
 import { Badge } from "../components/Badge";
 import { SelectableCard } from "../components/SelectableCard";
 import { CentredOverlay } from "../components/ResultOverlay";
-import { PRESETS, type Preset } from "../presets/themeShop";
+import { PRESETS, type Preset } from "../types/state";
 import type { ProjectStore } from "../types/state";
 
 // ── Quick Start overlay ───────────────────────────────────────────────────────
@@ -25,16 +25,17 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
   const close = useUiStore((s) => s.closeOverlay);
   const openOverlay = useUiStore((s) => s.openOverlay);
   const importRef = useRef<HTMLInputElement>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const quickPresets = QUICK_START_PRESET_IDS.map((id) => PRESETS.find((p) => p.id === id)).filter(Boolean) as Preset[];
 
   function loadPreset(preset: Preset) {
-    const base = makeBootstrapState();
-    const config = { ...base, ...preset.config, _presetId: preset.id };
-    ensureIds(config as unknown as Partial<ProjectStore>);
-    ensureVariations(config as ProjectStore);
-    loadState(config as ProjectStore);
-    close();
+    const next = { ...preset.config } as ProjectStore;
+    ensureIds(next);
+    ensureVariations(next);
+    loadState(next);
+    setSelectedId(preset.id);
+    setTimeout(close, 150);
   }
 
   function startBlank() {
@@ -82,7 +83,7 @@ export function QuickStart({ onClose: _onClose }: QuickStartProps) {
       <BodyText className="max-w-[300px] text-center">Pick a design system to start from, or begin with a blank canvas.</BodyText>
       <div className="grid grid-cols-2 gap-2 w-full max-w-[360px]">
         {quickPresets.map((preset) => (
-          <SelectableCard key={preset.id} onClick={() => loadPreset(preset)}>
+          <SelectableCard key={preset.id} selected={selectedId === preset.id} onClick={() => loadPreset(preset)}>
             <div className="flex items-center gap-1.5 mb-1">
               {preset.badge && (
                 <Badge variant="accent" size="xs" pill>

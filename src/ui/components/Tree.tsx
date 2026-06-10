@@ -387,3 +387,49 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
     </div>
   );
 }
+
+// ── Root drop zones ───────────────────────────────────────────────────────────
+// Three zones that all ungroup on drop: left strip, right strip, bottom zone.
+// Each has a distinct droppable ID; handleDragEnd treats all three as "root".
+
+export const ROOT_ZONE_IDS = ["root-bottom", "root-left", "root-right"] as const;
+export type RootZoneId = (typeof ROOT_ZONE_IDS)[number];
+
+function SideStrip({ id, side }: { id: RootZoneId; side: "left" | "right" }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`absolute top-0 bottom-0 w-5 z-10 flex items-center justify-center transition-colors rounded-[6px] ${
+        side === "left" ? "left-0" : "right-0"
+      } ${isOver ? "bg-accent-subtle border border-accent" : "border border-transparent"}`}
+    >
+      {isOver && (
+        <span className="text-accent text-[9px] font-bold [writing-mode:vertical-rl] rotate-180 select-none">
+          ungroup
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function RootDropZone({ activeId, activeIsGrouped }: { activeId: string | null; activeIsGrouped: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({ id: "root-bottom" });
+  if (!activeId || !activeIsGrouped) return null;
+  return (
+    <>
+      <SideStrip id="root-left" side="left" />
+      <SideStrip id="root-right" side="right" />
+      <div
+        ref={setNodeRef}
+        className={`mt-1 h-14 rounded-[8px] border-2 border-dashed flex items-center justify-center text-[11px] transition-colors ${
+          isOver
+            ? "border-accent bg-accent-subtle text-accent"
+            : "border-border-base text-text-dim"
+        }`}
+      >
+        {isOver ? "Release to ungroup" : "Drop here to ungroup"}
+      </div>
+    </>
+  );
+}

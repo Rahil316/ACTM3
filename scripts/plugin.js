@@ -36,7 +36,7 @@ const esbuildConfig = {
 
 function emitManifest() {
   const src  = JSON.parse(fs.readFileSync(path.resolve(root, 'manifest.json'), 'utf8'));
-  const dist = { ...src, main: 'scripts.js', ui: 'index.html' };
+  const dist = { ...src, main: 'scripts.js', ui: 'ui.html' };
   fs.writeFileSync(path.resolve(outDir, 'manifest.json'), JSON.stringify(dist, null, 2));
 }
 

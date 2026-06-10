@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useUiStore } from "../store/uiStore";
 import { useProjectStore, ensureIds, ensureVariations } from "../store/projectStore";
 import { banner } from "../store/bannerStore";
-import { PRESETS, type Preset } from "../presets/themeShop";
+import { PRESETS, type Preset } from "../types/state";
 import { ShopCard } from "../components/cards/ShopCard";
 import { Button } from "../components/Button";
 import { IconChevronLeft } from "../components/icons";
@@ -13,7 +13,6 @@ export function ThemeShopOverlay() {
   const isOpen = useUiStore((s) => s.activeOverlay === "theme-shop");
   const closeOverlay = useUiStore((s) => s.closeOverlay);
   const loadState = useProjectStore((s) => s.loadState);
-  const presetId = useProjectStore((s) => (s.projectStore as ProjectStore & { _presetId?: string })._presetId);
 
   const [query, setQuery] = useState("");
 
@@ -37,7 +36,7 @@ export function ThemeShopOverlay() {
     : PRESETS;
 
   function handleLoad(preset: Preset) {
-    const next = { ...preset.config, _presetId: preset.id } as ProjectStore & { _presetId: string };
+    const next = { ...preset.config } as ProjectStore;
     ensureIds(next);
     ensureVariations(next);
     loadState(next);
@@ -72,9 +71,9 @@ export function ThemeShopOverlay() {
         {filtered.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-[12px] text-text-muted">No presets match "{query}"</div>
         ) : (
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {filtered.map((preset) => (
-              <ShopCard key={preset.id} preset={preset} isLoaded={presetId === preset.id} onLoad={() => handleLoad(preset)} />
+              <ShopCard key={preset.id} preset={preset} onLoad={() => handleLoad(preset)} />
             ))}
           </div>
         )}

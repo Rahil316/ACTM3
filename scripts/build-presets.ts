@@ -2,10 +2,10 @@
 /**
  * build-presets.ts
  *
- * Imports every typed preset file from src/ui/lib/presets/raw/*.ts,
+ * Imports every typed preset file from src/shared/presets/raw/*.ts,
  * merges them in display order, and writes a single presets.json.
  *
- * Dev-only presets live in src/ui/lib/presets/raw/dev/ and are
+ * Dev-only presets live in src/shared/presets/raw/dev/ and are
  * automatically excluded from release builds — no manual list to maintain.
  * Add any new dev/test presets as .ts files in that folder; no script edits needed.
  *
@@ -17,24 +17,20 @@ import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
-import wandPresets      from '../src/ui/presets/raw/wand';
-import nclarityPresets  from '../src/ui/presets/raw/nclarity';
-import showcasePresets  from '../src/ui/presets/raw/showcase';
-import materialPresets  from '../src/ui/presets/raw/material';
-import atlassianPresets from '../src/ui/presets/raw/atlassian';
-import radixPresets     from '../src/ui/presets/raw/radix';
-import applePresets     from '../src/ui/presets/raw/apple';
-import tailwindPresets  from '../src/ui/presets/raw/tailwind';
-import carbonPresets    from '../src/ui/presets/raw/carbon';
-import polarisPresets   from '../src/ui/presets/raw/polaris';
-import blankPresets     from '../src/ui/presets/raw/blank';
+import materialPresets  from '../src/shared/presets/raw/material';
+import atlassianPresets from '../src/shared/presets/raw/atlassian';
+import radixPresets     from '../src/shared/presets/raw/radix';
+import applePresets     from '../src/shared/presets/raw/apple';
+import tailwindPresets  from '../src/shared/presets/raw/tailwind';
+import carbonPresets    from '../src/shared/presets/raw/carbon';
+import polarisPresets   from '../src/shared/presets/raw/polaris';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPreset = Record<string, any>;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUT_FILE  = path.resolve(__dirname, '../src/ui/presets/presets.json');
-const DEV_DIR   = path.resolve(__dirname, '../src/ui/presets/raw/dev');
+const OUT_FILE  = path.resolve(__dirname, '../src/shared/presets/presets.json');
+const DEV_DIR   = path.resolve(__dirname, '../src/shared/presets/raw/dev');
 const isRelease = process.argv.includes('--release');
 
 async function main() {
@@ -63,9 +59,6 @@ async function main() {
 
   // ── Merge in display order ──────────────────────────────────────────────────
   const all = [
-    ...wandPresets,
-    ...nclarityPresets,
-    ...showcasePresets,
     ...devPresets,
     ...materialPresets,
     ...atlassianPresets,
@@ -74,14 +67,10 @@ async function main() {
     ...tailwindPresets,
     ...carbonPresets,
     ...polarisPresets,
-    ...blankPresets,
   ];
 
   // ── Log summary ─────────────────────────────────────────────────────────────
   for (const [name, arr] of [
-    ['wand',      wandPresets      as AnyPreset[]],
-    ['nclarity',  nclarityPresets  as AnyPreset[]],
-    ['showcase',  showcasePresets  as AnyPreset[]],
     ['material',  materialPresets  as AnyPreset[]],
     ['atlassian', atlassianPresets as AnyPreset[]],
     ['radix',     radixPresets     as AnyPreset[]],
@@ -89,7 +78,6 @@ async function main() {
     ['tailwind',  tailwindPresets  as AnyPreset[]],
     ['carbon',    carbonPresets    as AnyPreset[]],
     ['polaris',   polarisPresets   as AnyPreset[]],
-    ['blank',     blankPresets     as AnyPreset[]],
   ] as [string, AnyPreset[]][]) {
     console.log(`  ${name}: ${arr.length} preset${arr.length !== 1 ? 's' : ''}`);
   }

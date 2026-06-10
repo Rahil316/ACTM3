@@ -1,5 +1,7 @@
 export type { PluginMode, MappingMethod, AlgorithmScopeLevel, TokenNameSegment, ScaleAlgorithm, SolverMode, Variation, ScaleStep, Color, RoleLocalBgKind, RoleLocalBg, Role, Theme, VariableScope, ScaleStepToken } from "../../shared/types";
 export type { EngineResult, TokenEntry, EngineInput } from "../../shared/clrEngine";
+export type { Preset } from "../../shared/presets/themeShop";
+export { PRESETS } from "../../shared/presets/themeShop";
 
 // ── Root app state ───────────────────────────────────────────────────────────
 
@@ -53,7 +55,6 @@ export interface ProjectStore {
   roles: Role[];
   themes: Theme[];
 
-  _presetId?: string;
 }
 
 // ── UI preferences ───────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { useState, useId, useEffect, useRef, useCallback, useMemo } from "react";
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent, DragOverlay, type DragOverEvent } from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, type CollisionDetection, type DragEndEvent, type DragStartEvent, DragOverlay, type DragOverEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useProjectStore, deriveShorthand, groupedName } from "../store/projectStore";
@@ -9,7 +9,7 @@ import { RoleGroupCard } from "../components/cards/RoleGroupCard";
 import { SplitActionButton } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import type { Role } from "../types/state";
-import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, type TreeNode } from "../components/Tree";
+import { buildTree, useCommittedNames, SortableLeafWrapper, TreeRenderer, MultiSelectToolbar, RootDropZone, ROOT_ZONE_IDS, type TreeNode } from "../components/Tree";
 
 // ── Suggested roles ───────────────────────────────────────────────────────────
 
@@ -80,6 +80,20 @@ function SortableRoleCard({ role, idx, selected, onToggleSelect }: { role: Role;
     </div>
   );
 }
+
+// ── Custom collision detection ────────────────────────────────────────────────
+
+const groupAwareCollision: CollisionDetection = (args) => {
+  const activeId = args.active.id as string;
+  if (activeId.startsWith("group::")) {
+    const groupAndRoot = args.droppableContainers.filter(
+      (c) => (c.id as string).startsWith("group::") || ROOT_ZONE_IDS.includes(c.id as typeof ROOT_ZONE_IDS[number]),
+    );
+    const hits = closestCenter({ ...args, droppableContainers: groupAndRoot });
+    if (hits.length > 0) return hits;
+  }
+  return closestCenter(args);
+};
 
 // ── RoleTree (grouped view) ───────────────────────────────────────────────────
 
@@ -251,6 +265,26 @@ function RoleTree() {
     const activeIdStr = active.id as string;
     const overId = over.id as string;
 
+    // anything → root zone: strip group prefix entirely
+    if (ROOT_ZONE_IDS.includes(overId as typeof ROOT_ZONE_IDS[number])) {
+      if (activeIdStr.startsWith("group::")) {
+        const srcPath = activeIdStr.slice(7);
+        const srcSegment = srcPath.split("/").pop()!;
+        roles.forEach((r, idx) => {
+          if (r.name === srcPath || r.name.startsWith(srcPath + "/"))
+            setRole(idx, "name", srcSegment + r.name.slice(srcPath.length));
+        });
+      } else {
+        const idsToMove = selectedIds.has(activeIdStr) ? [...selectedIds] : [activeIdStr];
+        roles.forEach((r, idx) => {
+          if (!r._id || !idsToMove.includes(r._id)) return;
+          setRole(idx, "name", r.name.split("/").pop()!);
+        });
+        setSelectedIds(new Set());
+      }
+      return;
+    }
+
     // group → group
     if (activeIdStr.startsWith("group::") && overId.startsWith("group::")) {
       const srcPath = activeIdStr.slice(7);
@@ -362,7 +396,7 @@ function RoleTree() {
         if (selectedIds.size > 0) setSelectedIds(new Set());
       }}
     >
-      <DndContext id={dndId} sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+      <DndContext id={dndId} sensors={sensors} collisionDetection={groupAwareCollision} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
         <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
           <TreeRenderer
             nodes={tree}
@@ -380,6 +414,15 @@ function RoleTree() {
             depth={0}
           />
         </SortableContext>
+        <RootDropZone
+          activeId={activeId}
+          activeIsGrouped={
+            activeId !== null && (
+              activeId.startsWith("group::") ||
+              (roles.find((r) => r._id === activeId)?.name ?? "").includes("/")
+            )
+          }
+        />
         <DragOverlay>
           {activeRole && (
             <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary flex items-center gap-2">

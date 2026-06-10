@@ -174,6 +174,19 @@ const presets: Preset[] = [
           description: "Border and divider hierarchy · subtle · strong · interactive",
         },
 
+        // ── FOCUS ───────────────────────────────────────────────────────────────
+        // Carbon's standalone $focus token — keyboard focus ring, always the brand blue.
+        // Separate from borderInteractive because it applies as an outline, not a fill.
+        {
+          name: "focus",
+          shorthand: "focus",
+          variations: [
+            { name: "default", shorthand: "default", target: 4.5 }, // $focus — blue focus ring
+            { name: "inset", shorthand: "inset", target: 14.0 },    // $focus-inset — white inset ring on dark fills
+          ],
+          description: "Focus ring · default keyboard outline · inset ring on dark fills",
+        },
+
         // ── SUPPORT / ERROR ──────────────────────────────────────────────────────
         {
           name: "support/error",

@@ -23,7 +23,7 @@ import { SaveVersionOverlay } from "./screens/SaveVersionOverlay";
 import { QuickStart } from "./screens/QuickStart";
 import { ThemeShopOverlay } from "./screens/ThemeShopOverlay";
 import { CanvasPreviewDevOverlay } from "./screens/CanvasPreviewDevOverlay";
- 
+
 declare const __RELEASE__: boolean;
 import { ExportSheet } from "./screens/ExportSheet";
 import { sendToPlugin } from "./types/messages";
@@ -78,7 +78,7 @@ function ProjectNameInput({ projectStore }: { projectStore: ProjectStore }) {
   const [localName, onNameChange, onNameBlur] = useLocalField(projectStore.name, updateProjectName);
 
   return (
-    <div className="flex items-center gap-2 min-w-0">
+    <div className="flex grow items-center gap-2 min-w-0">
       <img src={logoSvg} alt="Token Wand" className="h-[18px] w-auto shrink-0" />
       <input
         type="text"
@@ -86,7 +86,7 @@ function ProjectNameInput({ projectStore }: { projectStore: ProjectStore }) {
         onChange={onNameChange}
         onBlur={onNameBlur}
         aria-label="Project name"
-        className="text-[13px] font-semibold text-text-primary bg-transparent border border-transparent outline-none min-w-0 w-full max-w-[160px] truncate hover:bg-bg-hover focus:bg-bg-input focus:border-border-focus rounded-[4px] px-1 -mx-1 py-0.5 transition-colors cursor-text"
+        className="text-[13px] font-semibold text-text-primary bg-transparent border border-transparent outline-none min-w-20 w-full truncate hover:bg-bg-hover focus:bg-bg-input focus:border-border-focus rounded-[4px] px-1 -mx-1 py-0.5 transition-colors cursor-text"
         title="Click to rename project"
       />
     </div>
@@ -176,7 +176,7 @@ export default function App() {
       {!__RELEASE__ && activeOverlay === "canvas-preview-dev" && <CanvasPreviewDevOverlay />}
 
       {/* ── Header ── */}
-      <header className="shrink-0 px-3 py-2 flex items-center justify-between border-b border-border-base bg-bg-app sticky top-0 z-10">
+      <header className="shrink-0 px-3 py-2 flex gap-2 items-center border-b border-border-base bg-bg-app sticky top-0 z-10">
         <ProjectNameInput projectStore={projectStore} />
 
         <div className="flex items-center gap-1.5">
@@ -221,16 +221,7 @@ export default function App() {
             title="Import .wand / JSON  (Alt+I)"
             aria-label="Import .wand / JSON"
           />
-          <Button
-            variant="ghost"
-            size="sm"
-            square
-            icon={<Bookmark size={14} strokeWidth={1.75} />}
-            onClick={() => !saveBlockedReason && openOverlay("save-version")}
-            title={saveBlockedReason ?? "Save state  (Alt+S)"}
-            aria-label="Save state"
-            disabled={!!saveBlockedReason}
-          />
+          <Button variant="ghost" size="sm" square icon={<Bookmark size={14} strokeWidth={1.75} />} onClick={() => !saveBlockedReason && openOverlay("save-version")} title={saveBlockedReason ?? "Save state  (Alt+S)"} aria-label="Save state" disabled={!!saveBlockedReason} />
           <Button variant="ghost" size="sm" square icon={<Settings size={14} strokeWidth={1.75} />} onClick={() => openOverlay("settings")} title="Settings  (Alt+K)" aria-label="Settings" />
         </div>
       </div>

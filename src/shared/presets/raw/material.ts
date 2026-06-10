@@ -163,17 +163,19 @@ const presets: Preset[] = [
         },
 
         // ── SURFACE ─────────────────────────────────────────────────────────────
-        // Color source: neutral (#605D62)
-        // surface/default · dim · bright — the three base surface states
+        // Color source: neutral (#605D62) for fills; neutral-variant (#7D7279) for on/variant slots.
         {
           name: "surface",
           shorthand: "surface",
           variations: [
-            { name: "default", shorthand: "default", target: 1.0 }, // --md-sys-color-surface
-            { name: "dim", shorthand: "dim", target: 1.07 }, // --md-sys-color-surface-dim
-            { name: "bright", shorthand: "bright", target: 1.0 }, // --md-sys-color-surface-bright
+            { name: "default", shorthand: "default", target: 1.0 },              // --md-sys-color-surface
+            { name: "dim", shorthand: "dim", target: 1.07 },                     // --md-sys-color-surface-dim
+            { name: "bright", shorthand: "bright", target: 1.0 },                // --md-sys-color-surface-bright
+            { name: "on", shorthand: "on", target: 10.0 },                       // --md-sys-color-on-surface
+            { name: "variant", shorthand: "variant", target: 1.2 },              // --md-sys-color-surface-variant
+            { name: "on-variant", shorthand: "on-variant", target: 4.5 },        // --md-sys-color-on-surface-variant
           ],
-          description: "Surface states · default · dim · bright",
+          description: "Surface states and text · default · dim · bright · on · variant · on-variant",
         },
 
         // surface/container/* — 5-step container stack nested under surface
@@ -203,15 +205,15 @@ const presets: Preset[] = [
         },
 
         // ── INVERSE ─────────────────────────────────────────────────────────────
-        // Color source: neutral (#605D62)
-        // inverse/surface — snackbar / tooltip panel background
+        // Color source: neutral (#605D62) for inverse-surface; primary (#6750A4) for inverse-primary.
         {
           name: "inverse",
           shorthand: "inverse",
           variations: [
-            { name: "surface", shorthand: "surface", target: 12.0 }, // --md-sys-color-inverse-surface
+            { name: "surface", shorthand: "surface", target: 12.0 },             // --md-sys-color-inverse-surface
+            { name: "on-surface", shorthand: "on-surface", target: 1.1 },        // --md-sys-color-inverse-on-surface
           ],
-          description: "Inverse surface · snackbar/tooltip background",
+          description: "Inverse surface · snackbar/tooltip bg and text",
         },
 
         // ── SCRIM ───────────────────────────────────────────────────────────────
@@ -236,20 +238,6 @@ const presets: Preset[] = [
           description: "Shadow · elevation drop shadow, darkest achievable",
         },
 
-        // ── ON-SURFACE / SURFACE-VARIANT / OUTLINE / INVERSE-ON-SURFACE ─────────
-        // Color source: neutral-variant (#7D7279)
-        // Grouped into surface role for on/variant/on-variant slots
-        {
-          name: "surface",
-          shorthand: "surface",
-          variations: [
-            { name: "on", shorthand: "on", target: 10.0 }, // --md-sys-color-on-surface
-            { name: "variant", shorthand: "variant", target: 1.2 }, // --md-sys-color-surface-variant
-            { name: "on-variant", shorthand: "on-variant", target: 4.5 }, // --md-sys-color-on-surface-variant
-          ],
-          description: "Surface text and variant · on-surface · surface-variant · on-surface-variant",
-        },
-
         // outline/default and outline/variant
         {
           name: "outline",
@@ -261,15 +249,7 @@ const presets: Preset[] = [
           description: "Outline · interactive border · decorative divider",
         },
 
-        // inverse/on-surface — text on inverse-surface (near-white in light theme)
-        {
-          name: "inverse",
-          shorthand: "inverse",
-          variations: [
-            { name: "on-surface", shorthand: "on-surface", target: 1.1 }, // --md-sys-color-inverse-on-surface
-          ],
-          description: "Inverse on-surface · near-white text on snackbar bg",
-        },
+
       ],
 
       themes: [
