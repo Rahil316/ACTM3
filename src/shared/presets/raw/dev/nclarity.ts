@@ -1,24 +1,24 @@
 /**
  * nClarity — Personal mobile app preset
  *
- * Direct mode · Light + Dark · 15 colors · 11 roles
+ * Direct mode · Light + Dark + Midnight · 14 colors · 11 roles
  *
  * Colors:
- *   Brand/Primary · Brand/Secondary · Brand/Tertiary
+ *   Brand/Primary · Brand/Secondary
  *   Status/Success · Status/Warning · Status/Danger · Status/Info · Status/Attention
  *   Gray/Cool · Gray/Neutral
  *   Spare/1–5 (raw values + alpha only, no roles)
  *
  * Roles:
  *   background      — Base → Scrim (5 depth steps)
- *   stroke          — Hairline → Focus (5 contrast steps)
- *   fill            — Wash → Bold (5 contrast steps)
+ *   border          — Hairline → Focus (5 contrast steps)
+ *   fill/fill       — Wash → Bold (5 contrast steps)
  *   fill/button     — interactive states, saturated solver, solved on theme bg
  *   text/buttonLabel— interactive states, luminance solver, solved on fill/button/default
- *   text            — Faint → Emphasis (5 contrast steps)
+ *   text/text       — Faint → Emphasis (5 contrast steps)
  *   status/*        — 5 scoped roles, chroma-maximized, Bg/Tint/Fill/Text/Border
  *
- * Alpha tints: 5, 10, 15 … 95 (19 steps) on all colors.
+ * Alpha tints: 5, 10, 15, 20, 40, 50, 75, 80, 90 (9 steps) on all colors.
  * No descriptions. Variation shorthands are always numeric 1–5.
  */
 
@@ -29,7 +29,6 @@ import type { Preset } from "../../themeShop";
 const NC_IDS = {
   brandPrimary: "nc-bp",
   brandSecondary: "nc-bs",
-  brandTertiary: "nc-bt",
   statusSuccess: "nc-ss",
   statusWarning: "nc-sw",
   statusDanger: "nc-sd",
@@ -68,16 +67,16 @@ const nclarity: Preset = {
   id: "nclarity",
   name: "nClarity",
   badge: "nC",
-  description: "Personal mobile app preset — Direct mode, Light + Dark, full semantic role system with button contrast chaining, status roles, and alpha tints at 5–95.",
+  description: "Personal mobile app preset — Direct mode, Light + Dark + Midnight, full semantic role system with button contrast chaining, icon tray fills, status roles, and alpha tints at 5–95.",
   tags: ["nClarity", "Mobile", "Direct", "iOS", "Personal"],
   swatches: ["0A84FF", "BF5AF2", "30D158", "FF453A", "FF9F0A", "32ADE6", "636366", "8338EC"],
   config: {
     name: "nClarity",
+    description: "Personal mobile app — iOS-tuned Light, Dark, and Midnight themes with full semantic roles.",
 
     // ── Mode ────────────────────────────────────────────────────────────────
     pluginMode: "direct",
-    // scaleAlgorithm: 'Natural',
-    // scaleLength: 25,
+    scaleAlgorithm: "Natural",
     useUniformAlgorithm: false,
     algorithmScopeLevel: "role",
     solverMode: "natural",
@@ -92,7 +91,7 @@ const nclarity: Preset = {
     // ── Output ──────────────────────────────────────────────────────────────
     includeSourceColors: true,
     sourceCollectionName: "nclarity/source",
-    alphaValues: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95],
+    alphaValues: [5, 10, 15, 20, 40, 50, 75, 80, 90],
     includeColorScalesCollection: false,
     includeDescriptions: false,
     scaleCollectionName: "nclarity/scale",
@@ -101,29 +100,28 @@ const nclarity: Preset = {
     scaleSteps: null,
     canEditRoleVariants: true,
 
-    // Global fallback variation — all roles override with customVariationList.
-    variations: [{ name: "default", shorthand: "default" }],
+    // Global fallback variation — all roles override with their own variation list.
+    variations: [{ _id: "nc-v-default", name: "default", shorthand: "default" }],
 
     // ── Colors ──────────────────────────────────────────────────────────────
     colors: [
       // Brand
-      { _id: NC_IDS.brandPrimary, name: "Brand/Primary", shorthand: "b/p", value: "0A84FF" },
-      { _id: NC_IDS.brandSecondary, name: "Brand/Secondary", shorthand: "b/s", value: "BF5AF2" },
-      { _id: NC_IDS.brandTertiary, name: "Brand/Tertiary", shorthand: "b/t", value: "30D158" },
+      { _id: NC_IDS.brandPrimary,   name: "Brand/Primary",   shorthand: "b/p", value: "0E9CA6" },
+      { _id: NC_IDS.brandSecondary, name: "Brand/Secondary", shorthand: "b/s", value: "F2B01E" },
       // Status
-      { _id: NC_IDS.statusSuccess, name: "Status/Success", shorthand: "st/ss", value: "34C759" },
-      { _id: NC_IDS.statusWarning, name: "Status/Warning", shorthand: "st/wr", value: "FF9F0A" },
-      { _id: NC_IDS.statusDanger, name: "Status/Danger", shorthand: "st/dg", value: "FF453A" },
-      { _id: NC_IDS.statusInfo, name: "Status/Info", shorthand: "st/if", value: "32ADE6" },
+      { _id: NC_IDS.statusSuccess,   name: "Status/Success",   shorthand: "st/ss", value: "34C759" },
+      { _id: NC_IDS.statusWarning,   name: "Status/Warning",   shorthand: "st/wr", value: "FF9F0A" },
+      { _id: NC_IDS.statusDanger,    name: "Status/Danger",    shorthand: "st/dg", value: "FF453A" },
+      { _id: NC_IDS.statusInfo,      name: "Status/Info",      shorthand: "st/if", value: "32ADE6" },
       { _id: NC_IDS.statusAttention, name: "Status/Attention", shorthand: "st/at", value: "FFD60A" },
       // Gray
-      { _id: NC_IDS.grayCool, name: "Gray/Cool", shorthand: "gr/cl", value: "636366" },
+      { _id: NC_IDS.grayCool,    name: "Gray/Cool",    shorthand: "gr/cl", value: "676D6F" },
       { _id: NC_IDS.grayNeutral, name: "Gray/Neutral", shorthand: "gr/nu", value: "8E8E93" },
       // Spare — raw values + alpha only, not referenced in any role
-      { _id: NC_IDS.spare1, name: "Spare/1", shorthand: "sp/1", value: "F4A261" },
+      { _id: NC_IDS.spare1, name: "Spare/1", shorthand: "sp/1", value: "458AD3" },
       { _id: NC_IDS.spare2, name: "Spare/2", shorthand: "sp/2", value: "E76F51" },
-      { _id: NC_IDS.spare3, name: "Spare/3", shorthand: "sp/3", value: "2A9D8F" },
-      { _id: NC_IDS.spare4, name: "Spare/4", shorthand: "sp/4", value: "E9C46A" },
+      { _id: NC_IDS.spare3, name: "Spare/3", shorthand: "sp/3", value: "2A319D" },
+      { _id: NC_IDS.spare4, name: "Spare/4", shorthand: "sp/4", value: "CB9C25" },
       { _id: NC_IDS.spare5, name: "Spare/5", shorthand: "sp/5", value: "8338EC" },
     ],
 
@@ -145,11 +143,11 @@ const nclarity: Preset = {
         ],
       },
 
-      // ── Stroke ─────────────────────────────────────────────────────────────
+      // ── Border ─────────────────────────────────────────────────────────────
       // Hairline dividers through keyboard focus rings.
       {
-        name: "stroke",
-        shorthand: "sk",
+        name: "border",
+        shorthand: "br",
         solverMode: "natural",
         variations: [
           { name: "Hairline", shorthand: "1", target: 1.4 },
@@ -164,7 +162,7 @@ const nclarity: Preset = {
       // General colored fills for chips, badges, and decorative elements.
       {
         name: "fill/fill",
-        shorthand: "fl/fi",
+        shorthand: "f/fi",
         solverMode: "natural",
         variations: [
           { name: "Wash", shorthand: "1", target: 1.5 },
@@ -181,7 +179,7 @@ const nclarity: Preset = {
       // States ordered by contrast: Disabled (lowest) → Pressed (highest).
       {
         name: "fill/button",
-        shorthand: "fi/btn",
+        shorthand: "f/btn",
         solverMode: "saturated",
         variations: [
           { name: "Disabled", shorthand: "1", target: 1.3 },
@@ -198,7 +196,7 @@ const nclarity: Preset = {
       // each color's own button fill, not the page background.
       {
         name: "text/buttonLabel",
-        shorthand: "tx/btn",
+        shorthand: "t/btn",
         solverMode: "luminance",
         variations: [
           { name: "Disabled", shorthand: "1", target: 1.5 },
@@ -218,7 +216,7 @@ const nclarity: Preset = {
       // Emphasis (5) = AAA headings.
       {
         name: "text/text",
-        shorthand: "tx/tx",
+        shorthand: "t/t",
         solverMode: "natural",
         variations: [
           { name: "Faint", shorthand: "1", target: 2.0 },
@@ -232,17 +230,20 @@ const nclarity: Preset = {
       // ── Status roles ───────────────────────────────────────────────────────
       // Each role is scoped to its own color so tokens are only generated
       // for the matching status color, not the entire palette.
-      statusRole("status/success", "st/su", NC_IDS.statusSuccess),
-      statusRole("status/warning", "st/wr", NC_IDS.statusWarning),
-      statusRole("status/danger", "st/dg", NC_IDS.statusDanger),
-      statusRole("status/info", "st/if", NC_IDS.statusInfo),
-      statusRole("status/attention", "st/at", NC_IDS.statusAttention),
+      // Role shorthands use "r/" prefix to avoid colliding with color shorthands
+      // (color st/wr vs role r/wr, etc).
+      statusRole("status/success",   "s/su", NC_IDS.statusSuccess),
+      statusRole("status/warning",   "s/wr", NC_IDS.statusWarning),
+      statusRole("status/danger",    "s/dg", NC_IDS.statusDanger),
+      statusRole("status/info",      "s/if", NC_IDS.statusInfo),
+      statusRole("status/attention", "s/at", NC_IDS.statusAttention),
     ],
 
     // ── Themes ───────────────────────────────────────────────────────────────
     themes: [
       { name: "Light", bg: "F2F2F7" }, // iOS system grouped background
       { name: "Dark", bg: "000000" }, // iOS true black
+      { name: "Midnight", bg: "0A0F1E" }, // deep navy — common in personal/health apps
     ],
   },
 };
