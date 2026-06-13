@@ -70,7 +70,7 @@ export interface UiPrefs {
 
 // ── UI routing ───────────────────────────────────────────────────────────────
 
-export type SidebarTab = "color-groups" | "roles" | "project" | "saved-states";
+export type SidebarTab = "color-groups" | "roles" | "project" | "versions";
 export type ActiveOverlay = null | "settings" | "preview" | "run-dialog" | "save-version" | "quick-start" | "design-lab" | "export-sheet" | "theme-shop" | "canvas-preview-dev";
 export type SettingsTab = "tokens" | "roles" | "plugin";
 

@@ -10,63 +10,64 @@
 //   status.*       →  flat mapped (success, success-subtle, warning, …)
 // ============================================================================
 
-import type { ThemeTokens } from './tokens';
+import type { ThemeTokens } from "./tokens";
 
 type CssVarMap = Record<string, string>;
 
-function surfaceVars(t: ThemeTokens['surface']): CssVarMap {
+function surfaceVars(t: ThemeTokens["surface"]): CssVarMap {
   return {
-    '--bg-app':     t.app,
-    '--bg-panel':   t.panel,
-    '--bg-card':    t.card,
-    '--bg-input':   t.input,
-    '--bg-hover':   t.hover,
-    '--bg-active':  t.active,
-    '--bg-overlay': t.overlay,
-    '--bg-scrim':   t.scrim,
+    "--bg-app": t.app,
+    "--bg-panel": t.panel,
+    "--bg-card": t.card,
+    "--bg-cardDim": t.cardDim,
+    "--bg-input": t.input,
+    "--bg-hover": t.hover,
+    "--bg-active": t.active,
+    "--bg-overlay": t.overlay,
+    "--bg-scrim": t.scrim,
   };
 }
 
-function borderVars(t: ThemeTokens['border']): CssVarMap {
+function borderVars(t: ThemeTokens["border"]): CssVarMap {
   return {
-    '--border-subtle': t.subtle,
-    '--border-base':   t.base,
-    '--border-strong': t.strong,
-    '--border-input':  t.input,
-    '--border-focus':  t.focus,
+    "--border-subtle": t.subtle,
+    "--border-base": t.base,
+    "--border-strong": t.strong,
+    "--border-input": t.input,
+    "--border-focus": t.focus,
   };
 }
 
-function textVars(t: ThemeTokens['text']): CssVarMap {
+function textVars(t: ThemeTokens["text"]): CssVarMap {
   return {
-    '--text-primary':   t.primary,
-    '--text-secondary': t.secondary,
-    '--text-muted':     t.muted,
-    '--text-dim':       t.dim,
-    '--text-disabled':  t.disabled,
-    '--text-inverse':   t.inverse,
-    '--text-on-accent': t.onAccent,
+    "--text-primary": t.primary,
+    "--text-secondary": t.secondary,
+    "--text-muted": t.muted,
+    "--text-dim": t.dim,
+    "--text-disabled": t.disabled,
+    "--text-inverse": t.inverse,
+    "--text-on-accent": t.onAccent,
   };
 }
 
-function accentVars(t: ThemeTokens['accent']): CssVarMap {
+function accentVars(t: ThemeTokens["accent"]): CssVarMap {
   return {
-    '--accent':        t.DEFAULT,
-    '--accent-hover':  t.hover,
-    '--accent-subtle': t.subtle,
-    '--accent-glow':   t.glow,
+    "--accent": t.DEFAULT,
+    "--accent-hover": t.hover,
+    "--accent-subtle": t.subtle,
+    "--accent-glow": t.glow,
   };
 }
 
-function statusVars(t: ThemeTokens['status']): CssVarMap {
+function statusVars(t: ThemeTokens["status"]): CssVarMap {
   return {
-    '--success':        t.success,
-    '--success-subtle': t.successSubtle,
-    '--warning':        t.warning,
-    '--warning-subtle': t.warningSubtle,
-    '--danger':         t.danger,
-    '--danger-hover':   t.dangerHover,
-    '--danger-subtle':  t.dangerSubtle,
+    "--success": t.success,
+    "--success-subtle": t.successSubtle,
+    "--warning": t.warning,
+    "--warning-subtle": t.warningSubtle,
+    "--danger": t.danger,
+    "--danger-hover": t.dangerHover,
+    "--danger-subtle": t.dangerSubtle,
   };
 }
 
@@ -85,7 +86,7 @@ export function toCssVars(theme: ThemeTokens): CssVarMap {
 export function serializeVars(vars: CssVarMap): string {
   return Object.entries(vars)
     .map(([k, v]) => `  ${k}: ${v};`)
-    .join('\n');
+    .join("\n");
 }
 
 /** Full CSS block for a given selector + theme. */

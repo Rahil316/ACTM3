@@ -34,17 +34,21 @@ interface SectionCollapsibleProps {
   open: boolean;
   onToggle: () => void;
   label: string;
+  description?: string;
   badge?: ReactNode;
   children: ReactNode;
   className?: string;
 }
 
-export function SectionCollapsible({ open, onToggle, label, badge, children, className }: SectionCollapsibleProps) {
+export function SectionCollapsible({ open, onToggle, label, description, badge, children, className }: SectionCollapsibleProps) {
   return (
     <div className={className}>
-      <div className="flex items-center align-center justify-between cursor-pointer select-none py-1 gap-2" onClick={onToggle}>
-        <SectionLabel className="mb-0">{label}</SectionLabel>
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between cursor-pointer select-none py-1 gap-2" onClick={onToggle}>
+        <div className="flex flex-col min-w-0">
+          <SectionLabel className="mb-0">{label}</SectionLabel>
+          {description && <span className="text-[10px] text-text-dim mt-0.5 leading-tight">{description}</span>}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
           {badge}
           <span className="text-text-muted transition-transform duration-150 flex items-center" style={{ display: "inline-flex", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
             <IconChevronDown className="w-3 h-3" />

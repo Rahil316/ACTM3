@@ -18,7 +18,7 @@ import { RolesScreen } from "./screens/RolesScreen";
 import { SettingsOverlay } from "./screens/SettingsOverlay";
 import { PreviewScreen } from "./screens/PreviewScreen";
 import { RunDialog } from "./screens/RunDialog";
-import { ProjectScreen } from "./screens/ProjectScreen";
+import { ProjectScreen, VersionsScreen } from "./screens/ProjectScreen";
 import { SaveVersionOverlay } from "./screens/SaveVersionOverlay";
 import { QuickStart } from "./screens/QuickStart";
 import { ThemeShopOverlay } from "./screens/ThemeShopOverlay";
@@ -34,7 +34,8 @@ import type { ProjectStore, SidebarTab } from "./types/state";
 const TABS: { value: SidebarTab; label: string }[] = [
   { value: "color-groups", label: "Colors" },
   { value: "roles", label: "Roles" },
-  { value: "project", label: "Project" },
+  { value: "project", label: "Themes" },
+  { value: "versions", label: "Versions" },
 ];
 
 // ── Resize handle ─────────────────────────────────────────────────────────────
@@ -231,6 +232,7 @@ export default function App() {
         {activeTab === "color-groups" && <ColorsScreen />}
         {activeTab === "roles" && <RolesScreen />}
         {activeTab === "project" && <ProjectScreen />}
+        {activeTab === "versions" && <VersionsScreen />}
       </main>
 
       <ToastHub />

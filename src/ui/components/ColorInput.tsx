@@ -27,13 +27,14 @@ interface ColorInputProps {
   value: string;
   onUpdate: (cleanHex: string) => void;
   idPrefix?: string | null;
+  label?: string;
   size?: ColorInputSize;
   className?: string;
 }
 
 // Picker + hex text input. Handles all internal sync automatically.
 // onUpdate fires with a sanitized uppercase 6-char hex string on any change.
-export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', className }: ColorInputProps) {
+export function ColorInput({ value, onUpdate, idPrefix = null, label, size = 'xl', className }: ColorInputProps) {
   const s = SIZE[size];
   const initial = sanitizeHex(value);
   const hexRef = useRef<HTMLInputElement>(null);
@@ -80,7 +81,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
     }
   };
 
-  return (
+  const picker = (
     <div className={clsx(
       'flex items-center w-full bg-bg-input border border-border-input overflow-hidden',
       s.wrap,
@@ -108,6 +109,17 @@ export function ColorInput({ value, onUpdate, idPrefix = null, size = 'xl', clas
         onBlur={handleHexBlur}
         className={clsx('w-full bg-transparent uppercase outline-none text-text-primary pr-2', s.text)}
       />
+    </div>
+  );
+
+  if (!label) return picker;
+
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <label htmlFor={idPrefix ? `${idPrefix}-hex` : undefined} className="text-[12px] font-medium text-text-muted ml-0.5">
+        {label}
+      </label>
+      {picker}
     </div>
   );
 }

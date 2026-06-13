@@ -54,8 +54,9 @@ function FloatingDropdown({ anchorRef, open, children }: { anchorRef: React.RefO
 // Parse "[color]/RoleName/VarName" back into { role, variation } parts
 function parseDynamicRef(value: string): { role: string; variation: string } {
   const withoutColor = value.replace(/^\[color\]\//i, "");
-  const parts = withoutColor.split("/");
-  return { role: parts[0] ?? "", variation: parts[1] ?? "" };
+  const lastSlash = withoutColor.lastIndexOf("/");
+  if (lastSlash === -1) return { role: withoutColor, variation: "" };
+  return { role: withoutColor.slice(0, lastSlash), variation: withoutColor.slice(lastSlash + 1) };
 }
 
 function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null; onChange: (bg: RoleLocalBg | null) => void }) {
@@ -308,7 +309,7 @@ function LocalBgHexInputs({ localBg, themes, onChange }: { localBg: RoleLocalBg 
 const FILL_SCOPES: VariableScope[] = ["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL"];
 const ALL_LEAF_SCOPES: VariableScope[] = ["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL", "STROKE_COLOR", "EFFECT_COLOR"];
 
-export function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClose: () => void }) {
+export function RoleSettingsSheet({ roleIdx, onClose, initialTab = "colors" }: { roleIdx: number; onClose: () => void; initialTab?: "colors" | "contrast" | "scope" }) {
   const colors = useProjectStore((s) => s.projectStore.colors);
   const themes = useProjectStore((s) => s.projectStore.themes ?? []);
   const role = useProjectStore((s) => s.projectStore.roles[roleIdx]);
@@ -317,7 +318,7 @@ export function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClo
   const setRoleScopes = useProjectStore((s) => s.setRoleScopes);
 
   type Tab = "colors" | "contrast" | "scope";
-  const [activeTab, setActiveTab] = useState<Tab>("colors");
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
   // Draft state — only committed on Apply
   const [draftScopedIds, setDraftScopedIds] = useState<string[] | null>(role?.scopedColorIds ?? null);
@@ -326,7 +327,7 @@ export function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClo
 
   const isAll = draftScopedIds === null;
   const effectiveIds: string[] = isAll ? colors.map((c) => c._id ?? "") : draftScopedIds;
-  const bgKind: RoleLocalBgKind | "none" = draftLocalBg?.kind ?? "none";
+  const bgKind: RoleLocalBgKind | "none" = draftLocalBg?.kind === "token-dynamic" ? "token-static" : (draftLocalBg?.kind ?? "none");
 
   // ── Color scope helpers ───────────────────────────────────────────────────
   function toggleAll() {
@@ -475,7 +476,7 @@ export function RoleSettingsSheet({ roleIdx, onClose }: { roleIdx: number; onClo
                   </button>
                 ))}
               </div>
-              {(bgKind === "token-static" || bgKind === "token-dynamic") && <LocalBgTokenInput localBg={draftLocalBg} onChange={setDraftLocalBg} />}
+              {bgKind === "token-static" && <LocalBgTokenInput localBg={draftLocalBg} onChange={setDraftLocalBg} />}
               {bgKind === "color" && <LocalBgColorInput localBg={draftLocalBg} colors={colors} onChange={setDraftLocalBg} />}
               {bgKind === "hex" && <LocalBgHexInputs localBg={draftLocalBg} themes={themes} onChange={setDraftLocalBg} />}
             </div>

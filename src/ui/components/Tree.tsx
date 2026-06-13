@@ -344,10 +344,7 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
           const isDragging = activeGroupPath === node.fullPath;
           const isDropTarget = overGroupPath === node.fullPath && !isDragging;
           return (
-            <div
-              key={node.fullPath}
-              className={["group/treegroup rounded-[10px] border transition-all", isDropTarget ? "border-accent bg-accent-subtle/40 shadow-[0_0_0_3px_var(--accent-glow)]" : "border-border-base bg-bg-app hover:border-border-strong hover:shadow-sm"].join(" ")}
-            >
+            <div key={node.fullPath} className={["group/treegroup rounded-[10px] border transition-all bg-bg-cardDim", isDropTarget ? "border-accent bg-accent-subtle/40 shadow-[0_0_0_3px_var(--accent-glow)]" : "border-border-base hover:border-border-strong hover:shadow-sm"].join(" ")}>
               <DroppableGroupHeader
                 segment={node.segment}
                 fullPath={node.fullPath}
@@ -398,17 +395,8 @@ export type RootZoneId = (typeof ROOT_ZONE_IDS)[number];
 function SideStrip({ id, side }: { id: RootZoneId; side: "left" | "right" }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
-    <div
-      ref={setNodeRef}
-      className={`absolute top-0 bottom-0 w-5 z-10 flex items-center justify-center transition-colors rounded-[6px] ${
-        side === "left" ? "left-0" : "right-0"
-      } ${isOver ? "bg-accent-subtle border border-accent" : "border border-transparent"}`}
-    >
-      {isOver && (
-        <span className="text-accent text-[9px] font-bold [writing-mode:vertical-rl] rotate-180 select-none">
-          ungroup
-        </span>
-      )}
+    <div ref={setNodeRef} className={`absolute top-0 bottom-0 w-5 z-10 flex items-center justify-center transition-colors rounded-[6px] ${side === "left" ? "left-0" : "right-0"} ${isOver ? "bg-accent-subtle border border-accent" : "border border-transparent"}`}>
+      {isOver && <span className="text-accent text-[9px] font-bold [writing-mode:vertical-rl] rotate-180 select-none">ungroup</span>}
     </div>
   );
 }
@@ -420,14 +408,7 @@ export function RootDropZone({ activeId, activeIsGrouped }: { activeId: string |
     <>
       <SideStrip id="root-left" side="left" />
       <SideStrip id="root-right" side="right" />
-      <div
-        ref={setNodeRef}
-        className={`mt-1 h-14 rounded-[8px] border-2 border-dashed flex items-center justify-center text-[11px] transition-colors ${
-          isOver
-            ? "border-accent bg-accent-subtle text-accent"
-            : "border-border-base text-text-dim"
-        }`}
-      >
+      <div ref={setNodeRef} className={`mt-1 h-14 rounded-[8px] border-2 border-dashed flex items-center justify-center text-[11px] transition-colors ${isOver ? "border-accent bg-accent-subtle text-accent" : "border-border-base text-text-dim"}`}>
         {isOver ? "Release to ungroup" : "Drop here to ungroup"}
       </div>
     </>

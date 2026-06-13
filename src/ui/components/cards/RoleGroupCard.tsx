@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Settings } from "lucide-react";
+import { Settings, Palette, Layers2, Variable } from "lucide-react";
 import type { Role, Variation } from "../../types/state";
 import { CardToolbar } from "../CardToolbar";
 import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS } from "../../store/projectStore";
@@ -24,6 +24,12 @@ const EMPTY_VARIATIONS: Variation[] = [];
 export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, dragListeners, dragAttributes }: RoleGroupCardProps) {
   const [open, toggleOpen] = usePersistedToggle(`role_${role._id}`, false);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<"colors" | "contrast" | "scope">("colors");
+
+  function openSettings(tab: "colors" | "contrast" | "scope") {
+    setSettingsTab(tab);
+    setShowSettingsSheet(true);
+  }
 
   // Actions — stable references, never change
   const setRole = useProjectStore((s) => s.setRole);
@@ -43,6 +49,8 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const roleSolverMode = useProjectStore((s) => s.projectStore.roles[idx]?.solverMode);
   const scopedIds = useProjectStore((s) => s.projectStore.roles[idx]?.scopedColorIds ?? null);
   const roleLocalBg = useProjectStore((s) => s.projectStore.roles[idx]?.localBg);
+  const roleScopes = useProjectStore((s) => s.projectStore.roles[idx]?.scopes ?? null);
+  const colors = useProjectStore((s) => s.projectStore.colors);
 
   const vars: Variation[] = useProjectStore((s) => s.projectStore.roles[idx]?.variations ?? EMPTY_VARIATIONS);
 
@@ -51,9 +59,45 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const algoOptions = SCALE_ALGORITHM_OPTIONS.map((a) => ({ value: a, label: a }));
   const solverOptions = SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }));
 
-  const scopeLabel = scopedIds !== null ? (scopedIds.length === 0 ? "No colors" : `${scopedIds.length} colors`) : null;
-  const hasLocalBg = roleLocalBg;
-  const localBgLabel = roleLocalBg ? (roleLocalBg.kind === "token-dynamic" ? "BG: dynamic" : roleLocalBg.kind === "token-static" ? "BG: token" : roleLocalBg.kind === "color" ? "BG: color" : "BG: hex") : null;
+  const hasLocalBg = !!roleLocalBg;
+
+  // Color scope tag — shorthands truncated at 3
+  const colorScopeLabel = (() => {
+    if (scopedIds === null) return null;
+    if (scopedIds.length === 0) return "No colors";
+    const labels = scopedIds.map((id) => {
+      const c = colors.find((c) => c._id === id);
+      return c?.shorthand || c?.name || id;
+    });
+    if (labels.length <= 3) return labels.join(" · ");
+    return labels.slice(0, 3).join(" · ") + ` +${labels.length - 3}`;
+  })();
+
+  // BG contrast tag — show actual value
+  const bgLabel = (() => {
+    if (!roleLocalBg) return null;
+    const { kind, value } = roleLocalBg;
+    if (kind === "token-dynamic") return typeof value === "string" && value ? value : "dynamic";
+    if (kind === "token-static") return typeof value === "string" && value ? value : "token";
+    if (kind === "color") return typeof value === "string" && value ? value : "color";
+    return "hex";
+  })();
+
+  // Variable scope tag — summarise restricted scopes
+  const varScopeLabel = (() => {
+    if (roleScopes === null) return null;
+    if (roleScopes.length === 0) return "No scopes";
+    const SHORT: Record<string, string> = {
+      FRAME_FILL: "Frame",
+      SHAPE_FILL: "Shape",
+      TEXT_FILL: "Text",
+      STROKE_COLOR: "Stroke",
+      EFFECT_COLOR: "Effect",
+    };
+    const labels = roleScopes.map((s) => SHORT[s] ?? s);
+    if (labels.length <= 3) return labels.join(" · ");
+    return labels.slice(0, 3).join(" · ") + ` +${labels.length - 3}`;
+  })();
 
   const [localName, onNameChange, onNameBlur] = useLocalField(role.name, (v) => setRole(idx, "name", v));
   const [localShort, onShortChange, onShortBlur] = useLocalField(role.shorthand ?? "", (v) => setRole(idx, "shorthand", v));
@@ -66,10 +110,38 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
         <Input id={`role-${role._id}-short`} value={localShort} onChange={onShortChange} onBlur={onShortBlur} label="Short" size="xl" />
       </div>
 
-      {(scopeLabel || localBgLabel) && (
+      {(colorScopeLabel || bgLabel || varScopeLabel) && (
         <div className="flex gap-1.5 flex-wrap">
-          {scopeLabel && <span className="text-[10px] font-semibold text-accent bg-accent-subtle border border-accent/30 rounded-full px-2 py-0.5">{scopeLabel}</span>}
-          {localBgLabel && <span className="text-[10px] font-semibold text-accent bg-accent-subtle border border-accent/30 rounded-full px-2 py-0.5">{localBgLabel}</span>}
+          {colorScopeLabel && (
+            <button
+              onClick={() => openSettings("colors")}
+              title="Color scope"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold text-violet-400 bg-violet-500/10 border border-violet-500/25 rounded-full pl-1.5 pr-2 py-0.5 hover:bg-violet-500/20 transition-colors cursor-pointer max-w-[220px] truncate"
+            >
+              <Palette size={12} strokeWidth={2} className="shrink-0" />
+              {colorScopeLabel}
+            </button>
+          )}
+          {bgLabel && (
+            <button
+              onClick={() => openSettings("contrast")}
+              title="Local background"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/25 rounded-full pl-1.5 pr-2 py-0.5 hover:bg-sky-500/20 transition-colors cursor-pointer max-w-[220px] truncate"
+            >
+              <Layers2 size={12} strokeWidth={2} className="shrink-0" />
+              {bgLabel}
+            </button>
+          )}
+          {varScopeLabel && (
+            <button
+              onClick={() => openSettings("scope")}
+              title="Variable scope"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/25 rounded-full pl-1.5 pr-2 py-0.5 hover:bg-amber-500/20 transition-colors cursor-pointer max-w-[220px] truncate"
+            >
+              <Variable size={12} strokeWidth={2} className="shrink-0" />
+              {varScopeLabel}
+            </button>
+          )}
         </div>
       )}
 
@@ -100,17 +172,10 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
       )}
 
       <CardToolbar onDelete={() => removeRole(idx)} deleteDisabled={roleCount <= 1} deleteTitle="Delete role" dragListeners={dragListeners} dragAttributes={dragAttributes}>
-        <Button
-          variant="icon"
-          size="sm"
-          className={scopedIds !== null || hasLocalBg ? "text-accent bg-accent-subtle hover:text-accent-hover hover:bg-accent-subtle/80" : undefined}
-          onClick={() => setShowSettingsSheet(true)}
-          title="Role settings"
-          icon={<Settings size={11} strokeWidth={1.75} />}
-        />
+        <Button variant="icon" size="sm" className={scopedIds !== null || hasLocalBg ? "text-accent bg-accent-subtle hover:text-accent-hover hover:bg-accent-subtle/80" : undefined} onClick={() => openSettings("colors")} title="Role settings" icon={<Settings size={11} strokeWidth={1.75} />} />
       </CardToolbar>
 
-      {showSettingsSheet && <RoleSettingsSheet roleIdx={idx} onClose={() => setShowSettingsSheet(false)} />}
+      {showSettingsSheet && <RoleSettingsSheet roleIdx={idx} onClose={() => setShowSettingsSheet(false)} initialTab={settingsTab} />}
     </div>
   );
 });

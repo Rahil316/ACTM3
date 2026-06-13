@@ -79,4 +79,5 @@ export interface Theme {
   _id?: string;
   name: string;
   bg: string;
+  description?: string;
 }
