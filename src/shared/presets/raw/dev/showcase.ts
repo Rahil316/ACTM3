@@ -12,7 +12,7 @@
  *   Spare/Indigo · Spare/Fuchsia · Spare/Sand
  */
 
-import type { Preset } from "../themeShop";
+import type { Preset } from "../../themeShop";
 
 // ── Stable color IDs ──────────────────────────────────────────────────────────
 // Used for scopedColorIds on status roles so they only apply to their own color.

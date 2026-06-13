@@ -22,7 +22,7 @@
  * No descriptions. Variation shorthands are always numeric 1–5.
  */
 
-import type { Preset } from "../themeShop";
+import type { Preset } from "../../themeShop";
 
 // ── Stable color IDs ──────────────────────────────────────────────────────────
 

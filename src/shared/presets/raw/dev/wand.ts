@@ -3,7 +3,7 @@
 // Funk (chroma-maximized, bold creative).
 // WCAG contrast ratios (1.0 – 21.0).
 
-import type { Preset } from "../themeShop";
+import type { Preset } from "../../themeShop";
 
 const presets: Preset[] = [
   // ── TW Regular ──────────────────────────────────────────────────────────────
