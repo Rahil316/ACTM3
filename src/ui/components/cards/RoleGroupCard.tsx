@@ -21,6 +21,22 @@ interface RoleGroupCardProps {
 
 const EMPTY_VARIATIONS: Variation[] = [];
 
+const ALGO_OPTIONS = SCALE_ALGORITHM_OPTIONS.map((a) => ({ value: a, label: a }));
+const SOLVER_OPTIONS = SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }));
+
+export const SCOPE_SHORT: Record<string, string> = {
+  FRAME_FILL: "Frame",
+  SHAPE_FILL: "Shape",
+  TEXT_FILL: "Text",
+  STROKE_COLOR: "Stroke",
+  EFFECT_COLOR: "Effects",
+};
+
+function truncateLabels(labels: string[]): string {
+  if (labels.length <= 3) return labels.join(" · ");
+  return labels.slice(0, 3).join(" · ") + ` +${labels.length - 3}`;
+}
+
 export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, dragListeners, dragAttributes }: RoleGroupCardProps) {
   const [open, toggleOpen] = usePersistedToggle(`role_${role._id}`, false);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
@@ -56,10 +72,6 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
 
   const showAlgoRow = pluginMode === "scale" && !useUniformAlgo && algoScope === "role";
   const showSolverRow = pluginMode === "direct" && !useUniformAlgo && algoScope === "role";
-  const algoOptions = SCALE_ALGORITHM_OPTIONS.map((a) => ({ value: a, label: a }));
-  const solverOptions = SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }));
-
-  const hasLocalBg = !!roleLocalBg;
 
   // Color scope tag — shorthands truncated at 3
   const colorScopeLabel = (() => {
@@ -69,8 +81,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
       const c = colors.find((c) => c._id === id);
       return c?.shorthand || c?.name || id;
     });
-    if (labels.length <= 3) return labels.join(" · ");
-    return labels.slice(0, 3).join(" · ") + ` +${labels.length - 3}`;
+    return truncateLabels(labels);
   })();
 
   // BG contrast tag — show actual value
@@ -87,16 +98,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const varScopeLabel = (() => {
     if (roleScopes === null) return null;
     if (roleScopes.length === 0) return "No scopes";
-    const SHORT: Record<string, string> = {
-      FRAME_FILL: "Frame",
-      SHAPE_FILL: "Shape",
-      TEXT_FILL: "Text",
-      STROKE_COLOR: "Stroke",
-      EFFECT_COLOR: "Effect",
-    };
-    const labels = roleScopes.map((s) => SHORT[s] ?? s);
-    if (labels.length <= 3) return labels.join(" · ");
-    return labels.slice(0, 3).join(" · ") + ` +${labels.length - 3}`;
+    return truncateLabels(roleScopes.map((s) => SCOPE_SHORT[s] ?? s));
   })();
 
   const [localName, onNameChange, onNameBlur] = useLocalField(role.name, (v) => setRole(idx, "name", v));
@@ -148,11 +150,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
       <Collapsible
         open={open}
         onToggle={toggleOpen}
-        header={
-          <>
-            <span className="text-[12px] font-medium text-text-primary flex-1">Variations ({vars.length})</span>
-          </>
-        }
+        header={<span className="text-[12px] font-medium text-text-primary flex-1">Variations ({vars.length})</span>}
       >
         <div className="py-2">
           <VariationTable variations={vars} canEdit={canEditNames} mappingMethod={roleMappingMethod} idx={idx} scaleLength={scaleLength} />
@@ -161,18 +159,18 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
 
       {showAlgoRow && (
         <div className="space-y-1 mt-2 pt-2 border-t border-border-base">
-          <Select label="Algorithm" size="lg" options={algoOptions} value={roleScaleAlgorithm ?? "Natural"} onChange={(e) => setRole(idx, "scaleAlgorithm", e.target.value)} />
+          <Select label="Algorithm" size="lg" options={ALGO_OPTIONS} value={roleScaleAlgorithm ?? "Natural"} onChange={(e) => setRole(idx, "scaleAlgorithm", e.target.value)} />
         </div>
       )}
 
       {showSolverRow && (
         <div className="space-y-1 mt-2 pt-2 border-t border-border-base">
-          <Select label="Solver" size="lg" options={solverOptions} value={roleSolverMode ?? "natural"} onChange={(e) => setRole(idx, "solverMode", e.target.value)} />
+          <Select label="Solver" size="lg" options={SOLVER_OPTIONS} value={roleSolverMode ?? "natural"} onChange={(e) => setRole(idx, "solverMode", e.target.value)} />
         </div>
       )}
 
       <CardToolbar onDelete={() => removeRole(idx)} deleteDisabled={roleCount <= 1} deleteTitle="Delete role" dragListeners={dragListeners} dragAttributes={dragAttributes}>
-        <Button variant="icon" size="sm" className={scopedIds !== null || hasLocalBg ? "text-accent bg-accent-subtle hover:text-accent-hover hover:bg-accent-subtle/80" : undefined} onClick={() => openSettings("colors")} title="Role settings" icon={<Settings size={11} strokeWidth={1.75} />} />
+        <Button variant="icon" size="sm" className={scopedIds !== null || roleLocalBg != null ? "text-accent bg-accent-subtle hover:text-accent-hover hover:bg-accent-subtle/80" : undefined} onClick={() => openSettings("colors")} title="Role settings" icon={<Settings size={11} strokeWidth={1.75} />} />
       </CardToolbar>
 
       {showSettingsSheet && <RoleSettingsSheet roleIdx={idx} onClose={() => setShowSettingsSheet(false)} initialTab={settingsTab} />}

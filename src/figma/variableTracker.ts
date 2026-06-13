@@ -2,6 +2,30 @@ import type { EngineResult, TokenEntry } from "../shared/clrEngine";
 import type { PluginConfig } from "./config";
 import type { Role } from "../shared/types";
 
+// Shared label helpers — used by both variableTracker and figmaVars to resolve display names.
+export function makeLabelHelpers(config: PluginConfig) {
+  const colorLabel = (name: string): string => {
+    if (!config.useShorthandColors) return name;
+    const col = config.colors?.find((c) => c.name === name);
+    return (col && col.shorthand) || name;
+  };
+  const roleLabel = (name: string, roleIdx: number): string => {
+    if (!config.useShorthandRoles) return name;
+    const role = config.roles?.[roleIdx];
+    return (role && role.shorthand) || name;
+  };
+  const stepLabel = (name: string): string =>
+    config.useShorthandSteps && config.scaleStepShorthands?.[name] ? config.scaleStepShorthands[name] : name;
+  return { colorLabel, roleLabel, stepLabel };
+}
+
+// Shared hex → Figma RGB conversion. Exported so figmaVars can use the same implementation.
+export function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const clean = hex.replace(/^#/, "").padEnd(6, "0").slice(0, 6);
+  const n = parseInt(clean, 16);
+  return { r: ((n >> 16) & 0xff) / 255, g: ((n >> 8) & 0xff) / 255, b: (n & 0xff) / 255 };
+}
+
 // No import needed as Variable and VariableCollection are global types in Figma environment.
 
 export interface SyncPreview {
@@ -47,18 +71,14 @@ export function computeSyncPreview(
         let changed = false;
         if (existing.name !== entry.name) { toRename++; changed = true; }
         const currentVal = existing.valuesByMode[modeId];
-        if (currentVal === undefined || currentVal === null) { if (!changed) { toUpdate++; } changed = true; }
+        if (currentVal === undefined || currentVal === null) { toUpdate++; changed = true; }
         if (!changed && entry.description && existing.description !== entry.description) { toUpdate++; changed = true; }
         // Rough colour diff check (skip alias values)
         if (!changed && entry.value && typeof entry.value === 'string' &&
             typeof currentVal === 'object' && currentVal !== null &&
             !('type' in currentVal && (currentVal as { type: string }).type === 'VARIABLE_ALIAS')) {
           const rgb = currentVal as { r?: number; g?: number; b?: number };
-          const hex = entry.value.replace(/^#/, '').padEnd(6, '0').slice(0, 6);
-          const n = parseInt(hex, 16);
-          const r = ((n >> 16) & 0xff) / 255;
-          const g = ((n >> 8) & 0xff) / 255;
-          const b = (n & 0xff) / 255;
+          const { r, g, b } = hexToRgb(entry.value);
           if (Math.abs(r - (rgb.r ?? 0)) > 0.001 ||
               Math.abs(g - (rgb.g ?? 0)) > 0.001 ||
               Math.abs(b - (rgb.b ?? 0)) > 0.001) {
@@ -70,6 +90,9 @@ export function computeSyncPreview(
     }
   }
 
+  const { colorLabel, roleLabel, stepLabel } = makeLabelHelpers(config);
+  const tokenNameOrder: string[] = config.tokenNameSegments || ['color', 'role', 'variation'];
+
   // Count token variables (first theme only for preview purposes)
   if (result?.tokens) {
     const firstTheme = Object.keys(result.tokens)[0];
@@ -79,18 +102,24 @@ export function computeSyncPreview(
       for (const [colorName, roles] of Object.entries(result.tokens[firstTheme] as Record<string, Record<number, Record<number, TokenEntry>>>)) {
         const colorObj = config.colors?.find((c) => c.name === colorName);
         const colorId = colorObj?._id || colorName;
+        const cLabel = colorLabel(colorName);
         for (const [roleId, variations] of Object.entries(roles)) {
           const roleObj: Partial<Role> = config.roles?.[parseInt(roleId, 10)] || {};
           const roleIdStr = roleObj._id || roleId;
+          const rName = roleObj.name || roleId;
+          const rLabel = roleLabel(rName, parseInt(roleId, 10));
           const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let vi = 0; vi < variationDefs.length; vi++) {
             const token = variations[vi];
             if (!token) continue;
             const varDef = variationDefs[vi];
             const varIdStr = varDef._id || String(vi);
+            const dispName = config.useShorthandVariations && varDef.shorthand ? varDef.shorthand : varDef.name || String(vi);
+            const segParts: Record<string, string> = { color: cLabel, role: rLabel, variation: dispName };
+            const name = tokenNameOrder.map((s) => segParts[s] || s).join('/');
             entries.push({
               tokenRef: `token:${colorId}/${roleIdStr}/${varIdStr}`,
-              name: `${colorName}/${roleObj.name || roleId}/${varDef.name || vi}`,
+              name,
               value: token.value,
               description: token.roleDescription,
             });
@@ -108,8 +137,9 @@ export function computeSyncPreview(
     for (const [colorName, scale] of Object.entries(result.scales)) {
       const colorObj = config.colors?.find((c) => c.name === colorName);
       const colorId = colorObj?._id || colorName;
+      const cLabel = colorLabel(colorName);
       for (const [step, entry] of Object.entries(scale)) {
-        entries.push({ tokenRef: `scale:${colorId}/${step}`, name: `${colorName}/${step}`, value: entry?.value || null });
+        entries.push({ tokenRef: `scale:${colorId}/${step}`, name: `${cLabel}/${stepLabel(step)}`, value: entry?.value || null });
       }
     }
     checkVars(scaleCol, 'scale:', entries, modeId);
@@ -204,21 +234,7 @@ export function analyzeNameConflicts(
   sourceCol: VariableCollection | null
 ): NameConflict[] {
   const conflicts: NameConflict[] = [];
-
-  const colorLabel = (name: string) => {
-    if (!config.useShorthandColors) return name;
-    const col = config.colors?.find((c) => c.name === name);
-    return (col && col.shorthand) || name;
-  };
-  const roleLabel = (name: string, roleIdx: number) => {
-    if (!config.useShorthandRoles) return name;
-    const role = config.roles?.[roleIdx];
-    return (role && role.shorthand) || name;
-  };
-  const stepLabel = (name: string) =>
-    config.useShorthandSteps && config.scaleStepShorthands?.[name]
-      ? config.scaleStepShorthands[name]
-      : name;
+  const { colorLabel, roleLabel, stepLabel } = makeLabelHelpers(config);
 
   // 1. Check scale collection conflicts
   if (scaleCol && result?.scales) {

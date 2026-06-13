@@ -24,7 +24,6 @@ import applePresets from "../src/shared/presets/raw/apple";
 import tailwindPresets from "../src/shared/presets/raw/tailwind";
 import carbonPresets from "../src/shared/presets/raw/carbon";
 import polarisPresets from "../src/shared/presets/raw/polaris";
-import nclarityPresets from "../src/shared/presets/raw/dev/nclarity";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPreset = Record<string, any>;
@@ -63,7 +62,6 @@ async function main() {
   // ── Log summary ─────────────────────────────────────────────────────────────
   for (const [name, arr] of [
     ["material", materialPresets as AnyPreset[]],
-    ["nClarity", nclarityPresets as AnyPreset[]],
     ["atlassian", atlassianPresets as AnyPreset[]],
     ["radix", radixPresets as AnyPreset[]],
     ["apple", applePresets as AnyPreset[]],

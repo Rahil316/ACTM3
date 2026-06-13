@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { variableMaker } from "../../utils/engine";
+import { SCOPE_SHORT } from "./RoleGroupCard";
 import { X, ChevronDown } from "lucide-react";
 import { Checkbox } from "../Checkbox";
 import type { Color, Theme, RoleLocalBg, RoleLocalBgKind, VariableScope, TokenEntry } from "../../types/state";
@@ -104,8 +105,6 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
   }
 
   // ── Static mode: freetext search ─────────────────────────────────────────
-  const PLACEHOLDER_COLOR = projectStore.colors[0]?.name ?? "__color__";
-
   const allTokenNames = useMemo(() => {
     if (isDynamic) return [];
     try {
@@ -140,7 +139,7 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
     } catch {
       return [];
     }
-  }, [projectStore, isDynamic, PLACEHOLDER_COLOR]);
+  }, [projectStore.colors, projectStore.themes, projectStore.roles, projectStore.variations, projectStore.scaleLength, projectStore.pluginMode, projectStore.scaleAlgorithm, isDynamic]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
@@ -498,10 +497,10 @@ export function RoleSettingsSheet({ roleIdx, onClose, initialTab = "colors" }: {
                 <Checkbox checked={isFillOn} />
                 <span className="text-[12px] font-medium text-text-primary">Fill</span>
               </button>
-              {(["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL"] as VariableScope[]).map((s) => (
+              {FILL_SCOPES.map((s) => (
                 <button key={s} onClick={() => toggleScopeLeaf(s)} className="flex items-center gap-3 pl-10 pr-4 py-2 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
                   <Checkbox checked={isScopeOn(s)} />
-                  <span className="text-[12px] text-text-primary">{s === "FRAME_FILL" ? "Frame" : s === "SHAPE_FILL" ? "Shape" : "Text"}</span>
+                  <span className="text-[12px] text-text-primary">{SCOPE_SHORT[s] ?? s}</span>
                 </button>
               ))}
 

@@ -20,10 +20,10 @@ interface BadgeProps {
   type?: "pill" | "label";
   px?: number;
   py?: number;
-  radious?: number;
+  radius?: number;
 }
 export function makeBadge(props: BadgeProps): TextNode {
-  const { parent, textContent, fontSize, type, px, py, radious } = props;
+  const { parent, textContent, fontSize, type, px, py, radius } = props;
   //Get Label
   if (type === "label") {
     const txt = figma.createText();
@@ -45,7 +45,7 @@ export function makeBadge(props: BadgeProps): TextNode {
   badge.paddingRight = px || 4;
   badge.paddingTop = py || 4;
   badge.paddingBottom = py || 4;
-  badge.cornerRadius = radious || 8;
+  badge.cornerRadius = radius || 8;
   badge.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 }, opacity: 0.3, blendMode: "NORMAL", visible: true } as SolidPaint];
   badge.strokeWeight = 1;
   parent.appendChild(badge);

@@ -3,10 +3,11 @@
 //   Component "Scale Step Preview" (300w FIXED, HORIZONTAL, 4px padding, 8px gap)
 //     Rectangle "Swatch" (STRETCH, lockAspectRatio)
 //     Frame "Info" (VERTICAL, 4px gap, no fill)
-//       Badge → Text "Hex Code"    (11px)
-//       Badge → Text "@ScaleStepName"   (11px)
-//       Frame "Contrast Badges" (HORIZONTAL, 4px gap)
-//         Badge → Text "Contrast <ThemeName>"  (8px, one per theme)
+//       Text "@ScaleStepFullName"  (11px) ← "Color-Step" full identifier
+//       Text "@ScaleStepName"      (11px) ← "Step: N" short label
+//       Badge → Text "Hex Code"    (14px)
+//       Frame "Contrast Badges" (VERTICAL, 4px gap)
+//         Text "Contrast <ThemeName>"  (9px, one per theme)
 
 import { makeBadge } from "./helpers";
 
@@ -50,6 +51,8 @@ export function buildScaleStepMaster(themes: { name: string }[]): ComponentNode 
 
   const stepFullLabel = makeBadge({ parent: infoCol, textContent: "@ScaleStepFullName", fontSize: 11, type: "label" });
   stepFullLabel.name = "@ScaleStepFullName";
+  const stepNameLabel = makeBadge({ parent: infoCol, textContent: "@ScaleStepName", fontSize: 11, type: "label" });
+  stepNameLabel.name = "@ScaleStepName";
   const hexLabel = makeBadge({ parent: infoCol, textContent: "Hex Code", fontSize: 14 });
   hexLabel.name = "Hex Code";
 
@@ -65,7 +68,7 @@ export function buildScaleStepMaster(themes: { name: string }[]): ComponentNode 
 
   // One badge per theme: "Contrast <ThemeName>" — matched by name in canvasPreview.ts
   for (const theme of themes) {
-    const badge = makeBadge({ parent: contrastRow, textContent: `Contrast ${theme.name}`, fontSize: 9, type: "label", px: 4, py: 4, radious: 9 });
+    const badge = makeBadge({ parent: contrastRow, textContent: `Contrast ${theme.name}`, fontSize: 9, type: "label", px: 4, py: 4, radius: 9 });
     badge.name = `Contrast ${theme.name}`;
   }
 

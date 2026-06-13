@@ -12,13 +12,10 @@ export function SaveVersionOverlay() {
   const isOpen = useUiStore((s) => s.activeOverlay === "save-version");
   const closeOverlay = useUiStore((s) => s.closeOverlay);
   const saveVersion = useProjectStore((s) => s.saveVersion);
-  const versionSaveBlockedReason = useProjectStore((s) => s.versionSaveBlockedReason);
-  useProjectStore((s) => s.projectStore);
+  const reason = useProjectStore((s) => s.versionSaveBlockedReason());
 
   const [name, setName] = useState("");
   const [changelog, setChangelog] = useState("");
-
-  const reason = versionSaveBlockedReason();
 
   if (!isOpen) return null;
 

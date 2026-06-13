@@ -48,8 +48,8 @@ export function buildRoleTokenMaster(bg: string): ComponentNode {
   swatchFrame.name = "@ColorSwatch";
   swatchFrame.layoutMode = "VERTICAL";
   swatchFrame.primaryAxisSizingMode = "FIXED";
-  swatchFrame.counterAxisSizingMode = "AUTO";
-  swatchFrame.layoutGrow = 1;
+  swatchFrame.counterAxisSizingMode = "FIXED";
+  swatchFrame.layoutGrow = 0;
   swatchFrame.layoutAlign = "STRETCH";
   swatchFrame.primaryAxisAlignItems = "CENTER";
   swatchFrame.counterAxisAlignItems = "CENTER";

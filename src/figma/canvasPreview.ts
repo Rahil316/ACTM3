@@ -58,9 +58,15 @@ function getResultScaleHex(result: AnyObj, colorName: string, stepKey: string): 
   }
 }
 
-// Stable JSON fingerprint — strips functions, sorts keys so order doesn't matter
+// Stable JSON fingerprint — recursively sorts object keys so insertion order doesn't matter.
+// NOTE: JSON.stringify with a key *array* as replacer only filters top-level keys (not nested),
+// so we use a replacer *function* that rebuilds each object with sorted entries instead.
 function fingerprint(value: AnyObj): string {
-  return JSON.stringify(value, Object.keys(value ?? {}).sort());
+  return JSON.stringify(value, (_key, val) =>
+    val && typeof val === "object" && !Array.isArray(val)
+      ? Object.fromEntries(Object.entries(val).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : val,
+  );
 }
 
 // Find a direct child of a frame by its pluginData previewRole value

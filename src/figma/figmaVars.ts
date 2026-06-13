@@ -2,16 +2,11 @@
 // Ported from vanilla_archive/src/figma/figmaVars.js
 
 import { buildVariableRenameMap, detectStructuralChanges, type StructuralChange } from "./config";
-import { buildMetadataMap, findVariable } from "./variableTracker";
+import { buildMetadataMap, findVariable, makeLabelHelpers } from "./variableTracker";
+import { hexToFigmaRgb } from "./figmaComponents/helpers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyObj = any;
-
-function hexToFigmaRgb(hex: string): { r: number; g: number; b: number } {
-  const clean = hex.replace(/^#/, "").padEnd(6, "0").slice(0, 6);
-  const n = parseInt(clean, 16);
-  return { r: ((n >> 16) & 0xff) / 255, g: ((n >> 8) & 0xff) / 255, b: (n & 0xff) / 255 };
-}
 
 // Saves the last-successfully-synced state — used as the rename baseline on next open.
 // Only called after a successful sync, NOT from the auto-save subscriber.
@@ -115,23 +110,9 @@ export const VariableManager = {
     const scaleColExists = this.cache.collections.some((c: VariableCollection) => c.name === scaleCollectionName);
     const skipScales = config.pluginMode === "direct" || config.includeColorScalesCollection === false || (!scaleColExists && scope !== "all" && scope !== "groups");
     const tokenNameOrder: string[] = config.tokenNameSegments || ["color", "role", "variation"];
-    const useShortColor: boolean = config.useShorthandColors || false;
-    const useShortRole: boolean = config.useShorthandRoles || false;
     const useShortVar: boolean = config.useShorthandVariations || false;
-    const useShortStep: boolean = config.useShorthandSteps || false;
-    const stepShorthands: Record<string, string> = config.scaleStepShorthands || {};
 
-    const colorLabel = (name: string) => {
-      if (!useShortColor) return name;
-      const col = config.colors.find((c: AnyObj) => c.name === name);
-      return (col && col.shorthand) || name;
-    };
-    const roleLabel = (name: string, roleIdx: number) => {
-      if (!useShortRole) return name;
-      const role = config.roles[roleIdx];
-      return (role && role.shorthand) || name;
-    };
-    const stepLabel = (name: string) => (useShortStep && stepShorthands[name] ? stepShorthands[name] : name);
+    const { colorLabel, roleLabel, stepLabel } = makeLabelHelpers(config);
 
     const needsScaleCol = !skipScales && (scope === "all" || scope === "groups" || scope === "roles");
     const scaleCol = needsScaleCol ? await this.getOrCreateCollection(scaleCollectionName) : null;

@@ -21,8 +21,8 @@ export function useKeyboardShortcuts(importRef: React.RefObject<HTMLInputElement
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const target = e.target as HTMLElement;
+      if (target.isContentEditable || target.closest("input, textarea, select")) return;
 
       if (e.key === "Escape") {
         if (activeOverlayRef.current) closeOverlay();
