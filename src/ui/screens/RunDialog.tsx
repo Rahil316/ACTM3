@@ -19,7 +19,7 @@ type RunPhase = "config" | "validation-warning" | "loading" | "success" | "error
 
 const SCOPE_SEGMENTS = [
   { value: "all", label: "Everything" },
-  { value: "groups", label: "Scale Only" },
+  { value: "scale", label: "Scale Only" },
   { value: "roles", label: "Roles Only" },
 ];
 
@@ -232,9 +232,7 @@ export function RunDialog() {
 
             {/* Scope selector */}
             {!skipScales ? (
-              <SettingsCard>
-                <SmallRow label="Scope" control={<SegmentedControl segments={SCOPE_SEGMENTS} value={scope} onChange={(v) => setScope(v as SyncScope)} />} />
-              </SettingsCard>
+              <SmallRow label="What to Update/Create" control={<SegmentedControl segments={SCOPE_SEGMENTS} value={scope} onChange={(v) => setScope(v as SyncScope)} />} />
             ) : (
               <Callout variant="info" title="Direct Sync Enabled">
                 Color variables are synced directly. No scales collection will be created.
@@ -364,15 +362,7 @@ export function RunDialog() {
               }}
               className="flex-1"
             />
-            <Button
-              variant="primary"
-              size="xl"
-              label="Create / Update Variables"
-              onClick={handleConfirmRun}
-              disabled={isChecking || nothingToSync}
-              title={isChecking ? "Checking Figma collections…" : nothingToSync ? "All variables are already up to date in Figma" : undefined}
-              className="flex-1"
-            />
+            <Button variant="primary" size="xl" label="Create / Update Variables" onClick={handleConfirmRun} disabled={isChecking || nothingToSync} title={isChecking ? "Checking Figma collections…" : nothingToSync ? "All variables are already up to date in Figma" : undefined} className="flex-1" />
           </div>
         </>
       )}

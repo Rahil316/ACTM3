@@ -96,7 +96,7 @@ export const VariableManager = {
     return renamed;
   },
 
-  async sync(result: AnyObj, config: AnyObj, scope: "all" | "groups" | "roles" = "all", projectStore: AnyObj | null = null, savedProjectStore: AnyObj | null = null, decisions: Record<string, "keep" | "revert"> = {}): Promise<void> {
+  async sync(result: AnyObj, config: AnyObj, scope: "all" | "scale" | "roles" = "all", projectStore: AnyObj | null = null, savedProjectStore: AnyObj | null = null, decisions: Record<string, "keep" | "revert"> = {}): Promise<void> {
     this.tally = { created: 0, updated: 0, renamed: 0, removed: 0, failed: 0 };
     this.mutations = new Map<string, "created" | "renamed" | "updated">();
     this.scaleVarNameMap = {};
@@ -108,13 +108,13 @@ export const VariableManager = {
     const tokenColName = (projectStore && projectStore.tokenCollectionName) || "color tokens";
 
     const scaleColExists = this.cache.collections.some((c: VariableCollection) => c.name === scaleCollectionName);
-    const skipScales = config.pluginMode === "direct" || config.includeColorScalesCollection === false || (!scaleColExists && scope !== "all" && scope !== "groups");
+    const skipScales = config.pluginMode === "direct" || config.includeColorScalesCollection === false || (!scaleColExists && scope !== "all" && scope !== "scale");
     const tokenNameOrder: string[] = config.tokenNameSegments || ["color", "role", "variation"];
     const useShortVar: boolean = config.useShorthandVariations || false;
 
     const { colorLabel, roleLabel, stepLabel } = makeLabelHelpers(config);
 
-    const needsScaleCol = !skipScales && (scope === "all" || scope === "groups" || scope === "roles");
+    const needsScaleCol = !skipScales && (scope === "all" || scope === "scale" || scope === "roles");
     const scaleCol = needsScaleCol ? await this.getOrCreateCollection(scaleCollectionName) : null;
 
     if (scaleCol && renameMap.scale && Object.keys(renameMap.scale).length > 0) {
@@ -122,7 +122,7 @@ export const VariableManager = {
     }
 
     // STAGE 1: Color Scale → scale collection
-    if (scaleCol && (scope === "all" || scope === "groups")) {
+    if (scaleCol && (scope === "all" || scope === "scale")) {
       const modeId = scaleCol.modes[0].modeId;
       const include = config.includeDescriptions !== false;
       const scaleMetadataMap = buildMetadataMap(scaleCol, this.cache.variables, "scale:");

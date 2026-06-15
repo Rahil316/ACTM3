@@ -150,7 +150,7 @@ export type UiToPluginMessage = RunCreatorMessage | CheckCollectionsMessage | Re
 
 // ── Supporting types ─────────────────────────────────────────────────────────
 
-export type SyncScope = "all" | "groups" | "roles";
+export type SyncScope = "all" | "scale" | "roles";
 
 export type ExportFormat = "json" | "css" | "csv" | "scss" | "tailwind" | "dtcg" | "style-dictionary" | "ios-swift" | "android" | "rn-ts" | "wand";
 

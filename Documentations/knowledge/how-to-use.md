@@ -146,9 +146,9 @@ Click **Run** to open the Run dialog. The dialog shows:
 - Existing collections in the current Figma file that match configured collection names.
 - A rename summary: variables that will be renamed in place due to color or role label changes.
 - A **Scope** selector:
-  - `all` — rebuild the scale collection and the token collection.
-  - `groups` — rebuild the scale collection only.
-  - `roles` — rebuild the token collection only (skips scale regeneration — faster for token-only changes).
+  - `all` ("Everything") — rebuild the scale collection and the token collection.
+  - `scale` ("Scale Only") — rebuild the scale collection only.
+  - `roles` ("Roles Only") — rebuild the token collection only (skips scale regeneration — faster for token-only changes).
 
 Click **Sync** to write variables to Figma. A tally shows how many variables were created, updated, renamed, or failed.
 
