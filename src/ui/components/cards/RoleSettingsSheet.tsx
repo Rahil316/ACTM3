@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { variableMaker } from "../../utils/engine";
 import { SCOPE_SHORT } from "./RoleGroupCard";
-import { X, ChevronDown } from "lucide-react";
+import { LucideClose as X, LucideChevronDown as ChevronDown } from "../icons";
 import { Checkbox } from "../Checkbox";
 import type { Color, Theme, RoleLocalBg, RoleLocalBgKind, VariableScope, TokenEntry } from "../../types/state";
 import { useProjectStore } from "../../store/projectStore";
@@ -43,7 +43,7 @@ function FloatingDropdown({ anchorRef, open, children }: { anchorRef: React.RefO
 
   if (!open) return null;
   return createPortal(
-    <div className="bg-bg-card border border-border-base rounded-[8px] shadow-xl overflow-y-auto" style={{ ...style, maxHeight: DROPDOWN_MAX_H }}>
+    <div className="bg-n-sf-raised border border-n-br-default rounded-[8px] shadow-xl overflow-y-auto" style={{ ...style, maxHeight: DROPDOWN_MAX_H }}>
       {children}
     </div>,
     document.body,
@@ -173,7 +173,7 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
       {/* Per-color toggle */}
       <button onClick={toggleDynamic} className="flex items-center gap-2 cursor-pointer group">
         <Checkbox checked={isDynamic} />
-        <span className="text-[11px] text-text-muted group-hover:text-text-primary transition-colors">Per color</span>
+        <span className="text-[11px] text-n-tx-muted group-hover:text-n-tx-primary transition-colors">Per color</span>
       </button>
 
       {isDynamic ? (
@@ -181,8 +181,8 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
         <div className="space-y-2">
           <div className="flex gap-2">
             <div className="space-y-1 w-full">
-              <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Role</label>
-              <select value={selRole} onChange={(e) => handleRoleChange(e.target.value)} className="w-full bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent">
+              <label className="text-[10px] font-semibold text-n-tx-muted uppercase tracking-wide">Role</label>
+              <select value={selRole} onChange={(e) => handleRoleChange(e.target.value)} className="w-full bg-n-sf-input border border-n-br-default rounded-[6px] px-2 py-1.5 text-[12px] text-n-tx-primary focus:outline-none focus:border-b-br-strong">
                 <option value="">— select role —</option>
                 {roleOptions.map((r) => (
                   <option key={r} value={r}>
@@ -192,12 +192,12 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
               </select>
             </div>
             <div className="space-y-1 w-full">
-              <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Variation</label>
+              <label className="text-[10px] font-semibold text-n-tx-muted uppercase tracking-wide">Variation</label>
               <select
                 value={selVariation}
                 onChange={(e) => handleVariationChange(e.target.value)}
                 disabled={!selRole}
-                className="w-full bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent disabled:opacity-40"
+                className="w-full bg-n-sf-input border border-n-br-default rounded-[6px] px-2 py-1.5 text-[12px] text-n-tx-primary focus:outline-none focus:border-b-br-strong disabled:opacity-40"
               >
                 <option value="">— select variation —</option>
                 {variationOptions.map((v) => (
@@ -210,21 +210,21 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
           </div>
           <div>
             {selRole && selVariation && (
-              <p className="text-[10px] font-mono text-accent">
+              <p className="text-[10px] font-mono text-b-tx-muted">
                 [color]/{selRole}/{selVariation}
               </p>
             )}
-            <p className="text-[10px] text-text-dim">Resolved per color — bg is the selected role/variation of the same color.</p>
+            <p className="text-[10px] text-n-tx-dim">Resolved per color — bg is the selected role/variation of the same color.</p>
           </div>
         </div>
       ) : (
         /* ── Static: freetext token search ── */
         <div className="space-y-1">
-          <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Token ref</label>
+          <label className="text-[10px] font-semibold text-n-tx-muted uppercase tracking-wide">Token ref</label>
           <div className="relative flex items-center">
             <input
               ref={inputRef}
-              className="w-full bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent"
+              className="w-full bg-n-sf-input border border-n-br-default rounded-[6px] px-2 py-1.5 text-[12px] text-n-tx-primary focus:outline-none focus:border-b-br-strong"
               placeholder="Search tokens…"
               value={query}
               onChange={(e) => {
@@ -238,7 +238,7 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
               {filtered.map((name) => (
                 <button
                   key={name}
-                  className={["w-full text-left px-3 py-1.5 text-[11px] font-mono hover:bg-bg-hover transition-colors", name === storeVal ? "text-accent" : "text-text-primary"].join(" ")}
+                  className={["w-full text-left px-3 py-1.5 text-[11px] font-mono hover:bg-n-sf-hover transition-colors", name === storeVal ? "text-b-tx-muted" : "text-n-tx-primary"].join(" ")}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     select(name);
@@ -249,7 +249,7 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
               ))}
             </FloatingDropdown>
           </div>
-          <p className="text-[10px] text-text-dim">Same token used as bg for all colors.</p>
+          <p className="text-[10px] text-n-tx-dim">Same token used as bg for all colors.</p>
         </div>
       )}
     </div>
@@ -260,10 +260,10 @@ function LocalBgColorInput({ localBg, colors, onChange }: { localBg: RoleLocalBg
   const val = typeof localBg?.value === "string" ? localBg.value : (colors[0]?.name ?? "");
   return (
     <div className="p-4 space-y-1">
-      <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Color</label>
+      <label className="text-[10px] font-semibold text-n-tx-muted uppercase tracking-wide">Color</label>
       <div className="relative">
         <select
-          className="w-full appearance-none bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent pr-6"
+          className="w-full appearance-none bg-n-sf-input border border-n-br-default rounded-[6px] px-2 py-1.5 text-[12px] text-n-tx-primary focus:outline-none focus:border-b-br-strong pr-6"
           value={val}
           onChange={(e) => onChange({ kind: "color", value: e.target.value })}
         >
@@ -273,7 +273,7 @@ function LocalBgColorInput({ localBg, colors, onChange }: { localBg: RoleLocalBg
             </option>
           ))}
         </select>
-        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-dim pointer-events-none" />
+        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-n-tx-dim pointer-events-none" />
       </div>
     </div>
   );
@@ -283,8 +283,8 @@ function LocalBgHexInput({ themeKey, themeName, value, onCommit }: { themeKey: s
   const [local, handleChange, handleBlur] = useLocalField(value, (v) => onCommit(themeKey, v));
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] text-text-muted w-14 shrink-0">{themeName}</span>
-      <input className="flex-1 bg-bg-input border border-border-base rounded-[6px] px-2 py-1.5 text-[12px] text-text-primary focus:outline-none focus:border-accent font-mono" placeholder="#ffffff" value={local} onChange={handleChange} onBlur={handleBlur} />
+      <span className="text-[11px] text-n-tx-muted w-14 shrink-0">{themeName}</span>
+      <input className="flex-1 bg-n-sf-input border border-n-br-default rounded-[6px] px-2 py-1.5 text-[12px] text-n-tx-primary focus:outline-none focus:border-b-br-strong font-mono" placeholder="#ffffff" value={local} onChange={handleChange} onBlur={handleBlur} />
     </div>
   );
 }
@@ -410,23 +410,23 @@ export function RoleSettingsSheet({ roleIdx, onClose, initialTab = "colors" }: {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
-      <div className="absolute inset-0" style={{ background: "var(--bg-scrim)" }} onClick={onClose} />
-      <div className="relative z-10 h-[72%] flex flex-col bg-bg-panel rounded-t-[16px] border-t border-border-base">
+      <div className="absolute inset-0" style={{ background: "var(--n-sf-overlay)", opacity: 0.7 }} onClick={onClose} />
+      <div className="relative z-10 h-[72%] flex flex-col bg-n-bg-panel rounded-t-[16px] border-t border-n-br-default">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
-          <span className="text-[12px] font-semibold text-text-primary">Role Settings</span>
-          <button className="text-text-dim hover:text-text-primary cursor-pointer" onClick={onClose}>
+        <div className="px-4 py-3 border-b border-n-br-subtle flex items-center justify-between shrink-0">
+          <span className="text-[12px] font-semibold text-n-tx-primary">Role Settings</span>
+          <button className="text-n-tx-dim hover:text-n-tx-primary cursor-pointer" onClick={onClose}>
             <X size={13} />
           </button>
         </div>
 
         {/* Tab bar */}
-        <div className="flex border-b border-border-subtle shrink-0">
+        <div className="flex border-b border-n-br-subtle shrink-0">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={["flex-1 py-2.5 text-[11px] font-semibold transition-colors cursor-pointer", activeTab === tab.id ? "text-accent border-b-2 border-accent -mb-px" : "text-text-muted hover:text-text-primary"].join(" ")}
+              className={["flex-1 py-2.5 text-[11px] font-semibold transition-colors cursor-pointer", activeTab === tab.id ? "text-b-tx-muted border-b-2 border-b-br-strong -mb-px" : "text-n-tx-muted hover:text-n-tx-primary"].join(" ")}
             >
               {tab.label}
             </button>
@@ -439,17 +439,17 @@ export function RoleSettingsSheet({ roleIdx, onClose, initialTab = "colors" }: {
           {activeTab === "colors" && (
             <div className="flex flex-col">
               <div className="px-4 py-2.5">
-                <p className="text-[11px] text-text-dim">Limit which colors generate tokens for this role.</p>
+                <p className="text-[11px] text-n-tx-dim">Limit which colors generate tokens for this role.</p>
               </div>
-              <button onClick={toggleAll} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
+              <button onClick={toggleAll} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-n-sf-hover transition-colors cursor-pointer border-b border-n-br-subtle">
                 <Checkbox checked={isAll} />
-                <span className="text-[12px] font-medium text-text-primary">All colors</span>
+                <span className="text-[12px] font-medium text-n-tx-primary">All colors</span>
               </button>
               {colors.map((c) => (
-                <button key={c._id ?? ""} onClick={() => toggleColor(c._id ?? "")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0">
+                <button key={c._id ?? ""} onClick={() => toggleColor(c._id ?? "")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-n-sf-hover transition-colors cursor-pointer border-b border-n-br-subtle last:border-0">
                   <Checkbox checked={effectiveIds.includes(c._id ?? "")} />
                   <div className="w-5 h-5 rounded shrink-0 border border-black/10" style={{ background: c.value }} />
-                  <span className="text-[12px] text-text-primary">{c.name}</span>
+                  <span className="text-[12px] text-n-tx-primary">{c.name}</span>
                 </button>
               ))}
             </div>
@@ -459,16 +459,16 @@ export function RoleSettingsSheet({ roleIdx, onClose, initialTab = "colors" }: {
           {activeTab === "contrast" && (
             <div className="flex flex-col">
               <div className="px-4 py-2.5">
-                <p className="text-[11px] text-text-dim">Solve contrast against a local background instead of the global theme background.</p>
+                <p className="text-[11px] text-n-tx-dim">Solve contrast against a local background instead of the global theme background.</p>
               </div>
-              <div className="px-4 pb-3 flex gap-1.5 flex-wrap border-b border-border-base">
+              <div className="px-4 pb-3 flex gap-1.5 flex-wrap border-b border-n-br-default">
                 {kindOptions.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => setBgKind(opt.value)}
                     className={[
                       "px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer",
-                      bgKind === opt.value ? "bg-accent text-text-on-accent border-accent" : "bg-bg-input text-text-muted border-border-base hover:border-border-strong",
+                      bgKind === opt.value ? "bg-b-fi-btn-default text-b-tx-btn-default border-b-fi-btn-default" : "bg-n-sf-input text-n-tx-muted border-n-br-default hover:border-n-br-strong",
                     ].join(" ")}
                   >
                     {opt.label}
@@ -485,41 +485,41 @@ export function RoleSettingsSheet({ roleIdx, onClose, initialTab = "colors" }: {
           {activeTab === "scope" && (
             <div className="flex flex-col">
               <div className="px-4 py-2.5">
-                <p className="text-[11px] text-text-dim">Restrict where this variable can be applied in Figma.</p>
+                <p className="text-[11px] text-n-tx-dim">Restrict where this variable can be applied in Figma.</p>
               </div>
 
-              <button onClick={toggleAllScopes} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
+              <button onClick={toggleAllScopes} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-n-sf-hover transition-colors cursor-pointer border-b border-n-br-subtle">
                 <Checkbox checked={isAllScopes} />
-                <span className="text-[12px] font-medium text-text-primary">Show in all supported properties</span>
+                <span className="text-[12px] font-medium text-n-tx-primary">Show in all supported properties</span>
               </button>
 
-              <button onClick={toggleFillGroup} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
+              <button onClick={toggleFillGroup} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-n-sf-hover transition-colors cursor-pointer border-b border-n-br-subtle">
                 <Checkbox checked={isFillOn} />
-                <span className="text-[12px] font-medium text-text-primary">Fill</span>
+                <span className="text-[12px] font-medium text-n-tx-primary">Fill</span>
               </button>
               {FILL_SCOPES.map((s) => (
-                <button key={s} onClick={() => toggleScopeLeaf(s)} className="flex items-center gap-3 pl-10 pr-4 py-2 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
+                <button key={s} onClick={() => toggleScopeLeaf(s)} className="flex items-center gap-3 pl-10 pr-4 py-2 w-full hover:bg-n-sf-hover transition-colors cursor-pointer border-b border-n-br-subtle">
                   <Checkbox checked={isScopeOn(s)} />
-                  <span className="text-[12px] text-text-primary">{SCOPE_SHORT[s] ?? s}</span>
+                  <span className="text-[12px] text-n-tx-primary">{SCOPE_SHORT[s] ?? s}</span>
                 </button>
               ))}
 
-              <button onClick={() => toggleScopeLeaf("STROKE_COLOR")} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle">
+              <button onClick={() => toggleScopeLeaf("STROKE_COLOR")} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-n-sf-hover transition-colors cursor-pointer border-b border-n-br-subtle">
                 <Checkbox checked={isScopeOn("STROKE_COLOR")} />
-                <span className="text-[12px] font-medium text-text-primary">Stroke</span>
+                <span className="text-[12px] font-medium text-n-tx-primary">Stroke</span>
               </button>
 
-              <button onClick={() => toggleScopeLeaf("EFFECT_COLOR")} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-bg-hover transition-colors cursor-pointer border-b border-border-subtle last:border-0">
+              <button onClick={() => toggleScopeLeaf("EFFECT_COLOR")} className="flex items-center gap-3 px-4 py-2.5 w-full hover:bg-n-sf-hover transition-colors cursor-pointer border-b border-n-br-subtle last:border-0">
                 <Checkbox checked={isScopeOn("EFFECT_COLOR")} />
-                <span className="text-[12px] font-medium text-text-primary">Effects</span>
+                <span className="text-[12px] font-medium text-n-tx-primary">Effects</span>
               </button>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-border-subtle shrink-0">
-          <button onClick={applyChanges} className="w-full py-2 rounded-[8px] bg-accent hover:bg-accent-hover text-text-on-accent text-[12px] font-semibold transition-colors cursor-pointer">
+        <div className="px-4 py-3 border-t border-n-br-subtle shrink-0">
+          <button onClick={applyChanges} className="w-full py-2 rounded-[8px] bg-b-fi-btn-default hover:bg-b-fi-btn-hover text-b-tx-btn-default text-[12px] font-semibold transition-colors cursor-pointer">
             Apply changes
           </button>
         </div>

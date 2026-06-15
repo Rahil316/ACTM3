@@ -4,28 +4,26 @@ import clsx from "clsx";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type BadgeVariant =
-  | "default" // neutral surface — counts, labels
-  | "accent" // brand blue — active state, feature flags
-  | "success" // green — done, valid, passing
-  | "warning" // amber — caution, in-progress
-  | "danger" // red — errors, failing
-  | "muted" // very quiet — metadata, secondary info
+  | "default"  // neutral surface — counts, labels
+  | "accent"   // brand blue — active state, feature flags
+  | "success"  // green — done, valid, passing
+  | "warning"  // amber — caution, in-progress
+  | "danger"   // red — errors, failing
+  | "muted"    // very quiet — metadata, secondary info
   | "outline"; // transparent bg, border only — low-emphasis labels
 
 export type BadgeSize = "xs" | "sm" | "md";
 
 // ── Variant styles ────────────────────────────────────────────────────────────
-// All tints use dedicated *-subtle tokens — no /opacity hacks that break on
-// CSS variables.
 
 const VARIANT: Record<BadgeVariant, string> = {
-  default: "bg-bg-active  text-text-secondary border-transparent",
-  accent: "bg-accent-subtle  text-accent   border-transparent",
-  success: "bg-success-subtle text-success  border-transparent",
-  warning: "bg-warning-subtle text-warning  border-transparent",
-  danger: "bg-danger-subtle  text-danger   border-transparent",
-  muted: "bg-bg-input  text-text-dim      border-transparent",
-  outline: "bg-transparent text-text-muted  border-border-base",
+  default: "bg-n-sf-active  text-n-tx-secondary  border-transparent",
+  accent:  "bg-b-fi-subtle  text-b-tx-muted       border-transparent",
+  success: "bg-s-fi-subtle  text-s-tx-muted       border-transparent",
+  warning: "bg-w-fi-subtle  text-w-tx-muted       border-transparent",
+  danger:  "bg-d-fi-subtle  text-d-tx-muted       border-transparent",
+  muted:   "bg-n-sf-input   text-n-tx-dim         border-transparent",
+  outline: "bg-transparent  text-n-tx-muted       border-n-br-subtle",
 };
 
 // ── Size styles ───────────────────────────────────────────────────────────────
@@ -44,9 +42,9 @@ export interface BadgeProps {
   size?: BadgeSize;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
-  pill?: boolean; // full rounded — pill shape instead of rounded rect
-  dot?: boolean; // show a filled circle before the label (status dot)
-  onRemove?: () => void; // renders an × button — turns badge into a dismissible tag
+  pill?: boolean;
+  dot?: boolean;
+  onRemove?: () => void;
   onClick?: () => void;
   disabled?: boolean;
   title?: string;
@@ -74,16 +72,8 @@ export function Badge({ children, variant = "default", size = "sm", leftIcon, ri
         className,
       )}
     >
-      {/* Status dot */}
       {dot && (
-        <span
-          className={clsx(
-            "rounded-full shrink-0",
-            size === "xs" ? "size-[5px]" : "size-[6px]",
-            // Use current text color so it inherits the variant colour
-            "bg-current opacity-80",
-          )}
-        />
+        <span className={clsx("rounded-full shrink-0 bg-current opacity-80", size === "xs" ? "size-[5px]" : "size-[6px]")} />
       )}
 
       {leftIcon && <span className="inline-flex items-center shrink-0">{leftIcon}</span>}
@@ -92,14 +82,10 @@ export function Badge({ children, variant = "default", size = "sm", leftIcon, ri
 
       {rightIcon && !onRemove && <span className="inline-flex items-center shrink-0">{rightIcon}</span>}
 
-      {/* Dismiss × */}
       {onRemove && (
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
           disabled={disabled}
           aria-label="Remove"
           className={clsx(

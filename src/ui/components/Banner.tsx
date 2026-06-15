@@ -15,51 +15,51 @@ interface TypeConfig {
 
 const TYPE_CONFIG: Record<BannerType, TypeConfig> = {
   info: {
-    container:        'bg-accent-subtle border-b border-accent',
-    iconCls:          'text-accent',
-    textCls:          'text-text-primary',
-    barCls:           'bg-accent',
-    actionPrimaryCls: 'bg-accent text-text-on-accent border-accent hover:bg-accent-hover',
+    container:        'bg-b-fi-subtle border-b border-b-br-default',
+    iconCls:          'text-b-tx-muted',
+    textCls:          'text-n-tx-primary',
+    barCls:           'bg-b-fi-btn-default',
+    actionPrimaryCls: 'bg-b-fi-btn-default text-b-tx-btn-default border-b-fi-btn-default hover:bg-b-fi-btn-hover',
     glyph:            'ℹ',
   },
   success: {
-    container:        'bg-success-subtle border-b border-success',
-    iconCls:          'text-success',
-    textCls:          'text-text-primary',
-    barCls:           'bg-success',
-    actionPrimaryCls: 'bg-success text-text-on-accent border-success',
+    container:        'bg-s-fi-subtle border-b border-s-br-default',
+    iconCls:          'text-s-tx-muted',
+    textCls:          'text-n-tx-primary',
+    barCls:           'bg-s-fi-btn-default',
+    actionPrimaryCls: 'bg-s-fi-btn-default text-s-tx-btn-default border-s-fi-btn-default',
     glyph:            '✓',
   },
   warning: {
-    container:        'bg-warning-subtle border-b border-warning',
-    iconCls:          'text-warning',
-    textCls:          'text-text-primary',
-    barCls:           'bg-warning',
-    actionPrimaryCls: 'bg-warning text-text-inverse border-warning',
+    container:        'bg-w-fi-subtle border-b border-w-br-default',
+    iconCls:          'text-w-tx-muted',
+    textCls:          'text-n-tx-primary',
+    barCls:           'bg-w-fi-btn-default',
+    actionPrimaryCls: 'bg-w-fi-btn-default text-w-tx-btn-default border-w-fi-btn-default',
     glyph:            '⚠',
   },
   error: {
-    container:        'bg-danger-subtle border-b border-danger',
-    iconCls:          'text-danger',
-    textCls:          'text-text-primary',
-    barCls:           'bg-danger',
-    actionPrimaryCls: 'bg-danger text-text-on-accent border-danger hover:bg-danger-hover',
+    container:        'bg-d-fi-subtle border-b border-d-br-default',
+    iconCls:          'text-d-tx-muted',
+    textCls:          'text-n-tx-primary',
+    barCls:           'bg-d-fi-btn-default',
+    actionPrimaryCls: 'bg-d-fi-btn-default text-d-tx-btn-default border-d-fi-btn-default hover:bg-d-fi-btn-hover',
     glyph:            '✕',
   },
   neutral: {
-    container:        'bg-bg-card border-b border-border-base',
-    iconCls:          'text-text-dim',
-    textCls:          'text-text-muted',
-    barCls:           'bg-border-strong',
-    actionPrimaryCls: 'bg-bg-input text-text-primary border-border-base hover:bg-bg-hover',
+    container:        'bg-n-sf-default border-b border-n-br-default',
+    iconCls:          'text-n-tx-dim',
+    textCls:          'text-n-tx-muted',
+    barCls:           'bg-n-br-strong',
+    actionPrimaryCls: 'bg-n-sf-input text-n-tx-primary border-n-br-default hover:bg-n-sf-hover',
     glyph:            '·',
   },
   loading: {
-    container:        'bg-bg-card border-b border-border-base',
-    iconCls:          'text-accent',
-    textCls:          'text-text-primary',
-    barCls:           'bg-accent',
-    actionPrimaryCls: 'bg-accent text-text-on-accent border-accent hover:bg-accent-hover',
+    container:        'bg-n-sf-default border-b border-n-br-default',
+    iconCls:          'text-b-tx-muted',
+    textCls:          'text-n-tx-primary',
+    barCls:           'bg-b-fi-btn-default',
+    actionPrimaryCls: 'bg-b-fi-btn-default text-b-tx-btn-default border-b-fi-btn-default hover:bg-b-fi-btn-hover',
     glyph:            '…',
   },
 };
@@ -81,7 +81,7 @@ function ProgressBar({ durationMs, fillCls }: { durationMs: number; fillCls: str
   }, []);
 
   return (
-    <div className="h-[2px] w-full bg-bg-active overflow-hidden">
+    <div className="h-[2px] w-full bg-n-sf-active overflow-hidden">
       <div
         className={clsx('h-full origin-left', fillCls)}
         style={{ width, transition: `width ${durationMs}ms linear` }}
@@ -172,7 +172,7 @@ function BannerItem({
             {detail && (
               <>
                 {expanded && (
-                  <p className={clsx('text-[11px] leading-relaxed opacity-70 mt-1.5 pt-1.5 border-t border-border-subtle whitespace-pre-line', cfg.textCls)}>
+                  <p className={clsx('text-[11px] leading-relaxed opacity-70 mt-1.5 pt-1.5 border-t border-n-br-subtle whitespace-pre-line', cfg.textCls)}>
                     {detail}
                   </p>
                 )}
@@ -196,7 +196,7 @@ function BannerItem({
                       'text-[10px] px-2.5 py-1 rounded-[5px] border cursor-pointer transition-colors font-medium',
                       a.style === 'primary'
                         ? cfg.actionPrimaryCls
-                        : 'bg-transparent border-border-base text-text-secondary hover:bg-bg-hover',
+                        : 'bg-transparent border-n-br-default text-n-tx-secondary hover:bg-n-sf-hover',
                     )}
                   >
                     {a.label}

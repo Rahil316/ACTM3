@@ -42,12 +42,12 @@ export function ListRow({
       onDrop={onDrop}
       className={clsx(
         'flex items-center gap-1.5',
-        isDragOver && 'border-t-2 border-t-accent',
+        isDragOver && 'border-t-2 border-t-b-br-default',
         className,
       )}
     >
       {draggable && (
-        <span className="text-text-muted cursor-grab active:cursor-grabbing px-0.5 shrink-0 select-none text-[14px]">
+        <span className="text-n-tx-muted cursor-grab active:cursor-grabbing px-0.5 shrink-0 select-none text-[14px]">
           ⠿
         </span>
       )}
@@ -79,7 +79,7 @@ export function ListHeader({ columns, className, withDragHandle, withRemoveButto
     <div className={clsx('flex items-center gap-1.5 px-0.5', className)}>
       {withDragHandle && <span className="w-[18px] shrink-0" />}
       {columns.map((col, i) => (
-        <span key={i} className="flex-1 text-[10px] font-bold text-text-muted px-1">
+        <span key={i} className="flex-1 text-[10px] font-bold text-n-tx-muted px-1">
           {col}
         </span>
       ))}

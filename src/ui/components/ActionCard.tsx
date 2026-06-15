@@ -20,7 +20,7 @@ export function ActionCard({ title, subtitle, meta, actions, leading, className,
     <div
       className={clsx(
         'settings-card flex items-start justify-between gap-3',
-        onClick && 'cursor-pointer hover:bg-bg-hover transition-colors',
+        onClick && 'cursor-pointer hover:bg-n-sf-hover transition-colors',
         className,
       )}
       onClick={onClick}

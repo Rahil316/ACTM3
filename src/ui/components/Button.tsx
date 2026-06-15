@@ -19,13 +19,12 @@ export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 
 export type ButtonRadius =
   | "sharp" // 0px
-  | "sm" // 4–6px — matches size
+  | "sm" // 4–6px
   | "md" // default per size
   | "lg" // larger pill-ish
   | "full"; // pill
 
 // ── Size tokens ───────────────────────────────────────────────────────────────
-// Each size: height + horizontal padding + font size. Radius applied separately.
 
 const SIZE_H: Record<ButtonSize, string> = {
   xs: "h-5      px-1.5   text-[10px] gap-1",
@@ -33,7 +32,7 @@ const SIZE_H: Record<ButtonSize, string> = {
   md: "h-[30px] px-2.5   text-[12px] gap-1.5",
   lg: "h-[34px] px-3     text-[12px] gap-1.5",
   xl: "h-[38px] px-3.5   text-[13px] gap-2",
-  "2xl": "h-[44px] px-5    text-[14px] gap-2",
+  "2xl": "h-[44px] px-5     text-[14px] gap-2",
 };
 
 const SIZE_SQUARE: Record<ButtonSize, string> = {
@@ -45,7 +44,6 @@ const SIZE_SQUARE: Record<ButtonSize, string> = {
   "2xl": "size-[44px] shrink-0 text-[14px]",
 };
 
-// Default radius per size when radius prop is 'md' (default)
 const RADIUS_DEFAULT: Record<ButtonSize, string> = {
   xs: "rounded-[3px]",
   sm: "rounded-[5px]",
@@ -60,45 +58,40 @@ const RADIUS_MAP: Partial<Record<ButtonRadius, string>> = {
   sm: "rounded-[4px]",
   lg: "rounded-[12px]",
   full: "rounded-full",
-  // 'md' is handled by RADIUS_DEFAULT per size
 };
 
 // ── Variant tokens ────────────────────────────────────────────────────────────
-// NOTE: Tailwind's opacity modifier (bg-danger/10) does NOT work with CSS
-// variables — Tailwind needs static hex to split into RGB channels. All tint
-// backgrounds and focus rings use the dedicated *-subtle and *-glow tokens
-// from the design system instead.
 
 const VARIANT: Record<ButtonVariant, string> = {
   // Filled accent — primary CTA
-  primary: "bg-accent border-accent text-text-on-accent " + "hover:bg-accent-hover hover:border-accent-hover " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-accent-glow " + "active:opacity-80",
+  primary: "bg-b-fi-btn-default border-b-fi-btn-default text-b-tx-btn-default " + "hover:bg-b-fi-btn-hover hover:border-b-fi-btn-hover " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-b-br-strong " + "active:opacity-80",
 
   // Filled surface — default secondary action
-  secondary: "bg-bg-input border-border-base text-text-primary " + "hover:bg-bg-hover hover:border-border-strong " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-border-base " + "active:opacity-80",
+  secondary: "bg-n-sf-input border-n-br-subtle text-n-tx-primary " + "hover:bg-n-sf-hover hover:border-n-br-default " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-n-br-subtle " + "active:opacity-80",
 
   // No box — quiet inline action
-  ghost: "bg-transparent border-transparent text-text-muted " + "hover:bg-bg-hover hover:text-text-primary " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-border-base " + "active:opacity-70",
+  ghost: "bg-transparent border-transparent text-n-tx-muted " + "hover:bg-n-sf-hover hover:text-n-tx-primary " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-n-br-subtle " + "active:opacity-70",
 
-  // Transparent bg, visible border — alternative to secondary
-  outlined: "bg-transparent border-border-base text-text-primary " + "hover:bg-bg-hover hover:border-border-strong " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-border-base " + "active:opacity-80",
+  // Transparent bg, visible border
+  outlined: "bg-transparent border-n-br-subtle text-n-tx-primary " + "hover:bg-n-sf-hover hover:border-n-br-default " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-n-br-subtle " + "active:opacity-80",
 
   // Dashed border — "add" / create affordance
-  dashed: "bg-transparent border-dashed border-accent text-accent " + "hover:bg-accent-subtle " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-accent-glow " + "active:opacity-70",
+  dashed: "bg-transparent border-dashed border-b-fi-btn-default text-b-tx-muted " + "hover:bg-b-fi-subtle " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-b-br-strong " + "active:opacity-70",
 
   // Text only — inline link-style action
-  underlined: "bg-transparent border-transparent text-text-secondary underline underline-offset-2 decoration-border-base " + "hover:text-accent hover:decoration-accent " + "focus-visible:outline-none focus-visible:text-accent " + "active:opacity-70",
+  underlined: "bg-transparent border-transparent text-n-tx-secondary underline underline-offset-2 decoration-n-br-subtle " + "hover:text-b-tx-muted hover:decoration-b-br-default " + "focus-visible:outline-none focus-visible:text-b-tx-muted " + "active:opacity-70",
 
-  // Danger tint — soft destructive (delete in a list row)
-  danger: "bg-danger-subtle border-danger-subtle text-danger " + "hover:bg-danger-subtle hover:border-danger " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-danger " + "active:opacity-80",
+  // Danger tint — soft destructive
+  danger: "bg-d-fi-subtle border-d-fi-subtle text-d-tx-muted " + "hover:bg-d-fi-default hover:border-d-br-default " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-d-br-strong " + "active:opacity-80",
 
   // Solid red — hard destructive (confirm delete dialog)
-  "danger-solid": "bg-danger border-danger text-text-on-accent " + "hover:bg-danger-hover hover:border-danger-hover " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-danger " + "active:opacity-80",
+  "danger-solid": "bg-d-fi-btn-default border-d-fi-btn-default text-d-tx-btn-default " + "hover:bg-d-fi-btn-hover hover:border-d-fi-btn-hover " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-d-br-strong " + "active:opacity-80",
 
   // Outlined red — destructive but less alarming than solid
-  "danger-outlined": "bg-transparent border-danger text-danger " + "hover:bg-danger-subtle " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-danger " + "active:opacity-80",
+  "danger-outlined": "bg-transparent border-d-br-default text-d-tx-muted " + "hover:bg-d-fi-subtle " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-d-br-strong " + "active:opacity-80",
 
   // Square icon-only — toolbar / card controls
-  icon: "bg-transparent border-transparent text-text-muted " + "hover:bg-bg-hover hover:text-text-primary " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-border-base " + "active:opacity-70",
+  icon: "bg-transparent border-transparent text-n-tx-secondary " + "hover:bg-n-sf-hover hover:text-n-tx-primary " + "focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-n-br-subtle " + "active:opacity-70",
 };
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -107,12 +100,12 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   radius?: ButtonRadius;
-  square?: boolean; // force equal width/height (icon button shape)
-  label?: string; // text label — can also use children
-  leftIcon?: ReactNode; // icon before label
-  rightIcon?: ReactNode; // icon after label
-  icon?: ReactNode; // shorthand: single icon, implies square when no label
-  loading?: boolean; // shows spinner, disables interaction
+  square?: boolean;
+  label?: string;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
+  icon?: ReactNode;
+  loading?: boolean;
   fullWidth?: boolean;
 }
 
@@ -156,23 +149,21 @@ function Spinner({ size }: { size: ButtonSize }) {
 }
 
 // ── ActionButton ──────────────────────────────────────────────────────────────
-// Convenience: full-width dashed "add" call-to-action, unchanged API.
 
 export function ActionButton({ label, onClick, className }: { label: string; onClick: () => void; className?: string }) {
   return <Button variant="dashed" size="xl" label={label} onClick={onClick} fullWidth className={className} />;
 }
 
 // ── SplitActionButton ─────────────────────────────────────────────────────────
-// Left side: direct add (random preset). Right side: open picker sheet.
 
 export function SplitActionButton({ label, onAdd, onPick, className }: { label: string; onAdd: () => void; onPick: () => void; className?: string }) {
   return (
-    <div className={clsx("flex w-full rounded-[10px] border border-dashed border-accent overflow-hidden", className)}>
-      <button type="button" onClick={onAdd} className="flex-1 h-10 text-[12px] font-semibold text-accent bg-transparent hover:bg-accent-subtle transition-colors cursor-pointer">
+    <div className={clsx("flex w-full rounded-[10px] border border-dashed border-b-fi-btn-default overflow-hidden", className)}>
+      <button type="button" onClick={onAdd} className="flex-1 h-10 text-[12px] font-semibold text-b-tx-muted bg-transparent hover:bg-b-fi-subtle transition-colors cursor-pointer">
         {label}
       </button>
-      <div className="w-px bg-accent opacity-30 shrink-0" />
-      <button type="button" onClick={onPick} title="Browse suggestions" className="w-9 h-10 flex items-center justify-center text-accent bg-transparent hover:bg-accent-subtle transition-colors cursor-pointer shrink-0 text-[16px] leading-none">
+      <div className="w-px bg-b-fi-btn-default opacity-30 shrink-0" />
+      <button type="button" onClick={onPick} title="Browse suggestions" className="w-9 h-10 flex items-center justify-center text-b-tx-muted bg-transparent hover:bg-b-fi-subtle transition-colors cursor-pointer shrink-0 text-[16px] leading-none">
         ⊞
       </button>
     </div>

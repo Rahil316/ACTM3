@@ -161,11 +161,11 @@ export function RunDialog() {
             <SettingsCard>
               {isChecking ? (
                 <div className="flex flex-col gap-2 py-0.5 animate-pulse">
-                  <div className="h-[10px] w-24 rounded bg-bg-hover" />
+                  <div className="h-[10px] w-24 rounded bg-n-sf-hover" />
                   <div className="flex gap-2 mt-1">
-                    <div className="h-[18px] w-14 rounded-full bg-bg-hover" />
-                    <div className="h-[18px] w-16 rounded-full bg-bg-hover" />
-                    <div className="h-[18px] w-14 rounded-full bg-bg-hover" />
+                    <div className="h-[18px] w-14 rounded-full bg-n-sf-hover" />
+                    <div className="h-[18px] w-16 rounded-full bg-n-sf-hover" />
+                    <div className="h-[18px] w-14 rounded-full bg-n-sf-hover" />
                   </div>
                 </div>
               ) : (
@@ -245,7 +245,7 @@ export function RunDialog() {
             {!isChecking && conflicts.length > 0 && (
               <SettingsCard>
                 <div className="flex items-center justify-between mb-1">
-                  <SectionLabel className="text-warning">Name Changes Detected</SectionLabel>
+                  <SectionLabel className="text-w-tx-muted">Name Changes Detected</SectionLabel>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="xs" label="Keep All Figma" onClick={() => conflicts.forEach((c) => setDecision(c.tokenRef, "keep"))} />
                     <Button variant="ghost" size="xs" label="Apply All" onClick={() => conflicts.forEach((c) => setDecision(c.tokenRef, "revert"))} />
@@ -270,11 +270,11 @@ export function RunDialog() {
                     <MicroText className="capitalize">{change.type}:</MicroText>
                     <Mono>{change.from}</Mono>
                     <MicroText>→</MicroText>
-                    <Mono className="text-accent">{change.to}</Mono>
+                    <Mono className="text-b-tx-muted">{change.to}</Mono>
                   </div>
                 ))}
                 {!showAllRenames && hiddenRenameCount > 0 && (
-                  <button type="button" className="mt-1 text-[10px] text-accent hover:underline cursor-pointer" onClick={() => setShowAllRenames(true)}>
+                  <button type="button" className="mt-1 text-[10px] text-b-tx-muted hover:underline cursor-pointer" onClick={() => setShowAllRenames(true)}>
                     +{hiddenRenameCount} more
                   </button>
                 )}
@@ -286,7 +286,7 @@ export function RunDialog() {
               <SettingsCard>
                 <SectionLabel>Existing Collections</SectionLabel>
                 {existingCollections.map((col) => (
-                  <div key={col.id} className="flex items-center justify-between py-1 border-b border-border-subtle last:border-0">
+                  <div key={col.id} className="flex items-center justify-between py-1 border-b border-n-br-subtle last:border-0">
                     <CardTitle>{col.name}</CardTitle>
                     <Badge variant="muted" size="xs">
                       Update
@@ -341,15 +341,15 @@ export function RunDialog() {
           )}
 
           {/* Footer — always visible, never pushed off screen */}
-          <div className="shrink-0 px-3 py-3 border-t border-border-base flex gap-2 relative">
+          <div className="shrink-0 px-3 py-3 border-t border-n-br-default flex gap-2 relative">
             {/* Blocking overlay while preview is generating — prevents accidental close */}
             {isPreviewLoading && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 bg-bg-app/80 backdrop-blur-sm rounded">
-                <svg className="animate-spin w-3.5 h-3.5 text-accent shrink-0" viewBox="0 0 24 24" fill="none">
+              <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 bg-n-bg-app/80 backdrop-blur-sm rounded">
+                <svg className="animate-spin w-3.5 h-3.5 text-b-tx-muted shrink-0" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                 </svg>
-                <span className="text-xs text-text-muted">Generating preview — do not close</span>
+                <span className="text-xs text-n-tx-muted">Generating preview — do not close</span>
               </div>
             )}
             <Button

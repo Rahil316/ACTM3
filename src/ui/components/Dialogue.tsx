@@ -49,10 +49,10 @@ export function Dialogue({ open, title, body, icon, buttons = [], layout = 'row'
         <div className="flex flex-col">
           {/* drag handle */}
           <div className="flex justify-center pt-3 pb-1">
-            <div className="w-9 h-1 rounded-full bg-border-base" />
+            <div className="w-9 h-1 rounded-full bg-n-br-default" />
           </div>
           {/* header */}
-          <div className="px-5 pt-3 pb-4 border-b border-border-base">
+          <div className="px-5 pt-3 pb-4 border-b border-n-br-default">
             {icon && <div className="mb-3">{icon}</div>}
             <SheetTitle>{title}</SheetTitle>
             {body && <DetailText className="mt-1">{body}</DetailText>}
@@ -69,7 +69,7 @@ export function Dialogue({ open, title, body, icon, buttons = [], layout = 'row'
   // ── Stacked + row layouts (floating card) ────────────────────────────────
   const isStacked = layout === 'stacked';
   const card = (
-    <div className="bg-bg-card rounded-[14px] border border-border-base shadow-xl w-full max-w-[320px]">
+    <div className="bg-n-sf-default rounded-[14px] border border-n-br-default shadow-xl w-full max-w-[320px]">
       {isStacked ? (
         <div className="flex flex-col items-center gap-5 p-6 text-center">
           {icon}

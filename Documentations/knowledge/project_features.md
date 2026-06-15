@@ -13,7 +13,7 @@ Last updated: 2026-05-22
 ### Core engine
 
 - Tonal scale generation — 7 algorithms (Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear)
-- Direct mode — solves role colors directly to target WCAG contrast ratios via OKLCH binary-search solver (5 modes: natural, saturated, luminance, hue-locked, chroma-maximized)
+- Direct mode — solves role colors directly to target WCAG contrast ratios via OKLCH binary-search solver (5 modes: natural, constant-chroma, symmetric, hue-locked, max-chroma)
 - WCAG contrast calculation (hex↔RGB↔HSL↔OKLCH↔HCT)
 - Multi-theme output — light and dark modes with configurable background colors
 - Semantic role mapping — roles mapped to tonal steps by contrast or by index
@@ -67,7 +67,7 @@ Last updated: 2026-05-22
 - Role name + shorthand (always visible)
 - Mapping method: Contrast (walk scale for first step meeting WCAG target) or Index (pin to explicit step)
 - Per-role variation override — `customVariationList: true` substitutes `customVariations[]` for the global list
-- `solverMode` per color — "natural" | "saturated" | "luminance" | "hue-locked" | "chroma-maximized" (shown when `useUniformAlgorithm: false`)
+- `solverMode` per color — "natural" | "constant-chroma" | "symmetric" | "hue-locked" | "max-chroma" (shown when `useUniformAlgorithm: false`)
 - Per-color `scaleAlgorithm` — shown when `useUniformAlgorithm: false` and `pluginMode === "scale"`
 
 ### Build

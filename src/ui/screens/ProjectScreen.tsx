@@ -1,31 +1,61 @@
 import { useState } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  closestCenter,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { LucideReset as RotateCcw, LucidePencil as Pencil, LucideExport as Download, LucideCheck as Check, LucideClose as X } from "../components/icons";
 import { useProjectStore, relativeTime } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
-import { ActionCard } from "../components/ActionCard";
+import { CardToolbar } from "../components/CardToolbar";
 import { EmptyState } from "../components/EmptyState";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Input } from "../components/Input";
 import { ColorInput } from "../components/ColorInput";
 import { Button, ActionButton } from "../components/Button";
-import type { Theme } from "../types/state";
+import { toast } from "../store/toastStore";
+import type { Theme, Version } from "../types/state";
 
 // ── Theme card ────────────────────────────────────────────────────────────────
 
-function ThemeCard({ theme, idx, removable }: { theme: Theme; idx: number; removable: boolean }) {
+function SortableThemeCard({ theme, idx, removable }: { theme: Theme; idx: number; removable: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: theme._id ?? idx });
   const setTheme = useProjectStore((s) => s.setTheme);
   const removeTheme = useProjectStore((s) => s.removeTheme);
 
   return (
-    <div className="bg-bg-card border border-border-base rounded-[12px] p-3 space-y-2.5">
-      {/* Name + swatch + remove */}
-      <div className="grid gap-2 items-end" style={{ gridTemplateColumns: "1fr 148px auto" }}>
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform ? { ...transform, x: 0 } : null),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+      className="group/card relative bg-n-bg-panel border border-n-br-default rounded-[12px] p-3 space-y-2.5 hover:border-n-br-strong transition-colors"
+    >
+      <div className="grid gap-2 items-end" style={{ gridTemplateColumns: "1fr 148px" }}>
         <Input size="xl" label="Theme Mode Name" value={theme.name} placeholder="Theme name" onChange={(e) => setTheme(idx, "name", e.target.value)} />
         <ColorInput label="Theme Background" value={theme.bg} onUpdate={(hex) => setTheme(idx, "bg", hex)} idPrefix={`theme-${theme._id}`} size="xl" />
-        <Button variant="danger" size="xl" square icon={<span className="text-[12px] leading-none">×</span>} onClick={() => removeTheme(idx)} disabled={!removable} aria-label="Remove theme" />
       </div>
-
-      {/* Description */}
       <Input size="lg" label="Description" value={theme.description ?? ""} placeholder="Optional — e.g. iOS true black, used for OLED screens" onChange={(e) => setTheme(idx, "description", e.target.value)} />
+
+      <CardToolbar
+        onDelete={() => removeTheme(idx)}
+        deleteDisabled={!removable}
+        deleteTitle="Remove theme"
+        dragListeners={listeners as Record<string, unknown>}
+        dragAttributes={attributes as unknown as Record<string, unknown>}
+      />
     </div>
   );
 }
@@ -35,13 +65,104 @@ function ThemeCard({ theme, idx, removable }: { theme: Theme; idx: number; remov
 export function ProjectScreen() {
   const themes = useProjectStore((s) => s.projectStore.themes);
   const addTheme = useProjectStore((s) => s.addTheme);
+  const moveTheme = useProjectStore((s) => s.moveTheme);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = themes.findIndex((t) => t._id === active.id);
+    const newIndex = themes.findIndex((t) => t._id === over.id);
+    if (oldIndex !== -1 && newIndex !== -1) {
+      // arrayMove is used only to compute indices; actual state update via moveTheme
+      const reordered = arrayMove(themes, oldIndex, newIndex);
+      const fromIdx = oldIndex;
+      const toIdx = newIndex;
+      moveTheme(fromIdx, toIdx);
+      void reordered; // suppress unused warning
+    }
+  }
 
   return (
     <div className="flex flex-col gap-2 p-3">
       <ActionButton label="+ Add Theme Mode" onClick={addTheme} />
-      {themes.map((theme, i) => (
-        <ThemeCard key={theme._id} theme={theme} idx={i} removable={themes.length > 1} />
-      ))}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={themes.map((t, i) => t._id ?? i)} strategy={verticalListSortingStrategy}>
+          {themes.map((theme, i) => (
+            <SortableThemeCard key={theme._id} theme={theme} idx={i} removable={themes.length > 1} />
+          ))}
+        </SortableContext>
+      </DndContext>
+    </div>
+  );
+}
+
+// ── Version card ──────────────────────────────────────────────────────────────
+
+function VersionCard({ version, onRestore, onDelete }: { version: Version; onRestore: () => void; onDelete: () => void }) {
+  const renameVersion = useProjectStore((s) => s.renameVersion);
+  const [editing, setEditing] = useState(false);
+  const [draftName, setDraftName] = useState(version.name);
+
+  function commitRename() {
+    const trimmed = draftName.trim();
+    if (trimmed && trimmed !== version.name) renameVersion(version._id, trimmed);
+    setEditing(false);
+  }
+
+  function cancelRename() {
+    setDraftName(version.name);
+    setEditing(false);
+  }
+
+  function exportWand() {
+    const content = JSON.stringify(version.state, null, 2);
+    const blob = new Blob([content], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${version.name.replace(/[^a-z0-9_-]/gi, "_")}.wand`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported "${version.name}.wand"`);
+  }
+
+  return (
+    <div className="group/card relative bg-n-bg-panel border border-n-br-default rounded-[12px] p-3 space-y-1.5 hover:border-n-br-strong transition-colors">
+      {editing ? (
+        <div className="flex items-center gap-1.5">
+          <input
+            autoFocus
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitRename();
+              if (e.key === "Escape") cancelRename();
+            }}
+            className="flex-1 text-[12px] font-semibold text-n-tx-primary bg-n-sf-input border border-b-br-strong rounded-[6px] px-2 py-1 outline-none"
+          />
+          <Button variant="icon" size="sm" icon={<Check size={11} strokeWidth={2} />} onClick={commitRename} title="Confirm rename" />
+          <Button variant="icon" size="sm" icon={<X size={11} strokeWidth={2} />} onClick={cancelRename} title="Cancel" />
+        </div>
+      ) : (
+        <div className="text-[12px] font-semibold text-n-tx-primary leading-tight truncate pr-20">{version.name}</div>
+      )}
+
+      {version.description && (
+        <div className="text-[11px] text-n-tx-secondary truncate">{version.description}</div>
+      )}
+
+      <div className="text-[10px] text-n-tx-dim">{relativeTime(version.createdAt)}</div>
+
+      <CardToolbar
+        onDelete={onDelete}
+        deleteTitle="Remove version"
+      >
+        <Button variant="icon" size="sm" title="Restore this version" onClick={onRestore} icon={<RotateCcw size={11} strokeWidth={1.75} />} />
+        <Button variant="icon" size="sm" title="Rename" onClick={() => { setDraftName(version.name); setEditing(true); }} icon={<Pencil size={11} strokeWidth={1.75} />} />
+        <Button variant="icon" size="sm" title="Export as .wand" onClick={exportWand} icon={<Download size={11} strokeWidth={1.75} />} />
+      </CardToolbar>
     </div>
   );
 }
@@ -87,22 +208,15 @@ export function VersionsScreen() {
 
       <Button variant="dashed" size="xl" label="+ Save Current Version" onClick={() => openOverlay("save-version")} disabled={!!saveBlockedReason} title={saveBlockedReason ?? undefined} fullWidth />
 
-      {/* Version list */}
       {versions.length === 0 ? (
         <EmptyState icon="📦" title="No versions yet" description="Save a version to snapshot your current configuration." />
       ) : (
         versions.map((v) => (
-          <ActionCard
+          <VersionCard
             key={v._id}
-            title={v.name}
-            subtitle={v.description || undefined}
-            meta={relativeTime(v.createdAt)}
-            actions={
-              <>
-                <Button variant="secondary" size="sm" label="Restore" onClick={() => setConfirmRestore(v._id)} />
-                <Button variant="danger" size="sm" label="Delete" onClick={() => setConfirmDelete(v._id)} />
-              </>
-            }
+            version={v}
+            onRestore={() => setConfirmRestore(v._id)}
+            onDelete={() => setConfirmDelete(v._id)}
           />
         ))
       )}

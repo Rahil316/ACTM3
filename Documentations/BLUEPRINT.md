@@ -272,11 +272,11 @@ for each role in config.roles:
 
 **Solver modes (direct):**
 
-- `natural` — adjusts lightness, preserves hue and chroma where possible
-- `saturated` — pushes chroma up while solving
-- `luminance` — pure luminance axis, desaturates
-- `hue-locked` — only moves lightness, never shifts hue
-- `chroma-maximized` — maximizes chroma at the target contrast level
+- `natural` — chroma tapers as lightness moves away from mid; most natural-looking results
+- `constant-chroma` — holds chroma fixed at the seed value throughout the scale
+- `symmetric` — chroma follows a bell curve peaking at mid-lightness and collapsing toward zero at both white and black
+- `hue-locked` — stays on the seed's exact hue, pushes to maximum in-gamut chroma at the target contrast
+- `max-chroma` — ignores seed chroma entirely, always uses the most vivid in-gamut color at the target contrast
 
 ### `_processScaleMode`
 

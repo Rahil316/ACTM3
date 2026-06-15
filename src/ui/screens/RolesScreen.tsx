@@ -46,12 +46,12 @@ interface RoleSuggestSheetProps {
 function RoleSuggestSheet({ existingNames, onPick, onBlank, onClose }: RoleSuggestSheetProps) {
   const available = SUGGESTED_ROLES.filter((r) => !existingNames.includes(r.name));
   return (
-    <SuggestSheet label="Suggested roles" linkLabel="+ Custom" onLink={onBlank} onClose={onClose} empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions already added.</div> : undefined}>
+    <SuggestSheet label="Suggested roles" linkLabel="+ Custom" onLink={onBlank} onClose={onClose} empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-n-tx-muted">All suggestions already added.</div> : undefined}>
       {available.map((r) => (
         <MenuRow key={r.name} onClick={() => onPick(r)}>
           <div className="flex flex-col min-w-0 flex-1">
-            <span className="text-[12px] font-semibold text-text-primary truncate">{r.name}</span>
-            <span className="text-[10px] text-text-muted">{r.description}</span>
+            <span className="text-[12px] font-semibold text-n-tx-primary truncate">{r.name}</span>
+            <span className="text-[10px] text-n-tx-muted">{r.description}</span>
           </div>
         </MenuRow>
       ))}
@@ -67,15 +67,15 @@ function SortableRoleCard({ role, idx, selected, onToggleSelect }: { role: Role;
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+      style={{ transform: CSS.Transform.toString(transform ? { ...transform, x: 0 } : null), transition, opacity: isDragging ? 0.5 : 1 }}
       onClick={(e) => {
         if (!e.metaKey && !e.ctrlKey && !e.shiftKey) return;
         e.stopPropagation();
         onToggleSelect(role._id ?? "", e.metaKey || e.ctrlKey, e.shiftKey);
       }}
     >
-      <div style={selected ? { borderRadius: 12, outline: "2px solid var(--accent)", outlineOffset: 2, boxShadow: "0 0 0 4px var(--accent-glow)" } : undefined}>
-        <RoleGroupCard role={role} idx={idx} dragListeners={listeners as Record<string, unknown>} dragAttributes={attributes as unknown as Record<string, unknown>} />
+      <div style={selected ? { borderRadius: 12, outline: "2px solid var(--b-fi-btn-default)", outlineOffset: 2, boxShadow: "0 0 0 4px var(--b-fi-subtle)" } : undefined}>
+        <RoleGroupCard role={role} idx={idx} dragListeners={listeners as Record<string, unknown>} dragAttributes={attributes as unknown as Record<string, unknown>} isDragging={isDragging} />
       </div>
     </div>
   );
@@ -375,9 +375,9 @@ function RoleTree() {
         selected={selected}
         multiDragCount={multiDragCount}
         onToggleSelect={onToggleSel}
-        renderContent={(listeners, attributes) => (
+        renderContent={(listeners, attributes, isDragging) => (
           <div draggable={false} onDragStart={(e) => e.preventDefault()}>
-            <RoleGroupCard role={role} idx={idx} dragListeners={listeners} dragAttributes={attributes} />
+            <RoleGroupCard role={role} idx={idx} dragListeners={listeners} dragAttributes={attributes} isDragging={isDragging} />
           </div>
         )}
       />
@@ -425,14 +425,14 @@ function RoleTree() {
         />
         <DragOverlay>
           {activeRole && (
-            <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary flex items-center gap-2">
-              {activeRole._id && selectedIds.has(activeRole._id) && selectedIds.size > 1 && <span className="bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{selectedIds.size}</span>}
+            <div className="px-3 py-2 rounded-[10px] border border-b-br-default bg-n-sf-default shadow-xl text-[12px] font-semibold text-n-tx-primary flex items-center gap-2">
+              {activeRole._id && selectedIds.has(activeRole._id) && selectedIds.size > 1 && <span className="bg-b-fi-btn-default text-b-tx-btn-default text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{selectedIds.size}</span>}
               {activeRole.name.split("/").pop()}
             </div>
           )}
           {activeGroupSegment && (
-            <div className="px-3 py-1.5 rounded-[8px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-secondary flex items-center gap-1.5">
-              <span className="text-text-dim text-[10px]">{committed.filter((r) => r.name.startsWith(activeGroupPath! + "/")).length}</span>
+            <div className="px-3 py-1.5 rounded-[8px] border border-b-br-default bg-n-sf-default shadow-xl text-[12px] font-semibold text-n-tx-secondary flex items-center gap-1.5">
+              <span className="text-n-tx-dim text-[10px]">{committed.filter((r) => r.name.startsWith(activeGroupPath! + "/")).length}</span>
               {activeGroupSegment}
             </div>
           )}

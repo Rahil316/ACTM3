@@ -21,9 +21,9 @@ export const VariationTable = React.memo(function VariationTable({ variations: v
 
   return (
     <div>
-      <div className="grid px-2 py-1 bg-bg-app border-b border-border-base gap-1.5" style={{ gridTemplateColumns: cols }}>
+      <div className="grid px-2 py-1 bg-n-bg-app border-b border-n-br-default gap-1.5" style={{ gridTemplateColumns: cols }}>
         {headers.map((h) => (
-          <span key={h} className="text-[10px] font-bold text-text-muted">
+          <span key={h} className="text-[10px] font-bold text-n-tx-muted">
             {h}
           </span>
         ))}
@@ -32,13 +32,13 @@ export const VariationTable = React.memo(function VariationTable({ variations: v
       {vars.map((v, vi) => {
         const isIndex = mappingMethod === "index";
         return (
-          <div key={v._id ?? vi} className={["grid px-2 py-1 items-center gap-1.5", vi < vars.length - 1 ? "border-b border-border-subtle" : "", vi % 2 ? "bg-bg-app" : ""].join(" ")} style={{ gridTemplateColumns: cols }}>
-            <span className="text-[10px] text-text-muted tabular-nums">{vi + 1}</span>
+          <div key={v._id ?? vi} className={["grid px-2 py-1 items-center gap-1.5", vi < vars.length - 1 ? "border-b border-n-br-subtle" : "", vi % 2 ? "bg-n-bg-app" : ""].join(" ")} style={{ gridTemplateColumns: cols }}>
+            <span className="text-[10px] text-n-tx-muted tabular-nums">{vi + 1}</span>
 
             {canEditNames ? (
               <Input size="table" value={v.name ?? ""} onChange={(e) => setRoleVariation(idx, vi, "name", e.target.value)} />
             ) : (
-              <span className="text-[11px] px-1.5 text-text-muted truncate">
+              <span className="text-[11px] px-1.5 text-n-tx-muted truncate">
                 {v.name}
                 {v.shorthand ? ` (${v.shorthand})` : ""}
               </span>
@@ -48,14 +48,14 @@ export const VariationTable = React.memo(function VariationTable({ variations: v
 
             <Input size="table" type="number" value={String(v.target ?? 4.5)} min={isIndex ? "0" : "1"} max={isIndex ? String(scaleLength - 1) : "21"} step="0.1" onChange={(e) => setRoleVariation(idx, vi, "target", e.target.value)} />
 
-            {canEditNames && <Button variant="ghost" size="xs" square label="−" disabled={vars.length <= 1} onClick={() => removeRoleVariation(idx, vi)} className="hover:text-danger hover:bg-danger-subtle" />}
+            {canEditNames && <Button variant="ghost" size="xs" square label="−" disabled={vars.length <= 1} onClick={() => removeRoleVariation(idx, vi)} className="hover:text-d-tx-muted hover:bg-d-fi-subtle" />}
           </div>
         );
       })}
 
       {canEditNames && (
-        <div className="flex px-2 py-1.5 border-t border-border-subtle">
-          <Button variant="ghost" size="sm" label="+ Add variation" onClick={() => addRoleVariation(idx)} className="text-accent hover:text-accent hover:bg-accent-subtle" />
+        <div className="flex px-2 py-1.5 border-t border-n-br-subtle">
+          <Button variant="ghost" size="sm" label="+ Add variation" onClick={() => addRoleVariation(idx)} className="text-b-tx-muted hover:text-b-tx-muted hover:bg-b-fi-subtle" />
         </div>
       )}
     </div>

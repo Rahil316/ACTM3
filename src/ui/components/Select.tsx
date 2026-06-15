@@ -1,13 +1,14 @@
-import { type SelectHTMLAttributes, useId } from 'react';
-import clsx from 'clsx';
+import { type SelectHTMLAttributes, useId } from "react";
+import clsx from "clsx";
+import { InfoTooltip } from "./InfoTooltip";
 
-export type SelectSize = 'sm' | 'md' | 'lg' | 'xl';
+export type SelectSize = "sm" | "md" | "lg" | "xl";
 
 const SIZE: Record<SelectSize, string> = {
-  sm: 'h-[28px] text-[11px] rounded-[6px] px-2',
-  md: 'h-[32px] text-[12px] rounded-[7px] px-2',
-  lg: 'h-[36px] text-[12px] rounded-[8px] px-2',
-  xl: 'h-[40px] text-[13px] rounded-[8px] p-2',
+  sm: "h-[28px] text-[11px] rounded-[6px] px-2",
+  md: "h-[32px] text-[12px] rounded-[7px] px-2",
+  lg: "h-[36px] text-[12px] rounded-[8px] px-2",
+  xl: "h-[40px] text-[13px] rounded-[8px] p-2",
 };
 
 interface SelectOption {
@@ -15,26 +16,18 @@ interface SelectOption {
   label: string;
 }
 
-interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
+interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> {
   options: SelectOption[];
   size?: SelectSize;
   label?: string;
-  width?: 'full' | 'flex' | null;
+  tooltip?: string;
+  width?: "full" | "flex" | null;
 }
 
-export function Select({
-  options,
-  size = 'xl',
-  label,
-  width = 'full',
-  disabled,
-  className,
-  id: idProp,
-  ...rest
-}: SelectProps) {
+export function Select({ options, size = "xl", label, tooltip, width = "full", disabled, className, id: idProp, ...rest }: SelectProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
-  const widthCls = width === 'full' ? 'w-full' : width === 'flex' ? 'flex-1' : '';
+  const widthCls = width === "full" ? "w-full" : width === "flex" ? "flex-1" : "";
 
   const select = (
     <select
@@ -43,10 +36,10 @@ export function Select({
       className={clsx(
         SIZE[size],
         widthCls,
-        'bg-bg-input border border-border-base text-text-primary',
-        'outline-none focus:border-border-focus transition-colors',
-        'appearance-none cursor-pointer',
-        disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
+        "bg-n-sf-input border border-n-br-default text-n-tx-primary",
+        "outline-none focus:border-b-br-strong transition-colors",
+        "appearance-none cursor-pointer",
+        disabled && "opacity-40 cursor-not-allowed pointer-events-none",
         className,
       )}
       {...rest}
@@ -60,10 +53,13 @@ export function Select({
   if (!label) return select;
 
   return (
-    <div className={clsx('space-y-1', widthCls)}>
-      <label htmlFor={id} className="text-text-muted text-[12px] font-medium ml-1 block">
-        {label}
-      </label>
+    <div className={clsx("space-y-1", widthCls)}>
+      <div className="flex items-center gap-1 ml-1">
+        <label htmlFor={id} className="text-n-tx-muted text-[12px] font-medium">
+          {label}
+        </label>
+        {tooltip && <InfoTooltip content={tooltip} />}
+      </div>
       {select}
     </div>
   );

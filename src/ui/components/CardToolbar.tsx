@@ -1,5 +1,5 @@
 import React from 'react';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { LucideGripVertical as GripVertical, LucideTrash as Trash2 } from './icons';
 import { Button } from './Button';
 
 /**
@@ -26,7 +26,7 @@ export function CardToolbar({
 }) {
   return (
     <div className="absolute -right-1 -top-3 opacity-0 group-hover/card:opacity-100 transition-opacity z-10 pointer-events-none group-hover/card:pointer-events-auto">
-      <div className="flex items-center gap-0.5 bg-bg-card border border-border-base rounded-[8px] shadow-lg p-0.5">
+      <div className="flex items-center gap-0.5 bg-n-sf-raised border border-n-br-default rounded-[8px] shadow-lg p-0.5">
         {dragListeners && (
           <Button
             variant="icon"
@@ -39,12 +39,13 @@ export function CardToolbar({
             icon={<GripVertical size={12} strokeWidth={1.75} />}
           />
         )}
-        {children && <div className="h-4 w-px bg-border-base mx-0.5" />}
+        {dragListeners && children && <div className="h-4 w-px bg-n-br-default mx-0.5" />}
         {children}
+        {children && <div className="h-4 w-px bg-n-br-default mx-0.5" />}
         <Button
           variant="icon"
           size="sm"
-          className="hover:text-danger hover:bg-danger-subtle"
+          className="hover:text-d-tx-muted hover:bg-d-fi-subtle"
           onClick={onDelete}
           disabled={deleteDisabled}
           title={deleteTitle ?? 'Delete'}

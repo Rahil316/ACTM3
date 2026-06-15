@@ -98,15 +98,15 @@ When in doubt, use Natural. It produces the most believable results across the w
 
 ## Solver Mode Guide (Direct Mode)
 
-| Mode               | Effect                                            | Best for                               |
-| ------------------ | ------------------------------------------------- | -------------------------------------- |
-| `natural`          | C scales proportionally with source C at source L | Balanced, general purpose              |
-| `saturated`        | C held constant at source C as L shifts           | Vivid palettes, max color retention    |
-| `luminance`        | C drops parabolically near white/black            | Calm, desaturated systems              |
-| `hue-locked`       | H fixed, C follows natural curve, gamut-clamped   | Strict brand hue fidelity              |
-| `chroma-maximized` | L solved for contrast, then C maximized at that L | Maximum energy, bold creative products |
+| Mode               | Effect                                                          | Best for                               |
+| ------------------ | --------------------------------------------------------------- | -------------------------------------- |
+| `natural`          | C tapers as L moves away from mid                               | Balanced, general purpose              |
+| `constant-chroma`  | C held fixed at seed value throughout                           | Vivid palettes, max color retention    |
+| `symmetric`        | C follows a bell curve peaking at mid-L, collapsing at extremes | Calm, harmonically symmetric systems   |
+| `hue-locked`       | H fixed, pushes to maximum in-gamut C at target contrast        | Strict brand hue fidelity              |
+| `max-chroma`       | L solved for contrast, then C maximized at that L               | Maximum energy, bold creative products |
 
-`natural` is the correct choice for most product design systems. Use `chroma-maximized` when the goal is maximum saturation at every contrast level.
+`natural` is the correct choice for most product design systems. Use `max-chroma` when the goal is maximum saturation at every contrast level.
 
 ---
 

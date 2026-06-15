@@ -64,9 +64,9 @@ export const WithoutBorder: Story = {
 
 export const Showcase: StoryObj = {
   render: () => (
-    <div className="flex flex-col gap-4 p-4 bg-bg-app rounded-lg border border-border-base max-w-xs">
+    <div className="flex flex-col gap-4 p-4 bg-n-bg-app rounded-lg border border-n-br-default max-w-xs">
       <div>
-        <p className="text-text-muted text-[10px] uppercase tracking-wider font-bold mb-2">Sizes</p>
+        <p className="text-n-tx-muted text-[10px] uppercase tracking-wider font-bold mb-2">Sizes</p>
         <div className="flex items-center gap-3">
           <ColorSwatch color="#0066FF" size="xs" />
           <ColorSwatch color="#0066FF" size="sm" />
@@ -74,8 +74,8 @@ export const Showcase: StoryObj = {
           <ColorSwatch color="#0066FF" size="lg" />
         </div>
       </div>
-      <div className="border-t border-border-base pt-3">
-        <p className="text-text-muted text-[10px] uppercase tracking-wider font-bold mb-2">Corners</p>
+      <div className="border-t border-n-br-default pt-3">
+        <p className="text-n-tx-muted text-[10px] uppercase tracking-wider font-bold mb-2">Corners</p>
         <div className="flex items-center gap-3">
           <ColorSwatch color="#8B5CF6" size="md" radius="sm" />
           <ColorSwatch color="#8B5CF6" size="md" radius="md" />

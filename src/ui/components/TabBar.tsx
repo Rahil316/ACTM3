@@ -27,8 +27,8 @@ export function TabBar<T extends string>({ tabs, active, onChange, className }: 
           className={clsx(
             'shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap transition-all duration-150',
             tab.value === active
-              ? 'bg-accent border-accent text-text-on-accent'
-              : 'border-border-base bg-transparent text-text-muted hover:bg-bg-hover hover:text-text-primary',
+              ? 'bg-b-fi-btn-default border-b-fi-btn-default text-b-tx-btn-default'
+              : 'border-n-br-default bg-transparent text-n-tx-muted hover:bg-n-sf-hover hover:text-n-tx-primary',
           )}
         >
           {tab.label}

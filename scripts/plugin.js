@@ -1,21 +1,19 @@
-// Builds or watches src/figma/index.ts → <outDir>/scripts.js via esbuild.
+// Builds src/figma/index.ts → <outDir>/scripts.js via esbuild (one-shot).
 //
 // Usage:
-//   node scripts/plugin.js [outDir] [--watch] [--manifest]
+//   node scripts/plugin.js [outDir] [--manifest]
 //
 //   outDir      output directory relative to project root  (default: dist)
-//   --watch     rebuild on every save instead of building once
 //   --manifest  write manifest.json into outDir (release builds only)
 
 const esbuild = require('esbuild');
 const path    = require('path');
 const fs      = require('fs');
 
-const args         = process.argv.slice(2);
-const outDirName   = args.find(a => !a.startsWith('--')) || 'dist';
-const isWatch      = args.includes('--watch');
+const args          = process.argv.slice(2);
+const outDirName    = args.find(a => !a.startsWith('--')) || 'dist';
 const writeManifest = args.includes('--manifest');
-const isRelease    = writeManifest;
+const isRelease     = writeManifest;
 
 const root   = path.resolve(__dirname, '..');
 const outDir = path.resolve(root, outDirName);
@@ -23,14 +21,14 @@ if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
 const esbuildConfig = {
   entryPoints: [path.resolve(root, 'src/figma/index.ts')],
-  bundle:      true,
-  outfile:     path.resolve(outDir, 'scripts.js'),
-  target:      'es2017',
-  platform:    'browser',
-  format:      'iife',
-  external:    [],
-  logLevel:    'info',
-  define:      { __RELEASE__: String(isRelease) },
+  bundle:   true,
+  outfile:  path.resolve(outDir, 'scripts.js'),
+  target:   'es2017',
+  platform: 'browser',
+  format:   'iife',
+  external: [],
+  logLevel: 'info',
+  define:   { __RELEASE__: String(isRelease) },
   ...(isRelease && { drop: ['debugger'], pure: ['console.log'], minify: true }),
 };
 
@@ -51,11 +49,15 @@ function printSummary() {
       e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]
     );
   }
-  const files = walk(outDir).map(f => ({ rel: path.relative(outDir, f), size: fs.statSync(f).size }))
+  const files = walk(outDir)
+    .map(f => ({ rel: path.relative(outDir, f), size: fs.statSync(f).size }))
     .sort((a, b) => a.rel.localeCompare(b.rel));
-  const maxLen   = Math.max(...files.map(f => f.rel.length));
-  const total    = files.reduce((s, f) => s + f.size, 0);
-  const ts       = new Date().toLocaleString('en-US', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const maxLen = Math.max(...files.map(f => f.rel.length));
+  const total  = files.reduce((s, f) => s + f.size, 0);
+  const ts     = new Date().toLocaleString('en-US', {
+    year: 'numeric', month: 'short', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  });
 
   console.log('');
   console.log(`\x1b[1m\x1b[36m── Build Summary ─── ${ts} ───\x1b[0m`);
@@ -68,32 +70,12 @@ function printSummary() {
 }
 
 async function run() {
-  if (isWatch) {
-    const ctx = await esbuild.context({
-      ...esbuildConfig,
-      plugins: [{
-        name: 'on-rebuild',
-        setup(build) {
-          build.onEnd((result) => {
-            if (result.errors.length === 0) {
-              if (writeManifest) emitManifest();
-              console.log(`[plugin] rebuilt → ${outDirName}  ${new Date().toLocaleTimeString()}`);
-            }
-          });
-        },
-      }],
-    });
-    if (writeManifest) emitManifest();
-    await ctx.watch();
-    console.log(`[plugin] watching src/figma/** → ${outDirName}${writeManifest ? ' (with manifest)' : ''}`);
-  } else {
-    await esbuild.build(esbuildConfig);
-    console.log(`✓ ${outDirName}/scripts.js built`);
-    if (writeManifest) {
-      emitManifest();
-      console.log(`✓ ${outDirName}/manifest.json written`);
-      printSummary();
-    }
+  await esbuild.build(esbuildConfig);
+  console.log(`✓ ${outDirName}/scripts.js built`);
+  if (writeManifest) {
+    emitManifest();
+    console.log(`✓ ${outDirName}/manifest.json written`);
+    printSummary();
   }
 }
 

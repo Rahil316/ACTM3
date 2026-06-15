@@ -1,6 +1,8 @@
-/* Design tokens — auto-generated from src/ui/theme/tokens.ts
-   To change a color: edit tokens.ts, then run: npx tsx scripts/generateThemeCss.ts */
-@import "./theme/theme.generated.css";
+/* ── Theme 2.0 — Token Wand UI color system ─────────────────────────────────
+   Color-prefixed CSS custom properties: --n-* --b-* --d-* --s-* --w-*
+   Tailwind classes mirror the var names: bg-n-sf-default, text-b-tx-muted, etc. */
+@import "./theme/theme2.0/light.css";
+@import "./theme/theme2.0/dark.css";
 
 @tailwind base;
 @tailwind components;
@@ -13,7 +15,7 @@
     margin: 0;
     padding: 0;
     font-family: var(--font);
-    /* user-select: none; */
+    user-select: none;
   }
 
   html,
@@ -38,11 +40,11 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: var(--bg-active);
+    background: var(--n-sf-active);
     border-radius: 10px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--border-strong);
+    background: var(--n-br-default);
   }
 }
 
@@ -55,19 +57,19 @@
   /* ── Toggle pill ─────────────────────────────────────────────────────────── */
   .toggle-pill {
     @apply w-9 h-5 rounded-full border-none cursor-pointer relative transition-colors duration-200 shrink-0;
-    background: var(--border-base);
+    background: var(--n-br-default);
   }
   .toggle-pill::after {
     content: "";
     @apply absolute top-[3px] left-[3px] w-[14px] h-[14px] rounded-full transition-all duration-200;
-    background: var(--text-muted);
+    background: var(--n-tx-muted);
   }
   .toggle-pill.on {
-    background: var(--accent);
+    background: var(--b-fi-btn-default);
   }
   .toggle-pill.on::after {
     transform: translateX(16px);
-    background: var(--text-on-accent);
+    background: var(--b-tx-btn-default);
   }
 
   /* ── Bottom sheet ────────────────────────────────────────────────────────── */
@@ -82,9 +84,9 @@
   /* ── Focus ring utility ──────────────────────────────────────────────────── */
   .focus-ring {
     @apply outline-none;
-    box-shadow: 0 0 0 2px var(--accent-glow);
+    box-shadow: 0 0 0 2px var(--b-fi-subtle);
   }
   .focus-ring:focus-visible {
-    box-shadow: 0 0 0 2px var(--border-focus);
+    box-shadow: 0 0 0 2px var(--b-br-strong);
   }
 }

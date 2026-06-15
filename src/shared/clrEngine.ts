@@ -58,7 +58,7 @@ export interface EngineResult {
 
 // ── SOLVER CONSTANTS ──────────────────────────────────────────────────────────
 
-const SOLVER_MODES: SolverMode[] = ["natural", "saturated", "luminance", "hue-locked", "chroma-maximized"];
+const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "hue-locked", "max-chroma"];
 const OVERSHOOT_WARN = 0.3;
 const MAX_ITER = 60;
 const L_EPS = 1e-5;
@@ -695,9 +695,9 @@ function _maxChromaAtLH(L: number, H: number, startC: number): number {
 function _targetChroma(L: number, srcL: number, srcC: number, _srcH: number, mode: SolverMode): number {
   if (srcC < 0.001) return 0;
   switch (mode) {
-    case "saturated":
+    case "constant-chroma":
       return srcC;
-    case "luminance":
+    case "symmetric":
       return srcC * (1 - Math.pow(Math.abs(2 * L - 1), 1.5));
     case "natural":
       return (srcC / Math.max(srcL, 1 - srcL)) * Math.min(L, 1 - L);
@@ -768,7 +768,7 @@ export function solveColorForContrast(sourceHex: string, targetContrast: number,
     solvedC: number | null = null,
     chromaReduced = false;
 
-  if (mode === "chroma-maximized") {
+  if (mode === "max-chroma") {
     const getHex = (L: number) => {
       const maxC = _maxChromaAtLH(L, src.H, Math.max(src.C, 0.2));
       return oklchToHex(L, maxC < 0.001 ? 0 : maxC, src.H);

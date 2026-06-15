@@ -12,7 +12,7 @@ import { BannerSlot } from "./components/Banner";
 import { ToastHub } from "./components/Toast";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Button } from "./components/Button";
-import { Eye, Play, Download, Settings, RotateCcw, Upload, Bookmark, ShoppingBag } from "lucide-react";
+import { LucidePreview as Eye, LucideRun as Play, LucideExport as Download, LucideSettings as Settings, LucideReset as RotateCcw, LucideImport as Upload, LucideBookmark as Bookmark, LucideShop as ShoppingBag } from "./components/icons";
 import { ColorsScreen } from "./screens/ColorsScreen";
 import { RolesScreen } from "./screens/RolesScreen";
 import { SettingsOverlay } from "./screens/SettingsOverlay";
@@ -65,7 +65,7 @@ function ResizeHandle() {
 
   return (
     <div onMouseDown={handleMouseDown} className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-50 opacity-30 hover:opacity-70 transition-opacity" style={{ touchAction: "none" }} title="Drag to resize">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-text-muted">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-n-tx-muted">
         <path d="M14 10l-4 4h4v-4zm0-6l-10 10h2l8-8V4zM8 14l6-6v2l-4 4H8z" />
       </svg>
     </div>
@@ -87,7 +87,7 @@ function ProjectNameInput({ projectStore }: { projectStore: ProjectStore }) {
         onChange={onNameChange}
         onBlur={onNameBlur}
         aria-label="Project name"
-        className="text-[13px] font-semibold text-text-primary bg-transparent border border-transparent outline-none min-w-20 w-full truncate hover:bg-bg-hover focus:bg-bg-input focus:border-border-focus rounded-[4px] px-1 -mx-1 py-0.5 transition-colors cursor-text"
+        className="text-[13px] font-semibold text-n-tx-primary bg-transparent border border-transparent outline-none min-w-20 w-full truncate hover:bg-n-sf-hover focus:bg-n-sf-input focus:border-b-br-strong rounded-[4px] px-1 -mx-1 py-0.5 transition-colors cursor-text"
         title="Click to rename project"
       />
     </div>
@@ -148,7 +148,7 @@ export default function App() {
   useKeyboardShortcuts(importRef);
 
   return (
-    <div className="relative flex flex-col h-full bg-bg-app text-text-primary font-sans text-xs overflow-hidden">
+    <div className="relative flex flex-col h-full bg-n-bg-app text-n-tx-primary font-sans text-xs overflow-hidden">
       {/* Hidden file input for import */}
       <input ref={importRef} type="file" accept=".json,.wand" className="hidden" onChange={handleImportFile} />
 
@@ -177,7 +177,7 @@ export default function App() {
       {!__RELEASE__ && activeOverlay === "canvas-preview-dev" && <CanvasPreviewDevOverlay />}
 
       {/* ── Header ── */}
-      <header className="shrink-0 px-3 py-2 flex gap-2 items-center border-b border-border-base bg-bg-app sticky top-0 z-10">
+      <header className="shrink-0 px-3 py-2 flex gap-2 items-center border-b border-n-br-default bg-n-bg-app sticky top-0 z-10">
         <ProjectNameInput projectStore={projectStore} />
 
         <div className="flex items-center gap-1.5">
@@ -191,14 +191,14 @@ export default function App() {
       <BannerSlot />
 
       {/* ── Tab bar ── */}
-      <div className="shrink-0 flex gap-1 px-3 py-2 border-b border-border-base overflow-x-auto">
+      <div className="shrink-0 flex gap-1 px-3 py-2 border-b border-n-br-default overflow-x-auto">
         {TABS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => setActiveTab(tab.value)}
             className={clsx(
               "shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap transition-all duration-150",
-              activeTab === tab.value ? "bg-accent border-accent text-text-on-accent" : "border-border-base bg-transparent text-text-muted hover:bg-bg-hover hover:text-text-primary",
+              activeTab === tab.value ? "bg-b-fi-btn-default border-b-br-default text-b-tx-btn-default" : "border-n-br-default bg-transparent text-n-tx-muted hover:bg-n-sf-hover hover:text-n-tx-primary",
             )}
           >
             {tab.label}
@@ -228,7 +228,7 @@ export default function App() {
       </div>
 
       {/* ── Screen content ── */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden">
         {activeTab === "color-groups" && <ColorsScreen />}
         {activeTab === "roles" && <RolesScreen />}
         {activeTab === "project" && <ProjectScreen />}

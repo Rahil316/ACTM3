@@ -14,10 +14,10 @@ export function SelectableCard({ onClick, selected, children, className }: Selec
       type="button"
       onClick={onClick}
       className={clsx(
-        'text-left w-full bg-bg-card border rounded-[10px] p-3 transition-colors',
+        'text-left w-full bg-n-sf-default border rounded-[10px] p-3 transition-colors',
         selected
-          ? 'border-accent bg-accent-subtle'
-          : 'border-border-base hover:bg-bg-hover hover:border-accent',
+          ? 'border-b-br-default bg-b-fi-subtle'
+          : 'border-n-br-default hover:bg-n-sf-hover hover:border-b-br-default',
         className,
       )}
     >

@@ -83,7 +83,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, label, size = 'xl
 
   const picker = (
     <div className={clsx(
-      'flex items-center w-full bg-bg-input border border-border-input overflow-hidden',
+      'flex items-center w-full bg-n-sf-input border border-n-br-default overflow-hidden',
       s.wrap,
       className,
     )}>
@@ -107,7 +107,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, label, size = 'xl
         maxLength={6}
         onChange={handleHexChange}
         onBlur={handleHexBlur}
-        className={clsx('w-full bg-transparent uppercase outline-none text-text-primary pr-2', s.text)}
+        className={clsx('w-full bg-transparent uppercase outline-none text-n-tx-primary pr-2', s.text)}
       />
     </div>
   );
@@ -116,7 +116,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, label, size = 'xl
 
   return (
     <div className="flex flex-col gap-1 w-full">
-      <label htmlFor={idPrefix ? `${idPrefix}-hex` : undefined} className="text-[12px] font-medium text-text-muted ml-0.5">
+      <label htmlFor={idPrefix ? `${idPrefix}-hex` : undefined} className="text-[12px] font-medium text-n-tx-muted ml-0.5">
         {label}
       </label>
       {picker}

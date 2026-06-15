@@ -15,7 +15,7 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
     <div className={clsx('settings-card flex flex-col items-center gap-3 py-6 text-center', className)}>
-      <div className="w-10 h-10 rounded-xl bg-bg-input flex items-center justify-center text-text-muted text-[18px]">
+      <div className="w-10 h-10 rounded-xl bg-n-sf-input flex items-center justify-center text-n-tx-muted text-[18px]">
         {icon}
       </div>
       <div className="space-y-1">

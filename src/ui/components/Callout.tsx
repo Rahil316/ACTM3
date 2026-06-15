@@ -4,17 +4,17 @@ import clsx from 'clsx';
 type CalloutVariant = 'warning' | 'info' | 'success' | 'danger';
 
 const STYLES: Record<CalloutVariant, string> = {
-  warning: 'border-warning/40 bg-warning-subtle',
-  info:    'border-border-base bg-bg-input',
-  success: 'border-success/40 bg-success-subtle',
-  danger:  'border-danger/40 bg-danger-subtle',
+  warning: 'border-w-br-default bg-w-fi-subtle',
+  info:    'border-n-br-default bg-n-sf-input',
+  success: 'border-s-br-default bg-s-fi-subtle',
+  danger:  'border-d-br-default bg-d-fi-subtle',
 };
 
 const TITLE_STYLES: Record<CalloutVariant, string> = {
-  warning: 'text-warning',
-  info:    'text-text-primary',
-  success: 'text-success',
-  danger:  'text-danger',
+  warning: 'text-w-tx-muted',
+  info:    'text-n-tx-primary',
+  success: 'text-s-tx-muted',
+  danger:  'text-d-tx-muted',
 };
 
 interface CalloutProps {
@@ -30,7 +30,7 @@ export function Callout({ variant = 'info', title, children, className }: Callou
       {title && (
         <span className={clsx('text-[11px] font-semibold', TITLE_STYLES[variant])}>{title}</span>
       )}
-      <span className="text-[11px] text-text-muted">{children}</span>
+      <span className="text-[11px] text-n-tx-muted">{children}</span>
     </div>
   );
 }

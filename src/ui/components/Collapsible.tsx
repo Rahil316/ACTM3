@@ -16,8 +16,8 @@ interface CollapsibleProps {
 // Used in: role variation panel, project profile section, versions section.
 export function Collapsible({ open, onToggle, header, children, className, headerClassName }: CollapsibleProps) {
   return (
-    <div className={clsx("border border-border-base rounded-[10px] overflow-hidden", className)}>
-      <div className={clsx("flex items-center gap-2 px-3 py-2 bg-bg-input cursor-pointer select-none", headerClassName)} onClick={onToggle}>
+    <div className={clsx("border border-n-br-default rounded-[10px] overflow-hidden", className)}>
+      <div className={clsx("flex items-center gap-2 px-3 py-2 bg-n-sf-input cursor-pointer select-none", headerClassName)} onClick={onToggle}>
         <span className="flex items-center justify-center w-3 shrink-0 transition-transform duration-150" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)" }}>
           <IconChevronDown />
         </span>
@@ -46,11 +46,11 @@ export function SectionCollapsible({ open, onToggle, label, description, badge, 
       <div className="flex items-center justify-between cursor-pointer select-none py-1 gap-2" onClick={onToggle}>
         <div className="flex flex-col min-w-0">
           <SectionLabel className="mb-0">{label}</SectionLabel>
-          {description && <span className="text-[10px] text-text-dim mt-0.5 leading-tight">{description}</span>}
+          {description && <span className="text-[10px] text-n-tx-dim mt-0.5 leading-tight">{description}</span>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {badge}
-          <span className="text-text-muted transition-transform duration-150 flex items-center" style={{ display: "inline-flex", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
+          <span className="text-n-tx-muted transition-transform duration-150 flex items-center" style={{ display: "inline-flex", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
             <IconChevronDown className="w-3 h-3" />
           </span>
         </div>

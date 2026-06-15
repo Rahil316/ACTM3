@@ -49,7 +49,7 @@ function statusRole(name: string, shorthand: string, colorId: string) {
   return {
     name,
     shorthand,
-    solverMode: "chroma-maximized" as const,
+    solverMode: "max-chroma" as const,
     variations: [
       { name: "Bg", shorthand: "1", target: 1.15 },
       { name: "Tint", shorthand: "2", target: 1.8 },
@@ -180,7 +180,7 @@ const nclarity: Preset = {
       {
         name: "fill/button",
         shorthand: "f/btn",
-        solverMode: "saturated",
+        solverMode: "constant-chroma",
         variations: [
           { name: "Disabled", shorthand: "1", target: 1.3 },
           { name: "Subtle", shorthand: "2", target: 2.0 },
@@ -197,7 +197,7 @@ const nclarity: Preset = {
       {
         name: "text/buttonLabel",
         shorthand: "t/btn",
-        solverMode: "luminance",
+        solverMode: "symmetric",
         variations: [
           { name: "Disabled", shorthand: "1", target: 1.5 },
           { name: "Subtle", shorthand: "2", target: 3.0 },

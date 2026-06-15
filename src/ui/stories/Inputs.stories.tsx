@@ -18,7 +18,7 @@ export const TextInputs: StoryObj = {
   render: () => {
     const [v, setV] = useState('');
     return (
-      <div className="flex flex-col gap-5 p-4 max-w-xs bg-bg-app rounded-lg border border-border-base">
+      <div className="flex flex-col gap-5 p-4 max-w-xs bg-n-bg-app rounded-lg border border-n-br-default">
         <Section label="Sizes">
           {(['table', 'sm', 'md', 'lg', 'xl'] as const).map((sz) => (
             <Input key={sz} size={sz} placeholder={sz} />
@@ -79,7 +79,7 @@ export const TextInputs: StoryObj = {
 
 export const Textareas: StoryObj = {
   render: () => (
-    <div className="flex flex-col gap-5 p-4 max-w-xs bg-bg-app rounded-lg border border-border-base">
+    <div className="flex flex-col gap-5 p-4 max-w-xs bg-n-bg-app rounded-lg border border-n-br-default">
       <Section label="Default">
         <Textarea placeholder="Enter description…" />
       </Section>
@@ -111,10 +111,10 @@ export const OtherControls: StoryObj = {
     const [colorValue, setColor]    = useState('3B82F6');
 
     return (
-      <div className="flex flex-col gap-6 p-4 max-w-sm bg-bg-app rounded-lg border border-border-base">
+      <div className="flex flex-col gap-6 p-4 max-w-sm bg-n-bg-app rounded-lg border border-n-br-default">
         <Section label="Toggle">
           <Toggle on={toggleOn} onChange={() => setToggleOn(!toggleOn)} />
-          <span className="text-text-muted text-[11px]">{toggleOn ? 'On' : 'Off'}</span>
+          <span className="text-n-tx-muted text-[11px]">{toggleOn ? 'On' : 'Off'}</span>
         </Section>
 
         <Section label="Segmented control">
@@ -143,7 +143,7 @@ export const OtherControls: StoryObj = {
 
         <Section label="Color input">
           <ColorInput value={colorValue} onUpdate={setColor} />
-          <span className="text-[11px] text-text-muted font-mono">#{colorValue}</span>
+          <span className="text-[11px] text-n-tx-muted font-mono">#{colorValue}</span>
         </Section>
       </div>
     );
@@ -155,7 +155,7 @@ export const OtherControls: StoryObj = {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-text-muted text-[10px] uppercase tracking-wider font-bold">{label}</p>
+      <p className="text-n-tx-muted text-[10px] uppercase tracking-wider font-bold">{label}</p>
       {children}
     </div>
   );

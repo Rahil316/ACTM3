@@ -30,7 +30,7 @@ interface ModalProps {
 // Children are responsible for their own layout (flex-col, scroll, etc.).
 export function Modal({ open, layer = 'base', children, className }: ModalProps) {
   if (!open) return null;
-  return <div className={clsx('absolute inset-0 flex flex-col bg-bg-app', LAYER[layer], className)}>{children}</div>;
+  return <div className={clsx('absolute inset-0 flex flex-col bg-n-bg-app', LAYER[layer], className)}>{children}</div>;
 }
 
 // Frosted confirm overlay — semi-transparent backdrop with centered content.
@@ -40,7 +40,7 @@ export function ConfirmOverlay({ open, children, className }: ModalProps) {
   return (
     <div
       className={clsx(
-        'absolute inset-0 bg-bg-app/95 backdrop-blur-sm z-[60]',
+        'absolute inset-0 bg-n-bg-app/95 backdrop-blur-sm z-[60]',
         'flex items-center justify-center p-6 text-center flex-col gap-6',
         className,
       )}
@@ -61,7 +61,7 @@ interface ModalHeaderProps {
 export function ModalHeader({ title, subtitle, actions, className }: ModalHeaderProps) {
   return (
     <div
-      className={clsx('shrink-0 flex items-center justify-between px-3 py-2 border-b border-border-base', className)}
+      className={clsx('shrink-0 flex items-center justify-between px-3 py-2 border-b border-n-br-default', className)}
     >
       <div>
         <ModalTitle>{title}</ModalTitle>

@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { LucideClose as X } from './icons';
 import { Button } from './Button';
 import { Backdrop } from './Backdrop';
 import { Sheet } from './Sheet';
@@ -15,7 +15,7 @@ interface MenuHeaderProps {
 
 export function MenuHeader({ label, action, onClose }: MenuHeaderProps) {
   return (
-    <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
+    <div className="px-4 py-3 border-b border-n-br-subtle flex items-center justify-between shrink-0">
       <FieldLabel className="m-0 p-0">{label}</FieldLabel>
       {action ?? (onClose && (
         <Button variant="icon" size="xs" icon={<X size={13} strokeWidth={2} />} onClick={onClose} />
@@ -39,8 +39,8 @@ export function MenuRow({ onClick, children, className }: MenuRowProps) {
       onClick={onClick}
       className={[
         'flex items-center gap-3 px-4 py-2.5 w-full text-left',
-        'hover:bg-bg-hover transition-colors cursor-pointer',
-        'border-b border-border-subtle last:border-0',
+        'hover:bg-n-sf-hover transition-colors cursor-pointer',
+        'border-b border-n-br-subtle last:border-0',
         className ?? '',
       ].join(' ')}
     >

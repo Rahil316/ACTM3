@@ -21,7 +21,7 @@ export function LoadingOverlay({
 }: LoadingOverlayProps) {
   if (!open) return null;
   return (
-    <div className="absolute inset-0 bg-bg-app z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
+    <div className="absolute inset-0 bg-n-bg-app z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
       <Spinner size="lg" />
       <SheetTitle>{title}</SheetTitle>
       <HelperText>{subtitle}</HelperText>
@@ -43,22 +43,22 @@ export function SuccessOverlay({ open, tally, onDismiss }: SuccessOverlayProps) 
   const rows: TallyRow[] = tally ? [
     ['Created', tally.created, ''],
     ['Updated', tally.updated, ''],
-    ...(tally.renamed > 0 ? [['Renamed', tally.renamed, 'text-accent'] as TallyRow] : []),
-    ...(tally.removed > 0 ? [['Removed', tally.removed, 'text-muted']  as TallyRow] : []),
-    ...(tally.failed  > 0 ? [['Failed',  tally.failed,  'text-danger'] as TallyRow] : []),
+    ...(tally.renamed > 0 ? [['Renamed', tally.renamed, 'text-b-tx-muted'] as TallyRow] : []),
+    ...(tally.removed > 0 ? [['Removed', tally.removed, 'text-n-tx-muted'] as TallyRow] : []),
+    ...(tally.failed  > 0 ? [['Failed',  tally.failed,  'text-d-tx-muted'] as TallyRow] : []),
   ] : [];
 
   return (
-    <div className="absolute inset-0 bg-bg-app z-50 flex flex-col">
+    <div className="absolute inset-0 bg-n-bg-app z-50 flex flex-col">
       <div className="flex-1 flex items-center justify-center p-8 text-center flex-col gap-4">
-        <div className="w-20 h-20 bg-success-subtle rounded-full flex items-center justify-center text-success">
+        <div className="w-20 h-20 bg-s-fi-subtle rounded-full flex items-center justify-center text-s-tx-muted">
           <IconCheck className="w-8 h-8" />
         </div>
         <ModalTitle>Success!</ModalTitle>
         {rows.length > 0 && (
           <div className="space-y-1">
             {rows.map(([label, count, cls]) => (
-              <p key={label} className="text-[12px] text-text-muted">
+              <p key={label} className="text-[12px] text-n-tx-muted">
                 {label}: <StatValue className={clsx(cls)}>{count}</StatValue>
               </p>
             ))}
@@ -81,12 +81,12 @@ interface ErrorOverlayProps {
 export function ErrorOverlay({ open, message, onDismiss }: ErrorOverlayProps) {
   if (!open) return null;
   return (
-    <div className="absolute inset-0 bg-bg-app z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
-      <div className="w-20 h-20 bg-danger-subtle rounded-full flex items-center justify-center text-danger">
+    <div className="absolute inset-0 bg-n-bg-app z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
+      <div className="w-20 h-20 bg-d-fi-subtle rounded-full flex items-center justify-center text-d-tx-muted">
         <IconClose className="w-6 h-6" />
       </div>
       <ModalTitle>Error</ModalTitle>
-      {message && <HelperText className="text-danger">{message}</HelperText>}
+      {message && <HelperText className="text-d-tx-muted">{message}</HelperText>}
       <Button variant="secondary" size="lg" label="Dismiss" onClick={onDismiss} className="mt-4 px-6" />
     </div>
   );
@@ -105,8 +105,8 @@ interface ValidationWarningOverlayProps {
 export function ValidationWarningOverlay({ open, issues, onBack, onContinue }: ValidationWarningOverlayProps) {
   if (!open) return null;
   return (
-    <div className="absolute inset-0 bg-bg-app z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
-      <div className="w-16 h-16 bg-warning-subtle rounded-full flex items-center justify-center text-warning">
+    <div className="absolute inset-0 bg-n-bg-app z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
+      <div className="w-16 h-16 bg-w-fi-subtle rounded-full flex items-center justify-center text-w-tx-muted">
         <IconAlertTriangle className="w-8 h-8" />
       </div>
       <SheetTitle>
@@ -117,7 +117,7 @@ export function ValidationWarningOverlay({ open, issues, onBack, onContinue }: V
       </HelperText>
       <ul className="w-full text-left space-y-2 max-h-48 overflow-y-auto">
         {issues.map((msg, i) => (
-          <li key={i} className="text-[12px] bg-warning-subtle border border-warning rounded-[6px] px-3 py-2 text-text-primary">
+          <li key={i} className="text-[12px] bg-w-fi-subtle border border-w-br-default rounded-[6px] px-3 py-2 text-n-tx-primary">
             {msg}
           </li>
         ))}
@@ -144,7 +144,7 @@ export function CentredOverlay({ open, children, className, zIndex = 80 }: Centr
   if (!open) return null;
   return (
     <div
-      className={clsx('absolute inset-0 bg-bg-app flex flex-col items-center justify-center gap-6 p-8 text-center', className)}
+      className={clsx('absolute inset-0 bg-n-bg-app flex flex-col items-center justify-center gap-6 p-8 text-center', className)}
       style={{ zIndex }}
     >
       {children}

@@ -14,7 +14,7 @@ export function ConflictList({ conflicts, decisions, onChange }: ConflictListPro
 
   return (
     <SettingsCard>
-      <SectionLabel className="text-warning !text-amber-500">Manual Renames Detected</SectionLabel>
+      <SectionLabel className="text-w-tx-muted">Manual Renames Detected</SectionLabel>
       <HelperText className="mb-3">
         Some variables have been renamed manually in Figma. Choose whether to keep the Figma names or revert to the design system suggested format.
       </HelperText>
@@ -22,11 +22,11 @@ export function ConflictList({ conflicts, decisions, onChange }: ConflictListPro
         {conflicts.map((conflict) => (
           <div
             key={conflict.tokenRef}
-            className="flex flex-col gap-1.5 p-2.5 border border-border-subtle rounded-md bg-bg-surface-subtle"
+            className="flex flex-col gap-1.5 p-2.5 border border-n-br-subtle rounded-md bg-n-sf-sunken"
           >
             <div className="flex items-center justify-between gap-2">
               <span
-                className="font-mono text-[11px] text-text-secondary truncate max-w-[220px]"
+                className="font-mono text-[11px] text-n-tx-secondary truncate max-w-[220px]"
                 title={conflict.figmaName}
               >
                 Figma: {conflict.figmaName}
@@ -40,7 +40,7 @@ export function ConflictList({ conflicts, decisions, onChange }: ConflictListPro
                 onChange={(v) => onChange(conflict.tokenRef, v as 'keep' | 'revert')}
               />
             </div>
-            <MicroText className="text-text-muted">
+            <MicroText className="text-n-tx-muted">
               Suggested: {conflict.suggestedName}
             </MicroText>
           </div>

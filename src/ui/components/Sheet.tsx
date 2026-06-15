@@ -13,7 +13,7 @@ export function Sheet({ open, children, className }: SheetProps) {
   return (
     <div
       className={clsx(
-        'bottom-sheet absolute bottom-0 left-0 right-0 bg-bg-panel rounded-t-[16px] border-t border-border-base z-30 max-h-[90%] flex flex-col',
+        'bottom-sheet absolute bottom-0 left-0 right-0 bg-n-bg-panel rounded-t-[16px] border-t border-n-br-default z-30 max-h-[90%] flex flex-col',
         open && 'open',
         className,
       )}

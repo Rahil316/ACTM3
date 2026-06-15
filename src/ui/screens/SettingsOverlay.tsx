@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS } from "../store/projectStore";
+import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS, SOLVER_MODE_DESCRIPTIONS } from "../store/projectStore";
 import { useUiStore, VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
 import { takeSnapshot, restoreSnapshot, clearSnapshot } from "../store/snapshots";
 import { Modal, ModalHeader } from "../components/Modal";
@@ -36,7 +36,7 @@ function SortableSegmentPill({ id }: { id: TokenNameSegment }) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-accent-subtle border border-accent text-[11px] font-semibold text-accent cursor-grab select-none">
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-b-fi-subtle border border-b-br-default text-[11px] font-semibold text-b-tx-muted cursor-grab select-none">
       <span className="text-[9px] opacity-60">⠿</span>
       {SEGMENT_LABELS[id]}
     </div>
@@ -116,7 +116,7 @@ function TokensTab() {
         {projectStore.useUniformAlgorithm && (
           <SmallRow
             label="Solver Algorithm"
-            control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={projectStore.solverMode} onChange={(e) => setProjectField("solverMode", e.target.value as typeof projectStore.solverMode)} />}
+            control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={projectStore.solverMode} tooltip={SOLVER_MODE_DESCRIPTIONS[projectStore.solverMode]} onChange={(e) => setProjectField("solverMode", e.target.value as typeof projectStore.solverMode)} />}
           />
         )}
         {!projectStore.useUniformAlgorithm && (
@@ -188,7 +188,7 @@ function TokensTab() {
                   {tokenNameSegments.map((seg, i) => (
                     <div key={seg} className="flex items-center gap-1">
                       <SortableSegmentPill id={seg} />
-                      {i < tokenNameSegments.length - 1 && <span className="text-[11px] text-text-dim">/</span>}
+                      {i < tokenNameSegments.length - 1 && <span className="text-[11px] text-n-tx-dim">/</span>}
                     </div>
                   ))}
                 </div>
@@ -197,7 +197,7 @@ function TokensTab() {
           </div>
 
           {/* Live preview */}
-          <HelperText className="font-mono bg-bg-input rounded-[4px] p-2">{namePreview}</HelperText>
+          <HelperText className="font-mono bg-n-sf-input rounded-[4px] p-2">{namePreview}</HelperText>
         </div>
         <PanelRow label="Use Shorthand for Colors" control={<Toggle on={projectStore.useShorthandColors} onChange={() => setProjectField("useShorthandColors", !projectStore.useShorthandColors)} />} />
         <PanelRow label="Use Shorthand for Roles" control={<Toggle on={projectStore.useShorthandRoles} onChange={() => setProjectField("useShorthandRoles", !projectStore.useShorthandRoles)} />} />
@@ -234,7 +234,7 @@ function TokensTab() {
         <SettingsCard>
           <button type="button" className="flex items-center justify-between w-full text-left" onClick={() => setStepLabelsCollapsed((c) => !c)}>
             <SectionLabel>Step Labels</SectionLabel>
-            <span className="text-text-muted text-[10px]">{stepLabelsCollapsed ? "▸" : "▾"}</span>
+            <span className="text-n-tx-muted text-[10px]">{stepLabelsCollapsed ? "▸" : "▾"}</span>
           </button>
           {!stepLabelsCollapsed && (
             <>
@@ -395,7 +395,7 @@ export function SettingsOverlay() {
         }
       />
 
-      <div className="shrink-0 flex gap-1 px-3 py-2 border-b border-border-base overflow-x-auto">
+      <div className="shrink-0 flex gap-1 px-3 py-2 border-b border-n-br-default overflow-x-auto">
         <TabBar tabs={SETTINGS_TABS} active={settingsTab} onChange={setSettingsTab} />
       </div>
 

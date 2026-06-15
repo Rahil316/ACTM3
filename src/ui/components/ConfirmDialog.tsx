@@ -34,8 +34,8 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <ConfirmOverlay open={open} className={className}>
-      <div className="bg-bg-input rounded-xl p-6 flex flex-col items-center gap-6">
-        <div className="text-danger">{icon ?? <IconAlertTriangle />}</div>
+      <div className="bg-n-sf-input rounded-xl p-6 flex flex-col items-center gap-6">
+        <div className="text-d-tx-muted">{icon ?? <IconAlertTriangle />}</div>
         <div className="space-y-2">
           <ModalTitle>{title}</ModalTitle>
           {body && <BodyText className="max-w-[260px]">{body}</BodyText>}

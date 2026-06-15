@@ -25,8 +25,8 @@ export const AllDialogs: StoryObj = {
     const [fullscreenOpen, setFullscreenOpen] = useState(false);
 
     return (
-      <div className="flex flex-col gap-3 p-4 max-w-sm bg-bg-app rounded-lg border border-border-base relative min-h-[390px] justify-center items-center">
-        <h4 className="text-text-muted text-[11px] uppercase tracking-wider font-bold mb-2">Dialogs & Overlays</h4>
+      <div className="flex flex-col gap-3 p-4 max-w-sm bg-n-bg-app rounded-lg border border-n-br-default relative min-h-[390px] justify-center items-center">
+        <h4 className="text-n-tx-muted text-[11px] uppercase tracking-wider font-bold mb-2">Dialogs & Overlays</h4>
 
         <Button variant="secondary" size="md" className="w-full" label="Open Modal Screen" onClick={() => setModalOpen(true)} />
         <Button variant="secondary" size="md" className="w-full" label="Open Confirm Dialog" onClick={() => setConfirmOpen(true)} />
@@ -43,7 +43,7 @@ export const AllDialogs: StoryObj = {
             subtitle="Configure your plugins settings and design tokens"
             actions={<Button variant="primary" size="sm" label="Close" onClick={() => setModalOpen(false)} />}
           />
-          <div className="p-4 flex-1 overflow-y-auto flex flex-col items-center justify-center text-text-muted">
+          <div className="p-4 flex-1 overflow-y-auto flex flex-col items-center justify-center text-n-tx-muted">
             <p>This is the content area of a full-screen Modal overlay.</p>
           </div>
         </Modal>
@@ -105,8 +105,8 @@ export const AllDialogs: StoryObj = {
         {/* Backdrop (renders overlay with click-to-close) */}
         <Backdrop open={backdropOpen} onClick={() => setBackdropOpen(false)} />
         {backdropOpen && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-bg-card p-4 rounded-lg border border-border-base text-center shadow-lg pointer-events-auto">
-            <p className="text-text-primary mb-3">Backdrop is active!</p>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-n-sf-default p-4 rounded-lg border border-n-br-default text-center shadow-lg pointer-events-auto">
+            <p className="text-n-tx-primary mb-3">Backdrop is active!</p>
             <Button variant="primary" size="sm" label="Click to close" onClick={() => setBackdropOpen(false)} />
           </div>
         )}
@@ -119,7 +119,7 @@ export const AllDialogs: StoryObj = {
               subtitle="Explore beautiful predefined themes and color combinations"
               actions={<Button variant="primary" size="sm" label="Close" onClick={() => setFullscreenOpen(false)} />}
             />
-            <div className="p-5 flex-1 overflow-y-auto flex flex-col items-center justify-center text-text-muted">
+            <div className="p-5 flex-1 overflow-y-auto flex flex-col items-center justify-center text-n-tx-muted">
               <p>This is a FullscreenOverlay component. It covers the entire layout context.</p>
               <Button className="mt-4" variant="secondary" size="md" label="Close Overlay" onClick={() => setFullscreenOpen(false)} />
             </div>
@@ -129,4 +129,3 @@ export const AllDialogs: StoryObj = {
     );
   },
 };
-

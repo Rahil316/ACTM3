@@ -24,6 +24,7 @@ function applyPrefsToDOM(scale: number, theme: UiTheme): void {
   document.body.style.zoom = '';
   const resolved: 'dark' | 'light' = theme === 'figma' ? detectFigmaTheme() : theme;
   document.body.setAttribute('data-ui-theme', resolved);
+  document.body.setAttribute('data-theme', resolved);
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────

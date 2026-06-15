@@ -5,7 +5,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 // CSS is used in SortableLeafWrapper via CSS.Transform.toString
-import { ChevronRight, ChevronDown, GripVertical, Plus, FolderMinus, Trash2, Check, X, CheckSquare } from "lucide-react";
+import { LucideChevronRight as ChevronRight, LucideChevronDown as ChevronDown, LucideGripVertical as GripVertical, LucidePlus as Plus, LucideFolderMinus as FolderMinus, LucideTrash as Trash2, LucideCheck as Check, LucideClose as X, LucideCheckSquare as CheckSquare } from "./icons";
 import { Button } from "./Button";
 
 // ── Tree types ────────────────────────────────────────────────────────────────
@@ -100,15 +100,15 @@ export function useCommittedNames<T extends { _id: string; name: string }>(items
 export function MultiSelectToolbar({ count, onGroup, onUngroup, onDelete, onClear, onSelectAll }: { count: number; onGroup: () => void; onUngroup: () => void; onDelete: () => void; onClear: () => void; onSelectAll: () => void }) {
   return createPortal(
     <div className="fixed bottom-4 inset-x-0 flex justify-center z-50 pointer-events-none">
-      <div className="flex items-center gap-1 bg-bg-card border border-border-strong rounded-[10px] shadow-xl px-2 py-1.5 pointer-events-auto">
-        <span className="text-[10px] font-semibold text-text-primary tabular-nums px-1">{count} selected</span>
-        <div className="w-px h-4 bg-border-strong mx-0.5" />
-        <Button variant="ghost" size="xs" label="All" title="Select all (⌘A)" leftIcon={<CheckSquare size={11} strokeWidth={2} />} onClick={onSelectAll} className="text-text-primary hover:text-accent hover:bg-accent-subtle" />
-        <Button variant="ghost" size="xs" label="Group" title="Group (⌘G)" leftIcon={<Plus size={11} strokeWidth={2} />} onClick={onGroup} className="text-text-primary hover:text-accent hover:bg-accent-subtle" />
-        <Button variant="ghost" size="xs" label="Ungroup" title="Ungroup (⌘⇧G)" leftIcon={<FolderMinus size={11} strokeWidth={1.75} />} onClick={onUngroup} className="text-text-primary hover:text-text-primary hover:bg-bg-hover" />
-        <div className="w-px h-4 bg-border-strong mx-0.5" />
-        <Button variant="ghost" size="xs" label="Delete" title="Delete selected" leftIcon={<Trash2 size={11} strokeWidth={1.75} />} onClick={onDelete} className="text-text-primary hover:text-danger hover:bg-danger-subtle" />
-        <Button variant="icon" size="xs" title="Clear selection (Esc)" icon={<X size={11} strokeWidth={2} />} onClick={onClear} className="ml-0.5 text-text-primary" />
+      <div className="flex items-center gap-1 bg-n-sf-raised border border-n-br-strong rounded-[10px] shadow-xl px-2 py-1.5 pointer-events-auto">
+        <span className="text-[10px] font-semibold text-n-tx-primary tabular-nums px-1">{count} selected</span>
+        <div className="w-px h-4 bg-n-br-strong mx-0.5" />
+        <Button variant="ghost" size="xs" label="All" title="Select all (⌘A)" leftIcon={<CheckSquare size={11} strokeWidth={2} />} onClick={onSelectAll} className="text-n-tx-primary hover:text-b-tx-muted hover:bg-b-fi-subtle" />
+        <Button variant="ghost" size="xs" label="Group" title="Group (⌘G)" leftIcon={<Plus size={11} strokeWidth={2} />} onClick={onGroup} className="text-n-tx-primary hover:text-b-tx-muted hover:bg-b-fi-subtle" />
+        <Button variant="ghost" size="xs" label="Ungroup" title="Ungroup (⌘⇧G)" leftIcon={<FolderMinus size={11} strokeWidth={1.75} />} onClick={onUngroup} className="text-n-tx-primary hover:text-n-tx-primary hover:bg-n-sf-hover" />
+        <div className="w-px h-4 bg-n-br-strong mx-0.5" />
+        <Button variant="ghost" size="xs" label="Delete" title="Delete selected" leftIcon={<Trash2 size={11} strokeWidth={1.75} />} onClick={onDelete} className="text-n-tx-primary hover:text-d-tx-muted hover:bg-d-fi-subtle" />
+        <Button variant="icon" size="xs" title="Clear selection (Esc)" icon={<X size={11} strokeWidth={2} />} onClick={onClear} className="ml-0.5 text-n-tx-primary" />
       </div>
     </div>,
     document.body,
@@ -162,15 +162,15 @@ export function DroppableGroupHeader({
   return (
     <div
       ref={setRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDraggingThis ? 0.4 : 1 }}
-      className={["group flex items-center gap-1.5 px-2 py-1.5 rounded-t-[8px] select-none transition-colors cursor-pointer", isOver && !isDraggingThis ? "bg-accent-subtle" : "hover:bg-bg-hover"].join(" ")}
+      style={{ transform: CSS.Transform.toString(transform ? { ...transform, x: 0 } : null), transition, opacity: isDraggingThis ? 0.4 : 1 }}
+      className={["group flex items-center gap-1.5 px-2 py-1.5 rounded-t-[8px] select-none transition-colors cursor-pointer", isOver && !isDraggingThis ? "bg-b-fi-subtle" : "hover:bg-n-sf-hover"].join(" ")}
       onClick={onToggle}
     >
       {/* Group drag handle */}
       <Button
         variant="icon"
         size="sm"
-        className="cursor-grab touch-none shrink-0 text-text-muted hover:text-text-primary hover:bg-bg-hover"
+        className="cursor-grab touch-none shrink-0 text-n-tx-muted hover:text-n-tx-primary hover:bg-n-sf-hover"
         {...(attributes as React.HTMLAttributes<HTMLButtonElement>)}
         {...(listeners as React.HTMLAttributes<HTMLButtonElement>)}
         title="Drag group"
@@ -179,7 +179,7 @@ export function DroppableGroupHeader({
       />
 
       {/* Collapse chevron */}
-      <span className="text-text-muted shrink-0">{collapsed ? <ChevronRight size={13} strokeWidth={2.5} /> : <ChevronDown size={13} strokeWidth={2.5} />}</span>
+      <span className="text-n-tx-muted shrink-0">{collapsed ? <ChevronRight size={13} strokeWidth={2.5} /> : <ChevronDown size={13} strokeWidth={2.5} />}</span>
 
       {/* Name / edit */}
       {editing ? (
@@ -196,11 +196,11 @@ export function DroppableGroupHeader({
             }
           }}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 text-[12px] font-semibold bg-bg-input border border-accent rounded px-1.5 py-0.5 text-text-primary outline-none min-w-0"
+          className="flex-1 text-[12px] font-semibold bg-n-sf-input border border-b-br-strong rounded px-1.5 py-0.5 text-n-tx-primary outline-none min-w-0"
         />
       ) : (
         <span
-          className="flex-1 text-[12px] font-semibold text-text-primary min-w-0 truncate"
+          className="flex-1 text-[12px] font-semibold text-n-tx-primary min-w-0 truncate"
           onDoubleClick={(e) => {
             e.stopPropagation();
             setDraft(segment);
@@ -212,13 +212,13 @@ export function DroppableGroupHeader({
       )}
 
       {/* Count pill */}
-      <span className="text-[10px] font-semibold tabular-nums bg-border-strong text-text-primary rounded-full px-1.5 py-0.5 shrink-0 group-hover/treegroup:bg-accent group-hover/treegroup:text-text-on-accent transition-colors">{leafCount}</span>
+      <span className="text-[10px] font-semibold tabular-nums bg-n-br-strong text-n-tx-primary rounded-full px-1.5 py-0.5 shrink-0 group-hover/treegroup:bg-b-fi-btn-default group-hover/treegroup:text-b-tx-btn-default transition-colors">{leafCount}</span>
 
       {/* Action buttons */}
       <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
         {editing ? (
           <>
-            <Button variant="icon" size="sm" onClick={commit} title="Confirm rename" icon={<Check size={12} strokeWidth={2.5} />} className="text-accent hover:text-accent hover:bg-accent-subtle" />
+            <Button variant="icon" size="sm" onClick={commit} title="Confirm rename" icon={<Check size={12} strokeWidth={2.5} />} className="text-b-tx-muted hover:text-b-tx-muted hover:bg-b-fi-subtle" />
             <Button
               variant="icon"
               size="sm"
@@ -228,13 +228,13 @@ export function DroppableGroupHeader({
               }}
               title="Cancel rename"
               icon={<X size={12} strokeWidth={2} />}
-              className="text-text-muted hover:text-text-primary hover:bg-bg-hover"
+              className="text-n-tx-muted hover:text-n-tx-primary hover:bg-n-sf-hover"
             />
           </>
         ) : (
           <>
-            <Button variant="icon" size="sm" onClick={onAddChild} title="Add item in group" icon={<Plus size={12} strokeWidth={2} />} className="opacity-60 hover:opacity-100 hover:text-accent hover:bg-accent-subtle text-text-primary" />
-            <Button variant="icon" size="sm" onClick={onUngroup} title="Ungroup (⌘⇧G)" icon={<FolderMinus size={12} strokeWidth={1.75} />} className="opacity-60 hover:opacity-100 hover:text-text-primary hover:bg-bg-hover text-text-primary" />
+            <Button variant="icon" size="sm" onClick={onAddChild} title="Add item in group" icon={<Plus size={12} strokeWidth={2} />} className="opacity-60 hover:opacity-100 hover:text-b-tx-muted hover:bg-b-fi-subtle text-n-tx-primary" />
+            <Button variant="icon" size="sm" onClick={onUngroup} title="Ungroup (⌘⇧G)" icon={<FolderMinus size={12} strokeWidth={1.75} />} className="opacity-60 hover:opacity-100 hover:text-n-tx-primary hover:bg-n-sf-hover text-n-tx-primary" />
           </>
         )}
       </div>
@@ -258,7 +258,7 @@ export const SortableLeafWrapper = React.memo(function SortableLeafWrapper({
   selected: boolean;
   multiDragCount?: number;
   onToggleSelect: (id: string, meta: boolean, shift?: boolean) => void;
-  renderContent: (listeners: Record<string, unknown>, attributes: Record<string, unknown>) => React.ReactNode;
+  renderContent: (listeners: Record<string, unknown>, attributes: Record<string, unknown>, isDragging: boolean) => React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
@@ -271,7 +271,7 @@ export const SortableLeafWrapper = React.memo(function SortableLeafWrapper({
     <div
       ref={setNodeRef}
       style={{
-        transform: CSS.Transform.toString(transform),
+        transform: CSS.Transform.toString(transform ? { ...transform, x: 0 } : null),
         transition,
         opacity: isDragging ? 0.3 : 1,
       }}
@@ -288,16 +288,16 @@ export const SortableLeafWrapper = React.memo(function SortableLeafWrapper({
           selected
             ? {
                 borderRadius: 12,
-                outline: "2px solid var(--accent)",
+                outline: "2px solid var(--b-br-strong)",
                 outlineOffset: 2,
-                boxShadow: "0 0 0 4px var(--accent-glow)",
+                boxShadow: "0 0 0 4px var(--b-fi-subtle)",
               }
             : undefined
         }
       >
-        {renderContent(contentListeners as Record<string, unknown>, selected ? {} : (attributes as unknown as Record<string, unknown>))}
+        {renderContent(contentListeners as Record<string, unknown>, selected ? {} : (attributes as unknown as Record<string, unknown>), isDragging)}
         {/* Multi-drag count badge — shown on the card being dragged */}
-        {isDragging && multiDragCount && multiDragCount > 1 && <div className="absolute -top-2 -right-2 bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md z-10">{multiDragCount}</div>}
+        {isDragging && multiDragCount && multiDragCount > 1 && <div className="absolute -top-2 -right-2 bg-b-fi-btn-default text-b-tx-btn-default text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md z-10">{multiDragCount}</div>}
       </div>
     </div>
   );
@@ -344,7 +344,7 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
           const isDragging = activeGroupPath === node.fullPath;
           const isDropTarget = overGroupPath === node.fullPath && !isDragging;
           return (
-            <div key={node.fullPath} className={["group/treegroup rounded-[10px] border transition-all bg-bg-cardDim", isDropTarget ? "border-accent bg-accent-subtle/40 shadow-[0_0_0_3px_var(--accent-glow)]" : "border-border-base hover:border-border-strong hover:shadow-sm"].join(" ")}>
+            <div key={node.fullPath} className={["group/treegroup rounded-[10px] border transition-all bg-n-sf-sunken", isDropTarget ? "border-b-br-default bg-b-fi-subtle/40 shadow-[0_0_0_3px_var(--b-fi-subtle)]" : "border-n-br-default hover:border-n-br-strong hover:shadow-sm"].join(" ")}>
               <DroppableGroupHeader
                 segment={node.segment}
                 fullPath={node.fullPath}
@@ -358,7 +358,7 @@ export function TreeRenderer<T extends { name: string; _id: string }>({
                 onUngroup={() => onUngroup(node.fullPath)}
               />
               {!isCollapsed && !isDragging && (
-                <div className="border-t border-border-subtle p-2">
+                <div className="border-t border-n-br-subtle p-2">
                   <TreeRenderer
                     nodes={node.children}
                     collapsed={collapsed}
@@ -395,8 +395,8 @@ export type RootZoneId = (typeof ROOT_ZONE_IDS)[number];
 function SideStrip({ id, side }: { id: RootZoneId; side: "left" | "right" }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
-    <div ref={setNodeRef} className={`absolute top-0 bottom-0 w-5 z-10 flex items-center justify-center transition-colors rounded-[6px] ${side === "left" ? "left-0" : "right-0"} ${isOver ? "bg-accent-subtle border border-accent" : "border border-transparent"}`}>
-      {isOver && <span className="text-accent text-[9px] font-bold [writing-mode:vertical-rl] rotate-180 select-none">ungroup</span>}
+    <div ref={setNodeRef} className={`absolute top-0 bottom-0 w-5 z-10 flex items-center justify-center transition-colors rounded-[6px] ${side === "left" ? "left-0" : "right-0"} ${isOver ? "bg-b-fi-subtle border border-b-br-default" : "border border-transparent"}`}>
+      {isOver && <span className="text-b-tx-muted text-[9px] font-bold [writing-mode:vertical-rl] rotate-180 select-none">ungroup</span>}
     </div>
   );
 }
@@ -408,7 +408,7 @@ export function RootDropZone({ activeId, activeIsGrouped }: { activeId: string |
     <>
       <SideStrip id="root-left" side="left" />
       <SideStrip id="root-right" side="right" />
-      <div ref={setNodeRef} className={`mt-1 h-14 rounded-[8px] border-2 border-dashed flex items-center justify-center text-[11px] transition-colors ${isOver ? "border-accent bg-accent-subtle text-accent" : "border-border-base text-text-dim"}`}>
+      <div ref={setNodeRef} className={`mt-1 h-14 rounded-[8px] border-2 border-dashed flex items-center justify-center text-[11px] transition-colors ${isOver ? "border-b-br-default bg-b-fi-subtle text-b-tx-muted" : "border-n-br-default text-n-tx-dim"}`}>
         {isOver ? "Release to ungroup" : "Drop here to ungroup"}
       </div>
     </>

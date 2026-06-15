@@ -24,26 +24,26 @@ export function SourceColorCard({ color, alphaValues = [], showAlphas = false }:
       <div className="flex items-center gap-2 px-1">
         <div className="w-3 h-3 rounded-[3px] shrink-0" style={{ background: hex }} />
         <CardTitle>{color.name}</CardTitle>
-        <MicroText className="text-text-dim ml-1">{hex.toUpperCase()}</MicroText>
+        <MicroText className="text-n-tx-dim ml-1">{hex.toUpperCase()}</MicroText>
       </div>
 
       {/* Swatch tile */}
-      <div className="rounded-[10px] overflow-hidden border border-border-base cursor-pointer hover:opacity-90 transition-opacity" onClick={() => copyText(hex, color.name)} title={`${hex} — click to copy`}>
+      <div className="rounded-[10px] overflow-hidden border border-n-br-default cursor-pointer hover:opacity-90 transition-opacity" onClick={() => copyText(hex, color.name)} title={`${hex} — click to copy`}>
         <div className="h-16 flex items-end p-3" style={{ background: hex }}>
           <span className="text-[12px] font-bold font-mono tracking-widest" style={{ color: inkColor(swatchInk, 0.85), textShadow: "0 1px 3px rgba(0,0,0,0.15)" }}>
             {hex.toUpperCase()}
           </span>
         </div>
-        <div className="px-3 py-2 flex items-center justify-between bg-bg-input border-t border-border-subtle">
-          <span className="text-[11px] font-semibold text-text-primary">{color.name}</span>
-          {color.shorthand && <span className="text-[10px] font-mono text-text-dim">{color.shorthand}</span>}
+        <div className="px-3 py-2 flex items-center justify-between bg-n-sf-input border-t border-n-br-subtle">
+          <span className="text-[11px] font-semibold text-n-tx-primary">{color.name}</span>
+          {color.shorthand && <span className="text-[10px] font-mono text-n-tx-dim">{color.shorthand}</span>}
         </div>
       </div>
 
       {/* Alpha tint strip */}
       {alphas.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <MicroText className="text-text-dim px-1">Alpha tints</MicroText>
+          <MicroText className="text-n-tx-dim px-1">Alpha tints</MicroText>
           <div
             className="flex w-full h-12 rounded-[8px] overflow-hidden"
             style={{
@@ -65,7 +65,7 @@ export function SourceColorCard({ color, alphaValues = [], showAlphas = false }:
           <div className="flex">
             {alphas.map((alpha) => (
               <div key={alpha} className="flex-1 text-center">
-                <span className="text-[9px] font-mono text-text-dim">{alpha}%</span>
+                <span className="text-[9px] font-mono text-n-tx-dim">{alpha}%</span>
               </div>
             ))}
           </div>

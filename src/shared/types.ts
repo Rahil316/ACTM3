@@ -9,7 +9,7 @@ export type VariableScope = "FRAME_FILL" | "SHAPE_FILL" | "TEXT_FILL" | "STROKE_
 
 export type ScaleAlgorithm = "Natural" | "Uniform" | "Expressive" | "Symmetric" | "OKLCH" | "Material" | "Linear";
 
-export type SolverMode = "natural" | "saturated" | "luminance" | "hue-locked" | "chroma-maximized";
+export type SolverMode = "natural" | "constant-chroma" | "symmetric" | "hue-locked" | "max-chroma";
 
 // ── Entity shapes ────────────────────────────────────────────────────────────
 

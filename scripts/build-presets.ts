@@ -69,17 +69,17 @@ async function main() {
     ["carbon", carbonPresets as AnyPreset[]],
     ["polaris", polarisPresets as AnyPreset[]],
   ] as [string, AnyPreset[]][]) {
-    console.log(`  ${name}: ${arr.length} preset${arr.length !== 1 ? "s" : ""}`);
+    console.log(`[presets] ${name}: ${arr.length} preset${arr.length !== 1 ? "s" : ""}`);
   }
 
   if (!isRelease && devPresets.length > 0) {
-    console.log(`  dev (${devFileNames.join(", ")}): ${devPresets.length} preset${devPresets.length !== 1 ? "s" : ""}`);
+    console.log(`[presets] dev (${devFileNames.join(", ")}): ${devPresets.length} preset${devPresets.length !== 1 ? "s" : ""}`);
   } else if (isRelease) {
-    console.log(`  raw/dev/: excluded (--release)`);
+    console.log(`[presets] raw/dev/: excluded (--release)`);
   }
 
   fs.writeFileSync(OUT_FILE, JSON.stringify(all, null, 2));
-  console.log(`\nWrote ${all.length} presets → ${path.relative(process.cwd(), OUT_FILE)}`);
+  console.log(`[presets] wrote ${all.length} total → ${path.relative(process.cwd(), OUT_FILE)}`);
 }
 
 main().catch((e) => {

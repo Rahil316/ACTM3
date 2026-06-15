@@ -339,7 +339,7 @@ function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
   const themes = projectStore.themes;
 
   if (Object.keys(result.scales).length === 0) {
-    return <p className="text-[12px] text-text-muted p-4 text-center">No scale in Direct mode.</p>;
+    return <p className="text-[12px] text-n-tx-muted p-4 text-center">No scale in Direct mode.</p>;
   }
 
   return (
@@ -351,7 +351,7 @@ function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
         const hdrInk = getInkMode(srcHex);
 
         return (
-          <div key={color._id} className="rounded-[10px] overflow-hidden border border-border-base">
+          <div key={color._id} className="rounded-[10px] overflow-hidden border border-n-br-default">
             {/* Color header */}
             <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: srcHex, gridTemplateColumns: COL }}>
               {(["Step", "Hex", "Ratio", "WCAG", ""].concat(themes.map((t) => t.name)) as string[]).slice(0, 4 + themes.length).map((h, i) => (
@@ -367,10 +367,10 @@ function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
               const ratioStr = typeof contrast?.ratio === "number" ? contrast.ratio.toFixed(1) : "—";
 
               return (
-                <div key={stepName} className="grid items-center h-9 border-t border-border-subtle cursor-pointer hover:bg-bg-hover transition-colors" style={{ gridTemplateColumns: COL }} onClick={() => copyText(stepData.value, `${color.name}/${stepName}`)}>
+                <div key={stepName} className="grid items-center h-9 border-t border-n-br-subtle cursor-pointer hover:bg-n-sf-hover transition-colors" style={{ gridTemplateColumns: COL }} onClick={() => copyText(stepData.value, `${color.name}/${stepName}`)}>
                   <div className="px-3 flex items-center gap-1.5">
-                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0 border border-border-subtle" style={{ background: stepData.value }} />
-                    <span className="text-[11px] font-semibold text-text-primary">{stepName}</span>
+                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0 border border-n-br-subtle" style={{ background: stepData.value }} />
+                    <span className="text-[11px] font-semibold text-n-tx-primary">{stepName}</span>
                   </div>
                   <div className="px-2">
                     <span
@@ -385,10 +385,10 @@ function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
                     </span>
                   </div>
                   <div className="px-2">
-                    <span className="text-[12px] font-bold tabular-nums text-text-primary">{ratioStr}</span>
+                    <span className="text-[12px] font-bold tabular-nums text-n-tx-primary">{ratioStr}</span>
                   </div>
                   <div className="px-2">{contrast?.rating && <RatingBadge rating={contrast.rating} />}</div>
-                  <div className="px-2 text-[10px] text-text-dim font-mono truncate">
+                  <div className="px-2 text-[10px] text-n-tx-dim font-mono truncate">
                     {themes
                       .slice(1)
                       .map((t) => {
@@ -674,7 +674,7 @@ function ScaleSection({ result, projectStore, groupByStep = false, viewMode = "g
   if (Object.keys(result.scales).length === 0) {
     return (
       <div className="p-4 text-center">
-        <p className="text-[12px] text-text-muted">No scale in Direct mode — colors are solved directly per variation target.</p>
+        <p className="text-[12px] text-n-tx-muted">No scale in Direct mode — colors are solved directly per variation target.</p>
       </div>
     );
   }
@@ -693,7 +693,7 @@ function ScaleSection({ result, projectStore, groupByStep = false, viewMode = "g
 
             {viewMode === "table" ? (
               // Table: one row per color at this step
-              <div className="rounded-[10px] overflow-hidden border border-border-base">
+              <div className="rounded-[10px] overflow-hidden border border-n-br-default">
                 {colors.map((color) => {
                   const stepData = result.scales[color.name]?.[stepName];
                   if (!stepData) return null;
@@ -703,14 +703,14 @@ function ScaleSection({ result, projectStore, groupByStep = false, viewMode = "g
                   return (
                     <div
                       key={color._id}
-                      className="grid items-center h-9 border-t border-border-subtle first:border-0 cursor-pointer hover:bg-bg-hover transition-colors"
+                      className="grid items-center h-9 border-t border-n-br-subtle first:border-0 cursor-pointer hover:bg-n-sf-hover transition-colors"
                       style={{ gridTemplateColumns: "1fr 64px 56px 48px" }}
                       onClick={() => copyText(stepData.value, `${color.name}/${stepName}`)}
                     >
                       <div className="px-3 flex items-center gap-2 min-w-0">
                         <div className="w-3.5 h-3.5 rounded-[3px] shrink-0" style={{ background: stepData.value, boxShadow: "0 0 0 1px rgba(0,0,0,0.10)" }} />
                         <div className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ background: srcHex, boxShadow: "0 0 0 1px rgba(0,0,0,0.08)" }} />
-                        <span className="text-[11px] font-semibold text-text-primary truncate">{color.name}</span>
+                        <span className="text-[11px] font-semibold text-n-tx-primary truncate">{color.name}</span>
                       </div>
                       <div className="px-2">
                         <span className="text-[10px] font-mono font-semibold" style={{ color: stepData.value }}>
@@ -718,7 +718,7 @@ function ScaleSection({ result, projectStore, groupByStep = false, viewMode = "g
                         </span>
                       </div>
                       <div className="px-2">
-                        <span className="text-[12px] font-bold tabular-nums text-text-primary">{ratioStr}</span>
+                        <span className="text-[12px] font-bold tabular-nums text-n-tx-primary">{ratioStr}</span>
                       </div>
                       <div className="px-2">{contrast?.rating && <RatingBadge rating={contrast.rating} />}</div>
                     </div>
@@ -758,7 +758,7 @@ function ScaleSection({ result, projectStore, groupByStep = false, viewMode = "g
             <div className="flex items-center gap-2 px-1">
               <div className="w-3 h-3 rounded-[3px] shrink-0" style={{ background: srcHex }} />
               <CardTitle>{color.name}</CardTitle>
-              <MicroText className="text-text-dim ml-1">{srcHex.toUpperCase()}</MicroText>
+              <MicroText className="text-n-tx-dim ml-1">{srcHex.toUpperCase()}</MicroText>
             </div>
 
             <div className="flex w-full h-24 rounded-[10px] overflow-hidden cursor-crosshair" style={{ boxShadow: "0 10px 30px rgba(0,0,0,0.12)", border: "1px solid rgba(136,136,136,0.10)" }}>
@@ -906,7 +906,7 @@ function PreviewContent() {
   return (
     <div className="flex flex-col h-full">
       {/* Tab bar + toolbar */}
-      <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-2 border-b border-border-subtle flex-wrap gap-y-2">
+      <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-2 border-b border-n-br-subtle flex-wrap gap-y-2">
         {/* Tabs — arrow-key navigable */}
         <div className="flex items-center gap-1 flex-wrap" role="tablist" onKeyDown={onTabBarKeyDown}>
           {tabs.map((tab) => {
@@ -918,7 +918,7 @@ function PreviewContent() {
                 aria-selected={isActive}
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors flex items-center gap-1.5 ${isActive ? "bg-accent text-text-on-accent" : "bg-bg-input text-text-muted hover:bg-bg-hover hover:text-text-primary"}`}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors flex items-center gap-1.5 ${isActive ? "bg-b-fi-btn-default text-b-tx-btn-default" : "bg-n-sf-input text-n-tx-muted hover:bg-n-sf-hover hover:text-n-tx-primary"}`}
               >
                 {tab.bg && <span className="w-2.5 h-2.5 rounded-[2px] shrink-0 inline-block" style={{ background: tab.bg, boxShadow: "0 0 0 1px rgba(128,128,128,0.2)" }} />}
                 {tab.label}
@@ -929,7 +929,7 @@ function PreviewContent() {
 
         {/* Toolbar — hidden on Source tab */}
         <div className={`flex items-center gap-2 ${isSourceTab ? "invisible pointer-events-none" : ""}`}>
-          {computing && <MicroText className="text-text-dim">Computing…</MicroText>}
+          {computing && <MicroText className="text-n-tx-dim">Computing…</MicroText>}
           <SegmentedControl
             segments={
               isScaleTab

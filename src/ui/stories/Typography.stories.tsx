@@ -19,7 +19,7 @@ export default meta;
 
 export const TypeScale: StoryObj = {
   render: () => (
-    <div className="flex flex-col gap-5 p-4 max-w-sm bg-bg-app border border-border-base rounded-lg">
+    <div className="flex flex-col gap-5 p-4 max-w-sm bg-n-bg-app border border-n-br-default rounded-lg">
 
       <Row label="ModalTitle" usage="Full-screen result overlays (success, error)">
         <ModalTitle>Success!</ModalTitle>
@@ -73,7 +73,7 @@ export const TypeScale: StoryObj = {
 
 export const IconButtons: StoryObj = {
   render: () => (
-    <div className="flex gap-2 p-4 bg-bg-app border border-border-base rounded-lg items-center">
+    <div className="flex gap-2 p-4 bg-n-bg-app border border-n-br-default rounded-lg items-center">
       <Button variant="ghost" size="sm" square icon={<Icons.IconSettings />} aria-label="Settings" title="Settings" onClick={() => alert('Settings')} />
       <Button variant="ghost" size="sm" square icon={<Icons.IconRun />}      aria-label="Run"      title="Run"      onClick={() => alert('Run')} />
       <Button variant="ghost" size="sm" square icon={<Icons.IconCode />}     aria-label="Export"   title="Export"   onClick={() => alert('Export')} />
@@ -89,14 +89,14 @@ export const IconsGallery: StoryObj = {
   render: () => {
     const allIcons = Object.entries(Icons).filter(([name]) => name.startsWith('Icon'));
     return (
-      <div className="p-4 max-w-md bg-bg-app border border-border-base rounded-lg text-text-primary">
+      <div className="p-4 max-w-md bg-n-bg-app border border-n-br-default rounded-lg text-n-tx-primary">
         <SectionLabel>Icons Registry ({allIcons.length})</SectionLabel>
         <div className="grid grid-cols-4 gap-3 mt-3">
           {allIcons.map(([name, Comp]) => {
             const IconComp = Comp as React.ComponentType<{ className?: string }>;
             return (
-              <div key={name} className="flex flex-col items-center justify-center p-2 rounded border border-border-base bg-bg-card hover:bg-bg-hover text-center" title={name}>
-                <IconComp className="w-5 h-5 mb-1.5 text-text-muted" />
+              <div key={name} className="flex flex-col items-center justify-center p-2 rounded border border-n-br-default bg-n-sf-default hover:bg-n-sf-hover text-center" title={name}>
+                <IconComp className="w-5 h-5 mb-1.5 text-n-tx-muted" />
                 <MicroText className="select-all truncate w-full text-center">{name.replace('Icon', '')}</MicroText>
               </div>
             );
@@ -111,10 +111,10 @@ export const IconsGallery: StoryObj = {
 
 function Row({ label, usage, children }: { label: string; usage: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1 border-b border-border-subtle pb-4 last:border-0 last:pb-0">
+    <div className="flex flex-col gap-1 border-b border-n-br-subtle pb-4 last:border-0 last:pb-0">
       <div className="flex items-baseline gap-2 mb-0.5">
-        <span className="text-[10px] font-mono text-accent">{label}</span>
-        <span className="text-[10px] text-text-dim">{usage}</span>
+        <span className="text-[10px] font-mono text-b-tx-muted">{label}</span>
+        <span className="text-[10px] text-n-tx-dim">{usage}</span>
       </div>
       {children}
     </div>

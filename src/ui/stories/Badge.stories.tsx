@@ -24,7 +24,7 @@ export const Playground: Story = {
 
 export const Variants: StoryObj = {
   render: () => (
-    <div className="flex flex-col gap-6 p-4 bg-bg-app rounded-lg border border-border-base">
+    <div className="flex flex-col gap-6 p-4 bg-n-bg-app rounded-lg border border-n-br-default">
       <Section label="Variants">
         {(['default', 'accent', 'success', 'warning', 'danger', 'muted', 'outline'] as const).map((v) => (
           <Badge key={v} variant={v}>{v}</Badge>
@@ -88,7 +88,7 @@ export const Variants: StoryObj = {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-text-muted text-[10px] uppercase tracking-wider font-bold mb-2">{label}</p>
+      <p className="text-n-tx-muted text-[10px] uppercase tracking-wider font-bold mb-2">{label}</p>
       <div className="flex items-center gap-2 flex-wrap">{children}</div>
     </div>
   );
@@ -98,7 +98,7 @@ function DismissibleDemo() {
   const initial = ['React', 'TypeScript', 'Figma', 'Design System', 'Tokens'];
   const [tags, setTags] = useState(initial);
   if (tags.length === 0) return (
-    <button className="text-[11px] text-accent underline" onClick={() => setTags(initial)}>Reset</button>
+    <button className="text-[11px] text-b-tx-muted underline" onClick={() => setTags(initial)}>Reset</button>
   );
   return (
     <>

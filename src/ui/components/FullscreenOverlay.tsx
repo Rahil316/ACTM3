@@ -8,7 +8,7 @@ interface FullscreenOverlayProps {
 
 export function FullscreenOverlay({ children, className }: FullscreenOverlayProps) {
   return (
-    <div className={clsx('absolute inset-0 z-50 flex flex-col bg-bg-app', className)}>
+    <div className={clsx('absolute inset-0 z-50 flex flex-col bg-n-bg-app', className)}>
       {children}
     </div>
   );

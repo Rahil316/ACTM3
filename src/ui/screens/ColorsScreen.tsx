@@ -43,13 +43,13 @@ interface ColorSuggestSheetProps {
 function ColorSuggestSheet({ existingNames, onPick, onBlank, onClose }: ColorSuggestSheetProps) {
   const available = SUGGESTED_COLORS.filter((s) => !existingNames.includes(s.name));
   return (
-    <SuggestSheet label="Suggested colors" linkLabel="+ Custom" onLink={onBlank} onClose={onClose} empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-text-muted">All suggestions already added.</div> : undefined}>
+    <SuggestSheet label="Suggested colors" linkLabel="+ Custom" onLink={onBlank} onClose={onClose} empty={available.length === 0 ? <div className="px-4 py-6 text-center text-[11px] text-n-tx-muted">All suggestions already added.</div> : undefined}>
       {available.map((s) => (
         <MenuRow key={s.name} onClick={() => onPick(s.name, s.value, s.shorthand)}>
           <ColorSwatch color={s.value} size="md" />
           <div className="flex flex-col min-w-0">
-            <span className="text-[12px] font-semibold text-text-primary truncate">{s.name}</span>
-            <span className="text-[10px] text-text-muted font-mono">
+            <span className="text-[12px] font-semibold text-n-tx-primary truncate">{s.name}</span>
+            <span className="text-[10px] text-n-tx-muted font-mono">
               {s.value.toUpperCase()} · {s.description}
             </span>
           </div>
@@ -74,7 +74,7 @@ function SortableColorCard({ color, idx, selected, onToggleSelect }: { color: Co
         onToggleSelect(color._id ?? "", e.metaKey || e.ctrlKey, e.shiftKey);
       }}
     >
-      <div style={selected ? { borderRadius: 12, outline: "2px solid var(--accent)", outlineOffset: 2, boxShadow: "0 0 0 4px var(--accent-glow)" } : undefined}>
+      <div style={selected ? { borderRadius: 12, outline: "2px solid var(--b-fi-btn-default)", outlineOffset: 2, boxShadow: "0 0 0 4px var(--b-fi-subtle)" } : undefined}>
         <ColorGroupCard color={color} idx={idx} dragListeners={listeners as Record<string, unknown>} dragAttributes={attributes as unknown as Record<string, unknown>} />
       </div>
     </div>
@@ -441,14 +441,14 @@ function ColorTree() {
         />
         <DragOverlay>
           {activeColor && (
-            <div className="px-3 py-2 rounded-[10px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-primary flex items-center gap-2">
-              {activeColor._id && selectedIds.has(activeColor._id) && selectedIds.size > 1 && <span className="bg-accent text-text-on-accent text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{selectedIds.size}</span>}
+            <div className="px-3 py-2 rounded-[10px] border border-b-br-default bg-n-sf-default shadow-xl text-[12px] font-semibold text-n-tx-primary flex items-center gap-2">
+              {activeColor._id && selectedIds.has(activeColor._id) && selectedIds.size > 1 && <span className="bg-b-fi-btn-default text-b-tx-btn-default text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0">{selectedIds.size}</span>}
               {activeColor.name.split("/").pop()}
             </div>
           )}
           {activeGroupSegment && (
-            <div className="px-3 py-1.5 rounded-[8px] border border-accent bg-bg-card shadow-xl text-[12px] font-semibold text-text-secondary flex items-center gap-1.5">
-              <span className="text-text-dim text-[10px]">{committed.filter((c) => c.name.startsWith(activeGroupPath! + "/")).length}</span>
+            <div className="px-3 py-1.5 rounded-[8px] border border-b-br-default bg-n-sf-default shadow-xl text-[12px] font-semibold text-n-tx-secondary flex items-center gap-1.5">
+              <span className="text-n-tx-dim text-[10px]">{committed.filter((c) => c.name.startsWith(activeGroupPath! + "/")).length}</span>
               {activeGroupSegment}
             </div>
           )}

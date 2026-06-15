@@ -110,7 +110,7 @@ Open **Settings** via the gear icon in the top-right toolbar. Settings is a full
 
 **Algorithm** (Scale mode) — Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear.
 
-**Solver** (Direct mode, global) — Balanced (natural), Vivid (saturated), Muted (luminance), Hue Locked, Max Chroma.
+**Solver** (Direct mode, global) — Natural, Constant Chroma, Symmetric, Hue Locked, Max Chroma.
 
 **Solver scope** (Direct mode, global off) — By Color or By Role.
 

@@ -18,17 +18,17 @@ export default meta;
 
 export const Spinners: StoryObj = {
   render: () => (
-    <div className="flex flex-col gap-6 p-4 max-w-sm bg-bg-app rounded-lg border border-border-base">
+    <div className="flex flex-col gap-6 p-4 max-w-sm bg-n-bg-app rounded-lg border border-n-br-default">
       <div>
-        <h4 className="text-text-muted text-[11px] uppercase tracking-wider mb-2 font-bold">Standard Spinners</h4>
+        <h4 className="text-n-tx-muted text-[11px] uppercase tracking-wider mb-2 font-bold">Standard Spinners</h4>
         <div className="flex items-center gap-4">
           <Spinner size="sm" />
           <Spinner size="md" />
           <Spinner size="lg" />
         </div>
       </div>
-      <div className="border-t border-border-base pt-4">
-        <h4 className="text-text-muted text-[11px] uppercase tracking-wider mb-2 font-bold">Section Spinner</h4>
+      <div className="border-t border-n-br-default pt-4">
+        <h4 className="text-n-tx-muted text-[11px] uppercase tracking-wider mb-2 font-bold">Section Spinner</h4>
         <SectionSpinner message="Loading preview data..." />
       </div>
     </div>
@@ -38,7 +38,7 @@ export const Spinners: StoryObj = {
 // Static showcase — all banner types visible immediately, no interaction needed.
 export const Banners: StoryObj = {
   render: () => (
-    <div className="flex flex-col w-full max-w-lg rounded-lg overflow-hidden border border-border-base">
+    <div className="flex flex-col w-full max-w-lg rounded-lg overflow-hidden border border-n-br-default">
       <BannerSlot />
     </div>
   ),
@@ -85,12 +85,12 @@ export const BannersAndToasts: StoryObj = {
     return (
       <div className="flex flex-col gap-4 max-w-lg">
         {/* Live banner output — sits above controls, not clipped */}
-        <div className="rounded-lg overflow-hidden border border-border-base">
+        <div className="rounded-lg overflow-hidden border border-n-br-default">
           <BannerSlot />
         </div>
 
-        <div className="flex flex-col gap-2 p-3 bg-bg-card rounded-lg border border-border-base">
-          <p className="text-text-muted text-[11px] uppercase tracking-wider font-bold mb-1">Trigger banners</p>
+        <div className="flex flex-col gap-2 p-3 bg-n-sf-default rounded-lg border border-n-br-default">
+          <p className="text-n-tx-muted text-[11px] uppercase tracking-wider font-bold mb-1">Trigger banners</p>
           <div className="grid grid-cols-3 gap-1.5">
             {(['info', 'success', 'warning', 'error', 'loading', 'neutral'] as const).map((t) => (
               <Button key={t} variant="secondary" size="sm" label={t} onClick={() => add(t)} />
@@ -99,8 +99,8 @@ export const BannersAndToasts: StoryObj = {
           <Button variant="danger" size="sm" label="Clear all" onClick={() => bannersStore.clear()} />
         </div>
 
-        <div className="flex flex-col gap-2 p-3 bg-bg-card rounded-lg border border-border-base">
-          <p className="text-text-muted text-[11px] uppercase tracking-wider font-bold mb-1">Trigger toasts</p>
+        <div className="flex flex-col gap-2 p-3 bg-n-sf-default rounded-lg border border-n-br-default">
+          <p className="text-n-tx-muted text-[11px] uppercase tracking-wider font-bold mb-1">Trigger toasts</p>
           <div className="grid grid-cols-3 gap-1.5">
             {(['success', 'error', 'warn', 'info', 'neutral'] as const).map((t) => (
               <Button key={t} variant="secondary" size="sm" label={t} onClick={() => triggerToast(t)} />
@@ -119,9 +119,9 @@ export const Overlays: StoryObj = {
     const [activeOverlay, setActiveOverlay] = useState<'none' | 'loading' | 'success' | 'error' | 'warning'>('none');
 
     return (
-      <div className="p-4 max-w-sm bg-bg-app rounded-lg border border-border-base relative min-h-[260px] flex flex-col gap-3 justify-center items-center">
-        <h4 className="text-text-muted text-[11px] uppercase tracking-wider font-bold mb-2">Result Overlays</h4>
-        
+      <div className="p-4 max-w-sm bg-n-bg-app rounded-lg border border-n-br-default relative min-h-[260px] flex flex-col gap-3 justify-center items-center">
+        <h4 className="text-n-tx-muted text-[11px] uppercase tracking-wider font-bold mb-2">Result Overlays</h4>
+
         <Button variant="secondary" size="md" className="w-full" label="Show Loading Overlay" onClick={() => setActiveOverlay('loading')} />
         <Button variant="secondary" size="md" className="w-full" label="Show Success Overlay" onClick={() => setActiveOverlay('success')} />
         <Button variant="secondary" size="md" className="w-full" label="Show Error Overlay" onClick={() => setActiveOverlay('error')} />
@@ -165,7 +165,7 @@ export const Overlays: StoryObj = {
 
 export const Callouts: StoryObj = {
   render: () => (
-    <div className="flex flex-col gap-3 p-4 bg-bg-app rounded-lg border border-border-base w-full max-w-md">
+    <div className="flex flex-col gap-3 p-4 bg-n-bg-app rounded-lg border border-n-br-default w-full max-w-md">
       <Callout variant="info" title="Information Callout">
         Make sure you are on a Figma Professional plan or higher to load multiple theme modes.
       </Callout>
@@ -181,4 +181,3 @@ export const Callouts: StoryObj = {
     </div>
   ),
 };
-

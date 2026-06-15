@@ -479,7 +479,7 @@ const presets: Preset[] = [
       scaleAlgorithm: "Expressive",
       scaleLength: 25,
       useUniformAlgorithm: true,
-      solverMode: "chroma-maximized",
+      solverMode: "max-chroma",
       tokenNameSegments: ["color", "role", "variation"],
       useShorthandColors: false,
       useShorthandRoles: false,

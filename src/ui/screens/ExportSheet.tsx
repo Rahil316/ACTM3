@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { FileCode2, FileJson2, FileText, FileSpreadsheet, Smartphone, Tablet, Wind, Braces, Hash, Package, Download, Plus, X, PackageOpen } from "lucide-react";
+import { LucideFileCode as FileCode2, LucideFileJson as FileJson2, LucideFile as FileText, LucideFileSpreadsheet as FileSpreadsheet, LucideSmartphone as Smartphone, LucideTablet as Tablet, LucideWind as Wind, LucideBraces as Braces, LucideHash as Hash, LucidePackage as Package, LucideExport as Download, LucidePlus as Plus, LucideClose as X, LucidePackageOpen as PackageOpen } from "../components/icons";
 import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { useFigmaBridge, type BridgeCallbacks } from "../hooks/useFigmaBridge";
@@ -255,7 +255,7 @@ export function ExportSheet() {
         <ModalHeader title="Export Tokens" subtitle="Download formats individually or queue for bulk export" actions={<Button variant="ghost" size="sm" label="Close" onClick={closeOverlay} />} />
 
         {isEmpty && (
-          <div className="mx-3 mt-3 px-3 py-2.5 rounded-[8px] bg-warning-subtle border border-warning text-[11px] text-text-muted leading-relaxed">
+          <div className="mx-3 mt-3 px-3 py-2.5 rounded-[8px] bg-w-fi-subtle border border-w-br-default text-[11px] text-n-tx-muted leading-relaxed">
             {!hasColors && !hasRoles
               ? "Add colors and roles before exporting."
               : !hasColors
@@ -271,13 +271,13 @@ export function ExportSheet() {
             const isLoading = downloading === format;
 
             return (
-              <div key={format} className={["flex items-center gap-3 px-3 py-2 rounded-[10px] border transition-colors", inQueue ? "border-accent bg-accent-subtle" : "border-border-base bg-bg-card"].join(" ")}>
+              <div key={format} className={["flex items-center gap-3 px-3 py-2 rounded-[10px] border transition-colors", inQueue ? "border-b-br-default bg-b-fi-subtle" : "border-n-br-default bg-n-sf-raised"].join(" ")}>
                 {/* Format icon */}
-                <Icon size={16} className={inQueue ? "text-accent shrink-0" : "text-text-muted shrink-0"} strokeWidth={1.75} />
+                <Icon size={16} className={inQueue ? "text-b-tx-muted shrink-0" : "text-n-tx-muted shrink-0"} strokeWidth={1.75} />
 
                 {/* Label + desc */}
                 <div className="flex-1 min-w-0">
-                  <p className={["text-[12px] font-semibold", inQueue ? "text-accent" : "text-text-primary"].join(" ")}>{label}</p>
+                  <p className={["text-[12px] font-semibold", inQueue ? "text-b-tx-muted" : "text-n-tx-primary"].join(" ")}>{label}</p>
                   <HelperText>{description}</HelperText>
                 </div>
 
@@ -292,7 +292,7 @@ export function ExportSheet() {
                     className={[
                       "w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors",
                       isEmpty ? "opacity-30 cursor-default" : "cursor-pointer",
-                      inQueue ? "bg-accent text-text-on-accent hover:opacity-80" : "bg-bg-input border border-border-base text-text-muted hover:bg-bg-hover hover:text-text-primary",
+                      inQueue ? "bg-b-fi-btn-default text-b-tx-btn-default hover:opacity-80" : "bg-n-sf-input border border-n-br-default text-n-tx-muted hover:bg-n-sf-hover hover:text-n-tx-primary",
                     ].join(" ")}
                   >
                     {inQueue ? <X size={11} strokeWidth={2.5} /> : <Plus size={11} strokeWidth={2.5} />}
@@ -304,7 +304,7 @@ export function ExportSheet() {
                     onClick={() => handleSingleDownload(format)}
                     disabled={downloading !== null || isEmpty}
                     title={`Download ${label}`}
-                    className="h-6 px-2 rounded-[6px] flex items-center gap-1 text-[10px] font-semibold bg-bg-input border border-border-base text-text-primary hover:bg-bg-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default"
+                    className="h-6 px-2 rounded-[6px] flex items-center gap-1 text-[10px] font-semibold bg-n-sf-input border border-n-br-default text-n-tx-primary hover:bg-n-sf-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default"
                   >
                     {isLoading ? <Spinner size="sm" /> : <Download size={11} strokeWidth={2} />}
                     <span className="hidden sm:inline">{isLoading ? "…" : ""}</span>
@@ -316,19 +316,19 @@ export function ExportSheet() {
         </div>
 
         {/* Bulk export footer — always visible, disabled when queue empty */}
-        <div className="shrink-0 px-3 py-3 border-t border-border-base">
+        <div className="shrink-0 px-3 py-3 border-t border-n-br-default">
           {building ? (
             <div className="flex items-center justify-center gap-2 py-2">
               <Spinner size="sm" />
-              <span className="text-[12px] text-text-muted">Building package…</span>
+              <span className="text-[12px] text-n-tx-muted">Building package…</span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                <PackageOpen size={13} strokeWidth={1.75} className={queue.size > 0 ? "text-accent" : "text-text-dim"} />
-                <span className={["text-[11px]", queue.size > 0 ? "text-text-muted" : "text-text-dim"].join(" ")}>{queue.size > 0 ? `${queue.size} format${queue.size > 1 ? "s" : ""} queued` : "No formats queued"}</span>
+                <PackageOpen size={13} strokeWidth={1.75} className={queue.size > 0 ? "text-b-tx-muted" : "text-n-tx-dim"} />
+                <span className={["text-[11px]", queue.size > 0 ? "text-n-tx-muted" : "text-n-tx-dim"].join(" ")}>{queue.size > 0 ? `${queue.size} format${queue.size > 1 ? "s" : ""} queued` : "No formats queued"}</span>
                 {queue.size > 0 && (
-                  <button type="button" onClick={() => setQueue(new Set())} className="text-[10px] text-text-dim hover:text-danger cursor-pointer ml-1">
+                  <button type="button" onClick={() => setQueue(new Set())} className="text-[10px] text-n-tx-dim hover:text-d-tx-muted cursor-pointer ml-1">
                     Clear
                   </button>
                 )}

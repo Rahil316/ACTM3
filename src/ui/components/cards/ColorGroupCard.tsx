@@ -6,7 +6,7 @@ import { ColorInput } from "../ColorInput";
 import { Select } from "../Select";
 import { CardToolbar } from "../CardToolbar";
 import type { Color } from "../../types/state";
-import { SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS } from "../../store/projectStore";
+import { SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS, SCALE_ALGORITHM_DESCRIPTIONS, SOLVER_MODE_DESCRIPTIONS } from "../../store/projectStore";
 import { ControlLabel } from "../typography";
 
 interface ColorGroupCardProps {
@@ -38,7 +38,7 @@ export const ColorGroupCard = React.memo(function ColorGroupCard({ color, idx, d
   const [localDesc, onDescChange, onDescBlur] = useLocalField(color.description ?? "", (v) => setColor(idx, "description", v));
 
   return (
-    <div className="group/card relative bg-bg-card rounded-[12px] border border-border-base hover:border-border-strong p-3 space-y-2 transition-colors">
+    <div className="group/card relative bg-n-bg-panel rounded-[12px] border border-n-br-default hover:border-n-br-strong p-3 space-y-2 transition-colors">
       {/* Main row: name / shorthand / color value */}
       <div className="grid gap-2 items-end grid-cols-[1fr_120px_120px]">
         <Input id={`clr-${color._id}-name`} value={localName} onChange={onNameChange} onBlur={onNameBlur} label="Name" size="xl" />
@@ -49,8 +49,8 @@ export const ColorGroupCard = React.memo(function ColorGroupCard({ color, idx, d
         </div>
       </div>
 
-      {showAlgoRow && <Select label="Scale Algorithm" size="lg" options={algoOptions} value={colorScaleAlgorithm ?? "Natural"} onChange={(e) => setColor(idx, "scaleAlgorithm", e.target.value)} />}
-      {showSolverRow && <Select label="Color Solver" size="xl" options={solverOptions} value={colorSolverMode ?? "natural"} onChange={(e) => setColor(idx, "solverMode", e.target.value)} />}
+      {showAlgoRow && <Select label="Scale Algorithm" size="lg" options={algoOptions} value={colorScaleAlgorithm ?? "Natural"} tooltip={SCALE_ALGORITHM_DESCRIPTIONS[colorScaleAlgorithm ?? "Natural"]} onChange={(e) => setColor(idx, "scaleAlgorithm", e.target.value)} />}
+      {showSolverRow && <Select label="Color Solver" size="xl" options={solverOptions} value={colorSolverMode ?? "natural"} tooltip={SOLVER_MODE_DESCRIPTIONS[colorSolverMode ?? "natural"]} onChange={(e) => setColor(idx, "solverMode", e.target.value)} />}
       {includeDescriptions && <Input value={localDesc} placeholder="Optional…" onChange={onDescChange} onBlur={onDescBlur} label="Description" size="lg" />}
 
       <CardToolbar onDelete={() => removeColor(idx)} deleteDisabled={colorCount <= 1} deleteTitle="Delete color" dragListeners={dragListeners} dragAttributes={dragAttributes} />

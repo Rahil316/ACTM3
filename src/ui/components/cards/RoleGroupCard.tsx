@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Settings, Palette, Layers2, Variable } from "lucide-react";
+import { LucideSettings as Settings, LucidePalette as Palette, LucideLayers2 as Layers2, LucideVariable as Variable } from "../icons";
 import type { Role, Variation } from "../../types/state";
 import { CardToolbar } from "../CardToolbar";
-import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS } from "../../store/projectStore";
+import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS, SCALE_ALGORITHM_DESCRIPTIONS, SOLVER_MODE_DESCRIPTIONS } from "../../store/projectStore";
 import { useLocalField } from "../../hooks/useLocalField";
 import { Input } from "../Input";
 import { Button } from "../Button";
@@ -17,6 +17,7 @@ interface RoleGroupCardProps {
   idx: number;
   dragListeners?: Record<string, unknown>;
   dragAttributes?: Record<string, unknown>;
+  isDragging?: boolean;
 }
 
 const EMPTY_VARIATIONS: Variation[] = [];
@@ -37,7 +38,7 @@ function truncateLabels(labels: string[]): string {
   return labels.slice(0, 3).join(" · ") + ` +${labels.length - 3}`;
 }
 
-export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, dragListeners, dragAttributes }: RoleGroupCardProps) {
+export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, dragListeners, dragAttributes, isDragging = false }: RoleGroupCardProps) {
   const [open, toggleOpen] = usePersistedToggle(`role_${role._id}`, false);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
   const [settingsTab, setSettingsTab] = useState<"colors" | "contrast" | "scope">("colors");
@@ -105,14 +106,14 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const [localShort, onShortChange, onShortBlur] = useLocalField(role.shorthand ?? "", (v) => setRole(idx, "shorthand", v));
 
   return (
-    <div className="group/card relative bg-bg-card rounded-[12px] border border-border-base hover:border-border-strong p-3 space-y-2 transition-colors">
+    <div className="group/card relative bg-n-bg-panel rounded-[12px] border border-n-br-default hover:border-n-br-strong p-3 space-y-2 transition-colors">
       {/* Name row */}
       <div className="grid gap-2 items-end grid-cols-[1fr_148px]">
         <Input id={`role-${role._id}-name`} value={localName} onChange={onNameChange} onBlur={onNameBlur} label="Name" size="xl" />
         <Input id={`role-${role._id}-short`} value={localShort} onChange={onShortChange} onBlur={onShortBlur} label="Short" size="xl" />
       </div>
 
-      {(colorScopeLabel || bgLabel || varScopeLabel) && (
+      {!isDragging && (colorScopeLabel || bgLabel || varScopeLabel) && (
         <div className="flex gap-1.5 flex-wrap">
           {colorScopeLabel && (
             <button
@@ -147,30 +148,32 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
         </div>
       )}
 
-      <Collapsible
-        open={open}
-        onToggle={toggleOpen}
-        header={<span className="text-[12px] font-medium text-text-primary flex-1">Variations ({vars.length})</span>}
-      >
-        <div className="py-2">
-          <VariationTable variations={vars} canEdit={canEditNames} mappingMethod={roleMappingMethod} idx={idx} scaleLength={scaleLength} />
-        </div>
-      </Collapsible>
+      {!isDragging && (
+        <Collapsible
+          open={open}
+          onToggle={toggleOpen}
+          header={<span className="text-[12px] font-medium text-n-tx-primary flex-1">Variations ({vars.length})</span>}
+        >
+          <div className="py-2">
+            <VariationTable variations={vars} canEdit={canEditNames} mappingMethod={roleMappingMethod} idx={idx} scaleLength={scaleLength} />
+          </div>
+        </Collapsible>
+      )}
 
-      {showAlgoRow && (
-        <div className="space-y-1 mt-2 pt-2 border-t border-border-base">
-          <Select label="Algorithm" size="lg" options={ALGO_OPTIONS} value={roleScaleAlgorithm ?? "Natural"} onChange={(e) => setRole(idx, "scaleAlgorithm", e.target.value)} />
+      {!isDragging && showAlgoRow && (
+        <div className="space-y-1 mt-2 pt-2 border-t border-n-br-default">
+          <Select label="Algorithm" size="lg" options={ALGO_OPTIONS} value={roleScaleAlgorithm ?? "Natural"} tooltip={SCALE_ALGORITHM_DESCRIPTIONS[roleScaleAlgorithm ?? "Natural"]} onChange={(e) => setRole(idx, "scaleAlgorithm", e.target.value)} />
         </div>
       )}
 
-      {showSolverRow && (
-        <div className="space-y-1 mt-2 pt-2 border-t border-border-base">
-          <Select label="Solver" size="lg" options={SOLVER_OPTIONS} value={roleSolverMode ?? "natural"} onChange={(e) => setRole(idx, "solverMode", e.target.value)} />
+      {!isDragging && showSolverRow && (
+        <div className="space-y-1 mt-2 pt-2 border-t border-n-br-default">
+          <Select label="Solver" size="lg" options={SOLVER_OPTIONS} value={roleSolverMode ?? "natural"} tooltip={SOLVER_MODE_DESCRIPTIONS[roleSolverMode ?? "natural"]} onChange={(e) => setRole(idx, "solverMode", e.target.value)} />
         </div>
       )}
 
       <CardToolbar onDelete={() => removeRole(idx)} deleteDisabled={roleCount <= 1} deleteTitle="Delete role" dragListeners={dragListeners} dragAttributes={dragAttributes}>
-        <Button variant="icon" size="sm" className={scopedIds !== null || roleLocalBg != null ? "text-accent bg-accent-subtle hover:text-accent-hover hover:bg-accent-subtle/80" : undefined} onClick={() => openSettings("colors")} title="Role settings" icon={<Settings size={11} strokeWidth={1.75} />} />
+        <Button variant="icon" size="sm" className={scopedIds !== null || roleLocalBg != null ? "text-b-tx-muted bg-b-fi-subtle hover:text-b-tx-secondary hover:bg-b-fi-default" : undefined} onClick={() => openSettings("colors")} title="Role settings" icon={<Settings size={11} strokeWidth={1.75} />} />
       </CardToolbar>
 
       {showSettingsSheet && <RoleSettingsSheet roleIdx={idx} onClose={() => setShowSettingsSheet(false)} initialTab={settingsTab} />}

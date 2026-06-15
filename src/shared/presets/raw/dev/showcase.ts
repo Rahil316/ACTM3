@@ -315,7 +315,7 @@ const directShowcase: Preset = {
       {
         name: "on/fill",
         shorthand: "onfi",
-        solverMode: "luminance",
+        solverMode: "symmetric",
         variations: [
           { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled label on fill
           { name: "muted", shorthand: "muted", target: 3.0 }, // secondary label on fill
@@ -367,7 +367,7 @@ const directShowcase: Preset = {
       {
         name: "status/success",
         shorthand: "ss",
-        solverMode: "chroma-maximized",
+        solverMode: "max-chroma",
         variations: [
           { name: "bg", shorthand: "bg", target: 1.2 },
           { name: "tint", shorthand: "ti", target: 1.8 },
@@ -382,7 +382,7 @@ const directShowcase: Preset = {
       {
         name: "status/warning",
         shorthand: "sw",
-        solverMode: "chroma-maximized",
+        solverMode: "max-chroma",
         variations: [
           { name: "bg", shorthand: "bg", target: 1.2 },
           { name: "tint", shorthand: "ti", target: 1.8 },
@@ -397,7 +397,7 @@ const directShowcase: Preset = {
       {
         name: "status/danger",
         shorthand: "sd",
-        solverMode: "chroma-maximized",
+        solverMode: "max-chroma",
         variations: [
           { name: "bg", shorthand: "bg", target: 1.2 },
           { name: "tint", shorthand: "ti", target: 1.8 },
@@ -412,7 +412,7 @@ const directShowcase: Preset = {
       {
         name: "status/info",
         shorthand: "si",
-        solverMode: "chroma-maximized",
+        solverMode: "max-chroma",
         variations: [
           { name: "bg", shorthand: "bg", target: 1.2 },
           { name: "tint", shorthand: "ti", target: 1.8 },

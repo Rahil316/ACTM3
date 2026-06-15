@@ -16,7 +16,7 @@ export function ShopCard({ preset, onLoad }: ShopCardProps) {
   }
 
   return (
-    <div className="bg-bg-panel rounded-md border border-border-base flex flex-col gap-2 p-1">
+    <div className="bg-n-bg-panel rounded-md border border-n-br-default flex flex-col gap-2 p-1">
       {/* Swatch strip */}
       {swatches.length > 0 && (
         <div className="flex gap-0.5 h-12 rounded-md overflow-hidden">

@@ -15,7 +15,7 @@ interface SegmentedControlProps<T extends string> {
 
 export function SegmentedControl<T extends string>({ segments, value, onChange, className }: SegmentedControlProps<T>) {
   return (
-    <div className={clsx("flex gap-0.5 bg-bg-input border border-border-base rounded-[8px] p-0.5", className)}>
+    <div className={clsx("flex gap-0.5 bg-n-sf-input border border-n-br-default rounded-[8px] p-0.5", className)}>
       {segments.map((seg) => {
         const active = seg.value === value;
         return (
@@ -26,7 +26,7 @@ export function SegmentedControl<T extends string>({ segments, value, onChange, 
             onClick={() => onChange(seg.value)}
             className={clsx(
               "flex-1 h-7 px-2.5 text-[11px] font-semibold rounded-[6px] cursor-pointer transition-all duration-150 whitespace-nowrap",
-              active ? "bg-accent border border-accent text-text-on-accent" : "bg-transparent border border-transparent text-text-muted hover:bg-bg-hover hover:text-text-primary",
+              active ? "bg-b-fi-btn-default border border-b-fi-btn-default text-b-tx-btn-default" : "bg-transparent border border-transparent text-n-tx-muted hover:bg-n-sf-hover hover:text-n-tx-primary",
             )}
           >
             {seg.label}

@@ -69,10 +69,10 @@ export const InteractiveSelectableCard: StoryObj = {
       <div className="max-w-sm">
         <SelectableCard selected={selected} onClick={() => setSelected(!selected)}>
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="text-[12px] font-bold text-text-primary">Sunrise Theme Preset</span>
+            <span className="text-[12px] font-bold text-n-tx-primary">Sunrise Theme Preset</span>
             <Badge variant="success" size="xs" pill>Popular</Badge>
           </div>
-          <p className="text-[11px] text-text-muted">
+          <p className="text-[11px] text-n-tx-muted">
             A beautiful high-contrast warm palette designed for dashboards and creative sites.
           </p>
         </SelectableCard>
@@ -80,4 +80,3 @@ export const InteractiveSelectableCard: StoryObj = {
     );
   },
 };
-

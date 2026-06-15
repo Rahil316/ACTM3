@@ -68,13 +68,13 @@ export function computeSyncPreview(
       if (!existing) {
         toCreate++;
       } else {
-        let changed = false;
-        if (existing.name !== entry.name) { toRename++; changed = true; }
+        if (existing.name !== entry.name) { toRename++; }
         const currentVal = existing.valuesByMode[modeId];
-        if (currentVal === undefined || currentVal === null) { toUpdate++; changed = true; }
-        if (!changed && entry.description && existing.description !== entry.description) { toUpdate++; changed = true; }
+        let valueChanged = false;
+        if (currentVal === undefined || currentVal === null) { toUpdate++; valueChanged = true; }
+        if (!valueChanged && entry.description && existing.description !== entry.description) { toUpdate++; valueChanged = true; }
         // Rough colour diff check (skip alias values)
-        if (!changed && entry.value && typeof entry.value === 'string' &&
+        if (!valueChanged && entry.value && typeof entry.value === 'string' &&
             typeof currentVal === 'object' && currentVal !== null &&
             !('type' in currentVal && (currentVal as { type: string }).type === 'VARIABLE_ALIAS')) {
           const rgb = currentVal as { r?: number; g?: number; b?: number };
@@ -83,7 +83,6 @@ export function computeSyncPreview(
               Math.abs(g - (rgb.g ?? 0)) > 0.001 ||
               Math.abs(b - (rgb.b ?? 0)) > 0.001) {
             toUpdate++;
-            changed = true;
           }
         }
       }

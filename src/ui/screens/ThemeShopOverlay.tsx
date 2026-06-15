@@ -47,29 +47,29 @@ export function ThemeShopOverlay() {
   return (
     <FullscreenOverlay>
       {/* Header */}
-      <div className="shrink-0 flex items-center gap-3 px-3 py-3 border-b border-border-base bg-bg-app">
+      <div className="shrink-0 flex items-center gap-3 px-3 py-3 border-b border-n-br-default bg-n-bg-app">
         <Button variant="ghost" size="sm" square icon={<IconChevronLeft className="w-4 h-4" />} onClick={closeOverlay} aria-label="Back" title="Back" />
         <div className="flex-1 min-w-0">
-          <h2 className="text-[15px] font-semibold text-text-primary leading-tight">Theme Shop</h2>
-          <p className="text-[11px] text-text-muted mt-0.5">Load a preset to get started — everything is editable.</p>
+          <h2 className="text-[15px] font-semibold text-n-tx-primary leading-tight">Theme Shop</h2>
+          <p className="text-[11px] text-n-tx-muted mt-0.5">Load a preset to get started — everything is editable.</p>
         </div>
       </div>
 
       {/* Search */}
-      <div className="shrink-0 px-3 py-2 border-b border-border-subtle">
+      <div className="shrink-0 px-3 py-2 border-b border-n-br-subtle">
         <input
           type="text"
           placeholder="Search presets…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full h-8 px-3 rounded-[8px] bg-bg-input border border-border-input text-[12px] text-text-primary placeholder:text-text-muted outline-none focus:border-border-focus transition-colors"
+          className="w-full h-8 px-3 rounded-[8px] bg-n-sf-input border border-n-br-default text-[12px] text-n-tx-primary placeholder:text-n-tx-muted outline-none focus:border-b-br-strong transition-colors"
         />
       </div>
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto p-2">
         {filtered.length === 0 ? (
-          <div className="flex items-center justify-center h-32 text-[12px] text-text-muted">No presets match "{query}"</div>
+          <div className="flex items-center justify-center h-32 text-[12px] text-n-tx-muted">No presets match "{query}"</div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
             {filtered.map((preset) => (

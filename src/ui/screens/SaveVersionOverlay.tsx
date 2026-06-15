@@ -6,7 +6,7 @@ import { toast } from "../store/toastStore";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { HelperText } from "../components/typography";
-import { X } from "lucide-react";
+import { LucideClose as X } from "../components/icons";
 
 export function SaveVersionOverlay() {
   const isOpen = useUiStore((s) => s.activeOverlay === "save-version");
@@ -38,15 +38,15 @@ export function SaveVersionOverlay() {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
-      <div className="absolute inset-0" style={{ background: "var(--bg-scrim)" }} onClick={handleClose} />
-      <div className="relative z-10 flex flex-col bg-bg-panel rounded-t-[16px] border-t border-border-base">
+      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.5)" }} onClick={handleClose} />
+      <div className="relative z-10 flex flex-col bg-n-bg-panel rounded-t-[16px] border-t border-n-br-default">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
+        <div className="px-4 py-3 border-b border-n-br-subtle flex items-center justify-between shrink-0">
           <div>
-            <span className="text-[12px] font-semibold text-text-primary">Save Version</span>
-            <p className="text-[10px] text-text-dim mt-0.5">Snapshot the current configuration as a named version.</p>
+            <span className="text-[12px] font-semibold text-n-tx-primary">Save Version</span>
+            <p className="text-[10px] text-n-tx-dim mt-0.5">Snapshot the current configuration as a named version.</p>
           </div>
-          <button className="text-text-dim hover:text-text-primary cursor-pointer" onClick={handleClose}>
+          <button className="text-n-tx-dim hover:text-n-tx-primary cursor-pointer" onClick={handleClose}>
             <X size={13} />
           </button>
         </div>
@@ -72,7 +72,7 @@ export function SaveVersionOverlay() {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-border-subtle flex gap-2 shrink-0">
+        <div className="px-4 py-3 border-t border-n-br-subtle flex gap-2 shrink-0">
           <Button
             variant="primary"
             size="md"

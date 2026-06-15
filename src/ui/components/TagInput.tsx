@@ -38,7 +38,7 @@ export function TagInput({ values = [], onChange, placeholder }: TagInputProps) 
   };
 
   return (
-    <div className="w-full min-h-[36px] bg-bg-input border border-border-input focus-within:border-border-focus rounded-[7px] px-2 py-1.5 flex flex-wrap gap-1.5 items-center transition-colors">
+    <div className="w-full min-h-[36px] bg-n-sf-input border border-n-br-default focus-within:border-b-br-strong rounded-[7px] px-2 py-1.5 flex flex-wrap gap-1.5 items-center transition-colors">
       {safeValues.map((v, i) => (
         <Badge key={i} size="sm" variant="accent" onRemove={() => onChange(safeValues.filter((_, idx) => idx !== i))}>
           {v}%
@@ -55,7 +55,7 @@ export function TagInput({ values = [], onChange, placeholder }: TagInputProps) 
             addTag(inputValue);
           }
         }}
-        className="flex-1 min-w-[60px] bg-transparent text-[13px] text-text-primary outline-none border-none p-0 placeholder:text-text-dim"
+        className="flex-1 min-w-[60px] bg-transparent text-[13px] text-n-tx-primary outline-none border-none p-0 placeholder:text-n-tx-dim"
       />
     </div>
   );

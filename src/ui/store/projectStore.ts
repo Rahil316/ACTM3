@@ -3,15 +3,29 @@ import type { ProjectStore, ProjectStoreSnapshot, Color, Role, Theme, Variation,
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-export const SOLVER_MODE_OPTIONS: [string, string][] = [
-  ["natural", "Balanced"],
-  ["saturated", "Vivid"],
-  ["luminance", "Muted"],
-  ["hue-locked", "Hue Locked"],
-  ["chroma-maximized", "Max Chroma"],
+export const SOLVER_MODE_OPTIONS: [string, string, string][] = [
+  ["natural",          "Natural",         "Chroma tapers as lightness moves away from mid. Colors stay true to their hue — grays stay gray, blues stay blue but muted at extremes. Safe default for most roles."],
+  ["constant-chroma",  "Constant Chroma", "Holds chroma fixed at the seed value regardless of lightness. Colors stay as vivid as the seed across all steps. Good for fills and badges."],
+  ["symmetric",        "Symmetric",       "Chroma follows a bell curve peaking at mid-lightness and collapsing toward zero at both white and black. Results are near-neutral at extremes. Use for text-on-button where readability matters more than hue."],
+  ["hue-locked",       "Hue Locked",      "Stays on the seed's exact hue, pushes to the maximum in-gamut chroma at each lightness. Vivid but never out-of-gamut."],
+  ["max-chroma",       "Max Chroma",      "Ignores seed chroma entirely — finds the most vivid color the display gamut allows at each lightness. Applies to all colors including neutrals. Rarely correct as a global setting."],
 ];
 
 export const SCALE_ALGORITHM_OPTIONS = ["Natural", "Uniform", "Linear", "Expressive", "Symmetric", "OKLCH", "Material"] as const;
+
+export const SCALE_ALGORITHM_DESCRIPTIONS: Record<string, string> = {
+  "Natural":     "Lightness steps follow a perceptual curve — denser near the middle, spread at extremes. Best general-purpose choice.",
+  "Uniform":     "Equal perceptual lightness steps across the full range. Predictable and consistent.",
+  "Linear":      "Strictly linear lightness interpolation. Simple but can feel uneven perceptually.",
+  "Expressive":  "Exaggerated contrast at both ends with a flatter midrange. Good for expressive brand palettes.",
+  "Symmetric":   "Mirror-image lightness curve around the midpoint. Useful when light and dark variants must feel balanced.",
+  "OKLCH":       "Pure OKLCH lightness interpolation without perceptual adjustment. Accurate but may need manual tuning.",
+  "Material":    "Follows the Material Design 3 tonal palette curve. Optimised for MD3 component roles.",
+};
+
+export const SOLVER_MODE_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
+  SOLVER_MODE_OPTIONS.map(([v, , d]) => [v, d])
+);
 
 export const UI_DIMS = {
   defaultWidth: 560,
@@ -467,6 +481,7 @@ interface projectStoreState {
   saveVersion: (name: string, description: string) => boolean;
   restoreVersion: (id: string) => void;
   deleteVersion: (id: string) => void;
+  renameVersion: (id: string, name: string) => void;
 
   // Validation
   validate: () => ValidationIssues;
@@ -919,6 +934,15 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       projectStore: {
         ...s.projectStore,
         versions: (s.projectStore.versions ?? []).filter((v) => v._id !== id),
+      },
+    }));
+  },
+
+  renameVersion: (id, name) => {
+    set((s) => ({
+      projectStore: {
+        ...s.projectStore,
+        versions: (s.projectStore.versions ?? []).map((v) => (v._id === id ? { ...v, name } : v)),
       },
     }));
   },

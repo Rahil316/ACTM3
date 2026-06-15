@@ -66,13 +66,13 @@ This function binary-searches OKLCH lightness (L, 0–1) while shaping chroma (C
 
 The five solver modes control how chroma changes as L is adjusted:
 
-| Mode               | Chroma behavior                                                                |
-| ------------------ | ------------------------------------------------------------------------------ |
-| `natural`          | C scales linearly through the source C at source L — decreases toward extremes |
-| `saturated`        | C held constant at source C — maximum color retention                          |
-| `luminance`        | C drops parabolically near white and black — calm, desaturated at extremes     |
-| `hue-locked`       | H fixed to source; C follows natural curve, gamut-clamped                      |
-| `chroma-maximized` | L solved for contrast, then C pushed to maximum in-gamut value at that L       |
+| Mode               | Chroma behavior                                                                         |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| `natural`          | C tapers as L moves away from mid — most natural-looking results                        |
+| `constant-chroma`  | C held fixed at seed value — maximum color retention throughout the scale               |
+| `symmetric`        | C follows a bell curve peaking at mid-L, collapsing toward zero at white and black      |
+| `hue-locked`       | H fixed to source; pushes to maximum in-gamut C at the target contrast level            |
+| `max-chroma`       | L solved for contrast, then C pushed to maximum in-gamut value at that L                |
 
 ---
 
