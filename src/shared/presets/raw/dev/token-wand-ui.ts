@@ -1,36 +1,37 @@
 /**
  * Token Wand UI — The plugin's own color system.
  *
- * Direct mode · Light + Dark + Dark/Panel · 5 colors · 7 roles
+ * Direct mode · Light + Dark · 5 colors · 7 roles
  *
  * Design principles:
  *   - Icons share the text role — same color, same contrast, no separate icon role
- *   - All 6 roles generate tokens for every color, so status colors get
+ *   - All 7 roles generate tokens for every color, so status colors get
  *     danger/text/muted, danger/fill/button/default, etc. for free
  *   - No overlay role — modal scrims are a CSS alpha, not a design token
  *   - No scoped status roles — colors are the semantic axis, roles are structural
  *
  * Roles:
- *   bg            — App chrome (app window → panel/header)
+ *   bg            — App chrome (app window → panel/header → overlay tint)
  *   surface       — Raised elements: cards, inputs, popovers, sheets + hover/active states
  *   border        — Hairline dividers through input borders (4 weights)
- *                   focus ring comes from brand/border/focus for free
+ *                   focus ring comes from brand/border/strong for free
  *   text          — Full hierarchy: primary → secondary → muted → dim → disabled
  *                   also used for icons — same color, same contrast targets
  *   fill          — Tinted washes and badge fills (low contrast, decorative)
- *   fill/button   — Interactive CTA fills with 5 interaction states (saturated solver)
+ *                   5 steps: subtle → default → strong → stronger → strongest
+ *   fill/button   — Interactive CTA fills with 5 interaction states (constant-chroma solver)
  *                   brand → blue button, danger → red delete button, etc.
  *   text/button   — On-button labels, contrast chained to [color]/fill/button/default
- *                   luminance solver picks light or dark text per color automatically
+ *                   hue-locked solver picks light or dark text per color automatically
  *
  * Colors:
- *   Neutral — all chrome, surface, border, text work
- *   Brand   — Figma blue, CTA, focus ring, active tab
+ *   Neutral — pure gray seed (787878) · all chrome, surface, border, text work
+ *   Brand   — deep blue (0062FF) · CTA, focus ring, active tab
  *   Danger  — destructive actions, errors
  *   Success — confirmations, synced state
  *   Warning — blocked actions, caution
  *
- * Themes: Light (F2F2F7) · Dark (0D0D0D) · Dark/Panel (1A1A1A)
+ * Themes: Light (F2F2F7) · Dark (0D0D0D)
  * Alpha tints: 5 10 15 20 30 40 50 60 75 90
  * Names: color / role / variation  ·  shorthands on colors + roles
  */
@@ -90,14 +91,14 @@ const tokenWandUi: Preset = {
         _id: "twui-neutral",
         name: "Neutral",
         shorthand: "n",
-        value: "6B7280",
+        value: "787878",
         description: "Neutral gray — drives all surfaces, borders, and text",
       },
       {
         _id: "twui-brand",
         name: "Brand",
         shorthand: "b",
-        value: "18A0FB",
+        value: "0062FF",
         description: "Figma blue — CTA, focus ring, active tab, accent",
       },
       {
@@ -139,10 +140,11 @@ const tokenWandUi: Preset = {
         shorthand: "bg",
         solverMode: "natural",
         variations: [
-          { name: "App",   shorthand: "app",   target: 1.0  }, // plugin window chrome
-          { name: "Panel", shorthand: "panel", target: 1.15 }, // header, tab bar, sidebar
+          { name: "App",    shorthand: "app",    target: 1.0  }, // plugin window chrome
+          { name: "Panel",  shorthand: "panel",  target: 1.15 }, // header, tab bar, sidebar
+          { name: "Overly", shorthand: "overly", target: 2.0  }, // overlay tint / scrim base
         ],
-        description: "App chrome · window bg → panel/header",
+        description: "App chrome · window bg → panel/header → overlay tint",
       },
 
       // ── SURFACE ─────────────────────────────────────────────────────────────
@@ -195,7 +197,7 @@ const tokenWandUi: Preset = {
       {
         name: "text",
         shorthand: "tx",
-        solverMode: "natural",
+        solverMode: "hue-locked",
         variations: [
           { name: "Primary",   shorthand: "primary",   target: 12.0 }, // AAA — headings, active labels, toolbar icons
           { name: "Secondary", shorthand: "secondary", target: 7.0  }, // AA — body copy, descriptions, icons
@@ -216,9 +218,11 @@ const tokenWandUi: Preset = {
         shorthand: "fi",
         solverMode: "natural",
         variations: [
-          { name: "Subtle",  shorthand: "subtle",  target: 1.3 }, // barely-there tint wash
-          { name: "Default", shorthand: "default", target: 1.8 }, // badge bg, chip, tag
-          { name: "Strong",  shorthand: "strong",  target: 3.0 }, // bolder decorative fill
+          { name: "Subtle",   shorthand: "subtle",   target: 1.3 }, // barely-there tint wash
+          { name: "Default",  shorthand: "default",  target: 1.8 }, // badge bg, chip, tag
+          { name: "Strong",   shorthand: "strong",   target: 3.0 }, // bolder decorative fill
+          { _id: "6xil5fgggq8v", name: "Stronger",  shorthand: "stronger", target: 4.5 }, // high-contrast fill
+          { _id: "lneogcit96cu", name: "Strongest",  shorthand: "strongest", target: 4.5 }, // max fill
         ],
         description: "Tinted fills · badge bg · chip · subtle wash · not interactive",
       },
@@ -236,11 +240,11 @@ const tokenWandUi: Preset = {
         shorthand: "fi/btn",
         solverMode: "constant-chroma",
         variations: [
-          { name: "Disabled", shorthand: "disabled", target: 2.0  }, // clearly inactive
-          { name: "Subtle",   shorthand: "subtle",   target: 3.0  }, // ghost / secondary button
-          { name: "Default",  shorthand: "default",  target: 4.5  }, // primary CTA at rest (AA)
-          { name: "Hover",    shorthand: "hover",    target: 6.0  }, // hover
-          { name: "Pressed",  shorthand: "pressed",  target: 7.5  }, // mouse-down / active
+          { name: "Disabled", shorthand: "disabled", target: 2.0 }, // clearly inactive
+          { name: "Subtle",   shorthand: "subtle",   target: 3.0 }, // ghost / secondary button
+          { name: "Default",  shorthand: "default",  target: 5.0 }, // primary CTA at rest (AA)
+          { name: "Hover",    shorthand: "hover",    target: 6.5 }, // hover
+          { name: "Pressed",  shorthand: "pressed",  target: 8.0 }, // mouse-down / active
         ],
         description: "CTA fills · 5 states · all colors get brand/danger/success buttons (saturated)",
       },
@@ -255,7 +259,7 @@ const tokenWandUi: Preset = {
       {
         name: "text/button",
         shorthand: "tx/btn",
-        solverMode: "symmetric",
+        solverMode: "hue-locked",
         localBg: {
           kind: "token-dynamic",
           value: "[color]/fill/button/default",
@@ -275,11 +279,9 @@ const tokenWandUi: Preset = {
     // ── Themes ────────────────────────────────────────────────────────────────
     // Light = slightly warm off-white (iOS system grouped background).
     // Dark = near-black matching the plugin's current --bg-app.
-    // Dark/Panel = panel-level dark for testing popover and sheet overlays.
     themes: [
-      { name: "Light",      bg: "F2F2F7" },
-      { name: "Dark",       bg: "0D0D0D" },
-      { name: "Dark/Panel", bg: "1A1A1A" },
+      { name: "Light", bg: "F2F2F7" },
+      { name: "Dark",  bg: "0D0D0D" },
     ],
   },
 };

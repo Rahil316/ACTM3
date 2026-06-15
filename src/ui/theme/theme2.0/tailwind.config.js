@@ -1,4 +1,3 @@
-/* eslint-env commonjs */
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   theme: {
