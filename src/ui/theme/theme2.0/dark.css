@@ -1,6 +1,5 @@
 /* DARK */
 body[data-theme="dark"] {
-
   /* Neutral */
   --n-bg-app: #000000;
   --n-bg-panel: #1b1d21;
@@ -64,7 +63,7 @@ body[data-theme="dark"] {
   --b-fi-strongest: #3b77e0;
   --b-fi-btn-disabled: #043e9d;
   --b-fi-btn-subtle: #0855d3;
-  --b-fi-btn-default: #477fe3;
+  --b-fi-btn-default: #2164d8;
   --b-fi-btn-hover: #6595e9;
   --b-fi-btn-pressed: #7ea7ee;
   --b-tx-btn-disabled: #9bbcf3;
@@ -184,7 +183,6 @@ body[data-theme="dark"] {
 
 /* DARK/PANEL */
 body[data-theme="dark/panel"] {
-
   /* Neutral */
   --n-bg-app: #000000;
   --n-bg-panel: #24262c;

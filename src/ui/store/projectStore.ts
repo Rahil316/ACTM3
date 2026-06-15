@@ -14,13 +14,13 @@ export const SOLVER_MODE_OPTIONS: [string, string, string][] = [
 export const SCALE_ALGORITHM_OPTIONS = ["Natural", "Uniform", "Linear", "Expressive", "Symmetric", "OKLCH", "Material"] as const;
 
 export const SCALE_ALGORITHM_DESCRIPTIONS: Record<string, string> = {
-  "Natural":     "Lightness steps follow a perceptual curve — denser near the middle, spread at extremes. Best general-purpose choice.",
-  "Uniform":     "Equal perceptual lightness steps across the full range. Predictable and consistent.",
-  "Linear":      "Strictly linear lightness interpolation. Simple but can feel uneven perceptually.",
-  "Expressive":  "Exaggerated contrast at both ends with a flatter midrange. Good for expressive brand palettes.",
-  "Symmetric":   "Mirror-image lightness curve around the midpoint. Useful when light and dark variants must feel balanced.",
-  "OKLCH":       "Pure OKLCH lightness interpolation without perceptual adjustment. Accurate but may need manual tuning.",
-  "Material":    "Follows the Material Design 3 tonal palette curve. Optimised for MD3 component roles.",
+  "Natural":     "Perceptual lightness steps with chroma that tapers toward white and black. Colors feel true to the seed but muted at extremes. Best general-purpose choice.",
+  "Uniform":     "Perceptual lightness steps with chroma held constant throughout. Every step is as vivid as the seed. Use when consistent saturation matters more than naturalness.",
+  "Linear":      "Linear HSL lightness steps, fixed saturation. Simple and predictable but can feel perceptually uneven — lighter steps will look too similar to each other.",
+  "Expressive":  "Perceptual lightness steps with chroma tapering and a subtle hue shift — lighter steps drift toward yellow, darker steps drift toward blue. Creates visual warmth and depth.",
+  "Symmetric":   "Perceptual lightness steps anchored on the seed color itself. The seed appears at the midpoint of the scale; steps spread symmetrically above and below it in log-luminance space.",
+  "OKLCH":       "Perceptual lightness steps with chroma and hue held constant in OKLCH space. More accurate color rendering than HSL-based modes — chroma stays true across the lightness range.",
+  "Material":    "Perceptual lightness steps in the HCT color space (Google Material 3). Uses advanced perceptual modeling for more accurate dark-mode tones. Best when targeting MD3 component roles.",
 };
 
 export const SOLVER_MODE_DESCRIPTIONS: Record<string, string> = Object.fromEntries(

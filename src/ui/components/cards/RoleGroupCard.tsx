@@ -119,7 +119,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
             <button
               onClick={() => openSettings("colors")}
               title="Color scope"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold text-violet-400 bg-violet-500/10 border border-violet-500/25 rounded-full pl-1.5 pr-2 py-0.5 hover:bg-violet-500/20 transition-colors cursor-pointer max-w-[220px] truncate"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold text-b-tx-secondary bg-b-fi-subtle border border-b-br-subtle rounded-full pl-1.5 pr-2 py-0.5 hover:bg-b-fi-default transition-colors cursor-pointer max-w-[220px] truncate"
             >
               <Palette size={12} strokeWidth={2} className="shrink-0" />
               {colorScopeLabel}
@@ -129,7 +129,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
             <button
               onClick={() => openSettings("contrast")}
               title="Local background"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/25 rounded-full pl-1.5 pr-2 py-0.5 hover:bg-sky-500/20 transition-colors cursor-pointer max-w-[220px] truncate"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold text-s-tx-secondary bg-s-fi-subtle border border-s-br-subtle rounded-full pl-1.5 pr-2 py-0.5 hover:bg-s-fi-default transition-colors cursor-pointer max-w-[220px] truncate"
             >
               <Layers2 size={12} strokeWidth={2} className="shrink-0" />
               {bgLabel}
@@ -139,7 +139,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
             <button
               onClick={() => openSettings("scope")}
               title="Variable scope"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/25 rounded-full pl-1.5 pr-2 py-0.5 hover:bg-amber-500/20 transition-colors cursor-pointer max-w-[220px] truncate"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold text-w-tx-secondary bg-w-fi-subtle border border-w-br-subtle rounded-full pl-1.5 pr-2 py-0.5 hover:bg-w-fi-default transition-colors cursor-pointer max-w-[220px] truncate"
             >
               <Variable size={12} strokeWidth={2} className="shrink-0" />
               {varScopeLabel}
