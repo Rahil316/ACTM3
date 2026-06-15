@@ -173,7 +173,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
       )}
 
       <CardToolbar onDelete={() => removeRole(idx)} deleteDisabled={roleCount <= 1} deleteTitle="Delete role" dragListeners={dragListeners} dragAttributes={dragAttributes}>
-        <Button variant="icon" size="sm" className={scopedIds !== null || roleLocalBg != null ? "text-b-tx-muted bg-b-fi-subtle hover:text-b-tx-secondary hover:bg-b-fi-default" : undefined} onClick={() => openSettings("colors")} title="Role settings" icon={<Settings size={11} strokeWidth={1.75} />} />
+        <Button variant="icon" size="sm" className={scopedIds !== null || roleLocalBg != null ? "text-b-tx-muted bg-b-fi-subtle hover:text-b-tx-secondary hover:bg-b-fi-default" : undefined} onClick={() => openSettings("colors")} title="Role settings" icon={<Settings size={11} strokeWidth={2} />} />
       </CardToolbar>
 
       {showSettingsSheet && <RoleSettingsSheet roleIdx={idx} onClose={() => setShowSettingsSheet(false)} initialTab={settingsTab} />}

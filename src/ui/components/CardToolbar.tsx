@@ -36,7 +36,7 @@ export function CardToolbar({
             {...(dragListeners as React.HTMLAttributes<HTMLButtonElement>)}
             title="Drag to reorder"
             onClick={(e) => e.stopPropagation()}
-            icon={<GripVertical size={12} strokeWidth={1.75} />}
+            icon={<GripVertical size={12} strokeWidth={2} />}
           />
         )}
         {dragListeners && children && <div className="h-4 w-px bg-n-br-default mx-0.5" />}
@@ -49,7 +49,7 @@ export function CardToolbar({
           onClick={onDelete}
           disabled={deleteDisabled}
           title={deleteTitle ?? 'Delete'}
-          icon={<Trash2 size={11} strokeWidth={1.75} />}
+          icon={<Trash2 size={11} strokeWidth={2} />}
         />
       </div>
     </div>

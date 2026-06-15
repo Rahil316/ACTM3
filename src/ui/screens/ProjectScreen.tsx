@@ -159,9 +159,9 @@ function VersionCard({ version, onRestore, onDelete }: { version: Version; onRes
         onDelete={onDelete}
         deleteTitle="Remove version"
       >
-        <Button variant="icon" size="sm" title="Restore this version" onClick={onRestore} icon={<RotateCcw size={11} strokeWidth={1.75} />} />
-        <Button variant="icon" size="sm" title="Rename" onClick={() => { setDraftName(version.name); setEditing(true); }} icon={<Pencil size={11} strokeWidth={1.75} />} />
-        <Button variant="icon" size="sm" title="Export as .wand" onClick={exportWand} icon={<Download size={11} strokeWidth={1.75} />} />
+        <Button variant="icon" size="sm" title="Restore this version" onClick={onRestore} icon={<RotateCcw size={11} strokeWidth={2} />} />
+        <Button variant="icon" size="sm" title="Rename" onClick={() => { setDraftName(version.name); setEditing(true); }} icon={<Pencil size={11} strokeWidth={2} />} />
+        <Button variant="icon" size="sm" title="Export as .wand" onClick={exportWand} icon={<Download size={11} strokeWidth={2} />} />
       </CardToolbar>
     </div>
   );
