@@ -6,7 +6,8 @@
 function theme2Colors() {
   const colors = ['n', 'b', 'd', 's', 'w'];
   const tokens = [
-    'bg-app', 'bg-panel', 'bg-overly',
+    'bg-app', 'bg-card', 'bg-panel', 'bg-overly',
+    'card-border',
     'sf-sunken', 'sf-default', 'sf-input', 'sf-raised', 'sf-overlay', 'sf-hover', 'sf-active',
     'br-hairline', 'br-subtle', 'br-default', 'br-strong',
     'tx-primary', 'tx-secondary', 'tx-muted', 'tx-dim', 'tx-disabled',

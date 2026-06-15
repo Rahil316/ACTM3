@@ -1,14 +1,15 @@
 /* LIGHT */
 :root,
 [data-theme="light"] {
-
   /* Neutral */
   --n-bg-app: #ffffff;
+  --n-bg-card: #f5f5f5;
+  --n-card-border: #d1d1d1;
   --n-bg-panel: #e3e3e3;
   --n-bg-overly: #adadad;
   --n-sf-sunken: #ececec;
   --n-sf-default: #dedede;
-  --n-sf-input: #d2d2d2;
+  --n-sf-input: #eaeaea;
   --n-sf-raised: #c7c7c7;
   --n-sf-overlay: #bcbcbc;
   --n-sf-hover: #c4c4c4;
@@ -35,8 +36,8 @@
   --n-tx-btn-disabled: #9a9a9a;
   --n-tx-btn-subtle: #bdbdbd;
   --n-tx-btn-default: #e6e6e6;
-  --n-tx-btn-hover: #FFFFFF;
-  --n-tx-btn-pressed: #FFFFFF;
+  --n-tx-btn-hover: #ffffff;
+  --n-tx-btn-pressed: #ffffff;
 
   /* Brand */
   --b-bg-app: #ffffff;
@@ -71,8 +72,8 @@
   --b-tx-btn-disabled: #6b9bef;
   --b-tx-btn-subtle: #a0bff7;
   --b-tx-btn-default: #dbe8fd;
-  --b-tx-btn-hover: #FFFFFF;
-  --b-tx-btn-pressed: #FFFFFF;
+  --b-tx-btn-hover: #ffffff;
+  --b-tx-btn-pressed: #ffffff;
 
   /* Danger */
   --d-bg-app: #ffffff;
@@ -107,8 +108,8 @@
   --d-tx-btn-disabled: #d4867f;
   --d-tx-btn-subtle: #e6b2ac;
   --d-tx-btn-default: #f7e2df;
-  --d-tx-btn-hover: #FFFFFF;
-  --d-tx-btn-pressed: #FFFFFF;
+  --d-tx-btn-hover: #ffffff;
+  --d-tx-btn-pressed: #ffffff;
 
   /* Success */
   --s-bg-app: #ffffff;
@@ -143,8 +144,8 @@
   --s-tx-btn-disabled: #71a77b;
   --s-tx-btn-subtle: #a3c6a9;
   --s-tx-btn-default: #ddeade;
-  --s-tx-btn-hover: #FFFFFF;
-  --s-tx-btn-pressed: #FFFFFF;
+  --s-tx-btn-hover: #ffffff;
+  --s-tx-btn-pressed: #ffffff;
 
   /* Warning */
   --w-bg-app: #ffffff;
@@ -179,6 +180,6 @@
   --w-tx-btn-disabled: #b6956e;
   --w-tx-btn-subtle: #d0baa1;
   --w-tx-btn-default: #ede5db;
-  --w-tx-btn-hover: #FFFFFF;
-  --w-tx-btn-pressed: #FFFFFF;
+  --w-tx-btn-hover: #ffffff;
+  --w-tx-btn-pressed: #ffffff;
 }

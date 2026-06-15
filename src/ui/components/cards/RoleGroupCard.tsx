@@ -106,7 +106,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const [localShort, onShortChange, onShortBlur] = useLocalField(role.shorthand ?? "", (v) => setRole(idx, "shorthand", v));
 
   return (
-    <div className="group/card relative bg-n-bg-panel rounded-[12px] border border-n-br-default hover:border-n-br-strong p-3 space-y-2 transition-colors">
+    <div className="group/card relative bg-n-bg-card rounded-[12px] border border-n-card-border hover:border-n-br-strong p-3 space-y-2 transition-colors">
       {/* Name row */}
       <div className="grid gap-2 items-end grid-cols-[1fr_148px]">
         <Input id={`role-${role._id}-name`} value={localName} onChange={onNameChange} onBlur={onNameBlur} label="Name" size="xl" />

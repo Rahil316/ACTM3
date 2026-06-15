@@ -41,7 +41,7 @@ function SortableThemeCard({ theme, idx, removable }: { theme: Theme; idx: numbe
         transition,
         opacity: isDragging ? 0.5 : 1,
       }}
-      className="group/card relative bg-n-bg-panel border border-n-br-default rounded-[12px] p-3 space-y-2.5 hover:border-n-br-strong transition-colors"
+      className="group/card relative bg-n-bg-card border border-n-card-border rounded-[12px] p-3 space-y-2.5 hover:border-n-br-strong transition-colors"
     >
       <div className="grid gap-2 items-end" style={{ gridTemplateColumns: "1fr 148px" }}>
         <Input size="xl" label="Theme Mode Name" value={theme.name} placeholder="Theme name" onChange={(e) => setTheme(idx, "name", e.target.value)} />
@@ -129,7 +129,7 @@ function VersionCard({ version, onRestore, onDelete }: { version: Version; onRes
   }
 
   return (
-    <div className="group/card relative bg-n-bg-panel border border-n-br-default rounded-[12px] p-3 space-y-1.5 hover:border-n-br-strong transition-colors">
+    <div className="group/card relative bg-n-bg-card border border-n-card-border rounded-[12px] p-3 space-y-1.5 hover:border-n-br-strong transition-colors">
       {editing ? (
         <div className="flex items-center gap-1.5">
           <input

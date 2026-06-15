@@ -1,13 +1,14 @@
 /* DARK */
 [data-theme="dark"] {
-
   /* Neutral */
   --n-bg-app: #000000;
+  --n-bg-card: #141414;
+  --n-card-border: #232323;
   --n-bg-panel: #1d1d1d;
   --n-bg-overly: #454545;
   --n-sf-sunken: #141414;
   --n-sf-default: #212121;
-  --n-sf-input: #2a2a2a;
+  --n-sf-input: #1e1e1e;
   --n-sf-raised: #323232;
   --n-sf-overlay: #3a3a3a;
   --n-sf-hover: #343434;
@@ -189,7 +190,7 @@
     --n-bg-overly: #454545;
     --n-sf-sunken: #141414;
     --n-sf-default: #212121;
-    --n-sf-input: #2a2a2a;
+    --n-sf-input: #1e1e1e;
     --n-sf-raised: #323232;
     --n-sf-overlay: #3a3a3a;
     --n-sf-hover: #343434;

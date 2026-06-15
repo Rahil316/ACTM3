@@ -8,7 +8,7 @@ interface SettingsCardProps {
 }
 
 export function SettingsCard({ children, className }: SettingsCardProps) {
-  return <div className={clsx("px-3 py-2 bg-n-bg-panel rounded-xl border border-n-br-default space-y-3", className)}>{children}</div>;
+  return <div className={clsx("px-3 py-2 bg-n-bg-card rounded-xl border border-n-card-border space-y-3", className)}>{children}</div>;
 }
 
 interface PanelRowProps {

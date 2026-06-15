@@ -38,7 +38,7 @@ export const ColorGroupCard = React.memo(function ColorGroupCard({ color, idx, d
   const [localDesc, onDescChange, onDescBlur] = useLocalField(color.description ?? "", (v) => setColor(idx, "description", v));
 
   return (
-    <div className="group/card relative bg-n-bg-panel rounded-[12px] border border-n-br-default hover:border-n-br-strong p-3 space-y-2 transition-colors">
+    <div className="group/card relative bg-n-bg-card rounded-[12px] border border-n-card-border hover:border-n-br-strong p-3 space-y-2 transition-colors">
       {/* Main row: name / shorthand / color value */}
       <div className="grid gap-2 items-end grid-cols-[1fr_120px_120px]">
         <Input id={`clr-${color._id}-name`} value={localName} onChange={onNameChange} onBlur={onNameBlur} label="Name" size="xl" />
