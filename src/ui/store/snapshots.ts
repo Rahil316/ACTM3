@@ -40,13 +40,6 @@ export function markClean(): void {
   useProjectStore.getState().markClean();
 }
 
-// ── Persist to Figma / localStorage ─────────────────────────────────────────
-
-export function persistState(): void {
-  const { projectStore } = useProjectStore.getState();
-  parent.postMessage({ pluginMessage: { type: "save-config", state: projectStore } }, "*");
-}
-
 // ── Hash utility (exported for tests) ───────────────────────────────────────
 
 export { computeHash };

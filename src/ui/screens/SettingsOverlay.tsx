@@ -43,6 +43,52 @@ function SortableSegmentPill({ id }: { id: TokenNameSegment }) {
   );
 }
 
+// ── Mode settings card ────────────────────────────────────────────────────────
+
+interface ModeSettingsProps {
+  isScale: boolean;
+  projectStore: ReturnType<typeof useProjectStore.getState>["projectStore"];
+  setProjectField: ReturnType<typeof useProjectStore.getState>["setProjectField"];
+  algoOptions: { value: string; label: string }[];
+  scopeSegments: readonly { value: string; label: string }[];
+}
+
+function ModeSettings({ isScale, projectStore, setProjectField, algoOptions, scopeSegments }: ModeSettingsProps) {
+  return isScale ? (
+    <SettingsCard>
+      <SectionLabel>Color Algorithm</SectionLabel>
+      <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setProjectField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
+      {projectStore.useUniformAlgorithm && (
+        <SmallRow label="Algorithm" control={<Select size="md" options={algoOptions} value={projectStore.scaleAlgorithm} onChange={(e) => setProjectField("scaleAlgorithm", e.target.value as typeof projectStore.scaleAlgorithm)} />} />
+      )}
+      {!projectStore.useUniformAlgorithm && (
+        <PanelRow
+          label="Algorithm Scope"
+          description={projectStore.algorithmScopeLevel === "color" ? "Select Algorithm for each color." : "Select Algorithm for each role."}
+          control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setProjectField("algorithmScopeLevel", v as "color" | "role")} />}
+        />
+      )}
+    </SettingsCard>
+  ) : (
+    <SettingsCard>
+      <SectionLabel>Color Algorithm</SectionLabel>
+      <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setProjectField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
+      {projectStore.useUniformAlgorithm && (
+        <SmallRow
+          label="Solver Algorithm"
+          control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={projectStore.solverMode} tooltip={SOLVER_MODE_DESCRIPTIONS[projectStore.solverMode]} onChange={(e) => setProjectField("solverMode", e.target.value as typeof projectStore.solverMode)} />}
+        />
+      )}
+      {!projectStore.useUniformAlgorithm && (
+        <SmallRow
+          label="Algorithm Scope"
+          control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setProjectField("algorithmScopeLevel", v as "color" | "role")} />}
+        />
+      )}
+    </SettingsCard>
+  );
+}
+
 // ── Tokens tab ───────────────────────────────────────────────────────────────
 
 function TokensTab() {
@@ -93,41 +139,6 @@ function TokensTab() {
     variation: exampleVariation,
   };
   const namePreview = tokenNameSegments.map((s) => segmentValues[s]).join(" / ");
-  function ModeSettings(isScale: boolean): JSX.Element {
-    return isScale ? (
-      <SettingsCard>
-        <SectionLabel>Color Algorithm</SectionLabel>
-        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setProjectField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
-        {projectStore.useUniformAlgorithm && (
-          <SmallRow label="Algorithm" control={<Select size="md" options={algoOptions} value={projectStore.scaleAlgorithm} onChange={(e) => setProjectField("scaleAlgorithm", e.target.value as typeof projectStore.scaleAlgorithm)} />} />
-        )}
-        {!projectStore.useUniformAlgorithm && (
-          <PanelRow
-            label="Algorithm Scope"
-            description={projectStore.algorithmScopeLevel === "color" ? "Select Algorithm for each color." : "Select Algorithm for each role."}
-            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setProjectField("algorithmScopeLevel", v as "color" | "role")} />}
-          />
-        )}
-      </SettingsCard>
-    ) : (
-      <SettingsCard>
-        <SectionLabel>Color Algorithm</SectionLabel>
-        <PanelRow label="Uniform Algorithm" description="Apply the same algorithm to all colors." control={<Toggle on={projectStore.useUniformAlgorithm} onChange={() => setProjectField("useUniformAlgorithm", !projectStore.useUniformAlgorithm)} />} />
-        {projectStore.useUniformAlgorithm && (
-          <SmallRow
-            label="Solver Algorithm"
-            control={<Select size="md" options={SOLVER_MODE_OPTIONS.map(([v, l]) => ({ value: v, label: l }))} value={projectStore.solverMode} tooltip={SOLVER_MODE_DESCRIPTIONS[projectStore.solverMode]} onChange={(e) => setProjectField("solverMode", e.target.value as typeof projectStore.solverMode)} />}
-          />
-        )}
-        {!projectStore.useUniformAlgorithm && (
-          <SmallRow
-            label="Algorithm Scope"
-            control={<SegmentedControl segments={scopeSegments as unknown as { value: string; label: string }[]} value={projectStore.algorithmScopeLevel} onChange={(v) => setProjectField("algorithmScopeLevel", v as "color" | "role")} />}
-          />
-        )}
-      </SettingsCard>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -168,7 +179,7 @@ function TokensTab() {
       </SettingsCard>
 
       {/* Scale settings */}
-      {ModeSettings(isScaleMode)}
+      <ModeSettings isScale={isScaleMode} projectStore={projectStore} setProjectField={setProjectField} algoOptions={algoOptions} scopeSegments={scopeSegments} />
 
       {/* Token naming */}
       <SettingsCard>

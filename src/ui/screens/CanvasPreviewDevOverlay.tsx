@@ -11,7 +11,8 @@
 import { useMemo, useEffect, useRef, useState } from "react";
 import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
-import { variableMaker, contrastRatio, contrastRating, resolveTokenRefBgs, translateLocalBg } from "../utils/engine";
+import { useEngineStore } from "../store/engineStore";
+import { contrastRatio, contrastRating } from "../utils/engine";
 import { getInkMode, inkColor, normalizeHex } from "../components/preview";
 import type { ProjectStore } from "../types/state";
 import { CanvasPreviewDevTree } from "./CanvasPreviewDevTree";
@@ -96,52 +97,6 @@ function logValidation(label: string, pass: boolean, detail?: string) {
   console.log(`%c${icon} ${label}${detail ? ` — ${detail}` : ""}`, style);
 }
 
-// ── Build engine config ───────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildConfig(projectStore: ProjectStore): any {
-  return {
-    colors: projectStore.colors.map((c) => ({
-      _id: c._id,
-      name: c.name,
-      value: c.value,
-      shorthand: c.shorthand ?? "",
-      description: c.description ?? "",
-      scaleAlgorithm: c.scaleAlgorithm,
-      solverMode: c.solverMode,
-    })),
-    themes: projectStore.themes.map((t) => ({ name: t.name, bg: t.bg })),
-    scaleLength: projectStore.scaleLength,
-    scaleSteps: projectStore.scaleSteps?.map((s) => s.name) ?? undefined,
-    scaleAlgorithm: projectStore.scaleAlgorithm,
-    pluginMode: projectStore.pluginMode,
-    roles: projectStore.roles.map((r) => {
-      const { localBgResolved, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, projectStore.colors, projectStore.themes);
-      return {
-        name: r.name,
-        shorthand: r.shorthand ?? "",
-        mappingMethod: r.mappingMethod,
-        variations: r.variations,
-        solverMode: r.solverMode,
-        description: r.description,
-        scopedColorIds: r.scopedColorIds,
-        localBg: r.localBg,
-        localBgResolved,
-        localBgTokenRef,
-        localBgDynamicRef,
-      };
-    }),
-    variations: projectStore.variations ?? [],
-    tokenNameSegments: projectStore.tokenNameSegments,
-    useShorthandColors: projectStore.useShorthandColors,
-    useShorthandRoles: projectStore.useShorthandRoles,
-    useShorthandVariations: projectStore.useShorthandVariations,
-    useShorthandSteps: projectStore.useShorthandSteps,
-    alphaValues: projectStore.alphaValues?.length ? projectStore.alphaValues : [10, 25, 50, 75, 90],
-    includeSourceColors: projectStore.includeSourceColors ?? false,
-    includeColorScalesCollection: projectStore.includeColorScalesCollection !== false,
-  };
-}
 
 // ── Shared primitive components ───────────────────────────────────────────────
 
@@ -890,19 +845,7 @@ export function CanvasPreviewDevOverlay() {
 
   const selectedRef = useMemo<string | null>(() => selectedItem?.pluginDataRef ?? null, [selectedItem]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const config = useMemo(() => buildConfig(projectStore) as any, [projectStore]);
-
-  const result = useMemo(() => {
-    try {
-      const pass1 = variableMaker(config);
-      if (resolveTokenRefBgs(config, pass1)) return variableMaker(config);
-      return pass1;
-    } catch (err) {
-      console.error("[CanvasPreviewDev] Engine error:", err);
-      return null;
-    }
-  }, [config]);
+  const result = useEngineStore((s) => s.result);
 
   const includeSource = projectStore.includeSourceColors === true;
   const includeScales = projectStore.includeColorScalesCollection !== false;
@@ -1020,7 +963,7 @@ export function CanvasPreviewDevOverlay() {
           </>
         ) : (
           <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
-            <CanvasPreviewDevTree projectStore={projectStore} config={config} result={result} />
+            <CanvasPreviewDevTree projectStore={projectStore} config={projectStore} result={result} />
           </div>
         )}
       </div>

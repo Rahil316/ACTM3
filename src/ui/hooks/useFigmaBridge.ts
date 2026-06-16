@@ -179,7 +179,7 @@ function handleMessage(msg: PluginToUiMessage, callbacks: BridgeCallbacks): void
 
   switch (msg.type) {
     case "load-config": {
-      const isFirstLaunch = !msg.state || Object.keys(msg.state).length === 0;
+      const isFirstLaunch = !msg.state || !Array.isArray(msg.state.colors);
       if (isFirstLaunch) {
         openOverlay("quick-start");
       } else {
@@ -276,7 +276,11 @@ function handleMessage(msg: PluginToUiMessage, callbacks: BridgeCallbacks): void
     }
 
     case "warning": {
-      callbacks.onWarning?.(msg.message);
+      if (callbacks.onWarning) {
+        callbacks.onWarning(msg.message);
+      } else {
+        banner.show({ id: "plugin-warning", type: "warning", title: "Warning", message: msg.message });
+      }
       break;
     }
   }
@@ -321,34 +325,8 @@ export function useFigmaBridge(callbacks: BridgeCallbacks = {}): void {
       parent.postMessage({ pluginMessage: { type: "ui-ready" } }, "*");
     }
 
-    // Auto-save projectStore to Figma plugin storage whenever it changes.
-    // Debounced so rapid edits (typing a color name letter-by-letter) don't
-    // flood the Figma sandbox with serialization work.
-    // On cleanup (plugin close), the pending timer is flushed immediately so
-    // changes are never lost when the user closes before the debounce fires.
-    let saveTimer: ReturnType<typeof setTimeout> | null = null;
-    let pendingState: ReturnType<typeof useProjectStore.getState>["projectStore"] | null = null;
-
-    const unsubscribe = useProjectStore.subscribe((state, prev) => {
-      if (state.projectStore === prev.projectStore) return;
-      pendingState = state.projectStore;
-      if (saveTimer) clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => {
-        parent.postMessage({ pluginMessage: { type: "save-config", state: state.projectStore } }, "*");
-        pendingState = null;
-        saveTimer = null;
-      }, 500);
-    });
-
     return () => {
       window.removeEventListener("message", handler);
-      unsubscribe();
-      if (saveTimer) {
-        clearTimeout(saveTimer);
-        if (pendingState) {
-          parent.postMessage({ pluginMessage: { type: "save-config", state: pendingState } }, "*");
-        }
-      }
     };
   }, []);
 }

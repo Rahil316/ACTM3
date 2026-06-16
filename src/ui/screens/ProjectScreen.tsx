@@ -11,7 +11,6 @@ import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { LucideReset as RotateCcw, LucidePencil as Pencil, LucideExport as Download, LucideCheck as Check, LucideClose as X } from "../components/icons";
@@ -75,12 +74,7 @@ export function ProjectScreen() {
     const oldIndex = themes.findIndex((t) => t._id === active.id);
     const newIndex = themes.findIndex((t) => t._id === over.id);
     if (oldIndex !== -1 && newIndex !== -1) {
-      // arrayMove is used only to compute indices; actual state update via moveTheme
-      const reordered = arrayMove(themes, oldIndex, newIndex);
-      const fromIdx = oldIndex;
-      const toIdx = newIndex;
-      moveTheme(fromIdx, toIdx);
-      void reordered; // suppress unused warning
+      moveTheme(oldIndex, newIndex);
     }
   }
 

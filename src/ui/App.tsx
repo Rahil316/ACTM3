@@ -1,12 +1,14 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useDeferredValue } from "react";
 import logoSvg from "./assets/logo.svg";
 import clsx from "clsx";
 import { useFigmaBridge } from "./hooks/useFigmaBridge";
+import { useAutoSave } from "./hooks/useAutoSave";
 import { useLocalField } from "./hooks/useLocalField";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useUiPrefs } from "./hooks/useUiPrefs";
 import { useUiStore } from "./store/uiStore";
 import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations, UI_DIMS } from "./store/projectStore";
+import { engine } from "./store/engineStore";
 import { toast } from "./store/toastStore";
 import { BannerSlot } from "./components/Banner";
 import { ToastHub } from "./components/Toast";
@@ -17,7 +19,7 @@ import { ColorsScreen } from "./screens/ColorsScreen";
 import { RolesScreen } from "./screens/RolesScreen";
 import { SettingsOverlay } from "./screens/SettingsOverlay";
 import { PreviewScreen } from "./screens/PreviewScreen";
-import { RunDialog } from "./screens/RunDialog";
+import { RunDialog } from "./screens/run-dialog";
 import { ProjectScreen, VersionsScreen } from "./screens/ProjectScreen";
 import { SaveVersionOverlay } from "./screens/SaveVersionOverlay";
 import { QuickStart } from "./screens/QuickStart";
@@ -98,6 +100,7 @@ function ProjectNameInput({ projectStore }: { projectStore: ProjectStore }) {
 
 export default function App() {
   useFigmaBridge();
+  useAutoSave();
   useUiPrefs();
 
   const activeTab = useUiStore((s) => s.activeSidebarTab);
@@ -108,6 +111,10 @@ export default function App() {
   const loadState = useProjectStore((s) => s.loadState);
   const saveBlockedReason = useProjectStore((s) => s.versionSaveBlockedReason());
   const projectStore = useProjectStore((s) => s.projectStore);
+
+  // Single engine run for the whole app — all screens read from useEngineStore
+  const deferredStore = useDeferredValue(projectStore);
+  useEffect(() => { engine.compute(deferredStore); }, [deferredStore]);
 
   const importRef = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);

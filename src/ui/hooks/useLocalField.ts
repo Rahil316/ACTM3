@@ -8,10 +8,11 @@ import { useState, useEffect } from 'react';
 export function useLocalField(
   storeValue: string,
   onCommit: (value: string) => void,
+  { allowEmpty = false }: { allowEmpty?: boolean } = {},
 ): [string, (e: React.ChangeEvent<HTMLInputElement>) => void, (e: React.FocusEvent<HTMLInputElement>) => void] {
   const [local, setLocal] = useState(storeValue);
 
-  // Sync if the external value changes (e.g. drag-rename, undo)
+  // Sync if the external value changes (e.g. drag-rename, undo, fallback applied)
   useEffect(() => {
     setLocal(storeValue);
   }, [storeValue]);
@@ -22,8 +23,8 @@ export function useLocalField(
 
   function handleBlur(e: React.FocusEvent<HTMLInputElement>) {
     const val = e.target.value.trim();
-    if (!val) {
-      setLocal(storeValue); // restore — empty name not allowed
+    if (!val && !allowEmpty) {
+      setLocal(storeValue); // restore — empty not allowed, store handles fallback
     } else if (val !== storeValue) {
       onCommit(val);
     }

@@ -1,5 +1,7 @@
 export type { PluginMode, MappingMethod, AlgorithmScopeLevel, TokenNameSegment, ScaleAlgorithm, SolverMode, Variation, ScaleStep, Color, RoleLocalBgKind, RoleLocalBg, Role, Theme, VariableScope, ScaleStepToken } from "../../shared/types";
 export type { EngineResult, TokenEntry, EngineInput } from "../../shared/clrEngine";
+export type { ContrastRating } from "../../shared/clrUtils";
+export { ratingFromRatio } from "../../shared/clrUtils";
 export type { Preset } from "../../shared/presets/themeShop";
 export { PRESETS } from "../../shared/presets/themeShop";
 

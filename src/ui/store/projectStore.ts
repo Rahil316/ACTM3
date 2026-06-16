@@ -621,6 +621,9 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
           const newName = normalizeSegment(value as string);
           role.shorthand = syncShorthandToName(newName, roles[idx].shorthand || "");
         }
+        if (key === "shorthand" && !role.shorthand) {
+          role.shorthand = String(idx + 1);
+        }
       } else {
         (role as Record<string, unknown>)[key as string] = value;
       }
@@ -684,7 +687,9 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const vars = [...base];
       const val = field === "name" || field === "shorthand" ? normalizeSegment(value) : value;
       const parsed = parseFloat(val);
-      vars[varIdx] = { ...vars[varIdx], [field]: field === "target" ? (isNaN(parsed) ? vars[varIdx].target : parsed) : val };
+      const resolvedVal = (field === "shorthand" || field === "name") && !val ? String(varIdx + 1) : val;
+      const resolvedTarget = isNaN(parsed) ? vars[varIdx].target : Math.min(21, Math.max(1, parsed));
+      vars[varIdx] = { ...vars[varIdx], [field]: field === "target" ? resolvedTarget : resolvedVal };
       role.variations = vars;
       roles[roleIdx] = role;
       return { projectStore: { ...s.projectStore, roles } };

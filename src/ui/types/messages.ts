@@ -1,9 +1,9 @@
 import type { ProjectStore, UiPrefs } from "./state";
 import type { ExportFile } from "../../shared/exportEng/types";
-import type { NameConflict, SyncPreview } from "../../figma/variableTracker";
+import type { NameConflict, SyncPreview, SyncPreviewItem } from "../../figma/variableTracker";
 import type { StructuralChange } from "../../figma/config";
 export type { ExportFile } from "../../shared/exportEng/types";
-export type { NameConflict, SyncPreview } from "../../figma/variableTracker";
+export type { NameConflict, SyncPreview, SyncPreviewItem } from "../../figma/variableTracker";
 export type { StructuralChangeKind, StructuralChange } from "../../figma/config";
 
 // ── Plugin → UI messages ─────────────────────────────────────────────────────
@@ -26,6 +26,7 @@ export interface CollectionCheckResultMessage {
   conflicts?: NameConflict[];
   syncPreview?: SyncPreview;
   structuralChanges?: StructuralChange[];
+  items?: SyncPreviewItem[];
 }
 
 export interface FinishMessage {
@@ -89,12 +90,14 @@ export type PluginToUiMessage =
 
 // ── UI → Plugin messages ─────────────────────────────────────────────────────
 
+export type SyncDecision = "keep" | "revert" | "hold-delete";
+
 export interface RunCreatorMessage {
   type: "run-creator";
   state: ProjectStore;
   scope: SyncScope;
   savedState?: ProjectStore | null;
-  decisions?: Record<string, "keep" | "revert">;
+  decisions?: Record<string, SyncDecision>;
 }
 
 export interface CheckCollectionsMessage {

@@ -4,12 +4,12 @@
 // This file is bundled by esbuild into dist/scripts.js.
 // It runs in the Figma plugin sandbox (not the UI iframe).
 
-import { translateConfig, buildVariableRenameMap, resolveTokenRefBgs, detectStructuralChanges, type PluginConfig } from "./config";
+import { translateConfig, resolveTokenRefBgs, buildVariableRenameMap, type PluginConfig } from "./config";
 import { VariableManager, saveUiState } from "./figmaVars";
 import { variableMaker, type EngineResult } from "../shared/clrEngine.js";
 import { ExportFormatter } from "./docGen";
 import { buildExportBundle } from "../shared/exportEng/bundler";
-import { analyzeNameConflicts, computeSyncPreview } from "./variableTracker";
+import { runPrePublishAnalysis } from "./variableTracker";
 import { generateCanvasPreview, wasPreviewInterrupted, markPreviewInterrupted } from "./canvasPreview";
 import type { ExportConfig } from "../shared/exportEng/types";
 import type { Role } from "../shared/types";
@@ -131,33 +131,11 @@ figma.ui.onmessage = async (msg: any) => {
       }
 
       case "check-collections": {
-        const cols = await figma.variables.getLocalVariableCollectionsAsync();
-        const scaleColName = msg.state?.scaleCollectionName || "_scale";
-        const tokenColName = msg.state?.tokenCollectionName || "color tokens";
-        const sourceColName = msg.state?.sourceCollectionName || "_constants";
-
-        const scaleCol = cols.find((c) => c.name === scaleColName) || null;
-        const tokenCol = cols.find((c) => c.name === tokenColName) || null;
-        const sourceCol = cols.find((c) => c.name === sourceColName) || null;
-
-        const names = [scaleColName, tokenColName, sourceColName].filter(Boolean);
-        const existing = cols.filter((c) => names.includes(c.name)).map((c) => ({ name: c.name, id: c.id }));
-        const renames = msg.savedState && msg.state ? buildVariableRenameMap(msg.savedState, msg.state) : { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } };
-
         const config = translateConfig(msg.state);
         const result = runEngine(config);
-        const localVars = await figma.variables.getLocalVariablesAsync();
-        const conflicts = analyzeNameConflicts(result, config, localVars, tokenCol, scaleCol, sourceCol);
-
-        const syncPreview = computeSyncPreview(result, config, localVars, cols);
-        // Add savedState-diff renames (buildVariableRenameMap) into the preview count
-        const pendingRenames = renames.summary.scaleCount + renames.summary.tokenCount;
-        if (pendingRenames > 0) {
-          syncPreview.toRename += pendingRenames;
-          syncPreview.total += pendingRenames;
-        }
-        const structuralChanges = msg.savedState ? detectStructuralChanges(msg.savedState, msg.state) : [];
-        figma.ui.postMessage({ type: "collection-check-result", existing, renames, conflicts, syncPreview, structuralChanges });
+        const renames = buildVariableRenameMap(msg.savedState ?? null, msg.state);
+        const report = await runPrePublishAnalysis(msg.state, msg.savedState ?? null, config, result, renames);
+        figma.ui.postMessage({ type: "collection-check-result", ...report });
         break;
       }
 
