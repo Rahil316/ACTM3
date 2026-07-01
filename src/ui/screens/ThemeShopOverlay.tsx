@@ -5,6 +5,7 @@ import { banner } from "../store/bannerStore";
 import { PRESETS, type Preset } from "../types/state";
 import { ShopCard } from "../components/cards/ShopCard";
 import { Button } from "../components/Button";
+import { Input } from "../components/Input";
 import { IconChevronLeft } from "../components/icons";
 import { FullscreenOverlay } from "../components/FullscreenOverlay";
 import type { ProjectStore } from "../types/state";
@@ -57,13 +58,7 @@ export function ThemeShopOverlay() {
 
       {/* Search */}
       <div className="shrink-0 px-3 py-2 border-b border-n-br-subtle">
-        <input
-          type="text"
-          placeholder="Search presets…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="w-full h-8 px-3 rounded-[8px] bg-n-sf-input border border-n-br-default text-[12px] text-n-tx-primary placeholder:text-n-tx-muted outline-none focus:border-b-br-strong transition-colors"
-        />
+        <Input type="text" size="md" placeholder="Search presets…" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
 
       {/* Grid */}

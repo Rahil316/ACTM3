@@ -284,31 +284,26 @@ export function ExportSheet() {
                 {/* Action buttons */}
                 <div className="flex items-center gap-1 shrink-0">
                   {/* + / ✕ queue toggle */}
-                  <button
-                    type="button"
+                  <Button
+                    variant={inQueue ? "primary" : "secondary"}
+                    size="sm"
+                    square
+                    icon={inQueue ? <X size={11} strokeWidth={2.5} /> : <Plus size={11} strokeWidth={2.5} />}
                     onClick={() => toggleQueue(format)}
                     disabled={isEmpty}
                     title={inQueue ? "Remove from bulk export" : "Add to bulk export"}
-                    className={[
-                      "w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors",
-                      isEmpty ? "opacity-30 cursor-default" : "cursor-pointer",
-                      inQueue ? "bg-b-fi-btn-default text-b-tx-btn-default hover:opacity-80" : "bg-n-sf-input border border-n-br-default text-n-tx-muted hover:bg-n-sf-hover hover:text-n-tx-primary",
-                    ].join(" ")}
-                  >
-                    {inQueue ? <X size={11} strokeWidth={2.5} /> : <Plus size={11} strokeWidth={2.5} />}
-                  </button>
+                  />
 
                   {/* Download button */}
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<Download size={11} strokeWidth={2} />}
+                    loading={isLoading}
                     onClick={() => handleSingleDownload(format)}
                     disabled={downloading !== null || isEmpty}
                     title={`Download ${label}`}
-                    className="h-6 px-2 rounded-[6px] flex items-center gap-1 text-[10px] font-semibold bg-n-sf-input border border-n-br-default text-n-tx-primary hover:bg-n-sf-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default"
-                  >
-                    {isLoading ? <Spinner size="sm" /> : <Download size={11} strokeWidth={2} />}
-                    <span className="hidden sm:inline">{isLoading ? "…" : ""}</span>
-                  </button>
+                  />
                 </div>
               </div>
             );
@@ -327,11 +322,7 @@ export function ExportSheet() {
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
                 <PackageOpen size={13} strokeWidth={1.75} className={queue.size > 0 ? "text-b-tx-muted" : "text-n-tx-dim"} />
                 <span className={["text-[11px]", queue.size > 0 ? "text-n-tx-muted" : "text-n-tx-dim"].join(" ")}>{queue.size > 0 ? `${queue.size} format${queue.size > 1 ? "s" : ""} queued` : "No formats queued"}</span>
-                {queue.size > 0 && (
-                  <button type="button" onClick={() => setQueue(new Set())} className="text-[10px] text-n-tx-dim hover:text-d-tx-muted cursor-pointer ml-1">
-                    Clear
-                  </button>
-                )}
+                {queue.size > 0 && <Button variant="underlined" size="xs" label="Clear" onClick={() => setQueue(new Set())} className="ml-1" />}
               </div>
               <Button variant="primary" size="md" label="Export All" leftIcon={<Package size={13} strokeWidth={2} />} onClick={handleBulkExport} disabled={queue.size === 0 || isEmpty} />
             </div>

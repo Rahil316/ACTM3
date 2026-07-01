@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useHealthReport } from "./useHealthReport";
 import type { AdjustmentItem, NameCollisionItem, ModeDriftItem, InversionItem } from "./useHealthReport";
-import { FilterBar } from "../../FilterBar";
+import { SegmentedControl } from "../../../../components/SegmentedControl";
 import { SettingsCard } from "../../../../components/SettingsCard";
 import { Badge } from "../../../../components/Badge";
 import { EmptyState } from "../../../../components/EmptyState";
@@ -97,7 +97,7 @@ function AdjustmentsDetail({ items }: { items: AdjustmentItem[] }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <FilterBar tabs={tabs.map((t) => ({ key: t.key, label: t.label, count: t.count }))} active={tab} onChange={setTab} />
+      <SegmentedControl segments={tabs.map((t) => ({ value: t.key, label: t.label, count: t.count }))} value={tab} onChange={setTab} />
 
       <SettingsCard className="!space-y-0 !py-0">
         {visible.map((item, idx) => (

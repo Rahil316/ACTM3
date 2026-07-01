@@ -126,15 +126,17 @@ function VersionCard({ version, onRestore, onDelete }: { version: Version; onRes
     <div className="group/card relative bg-n-bg-card border border-n-card-border rounded-[12px] p-3 space-y-1.5 hover:border-n-br-strong transition-colors">
       {editing ? (
         <div className="flex items-center gap-1.5">
-          <input
+          <Input
             autoFocus
+            size="sm"
+            width="flex"
+            className="font-semibold"
             value={draftName}
             onChange={(e) => setDraftName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") commitRename();
               if (e.key === "Escape") cancelRename();
             }}
-            className="flex-1 text-[12px] font-semibold text-n-tx-primary bg-n-sf-input border border-b-br-strong rounded-[6px] px-2 py-1 outline-none"
           />
           <Button variant="icon" size="sm" icon={<Check size={11} strokeWidth={2} />} onClick={commitRename} title="Confirm rename" />
           <Button variant="icon" size="sm" icon={<X size={11} strokeWidth={2} />} onClick={cancelRename} title="Cancel" />

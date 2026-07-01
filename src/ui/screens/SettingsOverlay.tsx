@@ -6,6 +6,7 @@ import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS, SOLVER_M
 import { useUiStore, VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
 import { takeSnapshot, restoreSnapshot, clearSnapshot } from "../store/snapshots";
 import { Modal, ModalHeader } from "../components/Modal";
+import { Collapsible } from "../components/Collapsible";
 import { TabBar } from "../components/TabBar";
 import { SettingsCard, PanelRow, SmallRow } from "../components/SettingsCard";
 import { Toggle } from "../components/Toggle";
@@ -242,35 +243,29 @@ function TokensTab() {
 
       {/* Step labels */}
       {isScaleMode && (
-        <SettingsCard>
-          <button type="button" className="flex items-center justify-between w-full text-left" onClick={() => setStepLabelsCollapsed((c) => !c)}>
-            <SectionLabel>Step Labels</SectionLabel>
-            <span className="text-n-tx-muted text-[10px]">{stepLabelsCollapsed ? "▸" : "▾"}</span>
-          </button>
-          {!stepLabelsCollapsed && (
-            <>
-              <HelperText className="mt-1">Names for each scale step. Always {projectStore.scaleLength} entries — leave blank to use step numbers.</HelperText>
-              {scaleSteps.length === 0 && <ActionButton label={`+ Enable Step Labels`} onClick={addScaleStep} />}
-              {scaleSteps.length > 0 && (
-                <>
-                  <ListHeader columns={["Name", "Short"]} withRemoveButton />
-                  {scaleSteps.map((step, i) => (
-                    <ListRow key={step._id || i} onRemove={() => removeScaleStep(i)} removeAriaLabel="Clear step label">
-                      <Input size="sm" value={step.name} placeholder={`Step ${i + 1}`} onChange={(e) => setScaleStep(i, "name", e.target.value)} />
-                      <Input size="sm" value={step.shorthand ?? ""} placeholder="Short" onChange={(e) => setScaleStep(i, "shorthand", e.target.value)} />
-                    </ListRow>
-                  ))}
-                  <ActionButton
-                    label="− Disable Step Labels"
-                    onClick={() => {
-                      for (let k = scaleSteps.length - 1; k >= 0; k--) removeScaleStep(k);
-                    }}
-                  />
-                </>
-              )}
-            </>
-          )}
-        </SettingsCard>
+        <Collapsible open={!stepLabelsCollapsed} onToggle={() => setStepLabelsCollapsed((c) => !c)} header={<SectionLabel>Step Labels</SectionLabel>}>
+          <div className="px-3 py-2 space-y-1.5">
+            <HelperText>Names for each scale step. Always {projectStore.scaleLength} entries — leave blank to use step numbers.</HelperText>
+            {scaleSteps.length === 0 && <ActionButton label={`+ Enable Step Labels`} onClick={addScaleStep} />}
+            {scaleSteps.length > 0 && (
+              <>
+                <ListHeader columns={["Name", "Short"]} withRemoveButton />
+                {scaleSteps.map((step, i) => (
+                  <ListRow key={step._id || i} onRemove={() => removeScaleStep(i)} removeAriaLabel="Clear step label">
+                    <Input size="sm" value={step.name} placeholder={`Step ${i + 1}`} onChange={(e) => setScaleStep(i, "name", e.target.value)} />
+                    <Input size="sm" value={step.shorthand ?? ""} placeholder="Short" onChange={(e) => setScaleStep(i, "shorthand", e.target.value)} />
+                  </ListRow>
+                ))}
+                <ActionButton
+                  label="− Disable Step Labels"
+                  onClick={() => {
+                    for (let k = scaleSteps.length - 1; k >= 0; k--) removeScaleStep(k);
+                  }}
+                />
+              </>
+            )}
+          </div>
+        </Collapsible>
       )}
     </div>
   );

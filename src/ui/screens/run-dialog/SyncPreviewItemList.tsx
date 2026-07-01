@@ -4,7 +4,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { Mono, MicroText, Caption } from "../../components/typography";
 import { IconLayers } from "../../components/icons";
 import { Button } from "../../components/Button";
-import { FilterBar } from "./FilterBar";
+import { SegmentedControl } from "../../components/SegmentedControl";
 import type { SyncPreviewItem, SyncDecision } from "../../types/messages";
 
 type FilterAction = "all" | "create" | "update" | "rename" | "delete";
@@ -70,11 +70,11 @@ export function SyncPreviewItemList({ items, decisions, onDecision, initialFilte
 
   const visible = filter === "all" ? items : filter === "rename" ? items.filter((i) => i.action === "rename" || i.action === "rename+update") : items.filter((i) => i.action === filter);
 
-  const filterBarTabs = FILTER_TABS.map((tab) => ({ key: tab.value, label: tab.label, count: countFor(tab.value) }));
+  const filterSegments = FILTER_TABS.map((tab) => ({ value: tab.value, label: tab.label, count: countFor(tab.value) }));
 
   return (
     <div className="flex flex-col gap-2">
-      <FilterBar tabs={filterBarTabs} active={filter} onChange={setFilter} />
+      <SegmentedControl segments={filterSegments} value={filter} onChange={setFilter} />
 
       {/* Item list */}
       <div className="bg-n-bg-card border border-n-card-border rounded-xl overflow-hidden h-full">
