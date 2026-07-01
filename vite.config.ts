@@ -20,6 +20,7 @@ const renameIndexToUi = {
 export default defineConfig({
   plugins: isDev ? [react()] : [react(), viteSingleFile(), renameIndexToUi],
   root: 'src/ui',
+  cacheDir: '../../node_modules/.vite',
   // Inject __RELEASE__ so tree-shaking removes dev-only code in release builds
   define: {
     __RELEASE__: isRelease,
