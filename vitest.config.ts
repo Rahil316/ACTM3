@@ -21,7 +21,7 @@ export default mergeConfig(
           test: {
             name: 'components',
             root: '.',
-            include: ['tests/ui/components/**/*.test.tsx'],
+            include: ['tests/ui/components/**/*.test.tsx', 'tests/ui/screens/**/*.test.tsx'],
             environment: 'jsdom',
             globals: true,
             setupFiles: ['./tests/setup.ts'],
