@@ -62,6 +62,9 @@ Last updated: 2026-05-22
 - [ ] **Role Labels CSV**
       Convenience field to rename all variation levels at once via comma-separated string. Currently the only way to rename is per-variation inline in the list.
 
+- [ ] **Color algorithm equalizer + "ultimate" gamut-relative algorithm**
+      Full brainstorm and analysis in `Documentations/knowledge/color-algorithm-roadmap.md`. Pinned — not scheduled.
+
 ---
 
 ## ✅ Recently completed
