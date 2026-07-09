@@ -4,6 +4,7 @@ import { useProjectStore } from "../../store/projectStore";
 import { useLocalField } from "../../hooks/useLocalField";
 import { Input } from "../Input";
 import { Button } from "../Button";
+import { NumberStepper } from "../NumberStepper";
 
 export interface VariationTableProps {
   variations: Variation[];
@@ -31,9 +32,7 @@ function VariationRow({
   const [localShort, onShortChange, onShortBlur] = useLocalField(v.shorthand ?? "", (val) => setRoleVariation(idx, vi, "shorthand", val), { allowEmpty: true });
   const [localTarget, onTargetChange, onTargetBlur] = useLocalField(String(v.target ?? 4.5), (val) => setRoleVariation(idx, vi, "target", val));
 
-  const cols = canEditNames ? "16px 1fr 56px 88px 24px" : "16px 1fr 88px";
-  const isFallback = /^\d+$/.test((v.shorthand ?? "").trim());
-  const isNameFallback = /^\d+$/.test((v.name ?? "").trim());
+  const cols = canEditNames ? "16px 1fr 88px 88px 24px" : "16px 1fr 88px";
 
   return (
     <div
@@ -43,7 +42,7 @@ function VariationRow({
       <span className="text-[10px] text-n-tx-muted tabular-nums">{vi + 1}</span>
 
       {canEditNames ? (
-        <Input size="table" value={localName} onChange={onNameChange} onBlur={onNameBlur} inputState={isNameFallback ? "error" : "default"} />
+        <Input size="table" value={localName} onChange={onNameChange} onBlur={onNameBlur} />
       ) : (
         <span className="text-[11px] px-1.5 text-n-tx-muted truncate">
           {v.name}{v.shorthand ? ` (${v.shorthand})` : ""}
@@ -51,13 +50,22 @@ function VariationRow({
       )}
 
       {canEditNames && (
-        <Input size="table" value={localShort} onChange={onShortChange} onBlur={onShortBlur} inputState={isFallback ? "error" : "default"} />
+        <Input size="table" value={localShort} onChange={onShortChange} onBlur={onShortBlur} />
       )}
 
       <div className="relative flex items-center">
-        <Input size="table" type="number" value={localTarget} min="1" max="21" step="0.1" onChange={onTargetChange} onBlur={onTargetBlur} />
+        <NumberStepper
+          value={localTarget}
+          onChange={onTargetChange}
+          onBlur={onTargetBlur}
+          onNudge={(next) => setRoleVariation(idx, vi, "target", String(next))}
+          min={1}
+          max={21}
+          step={0.1}
+          bigStep={1}
+        />
         {canEditNames && globalTarget != null && v.target != null && Math.abs(v.target - globalTarget) > 0.001 && (
-          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-w-fi-strong pointer-events-none" title="Differs from global default" />
+          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-b-fi-strong pointer-events-none" title="Differs from global default" />
         )}
       </div>
 
@@ -70,8 +78,8 @@ function VariationRow({
 
 export const VariationTable = React.memo(function VariationTable({ variations: vars, canEdit: canEditNames, idx, highlightRows, globalVariations }: VariationTableProps) {
   const addRoleVariation = useProjectStore((s) => s.addRoleVariation);
-  const cols = canEditNames ? "16px 1fr 56px 88px 24px" : "16px 1fr 88px";
-  const headers = canEditNames ? ["#", "Name", "Short", "Target", ""] : ["#", "Variation", "Target"];
+  const cols = canEditNames ? "16px 1fr 88px 88px 24px" : "16px 1fr 88px";
+  const headers = canEditNames ? ["#", "Name", "Shorthand", "Contrast Target", ""] : ["#", "Variation", "Contrast Target"];
 
   return (
     <div>

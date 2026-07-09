@@ -146,6 +146,36 @@ export function normalizeSegment(str: string): string {
     .join("/");
 }
 
+function uniqueLabel(candidate: string, taken: Set<string>): string {
+  if (!taken.has(candidate)) return candidate;
+  let n = 2;
+  while (taken.has(`${candidate}-${n}`)) n++;
+  return `${candidate}-${n}`;
+}
+
+// ── Variation name/shorthand field resolution ───────────────────────────────
+//
+// Single source of truth for what a variation's `name`/`shorthand` commit
+// resolves to. Order matters and is enforced here, not scattered at call sites:
+//   1. Normalize (trim "/" segments) — done by the caller before this runs.
+//   2. Blank check — an empty commit reverts to the row's current stored
+//      value; only if no stored value exists does it fall back to a unique
+//      serial number (autofill path, no user-typed intent to protect).
+//   3. Collision check — a non-empty, non-blank edit that exactly matches a
+//      sibling row's current value for the same field is REJECTED and the
+//      row's previous stored value is kept as-is. This never silently
+//      rewrites what the user typed (see resolveVariationField's callers).
+//   4. Otherwise the typed value is accepted verbatim.
+//
+// Returns the resolved value; callers use it both to write to the store and
+// to hand back to the input for immediate resync (see useLocalField).
+function resolveVariationField(normalizedVal: string, currentValue: string, siblingValues: string[], fallbackSeed: string): string {
+  const taken = new Set(siblingValues);
+  if (!normalizedVal) return currentValue || uniqueLabel(fallbackSeed, taken);
+  if (taken.has(normalizedVal)) return currentValue; // reject collision, keep previous
+  return normalizedVal;
+}
+
 export function deriveShorthand(name: string): string {
   if (!name) return "";
   const words = name
@@ -451,7 +481,7 @@ interface projectStoreState {
   addRoleWith: (name: string, shorthand: string) => void;
   removeRole: (idx: number) => void;
   moveRole: (from: number, to: number) => void;
-  setRoleVariation: (roleIdx: number, varIdx: number, field: string, value: string) => void;
+  setRoleVariation: (roleIdx: number, varIdx: number, field: string, value: string) => string | void;
   addRoleVariation: (roleIdx: number) => void;
   removeRoleVariation: (roleIdx: number, varIdx: number) => void;
   setRoleScope: (roleIdx: number, colorIds: string[] | null) => void;
@@ -667,6 +697,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
   },
 
   setRoleVariation: (roleIdx, varIdx, field, value) => {
+    let out: string | undefined;
     set((s) => {
       const roles = [...s.projectStore.roles];
       const role = { ...roles[roleIdx] };
@@ -677,13 +708,22 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const vars = [...base];
       const val = field === "name" || field === "shorthand" ? normalizeSegment(value) : value;
       const parsed = parseFloat(val);
-      const resolvedVal = (field === "shorthand" || field === "name") && !val ? String(varIdx + 1) : val;
       const resolvedTarget = isNaN(parsed) ? vars[varIdx].target : Math.min(21, Math.max(1, parsed));
+      const current = vars[varIdx] as unknown as Record<string, string>;
+      let resolvedVal: string;
+      if (field === "name" || field === "shorthand") {
+        const siblingValues = vars.filter((_, i) => i !== varIdx).map((v) => (v as unknown as Record<string, string>)[field]);
+        resolvedVal = resolveVariationField(val, current[field], siblingValues, String(varIdx + 1));
+      } else {
+        resolvedVal = val;
+      }
       vars[varIdx] = { ...vars[varIdx], [field]: field === "target" ? resolvedTarget : resolvedVal };
       role.variations = vars;
       roles[roleIdx] = role;
+      out = field === "target" ? String(resolvedTarget) : resolvedVal;
       return { projectStore: { ...s.projectStore, roles } };
     });
+    return out;
   },
 
   addRoleVariation: (roleIdx) => {
@@ -693,7 +733,16 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       if (!role) return s;
       const base = role.variations;
       if (!base) return s;
-      const newVar: Variation = { _id: generateId(), name: "Variation", shorthand: "", target: 4.5 };
+      const takenNames = new Set(base.map((v) => v.name));
+      const takenShorts = new Set(base.map((v) => v.shorthand));
+      const nextNum = String(base.length + 1);
+      const target = Math.min(21, (base[base.length - 1]?.target ?? 0) + 1);
+      const newVar: Variation = {
+        _id: generateId(),
+        name: uniqueLabel(nextNum, takenNames),
+        shorthand: uniqueLabel(nextNum, takenShorts),
+        target,
+      };
       role.variations = [...base, newVar];
       roles[roleIdx] = role;
       return { projectStore: { ...s.projectStore, roles } };
