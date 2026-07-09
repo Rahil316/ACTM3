@@ -10,8 +10,8 @@ dist-release/
 storybook-static/
 *storybook.log
 
-# Generated preset bundle — built from src/shared/presets/raw/**/*.ts
-src/shared/presets/presets.json
+# Generated preset bundle — built from src/ui/presets/raw/*.ts
+src/ui/presets/presets.json
 
 # Export output folders
 lib/*/
