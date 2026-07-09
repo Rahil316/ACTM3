@@ -380,30 +380,8 @@ function _processScaleMode(color: Color, mode: Theme, config: EngineInput, scale
     const roleOutput: Record<number, TokenEntry> = (groupOutput[ri] = {});
     const roleVariations = role.variations ?? globalVariations;
 
-    if (role.mappingMethod === "index") {
-      _mapByIndex(color, role, roleVariations, scale, stepNames, modeName, roleOutput);
-    } else {
-      _mapByScaleContrast(color, role, roleVariations, scale, stepNames, modeName, effectiveBg, isDark, roleOutput, errors);
-    }
+    _mapByScaleContrast(color, role, roleVariations, scale, stepNames, modeName, effectiveBg, isDark, roleOutput, errors);
   }
-}
-
-function _mapByIndex(color: Color, role: Role, variations: Variation[], scale: Record<string | number, ScaleStepToken>, stepNames: string[], modeName: string, output: Record<number, TokenEntry>): void {
-  variations.forEach((v, vi) => {
-    const idx = Math.max(0, Math.min(stepNames.length - 1, parseInt(String(v.target ?? Math.floor((stepNames.length * vi) / Math.max(1, variations.length - 1))), 10) || 0));
-    const data = scale[stepNames[idx]];
-    const variation = v.name ?? String(vi);
-    output[vi] = {
-      tokenName: `${color.name}-${role.name}-${variation}`,
-      color: color.name,
-      role: role.name,
-      variation,
-      roleDescription: role.description || "",
-      tokenRef: data.stepName,
-      value: data.value,
-      contrast: { ratio: data.contrast[modeName].ratio, rating: data.contrast[modeName].rating },
-    };
-  });
 }
 
 function _mapByScaleContrast(

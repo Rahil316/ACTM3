@@ -76,7 +76,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 1.2 },
             { name: "Bold", shorthand: "5", target: 1.35 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Background/Subtle",
@@ -88,7 +87,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 1.5 },
             { name: "Bold", shorthand: "5", target: 1.8 },
           ],
-          mappingMethod: "contrast",
         },
         // Surfaces — card and raised element backgrounds.
         {
@@ -101,7 +99,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 2.2 },
             { name: "Bold", shorthand: "5", target: 2.7 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Surface/Raised",
@@ -113,7 +110,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 3.2 },
             { name: "Bold", shorthand: "5", target: 4.0 },
           ],
-          mappingMethod: "contrast",
         },
         // Borders — subtle to strong outlines.
         {
@@ -126,7 +122,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 4.8 },
             { name: "Bold", shorthand: "5", target: 5.8 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Border/Strong",
@@ -138,7 +133,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 7.0 },
             { name: "Bold", shorthand: "5", target: 8.5 },
           ],
-          mappingMethod: "contrast",
         },
         // Fills — interactive component fills and solid CTAs.
         {
@@ -151,7 +145,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 8.5 },
             { name: "Bold", shorthand: "5", target: 11.5 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Fill/Strong",
@@ -163,7 +156,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 11.5 },
             { name: "Bold", shorthand: "5", target: 14.5 },
           ],
-          mappingMethod: "contrast",
         },
         // Text — from placeholder/muted through to AAA headings.
         {
@@ -176,7 +168,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 11.5 },
             { name: "Bold", shorthand: "5", target: 13.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Text",
@@ -188,7 +179,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 14.5 },
             { name: "Bold", shorthand: "5", target: 16.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Text/Strong",
@@ -200,7 +190,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 17.5 },
             { name: "Bold", shorthand: "5", target: 19.0 },
           ],
-          mappingMethod: "contrast",
         },
         // Inverse — text or fill used against a dark/colored background.
         {
@@ -213,7 +202,6 @@ const presets: Preset[] = [
             { name: "Strong", shorthand: "4", target: 1.5 },
             { name: "Bold", shorthand: "5", target: 1.8 },
           ],
-          mappingMethod: "contrast",
         },
       ],
       themes: [
@@ -296,7 +284,6 @@ const presets: Preset[] = [
             { name: "State/Pressed", shorthand: "p", target: 7.0 },
             { name: "State/Disabled", shorthand: "d", target: 2.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Primary/Container",
@@ -308,7 +295,6 @@ const presets: Preset[] = [
             { name: "Layer/04", shorthand: "l4", target: 1.7 },
             { name: "Layer/Scrim", shorthand: "ls", target: 2.5 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "On/Primary",
@@ -319,7 +305,6 @@ const presets: Preset[] = [
             { name: "State/Pressed", shorthand: "p", target: 7.0 },
             { name: "State/Disabled", shorthand: "d", target: 2.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Secondary",
@@ -330,7 +315,6 @@ const presets: Preset[] = [
             { name: "State/Pressed", shorthand: "p", target: 7.0 },
             { name: "State/Disabled", shorthand: "d", target: 2.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "On/Secondary",
@@ -341,7 +325,6 @@ const presets: Preset[] = [
             { name: "State/Pressed", shorthand: "p", target: 7.0 },
             { name: "State/Disabled", shorthand: "d", target: 2.0 },
           ],
-          mappingMethod: "contrast",
         },
 
         // Surface family — 5-layer depth model with "/" naming → nested Figma folders.
@@ -356,7 +339,6 @@ const presets: Preset[] = [
             { name: "Layer/04", shorthand: "l4", target: 1.7 },
             { name: "Layer/Scrim", shorthand: "ls", target: 2.5 },
           ],
-          mappingMethod: "contrast",
         },
 
         // Text family — Emphasis hierarchy from accessible body copy to disabled.
@@ -369,7 +351,6 @@ const presets: Preset[] = [
             { name: "Emphasis/Low", shorthand: "el", target: 3.0 },
             { name: "Emphasis/Disabled", shorthand: "ed", target: 2.0 },
           ],
-          mappingMethod: "contrast",
         },
 
         // Outline — three weights of border/separator.
@@ -381,7 +362,6 @@ const presets: Preset[] = [
             { name: "Weight/Default", shorthand: "wd", target: 2.5 },
             { name: "Weight/Strong", shorthand: "wst", target: 3.5 },
           ],
-          mappingMethod: "contrast",
         },
 
         // Action roles — 4 interaction states via global variations.
@@ -394,7 +374,6 @@ const presets: Preset[] = [
             { name: "State/Pressed", shorthand: "p", target: 7.0 },
             { name: "State/Disabled", shorthand: "d", target: 2.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Action/Secondary",
@@ -405,7 +384,6 @@ const presets: Preset[] = [
             { name: "State/Pressed", shorthand: "p", target: 6.0 },
             { name: "State/Disabled", shorthand: "d", target: 2.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Action/Destructive",
@@ -416,7 +394,6 @@ const presets: Preset[] = [
             { name: "State/Pressed", shorthand: "p", target: 7.0 },
             { name: "State/Disabled", shorthand: "d", target: 2.0 },
           ],
-          mappingMethod: "contrast",
         },
 
         // Status / Error — 4 semantic token slots per status color.
@@ -430,7 +407,6 @@ const presets: Preset[] = [
             { name: "FG/Default", shorthand: "fgd", target: 4.5 },
             { name: "Border", shorthand: "bor", target: 2.5 },
           ],
-          mappingMethod: "contrast",
         },
 
         // Inverse — near-max contrast pair for high-contrast surfaces or dark tooltips.
@@ -441,7 +417,6 @@ const presets: Preset[] = [
             { name: "Default", shorthand: "df", target: 12.0 },
             { name: "Muted", shorthand: "mu", target: 4.5 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Inverse/On/Surface",
@@ -452,7 +427,6 @@ const presets: Preset[] = [
             { name: "State/Pressed", shorthand: "p", target: 7.0 },
             { name: "State/Disabled", shorthand: "d", target: 2.0 },
           ],
-          mappingMethod: "contrast",
         },
       ],
       themes: [
@@ -534,7 +508,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 2.0 },
             { name: "Max", shorthand: "5", target: 3.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Canvas/Raised",
@@ -546,7 +519,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 2.5 },
             { name: "Max", shorthand: "5", target: 4.0 },
           ],
-          mappingMethod: "contrast",
         },
         // Glow — color-tinted fills, from subtle aura to heavy overlay.
         {
@@ -559,7 +531,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 4.5 },
             { name: "Max", shorthand: "5", target: 7.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Glow/Strong",
@@ -571,7 +542,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 5.5 },
             { name: "Max", shorthand: "5", target: 9.0 },
           ],
-          mappingMethod: "contrast",
         },
         // Edge — borders and outlines.
         {
@@ -584,7 +554,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 3.5 },
             { name: "Max", shorthand: "5", target: 5.0 },
           ],
-          mappingMethod: "contrast",
         },
         // Fill — interactive component fills.
         {
@@ -597,7 +566,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 4.5 },
             { name: "Max", shorthand: "5", target: 6.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Fill/Core",
@@ -609,7 +577,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 6.5 },
             { name: "Max", shorthand: "5", target: 9.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Fill/Pop",
@@ -621,7 +588,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 10.0 },
             { name: "Max", shorthand: "5", target: 14.0 },
           ],
-          mappingMethod: "contrast",
         },
         // Ink — text from dim to maximum.
         {
@@ -634,7 +600,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 4.5 },
             { name: "Max", shorthand: "5", target: 6.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Ink",
@@ -646,7 +611,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 7.0 },
             { name: "Max", shorthand: "5", target: 10.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Ink/Loud",
@@ -658,7 +622,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 10.0 },
             { name: "Max", shorthand: "5", target: 14.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Ink/Max",
@@ -670,7 +633,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 18.0 },
             { name: "Max", shorthand: "5", target: 21.0 },
           ],
-          mappingMethod: "contrast",
         },
         // Highlight — decorative accent washes and pops.
         {
@@ -683,7 +645,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 4.5 },
             { name: "Max", shorthand: "5", target: 7.0 },
           ],
-          mappingMethod: "contrast",
         },
         {
           name: "Highlight/Strong",
@@ -695,7 +656,6 @@ const presets: Preset[] = [
             { name: "Loud", shorthand: "4", target: 7.0 },
             { name: "Max", shorthand: "5", target: 10.0 },
           ],
-          mappingMethod: "contrast",
         },
       ],
       themes: [
@@ -803,7 +763,6 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong", target: 1.3 }, // stronger section divider
           ],
           description: "Background fills · subtle wash · default section · strong divider",
-          mappingMethod: "contrast",
         },
 
         // ── SURFACE ───────────────────────────────────────────────────────────
@@ -819,7 +778,6 @@ const presets: Preset[] = [
             { name: "overlay", shorthand: "overlay", target: 1.15 }, // modal / sheet / drawer
           ],
           description: "Surface elevation · sunken · card · raised · modal overlay",
-          mappingMethod: "contrast",
         },
 
         // ── FILL ──────────────────────────────────────────────────────────────
@@ -834,7 +792,6 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled", target: 2.0 }, // clearly inactive
           ],
           description: "Solid fills · badge · chip · tag · 3 states",
-          mappingMethod: "contrast",
         },
 
         // ── TEXT ──────────────────────────────────────────────────────────────
@@ -849,7 +806,6 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled label
           ],
           description: "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
-          mappingMethod: "contrast",
         },
 
         // ── STROKE ────────────────────────────────────────────────────────────
@@ -863,7 +819,6 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong", target: 4.0 }, // focus ring / emphasis outline
           ],
           description: "Borders and dividers · subtle hairline · UI border · focus ring",
-          mappingMethod: "contrast",
         },
 
         // ── ICON ──────────────────────────────────────────────────────────────
@@ -877,7 +832,6 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled icon
           ],
           description: "Icon fills · default (AA) · subtle (AA-large) · disabled",
-          mappingMethod: "contrast",
         },
 
         // ── BUTTON ────────────────────────────────────────────────────────────
@@ -893,7 +847,6 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled", target: 2.0 }, // below action threshold
           ],
           description: "Button fills · 5 interaction states · default → hover → active → selected → disabled",
-          mappingMethod: "contrast",
         },
 
         // ── LINK ──────────────────────────────────────────────────────────────
@@ -907,7 +860,6 @@ const presets: Preset[] = [
             { name: "visited", shorthand: "visited", target: 3.5 }, // de-emphasized visited
           ],
           description: "Inline links · default · hover · visited",
-          mappingMethod: "contrast",
         },
 
         // ── OVERLAY ───────────────────────────────────────────────────────────
@@ -917,7 +869,6 @@ const presets: Preset[] = [
           shorthand: "overlay",
           variations: [{ name: "default", shorthand: "default", target: 14.0 }],
           description: "Modal scrim · darkest achievable from palette hue",
-          mappingMethod: "contrast",
         },
       ],
 
@@ -1026,7 +977,6 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong", target: 1.3 }, // stronger section divider
           ],
           description: "Background fills · subtle wash · default section · strong divider",
-          mappingMethod: "contrast",
         },
 
         // ── SURFACE ───────────────────────────────────────────────────────────
@@ -1042,7 +992,6 @@ const presets: Preset[] = [
             { name: "overlay", shorthand: "overlay", target: 1.15 }, // modal / sheet / drawer
           ],
           description: "Surface elevation · sunken · card · raised · modal overlay",
-          mappingMethod: "contrast",
         },
 
         // ── FILL ──────────────────────────────────────────────────────────────
@@ -1057,7 +1006,6 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled", target: 2.0 }, // clearly inactive
           ],
           description: "Solid fills · badge · chip · tag · 3 states",
-          mappingMethod: "contrast",
         },
 
         // ── TEXT ──────────────────────────────────────────────────────────────
@@ -1072,7 +1020,6 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled label
           ],
           description: "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
-          mappingMethod: "contrast",
         },
 
         // ── STROKE ────────────────────────────────────────────────────────────
@@ -1086,7 +1033,6 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong", target: 4.0 }, // focus ring / emphasis outline
           ],
           description: "Borders and dividers · subtle hairline · UI border · focus ring",
-          mappingMethod: "contrast",
         },
 
         // ── ICON ──────────────────────────────────────────────────────────────
@@ -1100,7 +1046,6 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled", target: 2.0 }, // disabled icon
           ],
           description: "Icon fills · default (AA) · subtle (AA-large) · disabled",
-          mappingMethod: "contrast",
         },
 
         // ── BUTTON ────────────────────────────────────────────────────────────
@@ -1116,7 +1061,6 @@ const presets: Preset[] = [
             { name: "disabled", shorthand: "disabled", target: 2.0 }, // below action threshold
           ],
           description: "Button fills · 5 interaction states · default → hover → active → selected → disabled",
-          mappingMethod: "contrast",
         },
 
         // ── LINK ──────────────────────────────────────────────────────────────
@@ -1130,7 +1074,6 @@ const presets: Preset[] = [
             { name: "visited", shorthand: "visited", target: 3.5 }, // de-emphasized visited
           ],
           description: "Inline links · default · hover · visited",
-          mappingMethod: "contrast",
         },
 
         // ── OVERLAY ───────────────────────────────────────────────────────────
@@ -1140,7 +1083,6 @@ const presets: Preset[] = [
           shorthand: "overlay",
           variations: [{ name: "default", shorthand: "default", target: 14.0 }],
           description: "Modal scrim · darkest achievable from palette hue",
-          mappingMethod: "contrast",
         },
       ],
 

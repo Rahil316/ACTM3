@@ -221,7 +221,6 @@ function InversionRow({ item }: { item: InversionItem }) {
   }));
   const roleIdx = roles.findIndex((r) => r.name === item.role);
   const role = roles[roleIdx];
-  const mappingMethod = role?.mappingMethod ?? "contrast";
 
   // Compute which row indices break monotonicity so they can be highlighted
   const brokenRows = useMemo(() => {
@@ -249,7 +248,7 @@ function InversionRow({ item }: { item: InversionItem }) {
         </div>
       }
     >
-      {roleIdx >= 0 && role && <VariationTable variations={role.variations ?? []} canEdit={canEditNames} mappingMethod={mappingMethod} idx={roleIdx} scaleLength={scaleLength} highlightRows={brokenRows} globalVariations={globalVariations} />}
+      {roleIdx >= 0 && role && <VariationTable variations={role.variations ?? []} canEdit={canEditNames} idx={roleIdx} scaleLength={scaleLength} highlightRows={brokenRows} globalVariations={globalVariations} />}
     </Collapsible>
   );
 }

@@ -116,7 +116,6 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
           name: r.name,
           shorthand: r.shorthand,
           variations: r.variations,
-          mappingMethod: r.mappingMethod,
         })),
         variations: projectStore.variations ?? [],
         scaleLength: projectStore.scaleLength ?? 11,

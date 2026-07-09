@@ -8,7 +8,6 @@ import { Button } from "../Button";
 export interface VariationTableProps {
   variations: Variation[];
   canEdit: boolean;
-  mappingMethod: "contrast" | "index";
   idx: number;
   scaleLength: number;
   highlightRows?: Set<number>;
@@ -18,10 +17,10 @@ export interface VariationTableProps {
 const EMPTY_VARIATIONS: Variation[] = [];
 
 function VariationRow({
-  v, vi, idx, isIndex, scaleLength, highlight, canEditNames, globalTarget,
+  v, vi, idx, highlight, canEditNames, globalTarget,
 }: {
-  v: Variation; vi: number; idx: number; isIndex: boolean;
-  scaleLength: number; highlight: boolean; canEditNames: boolean;
+  v: Variation; vi: number; idx: number;
+  highlight: boolean; canEditNames: boolean;
   globalTarget?: number;
 }) {
   const setRoleVariation = useProjectStore((s) => s.setRoleVariation);
@@ -56,7 +55,7 @@ function VariationRow({
       )}
 
       <div className="relative flex items-center">
-        <Input size="table" type="number" value={localTarget} min={isIndex ? "0" : "1"} max={isIndex ? String(scaleLength - 1) : "21"} step="0.1" onChange={onTargetChange} onBlur={onTargetBlur} />
+        <Input size="table" type="number" value={localTarget} min="1" max="21" step="0.1" onChange={onTargetChange} onBlur={onTargetBlur} />
         {canEditNames && globalTarget != null && v.target != null && Math.abs(v.target - globalTarget) > 0.001 && (
           <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-w-fi-strong pointer-events-none" title="Differs from global default" />
         )}
@@ -69,11 +68,10 @@ function VariationRow({
   );
 }
 
-export const VariationTable = React.memo(function VariationTable({ variations: vars, canEdit: canEditNames, mappingMethod, idx, scaleLength, highlightRows, globalVariations }: VariationTableProps) {
+export const VariationTable = React.memo(function VariationTable({ variations: vars, canEdit: canEditNames, idx, highlightRows, globalVariations }: VariationTableProps) {
   const addRoleVariation = useProjectStore((s) => s.addRoleVariation);
   const cols = canEditNames ? "16px 1fr 56px 88px 24px" : "16px 1fr 88px";
   const headers = canEditNames ? ["#", "Name", "Short", "Target", ""] : ["#", "Variation", "Target"];
-  const isIndex = mappingMethod === "index";
 
   return (
     <div>
@@ -87,8 +85,6 @@ export const VariationTable = React.memo(function VariationTable({ variations: v
         <VariationRow
           key={v._id ?? vi}
           v={v} vi={vi} idx={idx}
-          isIndex={isIndex}
-          scaleLength={scaleLength}
           highlight={highlightRows?.has(vi) ?? false}
           canEditNames={canEditNames}
           globalTarget={globalVariations?.[vi]?.target}

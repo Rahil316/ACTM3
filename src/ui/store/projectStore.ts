@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ProjectStore, ProjectStoreSnapshot, Color, Role, Theme, Variation, ValidationIssues, MappingMethod, VariableScope } from "../types/state";
+import type { ProjectStore, ProjectStoreSnapshot, Color, Role, Theme, Variation, ValidationIssues, VariableScope } from "../types/state";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -274,9 +274,9 @@ export function makeBootstrapState(): ProjectStore {
       { _id: generateId(), name: "Gray", shorthand: "gr", value: "#6B7280", description: "" },
     ],
     roles: [
-      { _id: generateId(), name: "Text", shorthand: "tx", mappingMethod: "contrast", variations: null },
-      { _id: generateId(), name: "Background", shorthand: "bg", mappingMethod: "contrast", variations: null },
-      { _id: generateId(), name: "Border", shorthand: "bd", mappingMethod: "contrast", variations: null },
+      { _id: generateId(), name: "Text", shorthand: "tx", variations: null },
+      { _id: generateId(), name: "Background", shorthand: "bg", variations: null },
+      { _id: generateId(), name: "Border", shorthand: "bd", variations: null },
     ],
     themes: [
       { _id: generateId(), name: "Light", bg: "#FFFFFF" },
@@ -446,7 +446,7 @@ interface projectStoreState {
   moveColor: (from: number, to: number) => void;
 
   // Roles — set / add / remove / move
-  setRole: (idx: number, key: keyof Role | string, value: string | MappingMethod) => void;
+  setRole: (idx: number, key: keyof Role | string, value: string) => void;
   addRole: () => void;
   addRoleWith: (name: string, shorthand: string) => void;
   removeRole: (idx: number) => void;
@@ -502,9 +502,6 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
   loadState: (incoming) => {
     set((s) => {
       const next = { ...s.projectStore, ...incoming };
-      (next.roles ?? []).forEach((r) => {
-        if (!r.mappingMethod) r.mappingMethod = "contrast";
-      });
       ensureIds(next);
       ensureVariations(next);
       const hash = computeHash(next);
@@ -610,12 +607,6 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       if (!roles[idx]) return s;
       const role = { ...roles[idx] };
 
-      if (key === "mappingMethod") {
-        role.mappingMethod = value === "index" ? "index" : "contrast";
-        roles[idx] = role;
-        return { projectStore: { ...s.projectStore, roles } };
-      }
-
       if (key === "name" || key === "shorthand") {
         (role as Record<string, unknown>)[key] = normalizeSegment(value as string);
         if (key === "name") {
@@ -641,7 +632,6 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
         _id: generateId(),
         name: preset.name,
         shorthand: preset.shorthand,
-        mappingMethod: "contrast",
         variations: (s.projectStore.variations ?? []).map((v) => ({ ...v, _id: generateId() })),
       };
       return { projectStore: { ...s.projectStore, roles: [...s.projectStore.roles, role] } };
@@ -654,7 +644,6 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
         _id: generateId(),
         name,
         shorthand: shorthand || deriveShorthand(name),
-        mappingMethod: "contrast",
         variations: (s.projectStore.variations ?? []).map((v) => ({ ...v, _id: generateId() })),
       };
       return { projectStore: { ...s.projectStore, roles: [...s.projectStore.roles, role] } };

@@ -52,7 +52,6 @@ export function ConfigTree({ config, expandAll }: { config: ProjectStore; expand
           <TreeRow key={r.name + i} depth={2} label={r.name} defaultOpen={false}>
             <FieldBlock depth={2}>
               <Field label="shorthand" value={r.shorthand || "—"} mono />
-              <Field label="mappingMethod" value={r.mappingMethod ?? "contrast"} />
               <Field label="solverMode" value={r.solverMode ?? "inherited"} />
               <Field label="scaleAlgorithm" value={r.scaleAlgorithm ?? "inherited"} />
               {r.description && <Field label="description" value={r.description} />}

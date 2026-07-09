@@ -32,7 +32,6 @@ export function buildEngineConfig(projectStore: ProjectStore): EngineInput {
       return {
         name: r.name,
         shorthand: r.shorthand ?? "",
-        mappingMethod: r.mappingMethod,
         variations: r.variations,
         solverMode: r.solverMode,
         description: r.description,

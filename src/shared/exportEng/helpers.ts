@@ -123,7 +123,7 @@ export function _eachToken(result: EngineResult, config: ExportConfig, cb: EachT
       const roleIds = Object.keys(roles);
       for (let ri = 0; ri < roleIds.length; ri++) {
         const roleId = roleIds[ri];
-        const roleObj: Role = (config.roles && config.roles[roleId]) || { _id: roleId, name: roleId, shorthand: roleId, mappingMethod: 'contrast', variations: null };
+        const roleObj: Role = (config.roles && config.roles[roleId]) || { _id: roleId, name: roleId, shorthand: roleId, variations: null };
         const rLabel = _roleLabel(roleObj, config);
         const varDefs = _variationDefs(roleObj, config);
         const variations = roles[roleId];

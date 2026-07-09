@@ -96,7 +96,6 @@ const presets: Preset[] = [
             { name: "raised", shorthand: "raised", target: 1.3 }, // ≈ TW 200 — raised card
           ],
           description: "Background fills · subtle tint · surface · raised card",
-          mappingMethod: "contrast",
         },
 
         // ── BORDER ──────────────────────────────────────────────────────────────
@@ -110,7 +109,6 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong", target: 3.5 }, // ≈ TW 500 — strong outline / focus ring
           ],
           description: "Border strokes · subtle separator · UI border · strong outline",
-          mappingMethod: "contrast",
         },
 
         // ── FILL ────────────────────────────────────────────────────────────────
@@ -124,7 +122,6 @@ const presets: Preset[] = [
             { name: "strong", shorthand: "strong", target: 7.0 }, // ≈ TW 700 — high-emphasis fill
           ],
           description: "Solid fills · muted icon · AA button fill · strong emphasis",
-          mappingMethod: "contrast",
         },
 
         // ── TEXT ────────────────────────────────────────────────────────────────
@@ -139,7 +136,6 @@ const presets: Preset[] = [
             { name: "inverse", shorthand: "inverse", target: 1.1 }, // ≈ TW 50  — text on colored fill
           ],
           description: "Text hierarchy · muted placeholder · AA body · AAA heading · inverse on fill",
-          mappingMethod: "contrast",
         },
 
         // ── STATUS / SUCCESS ─────────────────────────────────────────────────────
@@ -152,7 +148,6 @@ const presets: Preset[] = [
             { name: "text", shorthand: "text", target: 4.5 }, // success text / icon
           ],
           description: "Success feedback · tinted bg · border · text",
-          mappingMethod: "contrast",
         },
 
         // ── STATUS / WARNING ─────────────────────────────────────────────────────
@@ -165,7 +160,6 @@ const presets: Preset[] = [
             { name: "text", shorthand: "text", target: 4.5 },
           ],
           description: "Warning feedback · tinted bg · border · text",
-          mappingMethod: "contrast",
         },
 
         // ── STATUS / ERROR ───────────────────────────────────────────────────────
@@ -178,7 +172,6 @@ const presets: Preset[] = [
             { name: "text", shorthand: "text", target: 4.5 },
           ],
           description: "Error feedback · tinted bg · border · text",
-          mappingMethod: "contrast",
         },
       ],
 

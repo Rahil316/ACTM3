@@ -1,7 +1,6 @@
 // ── Core primitive types ─────────────────────────────────────────────────────
 
 export type PluginMode = "scale" | "direct";
-export type MappingMethod = "contrast" | "index";
 export type AlgorithmScopeLevel = "color" | "role";
 export type TokenNameSegment = "color" | "role" | "variation";
 
@@ -60,7 +59,6 @@ export interface Role {
   _id?: string;
   name: string;
   shorthand: string;
-  mappingMethod?: MappingMethod;
   variations?: Variation[] | null; //Use common/default/global Variations if null
   scaleAlgorithm?: ScaleAlgorithm;
   solverMode?: SolverMode;
