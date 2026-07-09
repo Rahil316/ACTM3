@@ -1,8 +1,13 @@
 import { type ReactNode } from "react";
 import clsx from "clsx";
 
-interface TypoProps  { children: ReactNode; className?: string; }
-interface LabelProps extends TypoProps { htmlFor?: string; }
+interface TypoProps {
+  children: ReactNode;
+  className?: string;
+}
+interface LabelProps extends TypoProps {
+  htmlFor?: string;
+}
 
 // ── Headings ──────────────────────────────────────────────────────────────────
 
@@ -73,11 +78,11 @@ export function LabelText({ children, className }: TypoProps) {
 }
 
 export function Caption({ children, className }: TypoProps) {
-  return <p className={clsx("text-[11px] text-n-tx-dim leading-snug", className)}>{children}</p>;
+  return <p className={clsx("text-[11px] text-n-tx-primary leading-snug", className)}>{children}</p>;
 }
 
 export function MicroText({ children, className }: TypoProps) {
-  return <span className={clsx("text-[10px] text-n-tx-dim", className)}>{children}</span>;
+  return <span className={clsx("text-[10px] text-n-tx-primary", className)}>{children}</span>;
 }
 
 // ── Inline value display ──────────────────────────────────────────────────────

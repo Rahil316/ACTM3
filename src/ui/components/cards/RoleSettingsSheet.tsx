@@ -105,6 +105,7 @@ function LocalBgTokenInput({ localBg, onChange }: { localBg: RoleLocalBg | null;
   }
 
   // ── Static mode: freetext search ─────────────────────────────────────────
+  // TODO: migrate to useEngineStore when store exposes token names as a derived slice
   const allTokenNames = useMemo(() => {
     if (isDynamic) return [];
     try {

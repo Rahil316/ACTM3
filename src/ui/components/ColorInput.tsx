@@ -43,7 +43,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, label, size = 'xl
   // Sync inputs when the value prop changes externally (e.g. preset load, undo).
   useEffect(() => {
     const clean = sanitizeHex(value);
-    if (hexRef.current && hexRef.current !== document.activeElement) hexRef.current.value = clean;
+    if (hexRef.current && hexRef.current !== document.activeElement) hexRef.current.value = '#' + clean;
     if (pickerRef.current && pickerRef.current !== document.activeElement) pickerRef.current.value = normalizeHex(clean) || '#000000';
   }, [value]);
 
@@ -53,7 +53,7 @@ export function ColorInput({ value, onUpdate, idPrefix = null, label, size = 'xl
 
   const handlePickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const clean = e.target.value.replace('#', '').toUpperCase();
-    if (hexRef.current) hexRef.current.value = clean;
+    if (hexRef.current) hexRef.current.value = '#' + clean;
     pendingPickerHex.current = clean;
   };
 
@@ -66,6 +66,8 @@ export function ColorInput({ value, onUpdate, idPrefix = null, label, size = 'xl
 
   const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const clean = sanitizeHex(e.target.value);
+    // Keep # prefix visible while typing
+    if (hexRef.current) hexRef.current.value = '#' + clean;
     if (clean.length === 6 && pickerRef.current) pickerRef.current.value = '#' + clean;
     if (clean.length === 6) onUpdate(clean);
   };
@@ -75,9 +77,12 @@ export function ColorInput({ value, onUpdate, idPrefix = null, label, size = 'xl
     // Expand 3-char shorthand (e.g. FFF → FFFFFF, A3C → AA33CC)
     if (clean.length === 3) {
       const expanded = clean.split('').map((c) => c + c).join('');
-      if (hexRef.current) hexRef.current.value = expanded;
+      if (hexRef.current) hexRef.current.value = '#' + expanded;
       if (pickerRef.current) pickerRef.current.value = '#' + expanded;
       onUpdate(expanded);
+    } else {
+      // Always restore # prefix on blur in case user deleted it
+      if (hexRef.current) hexRef.current.value = '#' + clean;
     }
   };
 
@@ -101,10 +106,10 @@ export function ColorInput({ value, onUpdate, idPrefix = null, label, size = 'xl
       <input
         ref={hexRef}
         type="text"
-        defaultValue={initial}
+        defaultValue={'#' + initial}
         id={idPrefix ? `${idPrefix}-hex` : undefined}
         aria-label="Hex color value"
-        maxLength={6}
+        maxLength={7}
         onChange={handleHexChange}
         onBlur={handleHexBlur}
         className={clsx('w-full bg-transparent uppercase outline-none text-n-tx-primary pr-2', s.text)}

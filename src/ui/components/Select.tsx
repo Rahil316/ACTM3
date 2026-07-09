@@ -1,5 +1,6 @@
 import { type SelectHTMLAttributes, useId } from "react";
 import clsx from "clsx";
+import { IconChevronDown } from "./icons";
 import { InfoTooltip } from "./InfoTooltip";
 
 export type SelectSize = "sm" | "md" | "lg" | "xl";
@@ -30,30 +31,33 @@ export function Select({ options, size = "xl", label, tooltip, width = "full", d
   const widthCls = width === "full" ? "w-full" : width === "flex" ? "flex-1" : "";
 
   const select = (
-    <select
-      id={id}
-      disabled={disabled}
-      className={clsx(
-        SIZE[size],
-        widthCls,
-        "bg-n-sf-input border border-n-br-default text-n-tx-primary",
-        "outline-none focus:border-b-br-strong transition-colors",
-        "appearance-none cursor-pointer",
-        disabled && "opacity-40 cursor-not-allowed pointer-events-none",
-        className,
-      )}
-      {...rest}
-    >
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>{opt.label}</option>
-      ))}
-    </select>
+    <div className={clsx("relative", widthCls)}>
+      <select
+        id={id}
+        disabled={disabled}
+        className={clsx(
+          SIZE[size],
+          "w-full pr-7",
+          "bg-n-sf-input border border-n-br-default text-n-tx-primary",
+          "outline-none focus:border-b-br-strong transition-colors",
+          "appearance-none cursor-pointer",
+          disabled && "opacity-40 cursor-not-allowed pointer-events-none",
+          className,
+        )}
+        {...rest}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+      <IconChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-n-tx-muted pointer-events-none" />
+    </div>
   );
 
   if (!label) return select;
 
   return (
-    <div className={clsx("space-y-1", widthCls)}>
+    <div className={clsx("space-y-1", widthCls, "min-w-0")}>
       <div className="flex items-center gap-1 ml-1">
         <label htmlFor={id} className="text-n-tx-muted text-[12px] font-medium">
           {label}

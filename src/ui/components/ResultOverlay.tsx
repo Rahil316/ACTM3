@@ -6,20 +6,30 @@ import { IconCheck, IconClose, IconAlertTriangle } from './icons';
 import { ModalTitle, SheetTitle, HelperText, StatValue } from './typography';
 import type { SyncTally } from '../types/messages';
 
-// ── Loading overlay ──────────────────────────────────────────────────────────
+// ── Operation overlay ────────────────────────────────────────────────────────
+// Full-screen overlay for async operations: sync and canvas preview.
 
-interface LoadingOverlayProps {
+type OperationKind = "sync" | "preview";
+
+interface OperationOverlayProps {
   open: boolean;
-  title?: string;
-  subtitle?: string;
+  kind: OperationKind;
 }
 
-export function LoadingOverlay({
-  open,
-  title = 'Creating Variables…',
-  subtitle = 'Generating color tokens and thematic variations in Figma.',
-}: LoadingOverlayProps) {
+const OPERATION_CONTENT: Record<OperationKind, { title: string; subtitle: string }> = {
+  sync: {
+    title: "Publishing to Figma…",
+    subtitle: "Creating and updating color variables.",
+  },
+  preview: {
+    title: "Generating Canvas Preview…",
+    subtitle: "Rendering token swatches — do not close the plugin.",
+  },
+};
+
+export function OperationOverlay({ open, kind }: OperationOverlayProps) {
   if (!open) return null;
+  const { title, subtitle } = OPERATION_CONTENT[kind];
   return (
     <div className="absolute inset-0 bg-n-bg-app z-50 flex items-center justify-center p-8 text-center flex-col gap-4">
       <Spinner size="lg" />

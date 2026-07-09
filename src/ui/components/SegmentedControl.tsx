@@ -8,14 +8,14 @@ interface Segment<T extends string> {
 
 interface SegmentedControlProps<T extends string> {
   segments: Segment<T>[];
-  value: T;
+  value: T | null;
   onChange: (value: T) => void;
   className?: string;
 }
 
 export function SegmentedControl<T extends string>({ segments, value, onChange, className }: SegmentedControlProps<T>) {
   return (
-    <div className={clsx("flex gap-0.5 bg-n-sf-input border border-n-br-default rounded-[8px] p-0.5", className)}>
+    <div className={clsx("flex gap-0.5 bg-n-sf-input border border-n-br-default rounded-[8px] p-0.5 overflow-hidden", className)}>
       {segments.map((seg) => {
         const active = seg.value === value;
         return (

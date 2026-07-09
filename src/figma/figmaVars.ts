@@ -2,7 +2,7 @@
 // Ported from vanilla_archive/src/figma/figmaVars.js
 
 import { buildVariableRenameMap, detectStructuralChanges, type StructuralChange } from "./config";
-import { buildMetadataMap, findVariable, makeLabelHelpers } from "./variableTracker";
+import { buildMetadataMap, findVariable, makeLabelHelpers, valuesEqual } from "./variableTracker";
 import { hexToFigmaRgb } from "./figmaComponents/helpers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,32 +30,6 @@ export function saveUiState(projectStore: AnyObj): void {
   }
 }
 
-function isDifferentValue(a: AnyObj, b: AnyObj, type: string): boolean {
-  if (a === undefined || a === null) return true;
-  if (b === undefined || b === null) return true;
-
-  const aIsAlias = typeof a === "object" && a.type === "VARIABLE_ALIAS";
-  const bIsAlias = typeof b === "object" && b.type === "VARIABLE_ALIAS";
-
-  if (aIsAlias || bIsAlias) {
-    if (aIsAlias && bIsAlias) {
-      return a.id !== b.id;
-    }
-    return true;
-  }
-
-  if (type === "COLOR") {
-    const rDiff = Math.abs((a.r ?? 0) - (b.r ?? 0));
-    const gDiff = Math.abs((a.g ?? 0) - (b.g ?? 0));
-    const bDiff = Math.abs((a.b ?? 0) - (b.b ?? 0));
-    const aDiff = Math.abs((a.a ?? 1) - (b.a ?? 1));
-    return rDiff > 0.001 || gDiff > 0.001 || bDiff > 0.001 || aDiff > 0.001;
-  }
-  if (typeof a === "object" && typeof b === "object") {
-    return JSON.stringify(a) !== JSON.stringify(b);
-  }
-  return a !== b;
-}
 
 export const VariableManager = {
   tally: { created: 0, updated: 0, renamed: 0, removed: 0, failed: 0 },
@@ -256,7 +230,7 @@ export const VariableManager = {
     if (projectStore && savedProjectStore) {
       const structuralChanges = detectStructuralChanges(savedProjectStore, projectStore);
       if (structuralChanges.length > 0) {
-        this.tally.removed += await this.purgeOrphanedVars(projectStore, savedProjectStore, structuralChanges);
+        this.tally.removed += await this.purgeOrphanedVars(projectStore, savedProjectStore, structuralChanges, decisions);
       }
     }
 
@@ -326,8 +300,9 @@ export const VariableManager = {
   },
 
   // Removes variables and collections that became orphaned due to structural setting changes.
+  // Skips any variable whose tokenRef has a "hold-delete" decision.
   // Returns the count of removed variables.
-  async purgeOrphanedVars(newProjectStore: AnyObj, savedProjectStore: AnyObj, changes: StructuralChange[]): Promise<number> {
+  async purgeOrphanedVars(newProjectStore: AnyObj, savedProjectStore: AnyObj, changes: StructuralChange[], decisions: Record<string, string> = {}): Promise<number> {
     let removed = 0;
 
     const removeCollection = async (name: string) => {
@@ -396,6 +371,7 @@ export const VariableManager = {
               // ref format: scale:{colorId}/{step}
               const step = ref.split("/").pop();
               if (step && orphanedSteps.includes(step)) {
+                if (decisions[ref] === "hold-delete") continue;
                 try {
                   v.remove();
                   removed++;
@@ -418,6 +394,7 @@ export const VariableManager = {
               const ref = v.getPluginData("tokenRef");
               // Alpha vars have refs like source:{colorId}/{opacity}
               if (ref && ref.startsWith("source:") && ref.split("/").length === 3) {
+                if (decisions[ref] === "hold-delete") continue;
                 try {
                   v.remove();
                   removed++;
@@ -444,6 +421,7 @@ export const VariableManager = {
               if (parts.length !== 3) continue; // not an alpha var
               const opacity = parts[2];
               if (!newAlphas.has(opacity)) {
+                if (decisions[ref] === "hold-delete") continue;
                 try {
                   v.remove();
                   removed++;
@@ -536,7 +514,7 @@ export const VariableManager = {
           }
 
           const currentVal = variable.valuesByMode[modeId];
-          if (isDifferentValue(currentVal, targetVal, varType)) {
+          if (!valuesEqual(currentVal, targetVal, varType)) {
             variable.setValueForMode(modeId, targetVal);
             isUpdated = true;
           }

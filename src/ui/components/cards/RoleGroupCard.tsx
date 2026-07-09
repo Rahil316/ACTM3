@@ -70,6 +70,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const colors = useProjectStore((s) => s.projectStore.colors);
 
   const vars: Variation[] = useProjectStore((s) => s.projectStore.roles[idx]?.variations ?? EMPTY_VARIATIONS);
+  const globalVariations = useProjectStore((s) => s.projectStore.variations ?? EMPTY_VARIATIONS);
 
   const showAlgoRow = pluginMode === "scale" && !useUniformAlgo && algoScope === "role";
   const showSolverRow = pluginMode === "direct" && !useUniformAlgo && algoScope === "role";
@@ -110,7 +111,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
       {/* Name row */}
       <div className="grid gap-2 items-end grid-cols-[1fr_148px]">
         <Input id={`role-${role._id}-name`} value={localName} onChange={onNameChange} onBlur={onNameBlur} label="Name" size="xl" />
-        <Input id={`role-${role._id}-short`} value={localShort} onChange={onShortChange} onBlur={onShortBlur} label="Short" size="xl" />
+        <Input id={`role-${role._id}-short`} value={localShort} onChange={onShortChange} onBlur={onShortBlur} label="Short" size="xl" inputState={/^\d+$/.test(localShort.trim()) ? "error" : "default"} hint={/^\d+$/.test(localShort.trim()) ? "Using index fallback — set a name" : undefined} />
       </div>
 
       {!isDragging && (colorScopeLabel || bgLabel || varScopeLabel) && (
@@ -155,7 +156,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
           header={<span className="text-[12px] font-medium text-n-tx-primary flex-1">Variations ({vars.length})</span>}
         >
           <div className="py-2">
-            <VariationTable variations={vars} canEdit={canEditNames} mappingMethod={roleMappingMethod} idx={idx} scaleLength={scaleLength} />
+            <VariationTable variations={vars} canEdit={canEditNames} mappingMethod={roleMappingMethod} idx={idx} scaleLength={scaleLength} globalVariations={globalVariations} />
           </div>
         </Collapsible>
       )}

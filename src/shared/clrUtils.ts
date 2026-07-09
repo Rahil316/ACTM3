@@ -229,13 +229,17 @@ export function shortestHueDiff(current: number, target: number): number {
 
 export type ContrastRating = "Fail" | "AA Large Text" | "AA" | "AAA";
 
-export function contrastRating(hex1: string, hex2: string): ContrastRating | null {
-  const ratio = contrastRatio(hex1, hex2);
-  if (ratio === null) return null;
+export function ratingFromRatio(ratio: number): ContrastRating {
   if (ratio < 3) return "Fail";
   if (ratio < 4.5) return "AA Large Text";
   if (ratio < 7) return "AA";
   return "AAA";
+}
+
+export function contrastRating(hex1: string, hex2: string): ContrastRating | null {
+  const ratio = contrastRatio(hex1, hex2);
+  if (ratio === null) return null;
+  return ratingFromRatio(ratio);
 }
 
 export function seriesMaker(x: number): number[] {

@@ -5,7 +5,7 @@ import { BannerSlot } from '../components/Banner';
 import { ToastHub } from '../components/Toast';
 import { useBannerStore } from '../store/bannerStore';
 import { useToastStore } from '../store/toastStore';
-import { LoadingOverlay, SuccessOverlay, ErrorOverlay, ValidationWarningOverlay } from '../components/ResultOverlay';
+import { OperationOverlay, SuccessOverlay, ErrorOverlay, ValidationWarningOverlay } from '../components/ResultOverlay';
 import { Button } from '../components/Button';
 import { Callout } from '../components/Callout';
 
@@ -116,22 +116,20 @@ export const BannersAndToasts: StoryObj = {
 
 export const Overlays: StoryObj = {
   render: () => {
-    const [activeOverlay, setActiveOverlay] = useState<'none' | 'loading' | 'success' | 'error' | 'warning'>('none');
+    const [activeOverlay, setActiveOverlay] = useState<'none' | 'sync' | 'preview' | 'success' | 'error' | 'warning'>('none');
 
     return (
       <div className="p-4 max-w-sm bg-n-bg-app rounded-lg border border-n-br-default relative min-h-[260px] flex flex-col gap-3 justify-center items-center">
         <h4 className="text-n-tx-muted text-[11px] uppercase tracking-wider font-bold mb-2">Result Overlays</h4>
 
-        <Button variant="secondary" size="md" className="w-full" label="Show Loading Overlay" onClick={() => setActiveOverlay('loading')} />
+        <Button variant="secondary" size="md" className="w-full" label="Show Sync Overlay" onClick={() => setActiveOverlay('sync')} />
+        <Button variant="secondary" size="md" className="w-full" label="Show Preview Overlay" onClick={() => setActiveOverlay('preview')} />
         <Button variant="secondary" size="md" className="w-full" label="Show Success Overlay" onClick={() => setActiveOverlay('success')} />
         <Button variant="secondary" size="md" className="w-full" label="Show Error Overlay" onClick={() => setActiveOverlay('error')} />
         <Button variant="secondary" size="md" className="w-full" label="Show Warning Overlay" onClick={() => setActiveOverlay('warning')} />
 
-        <LoadingOverlay
-          open={activeOverlay === 'loading'}
-          title="Updating Variables"
-          subtitle="Please wait while color engine builds Figma palette..."
-        />
+        <OperationOverlay open={activeOverlay === 'sync'} kind="sync" />
+        <OperationOverlay open={activeOverlay === 'preview'} kind="preview" />
 
         <SuccessOverlay
           open={activeOverlay === 'success'}

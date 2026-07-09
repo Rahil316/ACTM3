@@ -1,71 +1,19 @@
-import { useState, useEffect, useDeferredValue, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { usePersistedString } from "../hooks/usePersistedString";
 import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import { banner } from "../store/bannerStore";
+import { useEngineStore } from "../store/engineStore";
 import { SectionSpinner } from "../components/Spinner";
 import { EmptyState } from "../components/EmptyState";
 import { Modal, ModalHeader } from "../components/Modal";
 import { Button } from "../components/Button";
 import { SegmentedControl } from "../components/SegmentedControl";
-import { variableMaker, resolveTokenRefBgs, translateLocalBg } from "../utils/engine";
-import type { EngineInput, EngineResult } from "../types/state";
+import type { EngineResult } from "../types/state";
 import { CardTitle, MicroText } from "../components/typography";
 import type { ProjectStore } from "../types/state";
 import { RatingBadge, TokenTile, ScaleStepSlice, SourceColorCard, getInkMode, inkColor, normalizeHex, copyText } from "../components/preview";
 
-// ── Engine call ───────────────────────────────────────────────────────────────
-
-function buildEngineConfig(projectStore: ProjectStore): EngineInput {
-  return {
-    colors: projectStore.colors.map((c) => ({
-      _id: c._id,
-      name: c.name,
-      value: c.value,
-      shorthand: c.shorthand ?? "",
-      description: c.description ?? "",
-      scaleAlgorithm: c.scaleAlgorithm,
-      solverMode: c.solverMode,
-    })),
-    themes: projectStore.themes.map((t) => ({ name: t.name, bg: t.bg })),
-    scaleLength: projectStore.scaleLength,
-    scaleSteps: projectStore.scaleSteps?.map((s) => s.name) ?? undefined,
-    scaleAlgorithm: projectStore.scaleAlgorithm,
-    pluginMode: projectStore.pluginMode,
-    roles: projectStore.roles.map((r) => {
-      const { localBgResolved, localBgTokenRef, localBgDynamicRef } = translateLocalBg(r.localBg, projectStore.colors, projectStore.themes);
-      return {
-        name: r.name,
-        shorthand: r.shorthand ?? "",
-        mappingMethod: r.mappingMethod,
-        variations: r.variations,
-        solverMode: r.solverMode,
-        description: r.description,
-        scopedColorIds: r.scopedColorIds,
-        localBg: r.localBg,
-        localBgResolved,
-        localBgTokenRef,
-        localBgDynamicRef,
-      };
-    }),
-    variations: (projectStore.variations ?? []).map((v) => ({ name: v.name, shorthand: v.shorthand })),
-    useUniformAlgorithm: projectStore.useUniformAlgorithm,
-    algorithmScopeLevel: projectStore.algorithmScopeLevel,
-    solverMode: projectStore.solverMode,
-  };
-}
-
-function runEngine(projectStore: ProjectStore): EngineResult | null {
-  if (!projectStore.colors.length || !projectStore.roles.length || !projectStore.themes.length) return null;
-  try {
-    const config = buildEngineConfig(projectStore);
-    const pass1 = variableMaker(config);
-    // Two-pass: resolve token-kind localBg refs from pass-1 output, re-run if needed
-    if (resolveTokenRefBgs(config, pass1)) return variableMaker(config);
-    return pass1;
-  } catch {
-    return null;
-  }
-}
 
 // ── Color section (grid mode) ─────────────────────────────────────────────────
 
@@ -119,206 +67,124 @@ function ColorSection({ colorName, srcHex, roles, projectStore, ink }: ColorSect
 
 // ── Table section ─────────────────────────────────────────────────────────────
 
-interface TableSectionProps {
-  colorName: string;
-  srcHex: string;
-  roles: Record<number, Record<number, import("../../shared/clrEngine").TokenEntry>>;
-  projectStore: ProjectStore;
-  ink: "light" | "dark";
-}
+// ── Shared token row ──────────────────────────────────────────────────────────
 
-function TableSection({ srcHex, roles, projectStore, ink }: TableSectionProps) {
-  const variations = projectStore.variations ?? [];
-  const hdrInk = getInkMode(srcHex);
-  const COL = "minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)";
+const TABLE_COL = "minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)";
 
+function TokenRow({ token, varLabel, ink }: { token: import("../../shared/clrEngine").TokenEntry; varLabel: string; ink: "light" | "dark" }) {
+  const ratioStr = typeof token.contrast?.ratio === "number" ? token.contrast.ratio.toFixed(1) : "—";
   return (
-    <div className="rounded-[10px] overflow-hidden" style={{ border: `1px solid ${inkColor(ink, 0.1)}` }}>
-      {/* Section header — uses source color as bg */}
-      <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: srcHex, gridTemplateColumns: COL }}>
-        {(["Token", "Hex", "Ratio", "WCAG", "Token Name"] as const).map((h, i) => (
-          <div key={h} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate" style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>
-            {h}
-          </div>
-        ))}
+    <div
+      className="grid items-center h-9 cursor-pointer hover:opacity-80 transition-opacity"
+      style={{ gridTemplateColumns: TABLE_COL, borderTop: `1px solid ${inkColor(ink, 0.06)}` }}
+      onClick={() => copyText(token.value, "hex")}
+      title={`${token.value.toUpperCase()} — click to copy hex`}
+    >
+      <div className="px-3 flex items-center gap-1.5 min-w-0">
+        <div className="w-3.5 h-3.5 rounded-[3px] shrink-0" style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
+        <span className="text-[11px] font-semibold truncate" style={{ color: inkColor(ink, 0.85) }}>{varLabel}</span>
       </div>
-
-      {Object.entries(roles).map(([roleIdxStr, vars]) => {
-        const roleIdx = parseInt(roleIdxStr);
-        const role = projectStore.roles[roleIdx];
-        if (!role) return null;
-        const roleVars = role.variations ?? variations;
-
-        return (
-          <div key={roleIdx}>
-            <div className="h-[26px] flex items-center px-4" style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}>
-              <span className="text-[10px] font-bold tracking-[0.06em] uppercase truncate" style={{ color: inkColor(ink, 0.5) }}>
-                {role.name}
-              </span>
-            </div>
-
-            {Object.entries(vars).map(([varIdxStr, token]) => {
-              const varIdx = parseInt(varIdxStr);
-              const v = roleVars[varIdx];
-              const varLabel = v ? v.shorthand || v.name : String(varIdx);
-              const ratio = typeof token.contrast?.ratio === "number" ? token.contrast.ratio.toFixed(1) : "—";
-
-              return (
-                <div
-                  key={varIdxStr}
-                  className="grid items-center h-9 cursor-pointer hover:opacity-80 transition-opacity"
-                  style={{ gridTemplateColumns: COL, borderTop: `1px solid ${inkColor(ink, 0.06)}` }}
-                  onClick={() => copyText(token.value, "hex")}
-                  title={`${token.value.toUpperCase()} — click to copy hex`}
-                >
-                  <div className="px-3 flex items-center gap-1.5 min-w-0">
-                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0" style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
-                    <span className="text-[11px] font-semibold truncate" style={{ color: inkColor(ink, 0.85) }}>
-                      {varLabel}
-                    </span>
-                  </div>
-                  <div className="px-2 min-w-0">
-                    <span
-                      className="text-[10px] font-mono font-semibold tracking-[0.04em]"
-                      style={{ color: token.value }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        copyText(token.value, "hex");
-                      }}
-                    >
-                      {token.value.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="px-2">
-                    <span className="text-[12px] font-bold tabular-nums" style={{ color: inkColor(ink, 0.8) }}>
-                      {ratio}
-                    </span>
-                  </div>
-                  <div className="px-2">
-                    <RatingBadge rating={token.contrast?.rating ?? "Fail"} />
-                  </div>
-                  <div className="px-2 min-w-0">
-                    {token.tokenName ? (
-                      <span
-                        className="text-[10px] font-mono truncate block cursor-pointer hover:underline"
-                        style={{ color: inkColor(ink, 0.45) }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyText(token.tokenName, "token name");
-                        }}
-                        title={`${token.tokenName} — click to copy`}
-                      >
-                        {token.tokenName}
-                      </span>
-                    ) : (
-                      <span className="text-[10px]" style={{ color: inkColor(ink, 0.2) }}>
-                        —
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
+      <div className="px-2 min-w-0">
+        <span className="text-[10px] font-mono font-semibold tracking-[0.04em]" style={{ color: token.value }}
+          onClick={(e) => { e.stopPropagation(); copyText(token.value, "hex"); }}>
+          {token.value.toUpperCase()}
+        </span>
+      </div>
+      <div className="px-2">
+        <span className="text-[12px] font-bold tabular-nums" style={{ color: inkColor(ink, 0.8) }}>{ratioStr}</span>
+      </div>
+      <div className="px-2">
+        <RatingBadge rating={token.contrast?.rating ?? "Fail"} />
+      </div>
+      <div className="px-2 min-w-0">
+        {token.tokenName ? (
+          <span className="text-[10px] font-mono truncate block cursor-pointer hover:underline" style={{ color: inkColor(ink, 0.45) }}
+            onClick={(e) => { e.stopPropagation(); copyText(token.tokenName, "token name"); }}
+            title={`${token.tokenName} — click to copy`}>
+            {token.tokenName}
+          </span>
+        ) : (
+          <span className="text-[10px]" style={{ color: inkColor(ink, 0.2) }}>—</span>
+        )}
+      </div>
     </div>
   );
 }
 
-// ── Role-group table section ──────────────────────────────────────────────────
-// Like TableSection but role is the top-level header, colors are sub-headers.
+// ── Token table section ───────────────────────────────────────────────────────
+// groupAxis="color": color is top-level header, roles are sub-headers
+// groupAxis="role":  role is top-level header, colors are sub-headers
 
-interface RoleTableSectionProps {
+type ColorGroupAxis = {
+  groupAxis: "color";
+  srcHex: string;
+  roles: Record<number, Record<number, import("../../shared/clrEngine").TokenEntry>>;
+};
+type RoleGroupAxis = {
+  groupAxis: "role";
   roleName: string;
   colorMap: Record<string, Record<number, import("../../shared/clrEngine").TokenEntry>>;
-  projectStore: ProjectStore;
-  ink: "light" | "dark";
-}
+};
+type TokenTableSectionProps = (ColorGroupAxis | RoleGroupAxis) & { projectStore: ProjectStore; ink: "light" | "dark" };
 
-function RoleTableSection({ roleName, colorMap, projectStore, ink }: RoleTableSectionProps) {
-  const COL = "minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)";
+function TokenTableSection(props: TokenTableSectionProps) {
+  const { projectStore, ink } = props;
+  const variations = projectStore.variations ?? [];
+
+  if (props.groupAxis === "color") {
+    const { srcHex, roles } = props;
+    const hdrInk = getInkMode(srcHex);
+    return (
+      <div className="rounded-[10px] overflow-hidden" style={{ border: `1px solid ${inkColor(ink, 0.1)}` }}>
+        <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: srcHex, gridTemplateColumns: TABLE_COL }}>
+          {(["Token", "Hex", "Ratio", "WCAG", "Token Name"] as const).map((h, i) => (
+            <div key={h} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate" style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>{h}</div>
+          ))}
+        </div>
+        {Object.entries(roles).map(([roleIdxStr, vars]) => {
+          const roleIdx = parseInt(roleIdxStr);
+          const role = projectStore.roles[roleIdx];
+          if (!role) return null;
+          const roleVars = role.variations ?? variations;
+          return (
+            <div key={roleIdx}>
+              <div className="h-[26px] flex items-center px-4" style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}>
+                <span className="text-[10px] font-bold tracking-[0.06em] uppercase truncate" style={{ color: inkColor(ink, 0.5) }}>{role.name}</span>
+              </div>
+              {Object.entries(vars).map(([varIdxStr, token]) => {
+                const v = roleVars[parseInt(varIdxStr)];
+                return <TokenRow key={varIdxStr} token={token} varLabel={v ? v.shorthand || v.name : varIdxStr} ink={ink} />;
+              })}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const { roleName, colorMap } = props;
   const role = projectStore.roles.find((r) => r.name === roleName);
-  const roleVars = role?.variations ?? projectStore.variations ?? [];
-
+  const roleVars = role?.variations ?? variations;
   return (
     <div className="rounded-[10px] overflow-hidden" style={{ border: `1px solid ${inkColor(ink, 0.1)}` }}>
-      {/* Role header row */}
-      <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: inkColor(ink, 0.12), gridTemplateColumns: COL }}>
+      <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: inkColor(ink, 0.12), gridTemplateColumns: TABLE_COL }}>
         {(["Role / Color", "Hex", "Ratio", "WCAG", "Token Name"] as const).map((h, i) => (
           <div key={h} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate" style={{ color: inkColor(ink, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>
             {i === 0 ? roleName : h}
           </div>
         ))}
       </div>
-
       {Object.entries(colorMap).map(([colorName, vars]) => {
-        const colorEntry = projectStore.colors.find((c) => c.name === colorName);
-        const cHex = normalizeHex(colorEntry?.value ?? "888888");
+        const cHex = normalizeHex(projectStore.colors.find((c) => c.name === colorName)?.value ?? "888888");
         return (
           <div key={colorName}>
-            {/* Color sub-header */}
             <div className="h-[26px] flex items-center gap-2 px-4" style={{ background: inkColor(ink, 0.05), borderTop: `1px solid ${inkColor(ink, 0.08)}` }}>
               <div className="w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ background: cHex }} />
-              <span className="text-[10px] font-bold tracking-[0.06em] uppercase truncate" style={{ color: inkColor(ink, 0.5) }}>
-                {colorName}
-              </span>
+              <span className="text-[10px] font-bold tracking-[0.06em] uppercase truncate" style={{ color: inkColor(ink, 0.5) }}>{colorName}</span>
             </div>
-
             {Object.entries(vars).map(([varIdxStr, token]) => {
-              const varIdx = parseInt(varIdxStr);
-              const v = roleVars[varIdx];
-              const varLabel = v ? v.shorthand || v.name : String(varIdx);
-              const contrastRatioStr = typeof token.contrast?.ratio === "number" ? token.contrast.ratio.toFixed(1) : "—";
-
-              return (
-                <div key={varIdxStr} className="grid items-center h-9 cursor-pointer hover:opacity-80 transition-opacity" style={{ gridTemplateColumns: COL, borderTop: `1px solid ${inkColor(ink, 0.06)}` }} onClick={() => copyText(token.value, "hex")}>
-                  <div className="px-3 flex items-center gap-1.5 min-w-0">
-                    <div className="w-3.5 h-3.5 rounded-[3px] shrink-0" style={{ background: token.value, boxShadow: `0 0 0 1px ${inkColor(ink, 0.12)}` }} />
-                    <span className="text-[11px] font-semibold truncate" style={{ color: inkColor(ink, 0.85) }}>
-                      {varLabel}
-                    </span>
-                  </div>
-                  <div className="px-2 min-w-0">
-                    <span
-                      className="text-[10px] font-mono font-semibold tracking-[0.04em]"
-                      style={{ color: token.value }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        copyText(token.value, "hex");
-                      }}
-                    >
-                      {token.value.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="px-2">
-                    <span className="text-[12px] font-bold tabular-nums" style={{ color: inkColor(ink, 0.8) }}>
-                      {contrastRatioStr}
-                    </span>
-                  </div>
-                  <div className="px-2">
-                    <RatingBadge rating={token.contrast?.rating ?? "Fail"} />
-                  </div>
-                  <div className="px-2 min-w-0">
-                    {token.tokenName ? (
-                      <span
-                        className="text-[10px] font-mono truncate block cursor-pointer hover:underline"
-                        style={{ color: inkColor(ink, 0.45) }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyText(token.tokenName, "token name");
-                        }}
-                      >
-                        {token.tokenName}
-                      </span>
-                    ) : (
-                      <span className="text-[10px]" style={{ color: inkColor(ink, 0.2) }}>
-                        —
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
+              const v = roleVars[parseInt(varIdxStr)];
+              return <TokenRow key={varIdxStr} token={token} varLabel={v ? v.shorthand || v.name : varIdxStr} ink={ink} />;
             })}
           </div>
         );
@@ -605,7 +471,7 @@ function ThemePanel({ result, projectStore, themeIdx, groupBy, viewMode }: Theme
             return viewMode === "grid" ? (
               <ColorSection key={colorName} colorName={colorName} srcHex={srcHex} roles={roles} projectStore={projectStore} ink={ink} />
             ) : (
-              <TableSection key={colorName} colorName={colorName} srcHex={srcHex} roles={roles} projectStore={projectStore} ink={ink} />
+              <TokenTableSection key={colorName} groupAxis="color" srcHex={srcHex} roles={roles} projectStore={projectStore} ink={ink} />
             );
           })
         : Object.entries(byRole!).map(([roleIdxStr, colorMap]) => {
@@ -614,7 +480,7 @@ function ThemePanel({ result, projectStore, themeIdx, groupBy, viewMode }: Theme
             if (!role) return null;
 
             if (viewMode === "table") {
-              return <RoleTableSection key={roleIdxStr} roleName={role.name} colorMap={colorMap} projectStore={projectStore} ink={ink} />;
+              return <TokenTableSection key={roleIdxStr} groupAxis="role" roleName={role.name} colorMap={colorMap} projectStore={projectStore} ink={ink} />;
             }
 
             return (
@@ -810,46 +676,17 @@ type TabId = "scale" | `theme-${number}` | "source";
 
 function PreviewContent() {
   const projectStore = useProjectStore((s) => s.projectStore);
-  const deferred = useDeferredValue(projectStore);
+  const result = useEngineStore((s) => s.result);
+  const computing = useEngineStore((s) => s.status === "computing");
 
-  const [result, setResult] = useState<EngineResult | null>(null);
-  const [computing, setComputing] = useState(false);
-  function usePersistedString<T extends string>(key: string, def: T): [T, (v: T) => void] {
-    const [val, setVal] = useState<T>(() => {
-      try {
-        return (localStorage.getItem(key) as T) ?? def;
-      } catch {
-        return def;
-      }
-    });
-    function set(v: T) {
-      setVal(v);
-      try {
-        localStorage.setItem(key, v);
-      } catch {
-        /* ignore */
-      }
-    }
-    return [val, set];
-  }
+  // Report accessibility warnings whenever engine result changes
+  useEffect(() => {
+    if (result) reportAccessibilityWarnings(result, projectStore.pluginMode);
+  }, [result, projectStore.pluginMode]);
 
   const [activeTab, setActiveTab] = usePersistedString<TabId>("preview_activeTab", "scale");
   const [groupBy, setGroupBy] = usePersistedString<GroupBy>("preview_groupBy", "color");
   const [viewMode, setViewMode] = usePersistedString<ViewMode>("preview_viewMode", "grid");
-
-  const compute = useCallback((state: ProjectStore) => {
-    setComputing(true);
-    setTimeout(() => {
-      const r = runEngine(state);
-      setResult(r);
-      setComputing(false);
-      if (r) reportAccessibilityWarnings(r, state.pluginMode);
-    }, 0);
-  }, []);
-
-  useEffect(() => {
-    compute(deferred);
-  }, [deferred, compute]);
 
   // Default to first theme tab in direct mode
   useEffect(() => {
