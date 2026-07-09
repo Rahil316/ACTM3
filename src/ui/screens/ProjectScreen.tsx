@@ -165,8 +165,10 @@ function VersionCard({ version, onRestore, onDelete }: { version: Version; onRes
 
 // ── Versions screen ───────────────────────────────────────────────────────────
 
+const EMPTY_VERSIONS: Version[] = [];
+
 export function VersionsScreen() {
-  const versions = useProjectStore((s) => s.projectStore.versions ?? []);
+  const versions = useProjectStore((s) => s.projectStore.versions ?? EMPTY_VERSIONS);
   const restoreVersion = useProjectStore((s) => s.restoreVersion);
   const deleteVersion = useProjectStore((s) => s.deleteVersion);
   const openOverlay = useUiStore((s) => s.openOverlay);

@@ -4,9 +4,11 @@ description: Analysis of existing scale/solver algorithms + brainstormed ultimat
 type: project
 ---
 
-Last updated: 2026-07-01
+Last updated: 2026-07-08
 
-Status: **pinned — not scheduled.** Pure analysis/brainstorm session, no code changed. Revisit when there's room to spec the ultimate algorithm and/or the equalizer UI.
+Status: **the "ultimate algorithm" idea (section 2) has shipped** as the `Fidelity` scale algorithm (`src/shared/clrEngine.ts`, `TONAL_SCALE_ALGO.Fidelity`) — implemented in OKLCH rather than HCT (see note below). The equalizer/customizer idea (section 3) was explicitly dropped, not built. This doc is kept as historical analysis and for the equalizer idea, in case it's revisited later.
+
+**Implementation note (2026-07-08):** the original plan specified running the ultimate algorithm in HCT space for its theoretical hue-perception advantage over OKLCH. During implementation this surfaced a real, pre-existing bug: `hctToHex`'s inverse transform produces 20-45° of hue drift when chroma is pushed toward the gamut boundary away from a color's own natural tone — something Material (the only existing HCT-based algorithm) never triggers because it always stays near the seed's own chroma. `Fidelity` deliberately explores the full chroma-vs-lightness envelope, so it hit this immediately. Pivoted to OKLCH instead, reusing the existing `_maxChromaAtLH` primitive (already proven in production via the Direct-mode solver) — hue drift dropped to a small, expected residual (<5°) only at the extreme gamut-edge steps, no different from the other OKLCH-based approach already in this file. The HCT hue-stability bug itself is unfixed and out of scope — Material inherits it silently whenever a seed's chroma is unusually far from what its tone naturally supports.
 
 ---
 

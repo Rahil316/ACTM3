@@ -15,6 +15,8 @@ export interface VariationTableProps {
   globalVariations?: Variation[];
 }
 
+const EMPTY_VARIATIONS: Variation[] = [];
+
 function VariationRow({
   v, vi, idx, isIndex, scaleLength, highlight, canEditNames, globalTarget,
 }: {
@@ -24,7 +26,7 @@ function VariationRow({
 }) {
   const setRoleVariation = useProjectStore((s) => s.setRoleVariation);
   const removeRoleVariation = useProjectStore((s) => s.removeRoleVariation);
-  const vars = useProjectStore((s) => s.projectStore.roles[idx]?.variations ?? []);
+  const vars = useProjectStore((s) => s.projectStore.roles[idx]?.variations ?? EMPTY_VARIATIONS);
 
   const [localName, onNameChange, onNameBlur] = useLocalField(v.name ?? "", (val) => setRoleVariation(idx, vi, "name", val), { allowEmpty: true });
   const [localShort, onShortChange, onShortBlur] = useLocalField(v.shorthand ?? "", (val) => setRoleVariation(idx, vi, "shorthand", val), { allowEmpty: true });

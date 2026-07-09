@@ -62,13 +62,14 @@ Last updated: 2026-05-22
 - [ ] **Role Labels CSV**
       Convenience field to rename all variation levels at once via comma-separated string. Currently the only way to rename is per-variation inline in the list.
 
-- [ ] **Color algorithm equalizer + "ultimate" gamut-relative algorithm**
-      Full brainstorm and analysis in `Documentations/knowledge/color-algorithm-roadmap.md`. Pinned — not scheduled.
+- [ ] **Color algorithm equalizer** (customizer/knob UI over the scale algorithms)
+      Full brainstorm and analysis in `Documentations/knowledge/color-algorithm-roadmap.md`. Explicitly dropped from scope when the "ultimate algorithm" shipped as the `Fidelity` scale algorithm — pinned, not scheduled.
 
 ---
 
 ## ✅ Recently completed
 
+- [x] **"Fidelity" scale algorithm** shipped — the "ultimate" gamut-relative-chroma algorithm from `Documentations/knowledge/color-algorithm-roadmap.md`, implemented in OKLCH (pivoted from the originally-planned HCT after finding a pre-existing hue-drift bug in `hctToHex` — see that doc's implementation note). New test coverage added in `tests/shared/clrEngine.test.ts` (previously zero tests existed for `clrEngine.ts`).
 - [x] Full file restructure: `color/`, `ui/` folders, dissolved `utils.js`
 - [x] Settings migrated to full-screen 2-tab panel (Token Settings, Plugin)
 - [x] `inputsUI.btn()` — universal button primitive with 5 variants + sizes

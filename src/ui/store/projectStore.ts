@@ -11,7 +11,7 @@ export const SOLVER_MODE_OPTIONS: [string, string, string][] = [
   ["max-chroma",       "Max Chroma",      "Ignores seed chroma entirely — finds the most vivid color the display gamut allows at each lightness. Applies to all colors including neutrals. Rarely correct as a global setting."],
 ];
 
-export const SCALE_ALGORITHM_OPTIONS = ["Natural", "Uniform", "Linear", "Expressive", "Symmetric", "OKLCH", "Material"] as const;
+export const SCALE_ALGORITHM_OPTIONS = ["Natural", "Uniform", "Linear", "Expressive", "Symmetric", "OKLCH", "Material", "Fidelity"] as const;
 
 export const SCALE_ALGORITHM_DESCRIPTIONS: Record<string, string> = {
   "Natural":     "Perceptual lightness steps with chroma that tapers toward white and black. Colors feel true to the seed but muted at extremes. Best general-purpose choice.",
@@ -21,6 +21,7 @@ export const SCALE_ALGORITHM_DESCRIPTIONS: Record<string, string> = {
   "Symmetric":   "Perceptual lightness steps anchored on the seed color itself. The seed appears at the midpoint of the scale; steps spread symmetrically above and below it in log-luminance space.",
   "OKLCH":       "Perceptual lightness steps with chroma and hue held constant in OKLCH space. More accurate color rendering than HSL-based modes — chroma stays true across the lightness range.",
   "Material":    "Perceptual lightness steps in the HCT color space (Google Material 3). Uses advanced perceptual modeling for more accurate dark-mode tones. Best when targeting MD3 component roles.",
+  "Fidelity":    "Holds the seed's vividness as a fraction of what's actually achievable at each lightness in OKLCH space, instead of a fixed chroma or a guessed taper curve. The seed's exact color always appears in the scale. Most faithful reproduction of the seed's character across the full range.",
 };
 
 export const SOLVER_MODE_DESCRIPTIONS: Record<string, string> = Object.fromEntries(

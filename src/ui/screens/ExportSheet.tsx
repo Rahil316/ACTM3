@@ -11,6 +11,7 @@ import { Spinner } from "../components/Spinner";
 import { toast } from "../store/toastStore";
 import { sendToPlugin, type ExportFormat } from "../types/messages";
 import { HelperText } from "../components/typography";
+import { _slug, _projectSlug, _exportTimestamp } from "../utils/exportNaming";
 import type { LucideIcon } from "lucide-react";
 
 // ── Format catalogue ──────────────────────────────────────────────────────────
@@ -105,17 +106,18 @@ const EXPORT_FORMATS: FormatDef[] = [
 
 // ── Naming helpers ────────────────────────────────────────────────────────────
 
-function fmtTimestamp(ts: number): string {
-  const d = new Date(ts);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    d.getUTCFullYear().toString() +
-    pad(d.getUTCMonth() + 1) +
-    pad(d.getUTCDate()) +
-    "-" +
-    pad(d.getUTCHours()) +
-    pad(d.getUTCMinutes())
-  );
+const MAX_NAMED_FORMATS = 3;
+const FORMAT_ORDER: ExportFormat[] = EXPORT_FORMATS.map((f) => f.format);
+
+// Builds the tech-name segment of an export filename: up to MAX_NAMED_FORMATS
+// format names (in catalogue order), then a "N-others" suffix for the rest.
+function techListSlug(formats: ExportFormat[]): string {
+  const ordered = FORMAT_ORDER.filter((f) => formats.includes(f));
+  const named = ordered.slice(0, MAX_NAMED_FORMATS);
+  const remaining = ordered.length - named.length;
+  const parts = named.map((f) => _slug(f));
+  if (remaining > 0) parts.push(`${remaining}-others`);
+  return parts.join("-");
 }
 
 // ── Download helpers ──────────────────────────────────────────────────────────
@@ -130,14 +132,14 @@ function downloadBlob(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-async function downloadFiles(files: Array<{ path: string; content: string }>, zipName: string) {
-  if (files.length === 1) {
-    // Single file — direct download using the path as filename
+async function downloadFiles(files: Array<{ path: string; content: string }>, zipName: string, formatCount: number) {
+  if (formatCount === 1 && files.length === 1) {
+    // Exactly one format requested, and it produced exactly one file — direct download.
     const f = files[0];
     const filename = f.path.split("/").pop() ?? f.path;
     downloadBlob(f.content, filename);
   } else {
-    // Multiple files — zip them preserving directory structure
+    // Multiple formats requested, or a single format that expanded into several files — zip them.
     let JSZipModule;
     try {
       JSZipModule = await import("jszip");
@@ -172,8 +174,9 @@ export function ExportSheet() {
   const [building, setBuilding] = useState(false);
   const [downloading, setDownloading] = useState<ExportFormat | null>(null);
 
-  // Holds the zip filename decided at request time so the response handler can use it
+  // Holds the filename + requested format count decided at request time so the response handler can use them
   const pendingZipName = useRef<string>("");
+  const pendingFormatCount = useRef<number>(1);
 
   // ── Bridge callbacks ──────────────────────────────────────────────────────
 
@@ -186,7 +189,7 @@ export function ExportSheet() {
         toast.error("Export returned no files.");
         return;
       }
-      downloadFiles(files, pendingZipName.current).then(() => {
+      downloadFiles(files, pendingZipName.current, pendingFormatCount.current).then(() => {
         const label = wasBulk ? `Exported ${files.length} file${files.length > 1 ? "s" : ""}` : `Downloaded ${files.length > 1 ? files.length + " files" : files[0].path.split("/").pop()}`;
         toast.success(label);
         if (wasBulk) setQueue(new Set());
@@ -211,8 +214,9 @@ export function ExportSheet() {
   function handleSingleDownload(format: ExportFormat) {
     if (downloading) return;
     const ts = Date.now();
-    const projectSlug = (projectStore.name || "tokens").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    pendingZipName.current = `${projectSlug}_${format}_${fmtTimestamp(ts)}`;
+    const projectSlug = _projectSlug(projectStore.name);
+    pendingZipName.current = `${projectSlug}_${_slug(format)}_${_exportTimestamp(ts)}`;
+    pendingFormatCount.current = 1;
     setDownloading(format);
     sendToPlugin({ type: "request-processed-data", exportType: format, state: projectStore, timestamp: ts });
   }
@@ -220,10 +224,10 @@ export function ExportSheet() {
   function handleBulkExport() {
     if (queue.size === 0) return;
     const ts = Date.now();
-    const projectSlug = (projectStore.name || "tokens").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const projectSlug = _projectSlug(projectStore.name);
     const formats = Array.from(queue);
-    const techSuffix = formats.length <= 2 ? formats.join("-") : `${formats.length}-formats`;
-    pendingZipName.current = `${projectSlug}_${techSuffix}_${fmtTimestamp(ts)}`;
+    pendingZipName.current = `${projectSlug}_${techListSlug(formats)}_${_exportTimestamp(ts)}`;
+    pendingFormatCount.current = formats.length;
     setBuilding(true);
     sendToPlugin({
       type: "request-export-bundle",

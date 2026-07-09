@@ -12,7 +12,7 @@ Last updated: 2026-05-22
 
 ### Core engine
 
-- Tonal scale generation — 7 algorithms (Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear)
+- Tonal scale generation — 8 algorithms (Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear, Fidelity)
 - Direct mode — solves role colors directly to target WCAG contrast ratios via OKLCH binary-search solver (5 modes: natural, constant-chroma, symmetric, hue-locked, max-chroma)
 - WCAG contrast calculation (hex↔RGB↔HSL↔OKLCH↔HCT)
 - Multi-theme output — light and dark modes with configurable background colors

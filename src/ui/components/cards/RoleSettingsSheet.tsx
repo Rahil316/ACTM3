@@ -308,10 +308,11 @@ function LocalBgHexInputs({ localBg, themes, onChange }: { localBg: RoleLocalBg 
 
 const FILL_SCOPES: VariableScope[] = ["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL"];
 const ALL_LEAF_SCOPES: VariableScope[] = ["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL", "STROKE_COLOR", "EFFECT_COLOR"];
+const EMPTY_THEMES: Theme[] = [];
 
 export function RoleSettingsSheet({ roleIdx, onClose, initialTab = "colors" }: { roleIdx: number; onClose: () => void; initialTab?: "colors" | "contrast" | "scope" }) {
   const colors = useProjectStore((s) => s.projectStore.colors);
-  const themes = useProjectStore((s) => s.projectStore.themes ?? []);
+  const themes = useProjectStore((s) => s.projectStore.themes ?? EMPTY_THEMES);
   const role = useProjectStore((s) => s.projectStore.roles[roleIdx]);
   const setRoleScope = useProjectStore((s) => s.setRoleScope);
   const setRoleLocalBg = useProjectStore((s) => s.setRoleLocalBg);

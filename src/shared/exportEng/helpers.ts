@@ -61,6 +61,28 @@ export function _slug(str: string | null | undefined): string {
     .replace(/^-|-$/g, "");
 }
 
+// Single source of truth for export/download naming, shared between the UI
+// (outer zip/file name) and the bundler (inner folder/file paths) so the two
+// can't drift out of sync when the naming convention changes.
+
+export function _projectSlug(name: string | null | undefined): string {
+  return _slug(name) || "tokens";
+}
+
+// Compact timestamp string: YYYYMMDD-HHmm (UTC)
+export function _exportTimestamp(ts: number): string {
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    d.getUTCFullYear().toString() +
+    pad(d.getUTCMonth() + 1) +
+    pad(d.getUTCDate()) +
+    "-" +
+    pad(d.getUTCHours()) +
+    pad(d.getUTCMinutes())
+  );
+}
+
 export function _camel(parts: string[]): string {
   return parts.map(function(p, i) {
     const s = _slug(p).replace(/-([a-z0-9])/g, function(_, c) { return c.toUpperCase(); });
