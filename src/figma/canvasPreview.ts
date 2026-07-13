@@ -58,16 +58,38 @@ function getResultScaleHex(result: AnyObj, colorName: string, stepKey: string): 
   }
 }
 
+// Simple, fast 64-bit non-cryptographic hash (combining two 32-bit hashes)
+// to ensure fingerprints never exceed Figma's 100KB setPluginData limit.
+function hashString(str: string): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+
+  const part1 = (h1 >>> 0).toString(16).padStart(8, "0");
+  const part2 = (h2 >>> 0).toString(16).padStart(8, "0");
+  return part1 + part2;
+}
+
 // Stable JSON fingerprint — recursively sorts object keys so insertion order doesn't matter.
 // NOTE: JSON.stringify with a key *array* as replacer only filters top-level keys (not nested),
 // so we use a replacer *function* that rebuilds each object with sorted entries instead.
 function fingerprint(value: AnyObj): string {
-  return JSON.stringify(value, (_key, val) =>
+  const json = JSON.stringify(value, (_key, val) =>
     val && typeof val === "object" && !Array.isArray(val)
       ? Object.fromEntries(Object.entries(val).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
       : val,
   );
+  return hashString(json);
 }
+
 
 // Find a direct child of a frame by its pluginData previewRole value
 function findByRole(parent: FrameNode | PageNode, role: string): FrameNode | ComponentNode | null {

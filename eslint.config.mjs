@@ -5,7 +5,16 @@ import figmaPlugin from "@figma/eslint-plugin-figma-plugins";
 export default tseslint.config(
   // Ignore generated / legacy / build output / storybook
   {
-    ignores: ["node_modules/", "dist/", "dist-release/", "postcss.config.js", "tailwind.config.js", "**/tailwind.config.js", "vite.config.ts"],
+    ignores: [
+      "node_modules/",
+      "dist/",
+      "dist-release/",
+      "postcss.config.js",
+      "tailwind.config.js",
+      "**/tailwind.config.js",
+      "vite.config.ts",
+      "test-data/"
+    ],
   },
 
   // Base JS rules
