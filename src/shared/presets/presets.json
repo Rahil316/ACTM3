@@ -50,6 +50,7 @@
       "scaleCollectionName": "_scale",
       "tokenCollectionName": "color tokens",
       "scaleSteps": null,
+      "canEditRoleVariants": false,
       "variations": [
         {
           "name": "Subtle",
@@ -144,7 +145,8 @@
         {
           "_id": "nc-v-default",
           "name": "default",
-          "shorthand": "default"
+          "shorthand": "default",
+          "target": 4.5
         }
       ],
       "colors": [
@@ -152,85 +154,85 @@
           "_id": "nc-bp",
           "name": "Brand/Primary",
           "shorthand": "b/p",
-          "value": "0E9CA6"
+          "value": "#0E9CA6"
         },
         {
           "_id": "nc-bs",
           "name": "Brand/Secondary",
           "shorthand": "b/s",
-          "value": "F2B01E"
+          "value": "#F2B01E"
         },
         {
           "_id": "nc-ss",
           "name": "Status/Success",
           "shorthand": "st/ss",
-          "value": "34C759"
+          "value": "#34C759"
         },
         {
           "_id": "nc-sw",
           "name": "Status/Warning",
           "shorthand": "st/wr",
-          "value": "FF9F0A"
+          "value": "#FF9F0A"
         },
         {
           "_id": "nc-sd",
           "name": "Status/Danger",
           "shorthand": "st/dg",
-          "value": "FF453A"
+          "value": "#FF453A"
         },
         {
           "_id": "nc-si",
           "name": "Status/Info",
           "shorthand": "st/if",
-          "value": "32ADE6"
+          "value": "#32ADE6"
         },
         {
           "_id": "nc-sa",
           "name": "Status/Attention",
           "shorthand": "st/at",
-          "value": "FFD60A"
+          "value": "#FFD60A"
         },
         {
           "_id": "nc-gc",
           "name": "Gray/Cool",
           "shorthand": "gr/cl",
-          "value": "676D6F"
+          "value": "#676D6F"
         },
         {
           "_id": "nc-gn",
           "name": "Gray/Neutral",
           "shorthand": "gr/nu",
-          "value": "8E8E93"
+          "value": "#8E8E93"
         },
         {
           "_id": "nc-s1",
           "name": "Spare/1",
           "shorthand": "sp/1",
-          "value": "458AD3"
+          "value": "#458AD3"
         },
         {
           "_id": "nc-s2",
           "name": "Spare/2",
           "shorthand": "sp/2",
-          "value": "E76F51"
+          "value": "#E76F51"
         },
         {
           "_id": "nc-s3",
           "name": "Spare/3",
           "shorthand": "sp/3",
-          "value": "2A319D"
+          "value": "#2A319D"
         },
         {
           "_id": "nc-s4",
           "name": "Spare/4",
           "shorthand": "sp/4",
-          "value": "CB9C25"
+          "value": "#CB9C25"
         },
         {
           "_id": "nc-s5",
           "name": "Spare/5",
           "shorthand": "sp/5",
-          "value": "8338EC"
+          "value": "#8338EC"
         }
       ],
       "roles": [
@@ -609,15 +611,475 @@
       "themes": [
         {
           "name": "Light",
-          "bg": "F2F2F7"
+          "bg": "#F2F2F7"
         },
         {
           "name": "Dark",
-          "bg": "000000"
+          "bg": "#000000"
         },
         {
           "name": "Midnight",
-          "bg": "0A0F1E"
+          "bg": "#0A0F1E"
+        }
+      ]
+    }
+  },
+  {
+    "id": "nmobile",
+    "name": "nMobile",
+    "badge": "nM",
+    "description": "Mobile app preset built around a vibrant teal accent — Scale mode, Light + Dark, elevation-driven backgrounds, and scoped status roles for success/error/warning/info/attention states.",
+    "tags": [
+      "nMobile",
+      "Mobile",
+      "Scale",
+      "Teal"
+    ],
+    "swatches": [
+      "14B8A6",
+      "6366F1",
+      "22C55E",
+      "EF4444",
+      "F59E0B",
+      "3B82F6",
+      "FACC15"
+    ],
+    "config": {
+      "name": "nMobile",
+      "description": "Mobile app — teal-accented Light and Dark themes with elevation-based backgrounds and scoped status roles.",
+      "pluginMode": "scale",
+      "scaleAlgorithm": "Natural",
+      "scaleLength": 21,
+      "useUniformAlgorithm": true,
+      "algorithmScopeLevel": "color",
+      "solverMode": "natural",
+      "tokenNameSegments": [
+        "color",
+        "role",
+        "variation"
+      ],
+      "useShorthandColors": true,
+      "useShorthandRoles": true,
+      "useShorthandVariations": true,
+      "useShorthandSteps": true,
+      "includeSourceColors": true,
+      "sourceCollectionName": "nmobile/source",
+      "alphaValues": [
+        5,
+        10,
+        20,
+        30,
+        50,
+        75,
+        90
+      ],
+      "includeColorScalesCollection": true,
+      "includeDescriptions": true,
+      "scaleCollectionName": "nmobile/scale",
+      "tokenCollectionName": "nmobile/tokens",
+      "scaleSteps": null,
+      "canEditRoleVariants": true,
+      "variations": [
+        {
+          "name": "default",
+          "shorthand": "1",
+          "target": 4.5
+        }
+      ],
+      "colors": [
+        {
+          "_id": "nm-tl",
+          "name": "Teal",
+          "shorthand": "tl",
+          "value": "#14B8A6"
+        },
+        {
+          "_id": "nm-id",
+          "name": "Secondary",
+          "shorthand": "id",
+          "value": "#6366F1"
+        },
+        {
+          "_id": "nm-gy",
+          "name": "Gray",
+          "shorthand": "gy",
+          "value": "#71717A"
+        },
+        {
+          "_id": "nm-nt",
+          "name": "Neutral",
+          "shorthand": "nt",
+          "value": "#5B7B7A"
+        },
+        {
+          "_id": "nm-su",
+          "name": "Success",
+          "shorthand": "su",
+          "value": "#22C55E"
+        },
+        {
+          "_id": "nm-er",
+          "name": "Error",
+          "shorthand": "er",
+          "value": "#EF4444"
+        },
+        {
+          "_id": "nm-wr",
+          "name": "Warning",
+          "shorthand": "wr",
+          "value": "#F59E0B"
+        },
+        {
+          "_id": "nm-if",
+          "name": "Info",
+          "shorthand": "if",
+          "value": "#3B82F6"
+        },
+        {
+          "_id": "nm-at",
+          "name": "Attention",
+          "shorthand": "at",
+          "value": "#FACC15"
+        },
+        {
+          "_id": "nm-s1",
+          "name": "Spare/1",
+          "shorthand": "s1",
+          "value": "#F97316"
+        },
+        {
+          "_id": "nm-s2",
+          "name": "Spare/2",
+          "shorthand": "s2",
+          "value": "#EC4899"
+        },
+        {
+          "_id": "nm-s3",
+          "name": "Spare/3",
+          "shorthand": "s3",
+          "value": "#84CC16"
+        },
+        {
+          "_id": "nm-s4",
+          "name": "Spare/4",
+          "shorthand": "s4",
+          "value": "#06B6D4"
+        },
+        {
+          "_id": "nm-s5",
+          "name": "Spare/5",
+          "shorthand": "s5",
+          "value": "#A855F7"
+        }
+      ],
+      "roles": [
+        {
+          "name": "bg",
+          "shorthand": "bg",
+          "variations": [
+            {
+              "name": "App",
+              "shorthand": "1",
+              "target": 1
+            },
+            {
+              "name": "Surface",
+              "shorthand": "2",
+              "target": 1.06
+            },
+            {
+              "name": "Raised",
+              "shorthand": "3",
+              "target": 1.12
+            },
+            {
+              "name": "Overlay",
+              "shorthand": "4",
+              "target": 1.25
+            },
+            {
+              "name": "Scrim",
+              "shorthand": "5",
+              "target": 12
+            }
+          ],
+          "description": "Elevation ladder · app canvas · card surface · raised layer · overlay panel · modal scrim"
+        },
+        {
+          "name": "text",
+          "shorthand": "tx",
+          "variations": [
+            {
+              "name": "Disabled",
+              "shorthand": "1",
+              "target": 2
+            },
+            {
+              "name": "Muted",
+              "shorthand": "2",
+              "target": 3
+            },
+            {
+              "name": "Secondary",
+              "shorthand": "3",
+              "target": 4.5
+            },
+            {
+              "name": "Primary",
+              "shorthand": "4",
+              "target": 7
+            },
+            {
+              "name": "Emphasis",
+              "shorthand": "5",
+              "target": 11
+            }
+          ],
+          "description": "Text hierarchy and icon fills · disabled · muted · secondary · primary (AA) · emphasis (AAA)"
+        },
+        {
+          "name": "fill",
+          "shorthand": "fl",
+          "variations": [
+            {
+              "name": "Disabled",
+              "shorthand": "1",
+              "target": 1.5
+            },
+            {
+              "name": "Subtle",
+              "shorthand": "2",
+              "target": 2.5
+            },
+            {
+              "name": "Default",
+              "shorthand": "3",
+              "target": 4.5
+            },
+            {
+              "name": "Hover",
+              "shorthand": "4",
+              "target": 6
+            },
+            {
+              "name": "Pressed",
+              "shorthand": "5",
+              "target": 8
+            }
+          ],
+          "description": "Solid interactive fills · disabled · subtle · default (AA) · hover · pressed"
+        },
+        {
+          "name": "stroke",
+          "shorthand": "st",
+          "variations": [
+            {
+              "name": "Hairline",
+              "shorthand": "1",
+              "target": 1.4
+            },
+            {
+              "name": "Subtle",
+              "shorthand": "2",
+              "target": 1.8
+            },
+            {
+              "name": "Default",
+              "shorthand": "3",
+              "target": 2.5
+            },
+            {
+              "name": "Strong",
+              "shorthand": "4",
+              "target": 3.5
+            },
+            {
+              "name": "Focus",
+              "shorthand": "5",
+              "target": 4.5
+            }
+          ],
+          "description": "Outlines and borders · hairline · subtle · default · strong · focus ring"
+        },
+        {
+          "name": "status/success",
+          "shorthand": "s/su",
+          "variations": [
+            {
+              "name": "Bg",
+              "shorthand": "1",
+              "target": 1.15
+            },
+            {
+              "name": "Tint",
+              "shorthand": "2",
+              "target": 1.8
+            },
+            {
+              "name": "Fill",
+              "shorthand": "3",
+              "target": 4.5
+            },
+            {
+              "name": "Text",
+              "shorthand": "4",
+              "target": 4.5
+            },
+            {
+              "name": "Border",
+              "shorthand": "5",
+              "target": 3
+            }
+          ],
+          "scopedColorIds": [
+            "nm-su"
+          ]
+        },
+        {
+          "name": "status/error",
+          "shorthand": "s/er",
+          "variations": [
+            {
+              "name": "Bg",
+              "shorthand": "1",
+              "target": 1.15
+            },
+            {
+              "name": "Tint",
+              "shorthand": "2",
+              "target": 1.8
+            },
+            {
+              "name": "Fill",
+              "shorthand": "3",
+              "target": 4.5
+            },
+            {
+              "name": "Text",
+              "shorthand": "4",
+              "target": 4.5
+            },
+            {
+              "name": "Border",
+              "shorthand": "5",
+              "target": 3
+            }
+          ],
+          "scopedColorIds": [
+            "nm-er"
+          ]
+        },
+        {
+          "name": "status/warning",
+          "shorthand": "s/wr",
+          "variations": [
+            {
+              "name": "Bg",
+              "shorthand": "1",
+              "target": 1.15
+            },
+            {
+              "name": "Tint",
+              "shorthand": "2",
+              "target": 1.8
+            },
+            {
+              "name": "Fill",
+              "shorthand": "3",
+              "target": 4.5
+            },
+            {
+              "name": "Text",
+              "shorthand": "4",
+              "target": 4.5
+            },
+            {
+              "name": "Border",
+              "shorthand": "5",
+              "target": 3
+            }
+          ],
+          "scopedColorIds": [
+            "nm-wr"
+          ]
+        },
+        {
+          "name": "status/info",
+          "shorthand": "s/if",
+          "variations": [
+            {
+              "name": "Bg",
+              "shorthand": "1",
+              "target": 1.15
+            },
+            {
+              "name": "Tint",
+              "shorthand": "2",
+              "target": 1.8
+            },
+            {
+              "name": "Fill",
+              "shorthand": "3",
+              "target": 4.5
+            },
+            {
+              "name": "Text",
+              "shorthand": "4",
+              "target": 4.5
+            },
+            {
+              "name": "Border",
+              "shorthand": "5",
+              "target": 3
+            }
+          ],
+          "scopedColorIds": [
+            "nm-if"
+          ]
+        },
+        {
+          "name": "status/attention",
+          "shorthand": "s/at",
+          "variations": [
+            {
+              "name": "Bg",
+              "shorthand": "1",
+              "target": 1.15
+            },
+            {
+              "name": "Tint",
+              "shorthand": "2",
+              "target": 1.8
+            },
+            {
+              "name": "Fill",
+              "shorthand": "3",
+              "target": 4.5
+            },
+            {
+              "name": "Text",
+              "shorthand": "4",
+              "target": 4.5
+            },
+            {
+              "name": "Border",
+              "shorthand": "5",
+              "target": 3
+            }
+          ],
+          "scopedColorIds": [
+            "nm-at"
+          ]
+        }
+      ],
+      "themes": [
+        {
+          "name": "Light",
+          "bg": "#FFFFFF"
+        },
+        {
+          "name": "Dark",
+          "bg": "#0B0F0F"
         }
       ]
     }
@@ -687,105 +1149,105 @@
           "_id": "sc-bp",
           "name": "Brand/Primary",
           "shorthand": "bp",
-          "value": "0066FF",
+          "value": "#0066FF",
           "description": "Primary brand — vivid blue"
         },
         {
           "_id": "sc-bs",
           "name": "Brand/Secondary",
           "shorthand": "bs",
-          "value": "7C3AED",
+          "value": "#7C3AED",
           "description": "Secondary brand — violet"
         },
         {
           "_id": "sc-bn",
           "name": "Brand/Neutral",
           "shorthand": "bn",
-          "value": "64748B",
+          "value": "#64748B",
           "description": "Neutral slate — surfaces, borders, text"
         },
         {
           "_id": "sc-ss",
           "name": "Status/Success",
           "shorthand": "ss",
-          "value": "16A34A",
+          "value": "#16A34A",
           "description": "Positive / confirm"
         },
         {
           "_id": "sc-sw",
           "name": "Status/Warning",
           "shorthand": "sw",
-          "value": "D97706",
+          "value": "#D97706",
           "description": "Caution / attention"
         },
         {
           "_id": "sc-sd",
           "name": "Status/Danger",
           "shorthand": "sd",
-          "value": "DC2626",
+          "value": "#DC2626",
           "description": "Error / destructive"
         },
         {
           "_id": "sc-si",
           "name": "Status/Info",
           "shorthand": "si",
-          "value": "0284C7",
+          "value": "#0284C7",
           "description": "Informational"
         },
         {
           "_id": "sc-r",
           "name": "Spare/Rose",
           "shorthand": "ro",
-          "value": "F43F5E",
+          "value": "#F43F5E",
           "description": "Rose — warm pink"
         },
         {
           "_id": "sc-co",
           "name": "Spare/Coral",
           "shorthand": "cr",
-          "value": "F97316",
+          "value": "#F97316",
           "description": "Coral — warm orange"
         },
         {
           "_id": "sc-go",
           "name": "Spare/Gold",
           "shorthand": "gd",
-          "value": "EAB308",
+          "value": "#EAB308",
           "description": "Gold — warm yellow"
         },
         {
           "_id": "sc-mi",
           "name": "Spare/Mint",
           "shorthand": "mn",
-          "value": "10B981",
+          "value": "#10B981",
           "description": "Mint — cool green"
         },
         {
           "_id": "sc-te",
           "name": "Spare/Teal",
           "shorthand": "tl",
-          "value": "0D9488",
+          "value": "#0D9488",
           "description": "Teal — blue-green"
         },
         {
           "_id": "sc-in",
           "name": "Spare/Indigo",
           "shorthand": "ig",
-          "value": "6366F1",
+          "value": "#6366F1",
           "description": "Indigo — blue-violet"
         },
         {
           "_id": "sc-fu",
           "name": "Spare/Fuchsia",
           "shorthand": "fu",
-          "value": "D946EF",
+          "value": "#D946EF",
           "description": "Fuchsia — vivid pink"
         },
         {
           "_id": "sc-sa",
           "name": "Spare/Sand",
           "shorthand": "sa",
-          "value": "A8956A",
+          "value": "#A8956A",
           "description": "Sand — warm neutral"
         }
       ],
@@ -820,8 +1282,7 @@
               "target": 1.6
             }
           ],
-          "description": "Page and section backgrounds · 5 depth steps",
-          "mappingMethod": "contrast"
+          "description": "Page and section backgrounds · 5 depth steps"
         },
         {
           "name": "surface",
@@ -853,8 +1314,7 @@
               "target": 14
             }
           ],
-          "description": "Surface elevation stack · sunken → card → popover → modal scrim",
-          "mappingMethod": "contrast"
+          "description": "Surface elevation stack · sunken → card → popover → modal scrim"
         },
         {
           "name": "fill",
@@ -886,8 +1346,7 @@
               "target": 12
             }
           ],
-          "description": "Colored fills · tint → AA → AAA · badges, chips, CTAs",
-          "mappingMethod": "contrast"
+          "description": "Colored fills · tint → AA → AAA · badges, chips, CTAs"
         },
         {
           "name": "text",
@@ -919,8 +1378,7 @@
               "target": 11.5
             }
           ],
-          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA",
-          "mappingMethod": "contrast"
+          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA"
         },
         {
           "name": "stroke",
@@ -952,8 +1410,7 @@
               "target": 4.5
             }
           ],
-          "description": "Borders and dividers · hairline → focus ring",
-          "mappingMethod": "contrast"
+          "description": "Borders and dividers · hairline → focus ring"
         },
         {
           "name": "status/success",
@@ -1099,11 +1556,11 @@
       "themes": [
         {
           "name": "Light",
-          "bg": "FFFFFF"
+          "bg": "#FFFFFF"
         },
         {
           "name": "Dark",
-          "bg": "0F172A"
+          "bg": "#0F172A"
         }
       ]
     }
@@ -1174,105 +1631,105 @@
           "_id": "dc-bp",
           "name": "Brand/Primary",
           "shorthand": "bp",
-          "value": "0066FF",
+          "value": "#0066FF",
           "description": "Primary brand — vivid blue"
         },
         {
           "_id": "dc-bs",
           "name": "Brand/Secondary",
           "shorthand": "bs",
-          "value": "7C3AED",
+          "value": "#7C3AED",
           "description": "Secondary brand — violet"
         },
         {
           "_id": "dc-bn",
           "name": "Brand/Neutral",
           "shorthand": "bn",
-          "value": "64748B",
+          "value": "#64748B",
           "description": "Neutral slate — surfaces, borders, text"
         },
         {
           "_id": "dc-ss",
           "name": "Status/Success",
           "shorthand": "ss",
-          "value": "16A34A",
+          "value": "#16A34A",
           "description": "Positive / confirm"
         },
         {
           "_id": "dc-sw",
           "name": "Status/Warning",
           "shorthand": "sw",
-          "value": "D97706",
+          "value": "#D97706",
           "description": "Caution / attention"
         },
         {
           "_id": "dc-sd",
           "name": "Status/Danger",
           "shorthand": "sd",
-          "value": "DC2626",
+          "value": "#DC2626",
           "description": "Error / destructive"
         },
         {
           "_id": "dc-si",
           "name": "Status/Info",
           "shorthand": "si",
-          "value": "0284C7",
+          "value": "#0284C7",
           "description": "Informational"
         },
         {
           "_id": "dc-r",
           "name": "Spare/Rose",
           "shorthand": "ro",
-          "value": "F43F5E",
+          "value": "#F43F5E",
           "description": "Rose — warm pink"
         },
         {
           "_id": "dc-co",
           "name": "Spare/Coral",
           "shorthand": "cr",
-          "value": "F97316",
+          "value": "#F97316",
           "description": "Coral — warm orange"
         },
         {
           "_id": "dc-go",
           "name": "Spare/Gold",
           "shorthand": "gd",
-          "value": "EAB308",
+          "value": "#EAB308",
           "description": "Gold — warm yellow"
         },
         {
           "_id": "dc-mi",
           "name": "Spare/Mint",
           "shorthand": "mn",
-          "value": "10B981",
+          "value": "#10B981",
           "description": "Mint — cool green"
         },
         {
           "_id": "dc-te",
           "name": "Spare/Teal",
           "shorthand": "tl",
-          "value": "0D9488",
+          "value": "#0D9488",
           "description": "Teal — blue-green"
         },
         {
           "_id": "dc-in",
           "name": "Spare/Indigo",
           "shorthand": "ig",
-          "value": "6366F1",
+          "value": "#6366F1",
           "description": "Indigo — blue-violet"
         },
         {
           "_id": "dc-fu",
           "name": "Spare/Fuchsia",
           "shorthand": "fu",
-          "value": "D946EF",
+          "value": "#D946EF",
           "description": "Fuchsia — vivid pink"
         },
         {
           "_id": "dc-sa",
           "name": "Spare/Sand",
           "shorthand": "sa",
-          "value": "A8956A",
+          "value": "#A8956A",
           "description": "Sand — warm neutral"
         }
       ],
@@ -1308,8 +1765,7 @@
               "target": 14
             }
           ],
-          "description": "Surface elevation · page → card → popover → modal scrim",
-          "mappingMethod": "contrast"
+          "description": "Surface elevation · page → card → popover → modal scrim"
         },
         {
           "name": "fill",
@@ -1342,8 +1798,7 @@
               "target": 14
             }
           ],
-          "description": "Solid fills · subtle tint → AA → AAA → inverse",
-          "mappingMethod": "contrast"
+          "description": "Solid fills · subtle tint → AA → AAA → inverse"
         },
         {
           "name": "on/fill",
@@ -1380,8 +1835,7 @@
             "kind": "token-dynamic",
             "value": "[color]/fill/default"
           },
-          "description": "Text / icon on fill · contrast vs fill/default per color · luminance solver",
-          "mappingMethod": "contrast"
+          "description": "Text / icon on fill · contrast vs fill/default per color · luminance solver"
         },
         {
           "name": "text",
@@ -1414,8 +1868,7 @@
               "target": 11.5
             }
           ],
-          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA",
-          "mappingMethod": "contrast"
+          "description": "Text hierarchy · disabled → hint → secondary → AA → AAA"
         },
         {
           "name": "border",
@@ -1448,8 +1901,7 @@
               "target": 4.5
             }
           ],
-          "description": "Borders and dividers · hairline → focus ring",
-          "mappingMethod": "contrast"
+          "description": "Borders and dividers · hairline → focus ring"
         },
         {
           "name": "status/success",
@@ -1485,8 +1937,7 @@
           "scopedColorIds": [
             "dc-ss"
           ],
-          "description": "Success channel · chroma-maximized · scoped to Status/Success",
-          "mappingMethod": "contrast"
+          "description": "Success channel · chroma-maximized · scoped to Status/Success"
         },
         {
           "name": "status/warning",
@@ -1522,8 +1973,7 @@
           "scopedColorIds": [
             "dc-sw"
           ],
-          "description": "Warning channel · chroma-maximized · scoped to Status/Warning",
-          "mappingMethod": "contrast"
+          "description": "Warning channel · chroma-maximized · scoped to Status/Warning"
         },
         {
           "name": "status/danger",
@@ -1559,8 +2009,7 @@
           "scopedColorIds": [
             "dc-sd"
           ],
-          "description": "Danger / error channel · chroma-maximized · scoped to Status/Danger",
-          "mappingMethod": "contrast"
+          "description": "Danger / error channel · chroma-maximized · scoped to Status/Danger"
         },
         {
           "name": "status/info",
@@ -1596,22 +2045,21 @@
           "scopedColorIds": [
             "dc-si"
           ],
-          "description": "Info channel · chroma-maximized · scoped to Status/Info",
-          "mappingMethod": "contrast"
+          "description": "Info channel · chroma-maximized · scoped to Status/Info"
         }
       ],
       "themes": [
         {
           "name": "Light",
-          "bg": "FFFFFF"
+          "bg": "#FFFFFF"
         },
         {
           "name": "Dark",
-          "bg": "111827"
+          "bg": "#111827"
         },
         {
           "name": "Brand",
-          "bg": "0A1628"
+          "bg": "#0A1628"
         }
       ]
     }
@@ -1676,7 +2124,8 @@
         {
           "_id": "twui-v-default",
           "name": "default",
-          "shorthand": "default"
+          "shorthand": "default",
+          "target": 4.5
         }
       ],
       "colors": [
@@ -1684,35 +2133,35 @@
           "_id": "twui-neutral",
           "name": "Neutral",
           "shorthand": "n",
-          "value": "787878",
+          "value": "#787878",
           "description": "Neutral gray — drives all surfaces, borders, and text"
         },
         {
           "_id": "twui-brand",
           "name": "Brand",
           "shorthand": "b",
-          "value": "0062FF",
+          "value": "#0062FF",
           "description": "Figma blue — CTA, focus ring, active tab, accent"
         },
         {
           "_id": "twui-danger",
           "name": "Danger",
           "shorthand": "d",
-          "value": "EF4444",
+          "value": "#EF4444",
           "description": "Destructive actions — delete, error banners, danger fills"
         },
         {
           "_id": "twui-success",
           "name": "Success",
           "shorthand": "s",
-          "value": "22C55E",
+          "value": "#22C55E",
           "description": "Positive confirmation — toast, sync success, saved state"
         },
         {
           "_id": "twui-warning",
           "name": "Warning",
           "shorthand": "w",
-          "value": "F59E0B",
+          "value": "#F59E0B",
           "description": "Caution — blocked actions, degraded state, attention"
         }
       ],
@@ -1953,11 +2402,11 @@
       "themes": [
         {
           "name": "Light",
-          "bg": "F2F2F7"
+          "bg": "#F2F2F7"
         },
         {
           "name": "Dark",
-          "bg": "0D0D0D"
+          "bg": "#0D0D0D"
         }
       ]
     }
@@ -2001,6 +2450,7 @@
       "includeDescriptions": false,
       "scaleCollectionName": "_scale",
       "tokenCollectionName": "color tokens",
+      "canEditRoleVariants": false,
       "variations": [
         {
           "name": "Subtle",
@@ -2032,19 +2482,19 @@
         {
           "name": "Brand/Primary",
           "shorthand": "bp",
-          "value": "0066FF",
+          "value": "#0066FF",
           "description": "Primary brand color — vivid blue"
         },
         {
           "name": "Brand/Neutral",
           "shorthand": "bn",
-          "value": "6B7280",
+          "value": "#6B7280",
           "description": "Neutral gray for surfaces and text"
         },
         {
           "name": "Brand/Accent",
           "shorthand": "ba",
-          "value": "8B5CF6",
+          "value": "#8B5CF6",
           "description": "Accent — violet for highlights and CTAs"
         }
       ],
@@ -2078,8 +2528,7 @@
               "shorthand": "5",
               "target": 1.35
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Background/Subtle",
@@ -2110,8 +2559,7 @@
               "shorthand": "5",
               "target": 1.8
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Surface",
@@ -2142,8 +2590,7 @@
               "shorthand": "5",
               "target": 2.7
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Surface/Raised",
@@ -2174,8 +2621,7 @@
               "shorthand": "5",
               "target": 4
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Border",
@@ -2206,8 +2652,7 @@
               "shorthand": "5",
               "target": 5.8
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Border/Strong",
@@ -2238,8 +2683,7 @@
               "shorthand": "5",
               "target": 8.5
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Fill",
@@ -2270,8 +2714,7 @@
               "shorthand": "5",
               "target": 11.5
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Fill/Strong",
@@ -2302,8 +2745,7 @@
               "shorthand": "5",
               "target": 14.5
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Text/Muted",
@@ -2334,8 +2776,7 @@
               "shorthand": "5",
               "target": 13
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Text",
@@ -2366,8 +2807,7 @@
               "shorthand": "5",
               "target": 16
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Text/Strong",
@@ -2398,8 +2838,7 @@
               "shorthand": "5",
               "target": 19
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Text/Inverse",
@@ -2430,18 +2869,17 @@
               "shorthand": "5",
               "target": 1.8
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         }
       ],
       "themes": [
         {
           "name": "Light",
-          "bg": "FFFFFF"
+          "bg": "#FFFFFF"
         },
         {
           "name": "Dark",
-          "bg": "0F0F0F"
+          "bg": "#0F0F0F"
         }
       ]
     }
@@ -2486,6 +2924,7 @@
       "includeDescriptions": true,
       "scaleCollectionName": "_scale",
       "tokenCollectionName": "color tokens",
+      "canEditRoleVariants": true,
       "variations": [
         {
           "name": "State/Rest",
@@ -2512,25 +2951,25 @@
         {
           "name": "Brand/Primary",
           "shorthand": "bp",
-          "value": "0055E5",
+          "value": "#0055E5",
           "description": "Primary brand — deep vivid blue"
         },
         {
           "name": "Brand/Secondary",
           "shorthand": "bs",
-          "value": "7C3AED",
+          "value": "#7C3AED",
           "description": "Secondary brand — violet"
         },
         {
           "name": "Brand/Neutral",
           "shorthand": "bn",
-          "value": "64748B",
+          "value": "#64748B",
           "description": "Neutral slate — surfaces and text"
         },
         {
           "name": "Status/Error",
           "shorthand": "er",
-          "value": "DC2626",
+          "value": "#DC2626",
           "description": "Error and danger states"
         }
       ],
@@ -2559,8 +2998,7 @@
               "shorthand": "d",
               "target": 2
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Primary/Container",
@@ -2591,8 +3029,7 @@
               "shorthand": "ls",
               "target": 2.5
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "On/Primary",
@@ -2618,8 +3055,7 @@
               "shorthand": "d",
               "target": 2
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Secondary",
@@ -2645,8 +3081,7 @@
               "shorthand": "d",
               "target": 2
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "On/Secondary",
@@ -2672,8 +3107,7 @@
               "shorthand": "d",
               "target": 2
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Surface",
@@ -2704,8 +3138,7 @@
               "shorthand": "ls",
               "target": 2.5
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "On/Surface",
@@ -2731,8 +3164,7 @@
               "shorthand": "ed",
               "target": 2
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Outline",
@@ -2753,8 +3185,7 @@
               "shorthand": "wst",
               "target": 3.5
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Action/Primary",
@@ -2780,8 +3211,7 @@
               "shorthand": "d",
               "target": 2
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Action/Secondary",
@@ -2807,8 +3237,7 @@
               "shorthand": "d",
               "target": 2
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Action/Destructive",
@@ -2834,8 +3263,7 @@
               "shorthand": "d",
               "target": 2
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Status/Error",
@@ -2861,8 +3289,7 @@
               "shorthand": "bor",
               "target": 2.5
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Inverse/Surface",
@@ -2878,8 +3305,7 @@
               "shorthand": "mu",
               "target": 4.5
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Inverse/On/Surface",
@@ -2905,22 +3331,21 @@
               "shorthand": "d",
               "target": 2
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         }
       ],
       "themes": [
         {
           "name": "Light",
-          "bg": "FFFFFF"
+          "bg": "#FFFFFF"
         },
         {
           "name": "Dark",
-          "bg": "111827"
+          "bg": "#111827"
         },
         {
           "name": "Brand",
-          "bg": "0A1628"
+          "bg": "#0A1628"
         }
       ]
     }
@@ -2978,6 +3403,7 @@
       "includeDescriptions": false,
       "scaleCollectionName": "_scale",
       "tokenCollectionName": "color tokens",
+      "canEditRoleVariants": false,
       "variations": [
         {
           "name": "Ghost",
@@ -3009,19 +3435,19 @@
         {
           "name": "Electric/Blue",
           "shorthand": "eb",
-          "value": "0EA5E9",
+          "value": "#0EA5E9",
           "description": "Sky blue — high chroma"
         },
         {
           "name": "Electric/Pink",
           "shorthand": "ep",
-          "value": "EC4899",
+          "value": "#EC4899",
           "description": "Hot pink"
         },
         {
           "name": "Electric/Lime",
           "shorthand": "el",
-          "value": "84CC16",
+          "value": "#84CC16",
           "description": "Lime green"
         }
       ],
@@ -3055,8 +3481,7 @@
               "shorthand": "5",
               "target": 3
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Canvas/Raised",
@@ -3087,8 +3512,7 @@
               "shorthand": "5",
               "target": 4
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Glow",
@@ -3119,8 +3543,7 @@
               "shorthand": "5",
               "target": 7
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Glow/Strong",
@@ -3151,8 +3574,7 @@
               "shorthand": "5",
               "target": 9
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Edge",
@@ -3183,8 +3605,7 @@
               "shorthand": "5",
               "target": 5
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Fill/Soft",
@@ -3215,8 +3636,7 @@
               "shorthand": "5",
               "target": 6
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Fill/Core",
@@ -3247,8 +3667,7 @@
               "shorthand": "5",
               "target": 9
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Fill/Pop",
@@ -3279,8 +3698,7 @@
               "shorthand": "5",
               "target": 14
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Ink/Dim",
@@ -3311,8 +3729,7 @@
               "shorthand": "5",
               "target": 6
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Ink",
@@ -3343,8 +3760,7 @@
               "shorthand": "5",
               "target": 10
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Ink/Loud",
@@ -3375,8 +3791,7 @@
               "shorthand": "5",
               "target": 14
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Ink/Max",
@@ -3407,8 +3822,7 @@
               "shorthand": "5",
               "target": 21
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Highlight",
@@ -3439,8 +3853,7 @@
               "shorthand": "5",
               "target": 7
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         },
         {
           "name": "Highlight/Strong",
@@ -3471,22 +3884,21 @@
               "shorthand": "5",
               "target": 10
             }
-          ],
-          "mappingMethod": "contrast"
+          ]
         }
       ],
       "themes": [
         {
           "name": "Light",
-          "bg": "FAFAFA"
+          "bg": "#FAFAFA"
         },
         {
           "name": "Dark",
-          "bg": "09090B"
+          "bg": "#09090B"
         },
         {
           "name": "Vivid",
-          "bg": "1A0533"
+          "bg": "#1A0533"
         }
       ]
     }
@@ -3556,6 +3968,7 @@
       "scaleCollectionName": "palette",
       "tokenCollectionName": "tokens",
       "scaleSteps": null,
+      "canEditRoleVariants": true,
       "variations": [
         {
           "name": "default",
@@ -3567,43 +3980,43 @@
         {
           "name": "Brand",
           "shorthand": "Brand",
-          "value": "0066FF",
+          "value": "#0066FF",
           "description": "Primary brand color"
         },
         {
           "name": "Accent",
           "shorthand": "Accent",
-          "value": "7C3AED",
+          "value": "#7C3AED",
           "description": "Secondary accent — violet"
         },
         {
           "name": "Neutral",
           "shorthand": "Neutral",
-          "value": "6B7280",
+          "value": "#6B7280",
           "description": "Neutral gray — surfaces, borders, text"
         },
         {
           "name": "Success",
           "shorthand": "Success",
-          "value": "16A34A",
+          "value": "#16A34A",
           "description": "Positive / confirm"
         },
         {
           "name": "Warning",
           "shorthand": "Warning",
-          "value": "D97706",
+          "value": "#D97706",
           "description": "Caution / attention"
         },
         {
           "name": "Danger",
           "shorthand": "Danger",
-          "value": "DC2626",
+          "value": "#DC2626",
           "description": "Error / destructive"
         },
         {
           "name": "Info",
           "shorthand": "Info",
-          "value": "0284C7",
+          "value": "#0284C7",
           "description": "Informational"
         }
       ],
@@ -3628,8 +4041,7 @@
               "target": 1.3
             }
           ],
-          "description": "Background fills · subtle wash · default section · strong divider",
-          "mappingMethod": "contrast"
+          "description": "Background fills · subtle wash · default section · strong divider"
         },
         {
           "name": "surface",
@@ -3656,8 +4068,7 @@
               "target": 1.15
             }
           ],
-          "description": "Surface elevation · sunken · card · raised · modal overlay",
-          "mappingMethod": "contrast"
+          "description": "Surface elevation · sunken · card · raised · modal overlay"
         },
         {
           "name": "fill",
@@ -3679,8 +4090,7 @@
               "target": 2
             }
           ],
-          "description": "Solid fills · badge · chip · tag · 3 states",
-          "mappingMethod": "contrast"
+          "description": "Solid fills · badge · chip · tag · 3 states"
         },
         {
           "name": "text",
@@ -3707,8 +4117,7 @@
               "target": 2
             }
           ],
-          "description": "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
-          "mappingMethod": "contrast"
+          "description": "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled"
         },
         {
           "name": "stroke",
@@ -3730,8 +4139,7 @@
               "target": 4
             }
           ],
-          "description": "Borders and dividers · subtle hairline · UI border · focus ring",
-          "mappingMethod": "contrast"
+          "description": "Borders and dividers · subtle hairline · UI border · focus ring"
         },
         {
           "name": "icon",
@@ -3753,8 +4161,7 @@
               "target": 2
             }
           ],
-          "description": "Icon fills · default (AA) · subtle (AA-large) · disabled",
-          "mappingMethod": "contrast"
+          "description": "Icon fills · default (AA) · subtle (AA-large) · disabled"
         },
         {
           "name": "button",
@@ -3786,8 +4193,7 @@
               "target": 2
             }
           ],
-          "description": "Button fills · 5 interaction states · default → hover → active → selected → disabled",
-          "mappingMethod": "contrast"
+          "description": "Button fills · 5 interaction states · default → hover → active → selected → disabled"
         },
         {
           "name": "link",
@@ -3809,8 +4215,7 @@
               "target": 3.5
             }
           ],
-          "description": "Inline links · default · hover · visited",
-          "mappingMethod": "contrast"
+          "description": "Inline links · default · hover · visited"
         },
         {
           "name": "overlay",
@@ -3822,18 +4227,17 @@
               "target": 14
             }
           ],
-          "description": "Modal scrim · darkest achievable from palette hue",
-          "mappingMethod": "contrast"
+          "description": "Modal scrim · darkest achievable from palette hue"
         }
       ],
       "themes": [
         {
           "name": "Light",
-          "bg": "FFFFFF"
+          "bg": "#FFFFFF"
         },
         {
           "name": "Dark",
-          "bg": "0F172A"
+          "bg": "#0F172A"
         }
       ]
     }
@@ -3903,6 +4307,7 @@
       "scaleCollectionName": "palette",
       "tokenCollectionName": "tokens",
       "scaleSteps": null,
+      "canEditRoleVariants": true,
       "variations": [
         {
           "name": "default",
@@ -3914,43 +4319,43 @@
         {
           "name": "Brand",
           "shorthand": "Brand",
-          "value": "0066FF",
+          "value": "#0066FF",
           "description": "Primary brand color"
         },
         {
           "name": "Accent",
           "shorthand": "Accent",
-          "value": "7C3AED",
+          "value": "#7C3AED",
           "description": "Secondary accent — violet"
         },
         {
           "name": "Neutral",
           "shorthand": "Neutral",
-          "value": "6B7280",
+          "value": "#6B7280",
           "description": "Neutral gray — surfaces, borders, text"
         },
         {
           "name": "Success",
           "shorthand": "Success",
-          "value": "16A34A",
+          "value": "#16A34A",
           "description": "Positive / confirm"
         },
         {
           "name": "Warning",
           "shorthand": "Warning",
-          "value": "D97706",
+          "value": "#D97706",
           "description": "Caution / attention"
         },
         {
           "name": "Danger",
           "shorthand": "Danger",
-          "value": "DC2626",
+          "value": "#DC2626",
           "description": "Error / destructive"
         },
         {
           "name": "Info",
           "shorthand": "Info",
-          "value": "0284C7",
+          "value": "#0284C7",
           "description": "Informational"
         }
       ],
@@ -3975,8 +4380,7 @@
               "target": 1.3
             }
           ],
-          "description": "Background fills · subtle wash · default section · strong divider",
-          "mappingMethod": "contrast"
+          "description": "Background fills · subtle wash · default section · strong divider"
         },
         {
           "name": "surface",
@@ -4003,8 +4407,7 @@
               "target": 1.15
             }
           ],
-          "description": "Surface elevation · sunken · card · raised · modal overlay",
-          "mappingMethod": "contrast"
+          "description": "Surface elevation · sunken · card · raised · modal overlay"
         },
         {
           "name": "fill",
@@ -4026,8 +4429,7 @@
               "target": 2
             }
           ],
-          "description": "Solid fills · badge · chip · tag · 3 states",
-          "mappingMethod": "contrast"
+          "description": "Solid fills · badge · chip · tag · 3 states"
         },
         {
           "name": "text",
@@ -4054,8 +4456,7 @@
               "target": 2
             }
           ],
-          "description": "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled",
-          "mappingMethod": "contrast"
+          "description": "Text hierarchy · base (AAA) · subtle (AA) · muted (AA-large) · disabled"
         },
         {
           "name": "stroke",
@@ -4077,8 +4478,7 @@
               "target": 4
             }
           ],
-          "description": "Borders and dividers · subtle hairline · UI border · focus ring",
-          "mappingMethod": "contrast"
+          "description": "Borders and dividers · subtle hairline · UI border · focus ring"
         },
         {
           "name": "icon",
@@ -4100,8 +4500,7 @@
               "target": 2
             }
           ],
-          "description": "Icon fills · default (AA) · subtle (AA-large) · disabled",
-          "mappingMethod": "contrast"
+          "description": "Icon fills · default (AA) · subtle (AA-large) · disabled"
         },
         {
           "name": "button",
@@ -4133,8 +4532,7 @@
               "target": 2
             }
           ],
-          "description": "Button fills · 5 interaction states · default → hover → active → selected → disabled",
-          "mappingMethod": "contrast"
+          "description": "Button fills · 5 interaction states · default → hover → active → selected → disabled"
         },
         {
           "name": "link",
@@ -4156,8 +4554,7 @@
               "target": 3.5
             }
           ],
-          "description": "Inline links · default · hover · visited",
-          "mappingMethod": "contrast"
+          "description": "Inline links · default · hover · visited"
         },
         {
           "name": "overlay",
@@ -4169,18 +4566,17 @@
               "target": 14
             }
           ],
-          "description": "Modal scrim · darkest achievable from palette hue",
-          "mappingMethod": "contrast"
+          "description": "Modal scrim · darkest achievable from palette hue"
         }
       ],
       "themes": [
         {
           "name": "Light",
-          "bg": "FFFFFF"
+          "bg": "#FFFFFF"
         },
         {
           "name": "Dark",
-          "bg": "0F172A"
+          "bg": "#0F172A"
         }
       ]
     }

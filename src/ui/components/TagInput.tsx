@@ -28,6 +28,25 @@ export function TagInput({ values = [], onChange, placeholder }: TagInputProps) 
     setInputValue("");
   };
 
+  const addTags = (text: string) => {
+    const parsed = text
+      .split(/[,\s]+/)
+      .map((v) => parseInt(v.trim(), 10))
+      .filter((v) => !isNaN(v) && v >= 0 && v <= 100);
+    if (parsed.length === 0) return;
+    const next = [...new Set([...safeValues, ...parsed])].sort((a, b) => a - b);
+    onChange(next);
+    setInputValue("");
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData("text");
+    if (/[,\s]/.test(pasted.trim())) {
+      e.preventDefault();
+      addTags(pasted);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === "," || e.key === " ") {
       e.preventDefault();
@@ -50,6 +69,7 @@ export function TagInput({ values = [], onChange, placeholder }: TagInputProps) 
         placeholder={safeValues.length === 0 ? placeholder : ""}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         onBlur={() => {
           if (inputValue.trim()) {
             addTag(inputValue);
