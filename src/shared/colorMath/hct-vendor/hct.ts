@@ -137,6 +137,7 @@ export class Hct {
 
   /** Sets a property of the Hct object. */
   setValue(propertyName: string, value: number) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this as any)[propertyName] = value;
   }
 
