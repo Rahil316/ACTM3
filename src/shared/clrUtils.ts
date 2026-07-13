@@ -2,6 +2,9 @@
 import type { Role } from "./types";
 import type { EngineInput } from "./clrEngine";
 import type { EngineResult } from "./exportEng/types";
+import { contrastRatio } from "./colorMath";
+
+export { contrastRatio } from "./colorMath";
 
 /** Matches the [color] placeholder in dynamic token refs. */
 export const COLOR_PLACEHOLDER_RE = /\[color\]/i;
@@ -204,23 +207,6 @@ export function srgbLinearize(v: number): number {
 export function srgbDelinearize(v: number): number {
   const c = v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
   return Math.max(0, Math.min(255, Math.round(c * 255)));
-}
-
-export function relLum(hex: string): number | null {
-  const rgb = hexToRgb(hex);
-  if (!rgb) return null;
-  const [r, g, b] = rgb.map(srgbLinearize);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-export function contrastRatio(hex1: string, hex2: string): number | null {
-  const n1 = normalizeHex(hex1),
-    n2 = normalizeHex(hex2);
-  if (!n1 || !n2) return null;
-  const l1 = relLum(n1),
-    l2 = relLum(n2);
-  if (l1 === null || l2 === null) return null;
-  return Number(((Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)).toFixed(2));
 }
 
 export function shortestHueDiff(current: number, target: number): number {
