@@ -5,8 +5,8 @@
   "main": "code.js",
   "scripts": {
     "_comment_build": "── Build ────────────────────────────────────────────────────────────",
-    "build": "tsc --noEmit && eslint src/ scripts/ && tsx scripts/build-presets.ts && node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && node scripts/plugin.js dist",
-    "build:release": "tsc --noEmit && eslint src/ scripts/ && tsx scripts/build-presets.ts --release && node -e \"require('fs').rmSync('dist-release',{recursive:true,force:true})\" && VITE_OUT_DIR=dist-release vite build && node scripts/plugin.js dist-release --manifest",
+    "build": "tsc --noEmit && eslint src/ scripts/ && tsx scripts/build-presets.ts && vite build && node scripts/plugin.js dist",
+    "build:release": "tsc --noEmit && eslint src/ scripts/ && tsx scripts/build-presets.ts --release && VITE_OUT_DIR=dist-release vite build && node scripts/plugin.js dist-release --release",
     "_comment_dev": "── Dev ──────────────────────────────────────────────────────────────",
     "dev": "VITE_DEV=true vite",
     "_comment_watch": "── Watch ────────────────────────────────────────────────────────────",
@@ -15,15 +15,10 @@
     "_comment_theme": "── Theme ────────────────────────────────────────────────────────────",
     "theme:gen": "echo 'Theme CSS is now source-controlled in src/ui/theme/theme2.0/ — edit directly or regenerate from the plugin'",
     "_comment_qa": "── QA ───────────────────────────────────────────────────────────────",
-    "test": "vitest run",
-    "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "check": "npm run typecheck && npm run lint && npm run test",
-    "_comment_storybook": "── Storybook ────────────────────────────────────────────────────────",
-    "storybook": "storybook dev -p 6006",
-    "build:storybook": "storybook build"
+    "check": "npm run typecheck && npm run lint"
   },
   "author": "",
   "license": "",
@@ -39,17 +34,9 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^5.2.1",
     "@eslint/js": "^9.39.4",
     "@figma/eslint-plugin-figma-plugins": "*",
     "@figma/plugin-typings": "^1.124.0",
-    "@storybook/addon-a11y": "^10.4.1",
-    "@storybook/addon-docs": "^10.4.1",
-    "@storybook/addon-mcp": "^0.6.0",
-    "@storybook/react-vite": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^25.9.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
@@ -57,17 +44,12 @@
     "autoprefixer": "^10.5.0",
     "esbuild": "^0.25.0",
     "eslint": "^9.39.4",
-    "eslint-plugin-storybook": "^10.4.1",
-    "jsdom": "^29.1.1",
-    "playwright": "^1.60.0",
     "prettier": "^3.8.3",
-    "storybook": "^10.4.1",
     "tailwindcss": "^3.4.19",
     "tsx": "^4.22.3",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.59.4",
     "vite": "^7.3.6",
-    "vite-plugin-singlefile": "^2.0.2",
-    "vitest": "^4.1.7"
+    "vite-plugin-singlefile": "^2.0.2"
   }
 }

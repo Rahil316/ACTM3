@@ -103,7 +103,7 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
       const rolesRecord: Record<string, Role> = {};
       (projectStore.roles ?? []).forEach((r, i) => { rolesRecord[String(i)] = r; });
       const exportConfig = { ...projectStore, roles: rolesRecord } as Parameters<typeof buildExportBundle>[1];
-      const files = buildExportBundle(result, exportConfig, formats, projectStore as unknown as Record<string, unknown>, pm.timestamp as number | undefined);
+      const files = buildExportBundle(result, exportConfig, formats, projectStore as unknown as Record<string, unknown>, pm.timestamp as number);
       for (const f of files) {
         if (f.content === "" && f.path.endsWith(".csv")) {
           f.content = ExportFormatter.toCSV(result, exportConfig);

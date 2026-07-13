@@ -106,16 +106,16 @@ const nclarity: Preset = {
     // ── Colors ──────────────────────────────────────────────────────────────
     colors: [
       // Brand
-      { _id: NC_IDS.brandPrimary,   name: "Brand/Primary",   shorthand: "b/p", value: "0E9CA6" },
+      { _id: NC_IDS.brandPrimary, name: "Brand/Primary", shorthand: "b/p", value: "0E9CA6" },
       { _id: NC_IDS.brandSecondary, name: "Brand/Secondary", shorthand: "b/s", value: "F2B01E" },
       // Status
-      { _id: NC_IDS.statusSuccess,   name: "Status/Success",   shorthand: "st/ss", value: "34C759" },
-      { _id: NC_IDS.statusWarning,   name: "Status/Warning",   shorthand: "st/wr", value: "FF9F0A" },
-      { _id: NC_IDS.statusDanger,    name: "Status/Danger",    shorthand: "st/dg", value: "FF453A" },
-      { _id: NC_IDS.statusInfo,      name: "Status/Info",      shorthand: "st/if", value: "32ADE6" },
+      { _id: NC_IDS.statusSuccess, name: "Status/Success", shorthand: "st/ss", value: "34C759" },
+      { _id: NC_IDS.statusWarning, name: "Status/Warning", shorthand: "st/wr", value: "FF9F0A" },
+      { _id: NC_IDS.statusDanger, name: "Status/Danger", shorthand: "st/dg", value: "FF453A" },
+      { _id: NC_IDS.statusInfo, name: "Status/Info", shorthand: "st/if", value: "32ADE6" },
       { _id: NC_IDS.statusAttention, name: "Status/Attention", shorthand: "st/at", value: "FFD60A" },
       // Gray
-      { _id: NC_IDS.grayCool,    name: "Gray/Cool",    shorthand: "gr/cl", value: "676D6F" },
+      { _id: NC_IDS.grayCool, name: "Gray/Cool", shorthand: "gr/cl", value: "676D6F" },
       { _id: NC_IDS.grayNeutral, name: "Gray/Neutral", shorthand: "gr/nu", value: "8E8E93" },
       // Spare — raw values + alpha only, not referenced in any role
       { _id: NC_IDS.spare1, name: "Spare/1", shorthand: "sp/1", value: "458AD3" },
@@ -232,10 +232,10 @@ const nclarity: Preset = {
       // for the matching status color, not the entire palette.
       // Role shorthands use "r/" prefix to avoid colliding with color shorthands
       // (color st/wr vs role r/wr, etc).
-      statusRole("status/success",   "s/su", NC_IDS.statusSuccess),
-      statusRole("status/warning",   "s/wr", NC_IDS.statusWarning),
-      statusRole("status/danger",    "s/dg", NC_IDS.statusDanger),
-      statusRole("status/info",      "s/if", NC_IDS.statusInfo),
+      statusRole("status/success", "s/su", NC_IDS.statusSuccess),
+      statusRole("status/warning", "s/wr", NC_IDS.statusWarning),
+      statusRole("status/danger", "s/dg", NC_IDS.statusDanger),
+      statusRole("status/info", "s/if", NC_IDS.statusInfo),
       statusRole("status/attention", "s/at", NC_IDS.statusAttention),
     ],
 

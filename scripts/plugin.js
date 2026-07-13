@@ -1,19 +1,24 @@
 // Builds src/figma/index.ts → <outDir>/scripts.js via esbuild (one-shot).
 //
 // Usage:
-//   node scripts/plugin.js [outDir] [--manifest]
+//   node scripts/plugin.js [outDir] [--release]
 //
 //   outDir      output directory relative to project root  (default: dist)
-//   --manifest  write manifest.json into outDir (release builds only)
+//   --release   enables minification (manifest.json is hand-managed, not written here)
 
 const esbuild = require('esbuild');
 const path    = require('path');
 const fs      = require('fs');
 
-const args          = process.argv.slice(2);
-const outDirName    = args.find(a => !a.startsWith('--')) || 'dist';
-const writeManifest = args.includes('--manifest');
-const isRelease     = writeManifest;
+const KNOWN_FLAGS = ['--release'];
+
+const args       = process.argv.slice(2);
+const outDirName = args.find(a => !a.startsWith('--')) || 'dist';
+const isRelease  = args.includes('--release');
+
+for (const flag of args.filter(a => a.startsWith('--') && !KNOWN_FLAGS.includes(a))) {
+  console.warn(`[plugin.js] warning: unrecognized flag "${flag}" — ignored`);
+}
 
 const root   = path.resolve(__dirname, '..');
 const outDir = path.resolve(root, outDirName);
@@ -31,12 +36,6 @@ const esbuildConfig = {
   define:   { __RELEASE__: String(isRelease) },
   ...(isRelease && { drop: ['debugger'], pure: ['console.log'], minify: true }),
 };
-
-function emitManifest() {
-  const src  = JSON.parse(fs.readFileSync(path.resolve(root, 'manifest.json'), 'utf8'));
-  const dist = { ...src, main: 'scripts.js', ui: 'ui.html' };
-  fs.writeFileSync(path.resolve(outDir, 'manifest.json'), JSON.stringify(dist, null, 2));
-}
 
 function printSummary() {
   function fmtSize(b) {
@@ -72,11 +71,7 @@ function printSummary() {
 async function run() {
   await esbuild.build(esbuildConfig);
   console.log(`✓ ${outDirName}/scripts.js built`);
-  if (writeManifest) {
-    emitManifest();
-    console.log(`✓ ${outDirName}/manifest.json written`);
-    printSummary();
-  }
+  if (isRelease) printSummary();
 }
 
 run().catch(e => { console.error(e); process.exit(1); });

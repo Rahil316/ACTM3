@@ -7,6 +7,8 @@ import { Badge } from "../../../components/Badge";
 import { EmptyState } from "../../../components/EmptyState";
 import { SectionLabel, HelperText, Mono, Caption, PageTitle } from "../../../components/typography";
 import { IconCheck } from "../../../components/icons";
+import { Checkbox } from "../../../components/Checkbox";
+import { Input } from "../../../components/Input";
 import type { SyncPreview, StructuralChange, ExistingCollection, SyncScope } from "../../../types/messages";
 import type { RunDialogTab } from "../useRunDialogState";
 
@@ -313,16 +315,8 @@ function ScopeRow({ checked, onToggle, label, description, collectionName, onNam
   return (
     <div className={`flex items-center gap-2.5 py-2.5 transition-opacity ${dimmed ? "opacity-40" : ""}`}>
       {/* Checkbox */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`shrink-0 w-4 h-4 rounded-[4px] border flex items-center justify-center transition-all cursor-pointer ${
-          checked
-            ? "bg-b-fi-btn-default border-b-fi-btn-default"
-            : "bg-transparent border-n-br-default hover:border-n-br-strong"
-        }`}
-      >
-        {checked && <IconCheck className="w-2.5 h-2.5 text-white" />}
+      <button type="button" onClick={onToggle} className="shrink-0 cursor-pointer">
+        <Checkbox checked={checked} />
       </button>
 
       {/* Label + description */}
@@ -332,13 +326,7 @@ function ScopeRow({ checked, onToggle, label, description, collectionName, onNam
       </div>
 
       {/* Editable collection name */}
-      <input
-        type="text"
-        value={collectionName}
-        onChange={(e) => onNameChange(e.target.value)}
-        disabled={dimmed}
-        className="w-[120px] shrink-0 h-6 px-2 text-[11px] font-mono text-n-tx-secondary bg-n-sf-input border border-n-br-default rounded-[6px] focus:outline-none focus:border-n-br-strong focus:bg-n-bg-card disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-right"
-      />
+      <Input type="text" size="table" mono width="auto" value={collectionName} onChange={(e) => onNameChange(e.target.value)} disabled={dimmed} className="w-[120px] shrink-0 text-right" />
     </div>
   );
 }

@@ -261,6 +261,7 @@ for each color:
 - `OKLCH` — perceptual lightness steps with chroma and hue held constant in OKLCH space
 - `Material` — perceptual lightness steps in HCT color space (Google Material 3)
 - `Linear` — linear HSL lightness steps, fixed saturation
+- `Fidelity` — perceptual lightness steps in OKLCH space; chroma held as a fraction of the seed hue's real max-chroma envelope (not a raw value or a guessed taper curve), and the seed's exact hex always appears as one step
 
 ### `_solveDirectMode`
 

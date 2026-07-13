@@ -56,7 +56,8 @@ const presets: Preset[] = [
     id: "ibm-carbon",
     name: "IBM Carbon",
     badge: "Carbon",
-    description: "IBM Carbon enterprise token architecture. Role = semantic layer group. Variation = named slot within that group. All four Carbon themes (White, Gray-10, Gray-90, Gray-100) with full Interactive/Layer/Text/Field/Border/Support coverage.",
+    description:
+      "IBM Carbon enterprise token architecture. Role = semantic layer group. Variation = named slot within that group. All four Carbon themes (White, Gray-10, Gray-90, Gray-100) with full Interactive/Layer/Text/Field/Border/Support coverage.",
     tags: ["ibm", "carbon", "enterprise", "uniform", "10-step"],
     swatches: ["0F62FE", "8D8D8D", "DA1E28", "F1C21B", "198038"],
     config: {
@@ -81,8 +82,9 @@ const presets: Preset[] = [
       tokenCollectionName: "carbon",
 
       scaleSteps: null,
+      canEditRoleVariants: true,
 
-      // Global variations — not used directly (all roles use customVariationList).
+      // Global variations — not used directly (every role defines its own).
       variations: [{ name: "default", shorthand: "default" }],
 
       colors: [
@@ -182,7 +184,7 @@ const presets: Preset[] = [
           shorthand: "focus",
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // $focus — blue focus ring
-            { name: "inset", shorthand: "inset", target: 14.0 },    // $focus-inset — white inset ring on dark fills
+            { name: "inset", shorthand: "inset", target: 14.0 }, // $focus-inset — white inset ring on dark fills
           ],
           description: "Focus ring · default keyboard outline · inset ring on dark fills",
         },

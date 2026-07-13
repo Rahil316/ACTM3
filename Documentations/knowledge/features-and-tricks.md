@@ -2,9 +2,9 @@
 
 ## Core Features
 
-### Scale Mode with 7 Algorithms
+### Scale Mode with 8 Algorithms
 
-Generates a tonal ramp of N steps from a seed hex color. Steps are distributed geometrically in log-luminance so perceptual contrast between adjacent steps is consistent across the full lightness range. Seven algorithms: Natural (recommended), Uniform, Expressive, Symmetric, OKLCH, Material, Linear. The `_scale` Figma variable collection stores the raw ramp.
+Generates a tonal ramp of N steps from a seed hex color. Steps are distributed geometrically in log-luminance so perceptual contrast between adjacent steps is consistent across the full lightness range. Eight algorithms: Natural (recommended), Uniform, Expressive, Symmetric, OKLCH, Material, Linear, Fidelity. The `_scale` Figma variable collection stores the raw ramp.
 
 ### Direct Mode with 5 Solver Modes
 

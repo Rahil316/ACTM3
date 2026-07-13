@@ -163,7 +163,7 @@ export function DroppableGroupHeader({
     <div
       ref={setRef}
       style={{ transform: CSS.Transform.toString(transform ? { ...transform, x: 0 } : null), transition, opacity: isDraggingThis ? 0.4 : 1 }}
-      className={["group flex items-center gap-1.5 px-2 py-1.5 rounded-t-[8px] select-none transition-colors cursor-pointer", isOver && !isDraggingThis ? "bg-b-fi-subtle" : "hover:bg-n-sf-hover"].join(" ")}
+      className={["group flex items-center gap-1.5 px-2 py-1.5 rounded-[8px] select-none transition-colors cursor-pointer", isOver && !isDraggingThis ? "bg-b-fi-subtle" : "hover:bg-n-sf-hover"].join(" ")}
       onClick={onToggle}
     >
       {/* Group drag handle */}

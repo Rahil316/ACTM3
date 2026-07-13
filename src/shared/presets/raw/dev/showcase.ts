@@ -154,7 +154,6 @@ const scaleShowcase: Preset = {
           { name: "overlay", shorthand: "overlay", target: 1.6 }, // hover/focus overlay
         ],
         description: "Page and section backgrounds · 5 depth steps",
-        mappingMethod: "contrast",
       },
 
       // ── Surface ─────────────────────────────────────────────────────────────
@@ -170,7 +169,6 @@ const scaleShowcase: Preset = {
           { name: "scrim", shorthand: "scrim", target: 14.0 }, // modal backdrop
         ],
         description: "Surface elevation stack · sunken → card → popover → modal scrim",
-        mappingMethod: "contrast",
       },
 
       // ── Fill ────────────────────────────────────────────────────────────────
@@ -186,7 +184,6 @@ const scaleShowcase: Preset = {
           { name: "bold", shorthand: "bold", target: 12.0 }, // maximum contrast fill
         ],
         description: "Colored fills · tint → AA → AAA · badges, chips, CTAs",
-        mappingMethod: "contrast",
       },
 
       // ── Text ────────────────────────────────────────────────────────────────
@@ -202,7 +199,6 @@ const scaleShowcase: Preset = {
           { name: "strong", shorthand: "strong", target: 11.5 }, // AAA headings
         ],
         description: "Text hierarchy · disabled → hint → secondary → AA → AAA",
-        mappingMethod: "contrast",
       },
 
       // ── Stroke ──────────────────────────────────────────────────────────────
@@ -218,7 +214,6 @@ const scaleShowcase: Preset = {
           { name: "focus", shorthand: "focus", target: 4.5 }, // keyboard focus ring
         ],
         description: "Borders and dividers · hairline → focus ring",
-        mappingMethod: "contrast",
       },
 
       // ── Status roles — scoped to their own color ────────────────────────────
@@ -290,7 +285,6 @@ const directShowcase: Preset = {
           { name: "scrim", shorthand: "scrim", target: 14.0 }, // modal backdrop
         ],
         description: "Surface elevation · page → card → popover → modal scrim",
-        mappingMethod: "contrast",
       },
 
       // ── Fill ────────────────────────────────────────────────────────────────
@@ -306,7 +300,6 @@ const directShowcase: Preset = {
           { name: "inverse", shorthand: "inverse", target: 14.0 }, // near-maximum fill
         ],
         description: "Solid fills · subtle tint → AA → AAA → inverse",
-        mappingMethod: "contrast",
       },
 
       // ── On/Fill — localBg: dynamic token ref ────────────────────────────────
@@ -328,7 +321,6 @@ const directShowcase: Preset = {
           value: "[color]/fill/default",
         },
         description: "Text / icon on fill · contrast vs fill/default per color · luminance solver",
-        mappingMethod: "contrast",
       },
 
       // ── Text ────────────────────────────────────────────────────────────────
@@ -344,7 +336,6 @@ const directShowcase: Preset = {
           { name: "strong", shorthand: "strong", target: 11.5 },
         ],
         description: "Text hierarchy · disabled → hint → secondary → AA → AAA",
-        mappingMethod: "contrast",
       },
 
       // ── Border ──────────────────────────────────────────────────────────────
@@ -360,7 +351,6 @@ const directShowcase: Preset = {
           { name: "focus", shorthand: "focus", target: 4.5 },
         ],
         description: "Borders and dividers · hairline → focus ring",
-        mappingMethod: "contrast",
       },
 
       // ── Status roles — scoped + chroma-maximized solver ─────────────────────
@@ -377,7 +367,6 @@ const directShowcase: Preset = {
         ],
         scopedColorIds: [DIRECT_IDS.statusSuccess],
         description: "Success channel · chroma-maximized · scoped to Status/Success",
-        mappingMethod: "contrast",
       },
       {
         name: "status/warning",
@@ -392,7 +381,6 @@ const directShowcase: Preset = {
         ],
         scopedColorIds: [DIRECT_IDS.statusWarning],
         description: "Warning channel · chroma-maximized · scoped to Status/Warning",
-        mappingMethod: "contrast",
       },
       {
         name: "status/danger",
@@ -407,7 +395,6 @@ const directShowcase: Preset = {
         ],
         scopedColorIds: [DIRECT_IDS.statusDanger],
         description: "Danger / error channel · chroma-maximized · scoped to Status/Danger",
-        mappingMethod: "contrast",
       },
       {
         name: "status/info",
@@ -422,7 +409,6 @@ const directShowcase: Preset = {
         ],
         scopedColorIds: [DIRECT_IDS.statusInfo],
         description: "Info channel · chroma-maximized · scoped to Status/Info",
-        mappingMethod: "contrast",
       },
     ],
 

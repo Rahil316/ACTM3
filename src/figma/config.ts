@@ -131,7 +131,6 @@ function _mapRoles(projectStore: ProjectStore, _variations: Variation[]): Role[]
     _id: role._id,
     name: role.name,
     shorthand: role.shorthand || role.name.substring(0, 2).toLowerCase(),
-    mappingMethod: role.mappingMethod === "index" ? "index" : "contrast",
     variations: role.variations ?? null,
     scaleAlgorithm: role.scaleAlgorithm || undefined,
     solverMode: role.solverMode || undefined,

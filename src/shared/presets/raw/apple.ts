@@ -67,8 +67,9 @@ const presets: Preset[] = [
       tokenCollectionName: "semantic-colors",
 
       scaleSteps: null,
+      canEditRoleVariants: true,
 
-      // Global variations — not used directly (all roles use customVariationList).
+      // Global variations — not used directly (every role defines its own).
       variations: [{ name: "default", shorthand: "default", target: 1 }],
 
       colors: [

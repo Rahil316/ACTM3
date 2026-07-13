@@ -108,7 +108,7 @@ Open **Settings** via the gear icon in the top-right toolbar. Settings is a full
 - On (default): all colors use the single global algorithm selector.
 - Off: each color card shows its own algorithm or solver mode selector.
 
-**Algorithm** (Scale mode) — Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear.
+**Algorithm** (Scale mode) — Natural, Uniform, Expressive, Symmetric, OKLCH, Material, Linear, Fidelity.
 
 **Solver** (Direct mode, global) — Natural, Constant Chroma, Symmetric, Hue Locked, Max Chroma.
 
