@@ -10,7 +10,6 @@ All commands are run from the project root via `npm run <command>`.
 |---|---|
 | `build` | typecheck → lint → theme CSS → presets (with dev presets) → UI bundle via Vite → figma bundle via esbuild → `dist/` |
 | `build:release` | Same pipeline, release mode: dev presets excluded, `__RELEASE__=true` strips dev overlay + console.logs, writes `manifest.json` → `dist-release/` |
-| `build:storybook` | Builds Storybook as a static site |
 
 ---
 
@@ -36,21 +35,10 @@ All commands are run from the project root via `npm run <command>`.
 
 | Command | What it does |
 |---|---|
-| `test` | Run all tests once via Vitest |
-| `test:watch` | Run tests in watch mode — re-runs affected tests on save |
 | `typecheck` | `tsc --noEmit` only — no output files written |
 | `lint` | ESLint across the whole project |
 | `lint:fix` | ESLint with auto-fix |
-| `check` | `typecheck` + `lint` + `test` in sequence — run before committing |
-
----
-
-## Storybook
-
-| Command | What it does |
-|---|---|
-| `storybook` | Storybook dev server on port 6006 |
-| `build:storybook` | Build static Storybook |
+| `check` | `typecheck` + `lint` in sequence — run before committing |
 
 ---
 
