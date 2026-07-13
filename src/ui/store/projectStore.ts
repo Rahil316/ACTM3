@@ -298,7 +298,7 @@ export function makeBootstrapState(): ProjectStore {
     tokenCollectionName: "color tokens",
     scaleSteps: null,
     variations,
-    canEditRoleVariants: false,
+    canEditRoleVariants: true,
     colors: [
       { _id: generateId(), name: "Primary", shorthand: "pr", value: "#0066FF", description: "" },
       { _id: generateId(), name: "Gray", shorthand: "gr", value: "#6B7280", description: "" },

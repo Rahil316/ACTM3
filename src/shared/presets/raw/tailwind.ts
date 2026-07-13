@@ -49,7 +49,8 @@ const presets: Preset[] = [
     id: "tailwind-css",
     name: "Tailwind CSS",
     badge: "TW",
-    description: "Tailwind's 11-stop palette with a semantic layer on top. Role = use case (background, border, fill, text, status). Variation = intensity/state within that role. Collection names match Tailwind conventions.",
+    description:
+      "Tailwind's 11-stop palette with a semantic layer on top. Role = use case (background, border, fill, text, status). Variation = intensity/state within that role. Collection names match Tailwind conventions.",
     tags: ["tailwind", "utility", "11-step", "css", "react", "nextjs"],
     swatches: ["64748B", "3B82F6", "8B5CF6", "F43F5E"],
     config: {
@@ -73,8 +74,9 @@ const presets: Preset[] = [
       scaleCollectionName: "palette",
       tokenCollectionName: "tokens",
       scaleSteps: null,
+      canEditRoleVariants: true,
 
-      // Global variations — not used directly (all roles use custom variation arrays).
+      // Global variations — not used directly (every role defines its own).
       variations: [{ name: "default", shorthand: "default", target: 1 }],
 
       colors: [

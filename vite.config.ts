@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const pkg = require('./package.json');
 
 const isDev     = process.env.VITE_DEV === 'true';
 const isRelease = process.env.VITE_OUT_DIR === 'dist-release';
@@ -24,6 +28,7 @@ export default defineConfig({
   // Inject __RELEASE__ so tree-shaking removes dev-only code in release builds
   define: {
     __RELEASE__: isRelease,
+    __APP_VERSION__: JSON.stringify(isRelease ? pkg.version : `Beta ${pkg.version}`),
   },
   server: {
     port: 3000,

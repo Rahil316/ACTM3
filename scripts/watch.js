@@ -4,19 +4,26 @@
 //
 // Usage:
 //   node scripts/watch.js [--release]
-//     --release   writes to dist-release, enables minification, emits manifest
+//     --release   writes to dist-release, enables minification (manifest.json is hand-managed, not written here)
 
 const esbuild = require('esbuild');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-const isRelease = process.argv.includes('--release');
+const KNOWN_FLAGS = ['--release'];
+
+const argv = process.argv.slice(2);
+const isRelease = argv.includes('--release');
 const outDirName = isRelease ? 'dist-release' : 'dist';
 const lbl = isRelease ? 'watch:release' : 'watch';
 const root = path.resolve(__dirname, '..');
 const outDir = path.resolve(root, outDirName);
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
+for (const flag of argv.filter(a => a.startsWith('--') && !KNOWN_FLAGS.includes(a))) {
+  console.warn(`[watch.js] warning: unrecognized flag "${flag}" — ignored`);
+}
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -54,12 +61,6 @@ function maybeFlush() {
 
 // ── esbuild (plugin) ─────────────────────────────────────────────────────────
 
-function emitManifest() {
-  const src = JSON.parse(fs.readFileSync(path.resolve(root, 'manifest.json'), 'utf8'));
-  const dist = { ...src, main: 'scripts.js', ui: 'ui.html' };
-  fs.writeFileSync(path.resolve(outDir, 'manifest.json'), JSON.stringify(dist, null, 2));
-}
-
 const esbuildConfig = {
   entryPoints: [path.resolve(root, 'src/figma/index.ts')],
   bundle:   true,
@@ -82,7 +83,6 @@ async function startPlugin() {
         build.onStart(() => markDirty('plugin'));
         build.onEnd((result) => {
           if (result.errors.length === 0) {
-            if (isRelease) emitManifest();
             markDone('plugin', null);
           } else {
             markDone('plugin', `plugin: ${result.errors.length} error(s)`);
@@ -91,7 +91,6 @@ async function startPlugin() {
       },
     }],
   });
-  if (isRelease) emitManifest();
   await ctx.watch();
 }
 

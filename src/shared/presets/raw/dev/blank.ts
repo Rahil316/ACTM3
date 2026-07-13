@@ -30,6 +30,7 @@ const presets: Preset[] = [
       tokenCollectionName: "color tokens",
 
       scaleSteps: null,
+      canEditRoleVariants: false,
 
       // 5 named variations covering the full perceptual range.
       // These names work for any role — background, border, text, or fill.

@@ -59,7 +59,8 @@ const presets: Preset[] = [
     id: "shopify-polaris",
     name: "Shopify Polaris",
     badge: "Polaris",
-    description: "Shopify Polaris commerce token architecture. Role = semantic group (background, surface, text, border, icon, action, status). Variation = named slot. Brand/Info/Success/Caution/Critical/Magic channels with full interaction state coverage.",
+    description:
+      "Shopify Polaris commerce token architecture. Role = semantic group (background, surface, text, border, icon, action, status). Variation = named slot. Brand/Info/Success/Caution/Critical/Magic channels with full interaction state coverage.",
     tags: ["shopify", "polaris", "commerce", "adaptive", "ecommerce"],
     swatches: ["303ADE", "8C9196", "007B5E", "916A00", "CC1515", "7B2EA8"],
     config: {
@@ -84,8 +85,9 @@ const presets: Preset[] = [
       tokenCollectionName: "color",
 
       scaleSteps: null,
+      canEditRoleVariants: true,
 
-      // Global variations — not used directly (all roles use customVariationList).
+      // Global variations — not used directly (every role defines its own).
       variations: [{ name: "default", shorthand: "default" }],
 
       colors: [

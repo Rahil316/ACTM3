@@ -285,10 +285,10 @@ function RolesTab() {
   return (
     <div className="flex flex-col gap-3">
       <SettingsCard>
-        <SectionLabel>Role Defaults</SectionLabel>
+        <SectionLabel>Role Variations</SectionLabel>
         <PanelRow
-          label="Custom Variation Names for each role"
-          description="Allow each role to define its own variation names."
+          label="Custom Variations per role"
+          description="Allow each role to have its own set of variation names and values."
           control={
             <Toggle
               on={projectStore.canEditRoleVariants}
@@ -305,7 +305,7 @@ function RolesTab() {
         <HelperText>Define the variation levels applied across all roles.</HelperText>
         {variations.length > 0 && (
           <>
-            <ListHeader columns={["Name", "Short", "Target"]} withDragHandle withRemoveButton />
+            <ListHeader columns={["Name", "Short", "Target"]} withRemoveButton />
             {variations.map((v, i) => (
               <ListRow key={v._id || i} onRemove={() => removeVariation(i)} removeDisabled={variations.length <= 1} removeAriaLabel="Remove variation">
                 <Input size="sm" value={v.name ?? ""} placeholder="Name" onChange={(e) => setVariation(i, "name", e.target.value)} />
@@ -352,7 +352,8 @@ function PluginTab() {
         <SectionLabel>About</SectionLabel>
         <div className="space-y-1">
           <CardTitle>Token Wand</CardTitle>
-          <HelperText>Build accessible, scalable color systems for Figma.</HelperText>
+          <HelperText>Point, click, and <em>poof</em> — a full color system appears.</HelperText>
+          <HelperText className="font-mono">Version {__APP_VERSION__}</HelperText>
         </div>
       </SettingsCard>
     </div>

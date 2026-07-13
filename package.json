@@ -5,8 +5,8 @@
   "main": "code.js",
   "scripts": {
     "_comment_build": "── Build ────────────────────────────────────────────────────────────",
-    "build": "tsc --noEmit && eslint src/ scripts/ && tsx scripts/build-presets.ts && node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && node scripts/plugin.js dist",
-    "build:release": "tsc --noEmit && eslint src/ scripts/ && tsx scripts/build-presets.ts --release && node -e \"require('fs').rmSync('dist-release',{recursive:true,force:true})\" && VITE_OUT_DIR=dist-release vite build && node scripts/plugin.js dist-release --manifest",
+    "build": "tsc --noEmit && eslint src/ scripts/ && tsx scripts/build-presets.ts && vite build && node scripts/plugin.js dist",
+    "build:release": "tsc --noEmit && eslint src/ scripts/ && tsx scripts/build-presets.ts --release && VITE_OUT_DIR=dist-release vite build && node scripts/plugin.js dist-release --release",
     "_comment_dev": "── Dev ──────────────────────────────────────────────────────────────",
     "dev": "VITE_DEV=true vite",
     "_comment_watch": "── Watch ────────────────────────────────────────────────────────────",
