@@ -31,7 +31,6 @@ export interface ModeDriftItem {
   role: string;
   variation: string;
   modes: { theme: string; ratio: number | null; rating: ContrastRating | null }[];
-  ratingChanges: boolean;
 }
 
 export interface InversionItem {
@@ -100,6 +99,11 @@ export function computeHealthReport(result: EngineResult, themes: { name: string
   if (themes.length > 1) {
     for (const [, entries] of byKey) {
       if (entries.length < 2) continue;
+      // "First" here just means array order (Map insertion order, i.e. theme
+      // authoring order) — not a canonical baseline like "Light". Fine for
+      // detecting *that* drift exists (the comparison is symmetric), but if a
+      // future feature needs to say *which* theme is the outlier, this will
+      // need an explicit baseline theme instead of array position.
       const ratings = entries.map((e) => e.entry.contrast.rating);
       const firstRating = ratings[0];
       const ratingChanges = ratings.some((r) => r !== firstRating);
@@ -115,7 +119,6 @@ export function computeHealthReport(result: EngineResult, themes: { name: string
             ratio: e.entry.contrast.ratio,
             rating: e.entry.contrast.rating,
           })),
-          ratingChanges: true,
         });
       }
     }
@@ -143,6 +146,12 @@ export function computeHealthReport(result: EngineResult, themes: { name: string
 
   // D. Name collisions — token names must be unique within the project.
   // Derived purely from project structure: color × role × variation name combos.
+  // Intentionally keyed by the joined "/" display string, not the (color, role,
+  // variation) tuple: a collision here means two structurally different combos
+  // stringify to the identical Figma variable path, which is exactly the
+  // condition this detector exists to catch — Figma would silently overwrite
+  // one variable with the other. Keying by the tuple instead would make this
+  // detector never fire, since tuples are unique by construction.
   const nameCollisions: NameCollisionItem[] = [];
   const nameMap = new Map<string, { color: string; role: string; variation: string }[]>();
   for (const color of colors) {
@@ -159,7 +168,7 @@ export function computeHealthReport(result: EngineResult, themes: { name: string
     if (dupes.length > 1) nameCollisions.push({ tokenName, duplicates: dupes });
   }
 
-  const issueCount = adjustments.length + nameCollisions.length + modeDrift.filter((d) => d.ratingChanges).length + inversions.length;
+  const issueCount = adjustments.length + nameCollisions.length + modeDrift.length + inversions.length;
 
   return {
     adjustments,

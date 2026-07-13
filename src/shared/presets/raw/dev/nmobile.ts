@@ -1,12 +1,12 @@
 /**
  * nMobile — Mobile app preset built around a vibrant teal accent.
  *
- * Scale mode · Light + Dark · 13 colors · 9 roles
+ * Scale mode (Fidelity algorithm) · Light + Dark · 14 colors · 9 roles
  *
  * Colors:
  *   Teal (brand accent) · Secondary (indigo)
  *   Success · Error · Warning · Info · Attention
- *   Gray (flat neutral) · Neutral (teal-tinted, makes Teal pop via hue harmony)
+ *   Gray (flat neutral) · Neutral (cool blue-gray, complements Teal without duplicating it)
  *   Spare/1–5 (raw values only, no roles — source collection)
  *
  * Roles:
@@ -73,7 +73,7 @@ const nmobile: Preset = {
 
     // ── Mode ────────────────────────────────────────────────────────────────
     pluginMode: "scale",
-    scaleAlgorithm: "Natural",
+    scaleAlgorithm: "Fidelity",
     scaleLength: 21,
     useUniformAlgorithm: true,
     algorithmScopeLevel: "color",
@@ -89,7 +89,7 @@ const nmobile: Preset = {
     // ── Output ──────────────────────────────────────────────────────────────
     includeSourceColors: true,
     sourceCollectionName: "nmobile/source",
-    alphaValues: [5, 10, 20, 30, 50, 75, 90],
+    alphaValues: [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 85, 90, 95],
     includeColorScalesCollection: true,
     includeDescriptions: true,
     scaleCollectionName: "nmobile/scale",
@@ -106,7 +106,7 @@ const nmobile: Preset = {
       { _id: NM_IDS.teal, name: "Teal", shorthand: "tl", value: "14B8A6" },
       { _id: NM_IDS.secondary, name: "Secondary", shorthand: "id", value: "6366F1" },
       { _id: NM_IDS.gray, name: "Gray", shorthand: "gy", value: "71717A" },
-      { _id: NM_IDS.neutral, name: "Neutral", shorthand: "nt", value: "5B7B7A" },
+      { _id: NM_IDS.neutral, name: "Neutral", shorthand: "nt", value: "71787E" },
       { _id: NM_IDS.success, name: "Success", shorthand: "su", value: "22C55E" },
       { _id: NM_IDS.error, name: "Error", shorthand: "er", value: "EF4444" },
       { _id: NM_IDS.warning, name: "Warning", shorthand: "wr", value: "F59E0B" },
@@ -129,13 +129,13 @@ const nmobile: Preset = {
         name: "bg",
         shorthand: "bg",
         variations: [
-          { name: "App", shorthand: "1", target: 1.0 },
-          { name: "Surface", shorthand: "2", target: 1.06 },
-          { name: "Raised", shorthand: "3", target: 1.12 },
-          { name: "Overlay", shorthand: "4", target: 1.25 },
-          { name: "Scrim", shorthand: "5", target: 12.0 },
+          { name: "Sunken", shorthand: "1", target: 1.03 },
+          { name: "App", shorthand: "2", target: 1.0 },
+          { name: "Surface", shorthand: "3", target: 1.05 },
+          { name: "Raised", shorthand: "4", target: 1.1 },
+          { name: "Overlay", shorthand: "5", target: 1.15 },
         ],
-        description: "Elevation ladder · app canvas · card surface · raised layer · overlay panel · modal scrim",
+        description: "Elevation ladder · sunken well · app canvas · card surface · raised layer · overlay panel",
       },
 
       // ── TEXT ────────────────────────────────────────────────────────────────

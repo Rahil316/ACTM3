@@ -1,6 +1,6 @@
 import type { EngineResult, ProjectStore } from "../../types/state";
 import { CardTitle, MicroText } from "../../components/typography";
-import { RatingBadge, ScaleStepSlice, SourceColorCard, normalizeHex, getInkMode, inkColor, copyText } from "../../components/preview";
+import { RatingBadge, ScaleStepSlice, normalizeHex, getInkMode, inkColor, copyText } from "../../components/preview";
 import type { ViewMode } from "./ThemePanel";
 
 // ── Scale table view ──────────────────────────────────────────────────────────
@@ -193,8 +193,6 @@ export function ScaleSection({ result, projectStore, groupByStep = false, viewMo
                 <ScaleStepSlice key={stepName} stepName={stepName} stepData={stepData} themeKeys={themeKeys} colorName={color.name} />
               ))}
             </div>
-
-            {(projectStore.alphaValues?.length ?? 0) > 0 && <SourceColorCard color={color} alphaValues={projectStore.alphaValues ?? []} showAlphas />}
           </div>
         );
       })}

@@ -648,7 +648,7 @@
       "name": "nMobile",
       "description": "Mobile app — teal-accented Light and Dark themes with elevation-based backgrounds and scoped status roles.",
       "pluginMode": "scale",
-      "scaleAlgorithm": "Natural",
+      "scaleAlgorithm": "Fidelity",
       "scaleLength": 21,
       "useUniformAlgorithm": true,
       "algorithmScopeLevel": "color",
@@ -667,11 +667,19 @@
       "alphaValues": [
         5,
         10,
+        15,
         20,
+        25,
         30,
+        40,
         50,
+        60,
+        70,
         75,
-        90
+        80,
+        85,
+        90,
+        95
       ],
       "includeColorScalesCollection": true,
       "includeDescriptions": true,
@@ -709,7 +717,7 @@
           "_id": "nm-nt",
           "name": "Neutral",
           "shorthand": "nt",
-          "value": "#5B7B7A"
+          "value": "#71787E"
         },
         {
           "_id": "nm-su",
@@ -778,32 +786,32 @@
           "shorthand": "bg",
           "variations": [
             {
-              "name": "App",
+              "name": "Sunken",
               "shorthand": "1",
+              "target": 1.03
+            },
+            {
+              "name": "App",
+              "shorthand": "2",
               "target": 1
             },
             {
               "name": "Surface",
-              "shorthand": "2",
-              "target": 1.06
+              "shorthand": "3",
+              "target": 1.05
             },
             {
               "name": "Raised",
-              "shorthand": "3",
-              "target": 1.12
+              "shorthand": "4",
+              "target": 1.1
             },
             {
               "name": "Overlay",
-              "shorthand": "4",
-              "target": 1.25
-            },
-            {
-              "name": "Scrim",
               "shorthand": "5",
-              "target": 12
+              "target": 1.15
             }
           ],
-          "description": "Elevation ladder · app canvas · card surface · raised layer · overlay panel · modal scrim"
+          "description": "Elevation ladder · sunken well · app canvas · card surface · raised layer · overlay panel"
         },
         {
           "name": "text",

@@ -68,12 +68,17 @@ export function RunDialog() {
 
   if (!isOpen) return null;
 
-  const { syncPreview, previewItems, structuralChanges, conflicts, decisions, existingCollections } = dialog;
+  const { syncPreview, previewItems, structuralChanges, conflicts, decisions, existingCollections, isStale } = dialog;
 
+  // isChecking: no result yet at all (initial load). isStale: we have a
+  // result, but the project has changed since and a re-check is pending —
+  // both states render the same "checking" skeleton and disable sync so the
+  // user never acts on counts that no longer match the live config.
   const isChecking = syncPreview === null;
-  const nothingToSync = syncPreview !== null && syncPreview.total === 0 && conflicts.length === 0;
+  const isCheckingOrStale = isChecking || isStale;
+  const nothingToSync = !isCheckingOrStale && syncPreview!.total === 0 && conflicts.length === 0;
 
-  const syncLabel = isChecking ? "Checking…" : nothingToSync ? "Up to Date" : getSyncLabel(syncPreview!);
+  const syncLabel = isCheckingOrStale ? "Checking…" : nothingToSync ? "Up to Date" : getSyncLabel(syncPreview!);
 
   const configSummary = `${projectStore.colors.length} color${projectStore.colors.length !== 1 ? "s" : ""} · ${projectStore.roles.length} role${projectStore.roles.length !== 1 ? "s" : ""} · ${projectStore.themes.length} theme${projectStore.themes.length !== 1 ? "s" : ""} · ${projectStore.pluginMode} mode`;
 
@@ -114,6 +119,8 @@ export function RunDialog() {
             {dialog.activeTab === "summary" && (
               <SummaryTab
                 syncPreview={syncPreview}
+                isChecking={isCheckingOrStale}
+                nothingToSync={nothingToSync}
                 structuralChanges={structuralChanges}
                 existingCollections={existingCollections}
                 conflicts={conflicts}
@@ -132,7 +139,7 @@ export function RunDialog() {
               />
             )}
 
-            {dialog.activeTab === "changes" && <ChangesTab previewItems={previewItems} conflicts={conflicts} decisions={decisions} setDecision={dialog.setDecision} total={syncPreview?.total ?? 0} isChecking={isChecking} initialFilter={changesFilter} />}
+            {dialog.activeTab === "changes" && <ChangesTab previewItems={previewItems} conflicts={conflicts} decisions={decisions} setDecision={dialog.setDecision} total={syncPreview?.total ?? 0} isChecking={isCheckingOrStale} initialFilter={changesFilter} />}
 
             {dialog.activeTab === "health" && <HealthTab initialMetric={healthMetric} />}
           </div>
@@ -140,7 +147,7 @@ export function RunDialog() {
           {/* Footer */}
           <div className="shrink-0 px-3 py-3 border-t border-n-br-default flex gap-2">
             <Button variant="secondary" size="xl" label={isPreviewSelected ? "Update Canvas Preview" : "Preview in Canvas"} onClick={dialog.handleStartPreview} className="flex-1" />
-            <Button variant="primary" size="xl" label={syncLabel} onClick={dialog.handleConfirmRun} disabled={isChecking || nothingToSync} title={isChecking ? "Checking Figma collections…" : nothingToSync ? "All variables are already up to date in Figma" : undefined} className="flex-1" />
+            <Button variant="primary" size="xl" label={syncLabel} onClick={dialog.handleConfirmRun} disabled={isCheckingOrStale || nothingToSync} title={isCheckingOrStale ? "Checking Figma collections…" : nothingToSync ? "All variables are already up to date in Figma" : undefined} className="flex-1" />
           </div>
 
           {/* Conflict resolution sheet — rendered at modal root so Sheet slides within the dialog */}

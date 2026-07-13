@@ -11,24 +11,12 @@ import { Checkbox } from "../../../components/Checkbox";
 import { Input } from "../../../components/Input";
 import type { SyncPreview, StructuralChange, ExistingCollection, SyncScope } from "../../../types/messages";
 import type { RunDialogTab } from "../useRunDialogState";
-
-const STRUCTURAL_TITLE: Record<string, string> = {
-  "mode-direct-to-scale": "Mode change: Direct → Scale",
-  "mode-scale-to-direct": "Mode change: Scale → Direct",
-  "scale-shrunk": "Scale length reduced",
-  "scale-collection-renamed": "Scale collection renamed",
-  "token-collection-renamed": "Token collection renamed",
-  "source-collection-renamed": "Source collection renamed",
-  "source-removed": "Source colors disabled",
-  "alpha-removed": "Alpha tints disabled",
-  "alpha-changed": "Alpha values changed",
-  "scale-collection-removed": "Scale collection disabled",
-};
-
-const ORPHANING_KINDS = new Set(["alpha-removed", "alpha-changed", "scale-shrunk"]);
+import { STRUCTURAL_TITLE, ORPHANING_KINDS, CHIP_BG, type ChipVariant } from "../changeDisplay";
 
 interface SummaryTabProps {
   syncPreview: SyncPreview | null;
+  isChecking: boolean;
+  nothingToSync: boolean;
   structuralChanges: StructuralChange[];
   existingCollections: ExistingCollection[];
   conflicts: { tokenRef: string }[];
@@ -48,6 +36,8 @@ interface SummaryTabProps {
 
 export function SummaryTab({
   syncPreview,
+  isChecking,
+  nothingToSync,
   structuralChanges,
   existingCollections,
   conflicts,
@@ -64,9 +54,6 @@ export function SummaryTab({
   setChangesFilter,
   setHealthMetric,
 }: SummaryTabProps) {
-  const isChecking = syncPreview === null;
-  const nothingToSync = syncPreview !== null && syncPreview.total === 0 && conflicts.length === 0;
-
   function goToChanges(filter: "all" | "create" | "update" | "rename" | "delete") {
     setChangesFilter(filter);
     setActiveTab("changes");
@@ -330,15 +317,6 @@ function ScopeRow({ checked, onToggle, label, description, collectionName, onNam
     </div>
   );
 }
-
-type ChipVariant = "success" | "accent" | "warning" | "danger";
-
-const CHIP_BG: Record<ChipVariant, string> = {
-  success: "bg-s-fi-subtle border-s-br-default hover:ring-1 hover:ring-s-br-default",
-  accent:  "bg-b-fi-subtle border-b-br-default hover:ring-1 hover:ring-b-br-default",
-  warning: "bg-w-fi-subtle border-w-br-default hover:ring-1 hover:ring-w-br-default",
-  danger:  "bg-d-fi-subtle border-d-br-default hover:ring-1 hover:ring-d-br-default",
-};
 
 // ── Stat chip ──────────────────────────────────────────────────────────────────
 

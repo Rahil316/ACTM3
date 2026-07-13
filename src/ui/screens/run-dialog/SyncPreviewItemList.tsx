@@ -6,6 +6,7 @@ import { IconLayers } from "../../components/icons";
 import { Button } from "../../components/Button";
 import { SegmentedControl } from "../../components/SegmentedControl";
 import type { SyncPreviewItem, SyncDecision } from "../../types/messages";
+import { ACTION_VARIANT, ACTION_LABEL, COLLECTION_LABEL } from "./changeDisplay";
 
 type FilterAction = "all" | "create" | "update" | "rename" | "delete";
 
@@ -17,28 +18,6 @@ interface SyncPreviewItemListProps {
   onDecision: (tokenRef: string, decision: SyncDecision) => void;
   initialFilter?: FilterAction;
 }
-
-const ACTION_VARIANT: Record<SyncPreviewItem["action"], "success" | "accent" | "warning" | "danger"> = {
-  create: "success",
-  update: "accent",
-  rename: "warning",
-  "rename+update": "warning",
-  delete: "danger",
-};
-
-const ACTION_LABEL: Record<SyncPreviewItem["action"], string> = {
-  create: "New",
-  update: "Updated",
-  rename: "Renamed",
-  "rename+update": "Renamed",
-  delete: "Removed",
-};
-
-const COLLECTION_LABEL: Record<string, string> = {
-  token: "Token",
-  scale: "Scale",
-  source: "Source",
-};
 
 const FILTER_TABS: { value: FilterAction; label: string }[] = [
   { value: "all", label: "All" },

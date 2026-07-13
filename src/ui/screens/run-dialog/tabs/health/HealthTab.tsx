@@ -101,7 +101,10 @@ function AdjustmentsDetail({ items }: { items: AdjustmentItem[] }) {
 
       <SettingsCard className="!space-y-0 !py-0">
         {visible.map((item, idx) => (
-          <div key={`${item.tokenName}-${item.theme}`} className={`flex items-center gap-2 py-1.5 ${idx < visible.length - 1 ? "border-b border-n-br-hairline" : ""}`}>
+          // Index suffix guards against duplicate keys when tokenName collides
+          // across different color/role/variation combos — exactly the case
+          // the Name Collisions detail (below) is built to detect.
+          <div key={`${item.tokenName}-${item.theme}-${idx}`} className={`flex items-center gap-2 py-1.5 ${idx < visible.length - 1 ? "border-b border-n-br-hairline" : ""}`}>
             <div className="flex-1 min-w-0">
               <Mono className="text-n-tx-secondary truncate">{item.tokenName}</Mono>
               <Caption className="text-n-tx-dim">{item.theme}</Caption>
@@ -154,13 +157,13 @@ function NameCollisionsDetail({ items }: { items: NameCollisionItem[] }) {
 
 function ModeDriftDetail({ items }: { items: ModeDriftItem[] }) {
   const roles = useProjectStore((s) => s.projectStore.roles);
-  const critical = items.filter((i) => i.ratingChanges);
-  if (critical.length === 0) {
+  // items are already filtered to drift cases at computation time (useHealthReport.ts) — no further filter needed here.
+  if (items.length === 0) {
     return <EmptyState icon={<IconSunMoon className="w-5 h-5" />} title="No cross-mode drift" description="All tokens maintain their WCAG rating category across every theme." />;
   }
 
   // Collect all theme names in order of first appearance
-  const themes = Array.from(new Set(critical.flatMap((i) => i.modes.map((m) => m.theme))));
+  const themes = Array.from(new Set(items.flatMap((i) => i.modes.map((m) => m.theme))));
 
   // grid: token col + one col per theme
   const cols = `1fr ${themes.map(() => "80px").join(" ")}`;
@@ -178,14 +181,14 @@ function ModeDriftDetail({ items }: { items: ModeDriftItem[] }) {
       </div>
 
       {/* Data rows */}
-      {critical.map((item, idx) => {
+      {items.map((item, idx) => {
         const byTheme = Object.fromEntries(item.modes.map((m) => [m.theme, m]));
 
         const role = roles.find((r) => r.name === item.role);
         const variationTarget = role?.variations?.find((v) => v.name === item.variation)?.target ?? null;
 
         return (
-          <div key={item.tokenName} className={`grid px-2 py-1.5 items-center gap-2 ${idx % 2 ? "bg-n-bg-app" : ""} ${idx < critical.length - 1 ? "border-b border-n-br-subtle" : ""}`} style={{ gridTemplateColumns: cols }}>
+          <div key={item.tokenName} className={`grid px-2 py-1.5 items-center gap-2 ${idx % 2 ? "bg-n-bg-app" : ""} ${idx < items.length - 1 ? "border-b border-n-br-subtle" : ""}`} style={{ gridTemplateColumns: cols }}>
             <div className="flex flex-col gap-0.5 min-w-0">
               <Mono className="text-n-tx-secondary truncate">{item.tokenName}</Mono>
               <Caption className="text-n-tx-dim">
@@ -307,7 +310,7 @@ export interface MetricTileRowProps {
 
 export function MetricTileRow({ selected, onSelect, onNavigateToHealth }: MetricTileRowProps) {
   const report = useHealthReport();
-  const driftCritical = report ? report.modeDrift.filter((d) => d.ratingChanges).length : 0;
+  const driftCritical = report ? report.modeDrift.length : 0;
 
   const metrics: { key: MetricKey; count: number; total: number; state: TileState }[] = [
     { key: "adjustments", count: report?.adjustments.length ?? 0, total: report?.totalTokens ?? 0, state: !report || report.adjustments.length === 0 ? "good" : "warn" },
@@ -348,7 +351,7 @@ export function HealthTab({ initialMetric }: { initialMetric?: MetricKey }) {
     return <EmptyState icon={<IconActivity className="w-5 h-5" />} title="No health data yet" description="Add at least one color, role, and theme — then run a preview to see quality metrics." />;
   }
 
-  const driftCritical = report.modeDrift.filter((d) => d.ratingChanges).length;
+  const driftCritical = report.modeDrift.length;
   const selectedCount = selected === "adjustments" ? report.adjustments.length : selected === "collisions" ? report.nameCollisions.length : selected === "drift" ? driftCritical : report.inversions.length;
   const desc = selectedCount === 0 ? METRIC_DESCRIPTIONS[selected].good : METRIC_DESCRIPTIONS[selected].issue;
 
