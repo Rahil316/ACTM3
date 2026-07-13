@@ -41,7 +41,7 @@ export function ListRow({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={clsx(
-        'flex items-center gap-1.5',
+        'flex items-center gap-1.5 px-0.5',
         isDragOver && 'border-t-2 border-t-b-br-default',
         className,
       )}
@@ -83,7 +83,7 @@ export function ListHeader({ columns, className, withDragHandle, withRemoveButto
           {col}
         </span>
       ))}
-      {withRemoveButton && <span className="w-[32px] shrink-0" />}
+      {withRemoveButton && <span className="w-[30px] shrink-0" />}
     </div>
   );
 }

@@ -85,8 +85,9 @@ const presets: Preset[] = [
       tokenCollectionName: "color tokens",
 
       scaleSteps: null,
+      canEditRoleVariants: true,
 
-      // Global variations — not used directly (all roles use customVariationList).
+      // Global variations — not used directly (every role defines its own).
       // Defined so the config is valid.
       variations: [{ name: "default", shorthand: "default" }],
 
@@ -168,12 +169,12 @@ const presets: Preset[] = [
           name: "surface",
           shorthand: "surface",
           variations: [
-            { name: "default", shorthand: "default", target: 1.0 },              // --md-sys-color-surface
-            { name: "dim", shorthand: "dim", target: 1.07 },                     // --md-sys-color-surface-dim
-            { name: "bright", shorthand: "bright", target: 1.0 },                // --md-sys-color-surface-bright
-            { name: "on", shorthand: "on", target: 10.0 },                       // --md-sys-color-on-surface
-            { name: "variant", shorthand: "variant", target: 1.2 },              // --md-sys-color-surface-variant
-            { name: "on-variant", shorthand: "on-variant", target: 4.5 },        // --md-sys-color-on-surface-variant
+            { name: "default", shorthand: "default", target: 1.0 }, // --md-sys-color-surface
+            { name: "dim", shorthand: "dim", target: 1.07 }, // --md-sys-color-surface-dim
+            { name: "bright", shorthand: "bright", target: 1.0 }, // --md-sys-color-surface-bright
+            { name: "on", shorthand: "on", target: 10.0 }, // --md-sys-color-on-surface
+            { name: "variant", shorthand: "variant", target: 1.2 }, // --md-sys-color-surface-variant
+            { name: "on-variant", shorthand: "on-variant", target: 4.5 }, // --md-sys-color-on-surface-variant
           ],
           description: "Surface states and text · default · dim · bright · on · variant · on-variant",
         },
@@ -210,8 +211,8 @@ const presets: Preset[] = [
           name: "inverse",
           shorthand: "inverse",
           variations: [
-            { name: "surface", shorthand: "surface", target: 12.0 },             // --md-sys-color-inverse-surface
-            { name: "on-surface", shorthand: "on-surface", target: 1.1 },        // --md-sys-color-inverse-on-surface
+            { name: "surface", shorthand: "surface", target: 12.0 }, // --md-sys-color-inverse-surface
+            { name: "on-surface", shorthand: "on-surface", target: 1.1 }, // --md-sys-color-inverse-on-surface
           ],
           description: "Inverse surface · snackbar/tooltip bg and text",
         },
@@ -248,8 +249,6 @@ const presets: Preset[] = [
           ],
           description: "Outline · interactive border · decorative divider",
         },
-
-
       ],
 
       themes: [

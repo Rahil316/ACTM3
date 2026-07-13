@@ -61,7 +61,6 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const roleCount = useProjectStore((s) => s.projectStore.roles.length);
 
   // Role-level fields — subscribed directly to avoid stale-prop re-render issues
-  const roleMappingMethod = useProjectStore((s) => s.projectStore.roles[idx]?.mappingMethod ?? "contrast");
   const roleScaleAlgorithm = useProjectStore((s) => s.projectStore.roles[idx]?.scaleAlgorithm);
   const roleSolverMode = useProjectStore((s) => s.projectStore.roles[idx]?.solverMode);
   const scopedIds = useProjectStore((s) => s.projectStore.roles[idx]?.scopedColorIds ?? null);
@@ -156,7 +155,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
           header={<span className="text-[12px] font-medium text-n-tx-primary flex-1">Variations ({vars.length})</span>}
         >
           <div className="py-2">
-            <VariationTable variations={vars} canEdit={canEditNames} mappingMethod={roleMappingMethod} idx={idx} scaleLength={scaleLength} globalVariations={globalVariations} />
+            <VariationTable variations={vars} canEdit={canEditNames} idx={idx} scaleLength={scaleLength} globalVariations={globalVariations} />
           </div>
         </Collapsible>
       )}

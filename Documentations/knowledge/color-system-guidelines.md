@@ -91,8 +91,9 @@ Direct mode gives each variation an exact WCAG guarantee. Scale mode gives palet
 | OKLCH      | Perceptually uniform in OKLCH space, preserves source H/C       | Maximum perceptual accuracy, wide-gamut displays         |
 | Material   | HCT-based (CAM16 hue + CIE L\* tone)                            | Android, Wear OS, Material You compliance                |
 | Linear     | Even HSL lightness steps                                        | Quick prototypes; not perceptually uniform               |
+| Fidelity   | OKLCH-based; chroma held as a fraction of the seed hue's real gamut envelope (not a fixed value or a guessed curve); seed's exact hex always appears in the ramp | Brand colors where the seed's own vividness character should carry through the whole scale, especially unusual/highly saturated hues |
 
-When in doubt, use Natural. It produces the most believable results across the widest range of brand colors.
+When in doubt, use Natural. It produces the most believable results across the widest range of brand colors. Reach for Fidelity when the seed color itself must be reproducible in the palette and its particular vividness — not a generic taper — is the point.
 
 ---
 

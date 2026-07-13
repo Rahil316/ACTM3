@@ -82,8 +82,9 @@ const presets: Preset[] = [
       tokenCollectionName: "color",
 
       scaleSteps: null,
+      canEditRoleVariants: true,
 
-      // Single global variation — not used (every role uses customVariationList).
+      // Single global variation — not used (every role defines its own).
       variations: [{ name: "default", shorthand: "default" }],
 
       // ── Key colors ─────────────────────────────────────────────────────────
@@ -434,9 +435,9 @@ const presets: Preset[] = [
           name: "link",
           shorthand: "link",
           variations: [
-            { name: "default", shorthand: "default", target: 4.5 },  // color.link
-            { name: "pressed", shorthand: "pressed", target: 7.0 },  // color.link.pressed
-            { name: "visited", shorthand: "visited", target: 4.5 },  // color.link.visited
+            { name: "default", shorthand: "default", target: 4.5 }, // color.link
+            { name: "pressed", shorthand: "pressed", target: 7.0 }, // color.link.pressed
+            { name: "visited", shorthand: "visited", target: 4.5 }, // color.link.visited
           ],
           description: "color.link — default · pressed · visited link colors",
         },
@@ -446,15 +447,15 @@ const presets: Preset[] = [
           name: "text/accent",
           shorthand: "text/accent",
           variations: [
-            { name: "blue", shorthand: "blue", target: 4.5 },        // color.text.accent.blue
-            { name: "red", shorthand: "red", target: 4.5 },          // color.text.accent.red
-            { name: "orange", shorthand: "orange", target: 4.5 },    // color.text.accent.orange
-            { name: "yellow", shorthand: "yellow", target: 3.0 },    // color.text.accent.yellow (light hue)
-            { name: "green", shorthand: "green", target: 4.5 },      // color.text.accent.green
-            { name: "purple", shorthand: "purple", target: 4.5 },    // color.text.accent.purple
-            { name: "teal", shorthand: "teal", target: 4.5 },        // color.text.accent.teal
-            { name: "magenta", shorthand: "magenta", target: 4.5 },  // color.text.accent.magenta
-            { name: "gray", shorthand: "gray", target: 4.5 },        // color.text.accent.gray
+            { name: "blue", shorthand: "blue", target: 4.5 }, // color.text.accent.blue
+            { name: "red", shorthand: "red", target: 4.5 }, // color.text.accent.red
+            { name: "orange", shorthand: "orange", target: 4.5 }, // color.text.accent.orange
+            { name: "yellow", shorthand: "yellow", target: 3.0 }, // color.text.accent.yellow (light hue)
+            { name: "green", shorthand: "green", target: 4.5 }, // color.text.accent.green
+            { name: "purple", shorthand: "purple", target: 4.5 }, // color.text.accent.purple
+            { name: "teal", shorthand: "teal", target: 4.5 }, // color.text.accent.teal
+            { name: "magenta", shorthand: "magenta", target: 4.5 }, // color.text.accent.magenta
+            { name: "gray", shorthand: "gray", target: 4.5 }, // color.text.accent.gray
           ],
           description: "color.text.accent — colored label text for tags, lozenges, and search highlights",
         },

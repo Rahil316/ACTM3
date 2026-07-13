@@ -1,5 +1,5 @@
 import type { EngineResult, ExportConfig, ExportFile } from "./types";
-import { _slug } from "./helpers";
+import { _slug, _projectSlug, _exportTimestamp } from "./helpers";
 import { fmtCSS } from "./fmtCSS";
 import { fmtSCSS } from "./fmtSCSS";
 import { fmtTailwind } from "./fmtTailwind";
@@ -9,44 +9,38 @@ import { fmtSwift } from "./fmtSwift";
 import { fmtAndroid } from "./fmtAndroid";
 import { fmtReactNative } from "./fmtReactNative";
 
-// Maps a theme name to the correct Android resource qualifier directory.
+// Maps each theme name to a unique Android resource qualifier directory.
 // Android only natively supports values/ (default) and values-night/ (dark).
 // Any other theme name gets a sanitised qualifier that must be applied programmatically.
-function _androidQualifier(themeName: string, index: number): string {
-  const lower = themeName.toLowerCase();
-  if (index === 0) return "values";          // first theme is always the default
-  if (lower === "dark") return "values-night";
-  return `values-${_slug(themeName)}`;       // custom — comment in the XML explains it
-}
+// Two theme names can slug to the same qualifier (e.g. "Dark Mode" / "dark-mode", or
+// two punctuation-only names both slugging to ""); when that happens the later theme(s)
+// get a numeric suffix so no qualifier — and therefore no colors.xml — is silently dropped.
+function _androidQualifiers(themeNames: string[]): string[] {
+  const seen = new Map<string, number>();
+  return themeNames.map((themeName, index) => {
+    const lower = themeName.toLowerCase();
+    let base: string;
+    if (index === 0) base = "values";
+    else if (lower === "dark") base = "values-night";
+    else base = `values-${_slug(themeName) || "theme"}`;
 
-// Returns a compact timestamp string: YYYYMMDD-HHmm (UTC)
-function _timestamp(ts: number): string {
-  const d = new Date(ts);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    d.getUTCFullYear().toString() +
-    pad(d.getUTCMonth() + 1) +
-    pad(d.getUTCDate()) +
-    "-" +
-    pad(d.getUTCHours()) +
-    pad(d.getUTCMinutes())
-  );
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    return count === 0 ? base : `${base}-${count + 1}`;
+  });
 }
 
 export function buildExportBundle(
   result: EngineResult,
   config: ExportConfig,
   formats: string[],
-  projectStore?: Record<string, unknown>,
-  timestamp?: number,
+  projectStore: Record<string, unknown> | undefined,
+  timestamp: number,
 ): ExportFile[] {
   const files: ExportFile[] = [];
   const themeKeys = Object.keys(result.tokens || {});
-  const projectSlug = ((projectStore?.["name"] as string) || config.name || "tokens")
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-  const ts = _timestamp(timestamp ?? 0);
+  const projectSlug = _projectSlug((projectStore?.["name"] as string) || config.name);
+  const ts = _exportTimestamp(timestamp);
 
   // Single-format exports use a flat filename: {project}_{tech}_{ts}.ext
   // Multi-file formats within a zip use {tech}/ subfolders (no project prefix inside).
@@ -95,25 +89,26 @@ export function buildExportBundle(
     if (fmt === "ios-swift") {
       for (const theme of themeKeys) {
         const name = theme.charAt(0).toUpperCase() + theme.slice(1) + "Colors.swift";
-        files.push({ path: `${pre("ios")}${name}`, content: fmtSwift.file(result, config, theme) });
+        files.push({ path: `${pre("ios-swift")}${name}`, content: fmtSwift.file(result, config, theme) });
       }
     }
 
     if (fmt === "android") {
+      // Android only understands values/ (default/light) and values-night/ (dark).
+      // Any other theme is exported with a comment qualifier — handled in the formatter.
+      const qualifiers = _androidQualifiers(themeKeys);
       for (let ti = 0; ti < themeKeys.length; ti++) {
-        // Android only understands values/ (default/light) and values-night/ (dark).
-        // Any other theme is exported with a comment qualifier — handled in the formatter.
         const themeName = themeKeys[ti];
-        const qualifier = _androidQualifier(themeName, ti);
+        const qualifier = qualifiers[ti];
         const isNonStandard = qualifier !== "values" && qualifier !== "values-night";
         files.push({ path: `${pre("android")}res/${qualifier}/colors.xml`, content: fmtAndroid.file(result, config, themeName, isNonStandard) });
       }
     }
 
     if (fmt === "rn-ts") {
-      files.push({ path: `${pre("rn")}tokens/index.ts`, content: fmtReactNative.index(result, config) });
+      files.push({ path: `${pre("rn-ts")}tokens/index.ts`, content: fmtReactNative.index(result, config) });
       for (const theme of themeKeys) {
-        files.push({ path: `${pre("rn")}tokens/${_slug(theme)}.ts`, content: fmtReactNative.theme(result, config, theme) });
+        files.push({ path: `${pre("rn-ts")}tokens/${_slug(theme)}.ts`, content: fmtReactNative.theme(result, config, theme) });
       }
     }
 

@@ -179,6 +179,57 @@ const TONAL_SCALE_ALGO: Record<ScaleAlgorithm, AlgoFn> = {
     }
     return out;
   },
+
+  // Holds the seed's chroma as a *fraction of its hue's real max-chroma envelope*
+  // (rather than a raw chroma value) constant across lightness — the taper comes
+  // from each hue's actual sRGB gamut shape instead of a guessed curve, and is
+  // gamut-safe by construction since the fraction is always <= 1. Runs in OKLCH
+  // rather than HCT: HCT's inverse transform has a pre-existing hue-stability
+  // issue when chroma is pushed toward the gamut boundary away from the seed's
+  // own tone (see project notes), which this algorithm deliberately does a lot
+  // of — OKLCH stays hue-stable under the same conditions. The seed's own
+  // lightness is snapped to whichever step sits closest to it, so the seed's
+  // exact hex always appears verbatim in the ramp instead of being approximated.
+  Fidelity: (_hue, _satu, N, stepLum, _findL, { hexIn }) => {
+    const seedHex = normalizeHex(hexIn) || "#000000";
+    const src = hexToOklch(seedHex);
+    const envelope = _maxChromaAtLH(src.L, src.H, 0.5);
+    const f = envelope > 0.001 ? Math.min(1, src.C / envelope) : 0;
+
+    const srcLum = relLum(seedHex) ?? 0;
+    let anchorIdx = 0;
+    let anchorDiff = Infinity;
+    for (let i = 0; i < N; i++) {
+      const diff = Math.abs(stepLum(i) - srcLum);
+      if (diff < anchorDiff) {
+        anchorDiff = diff;
+        anchorIdx = i;
+      }
+    }
+
+    const out: string[] = [];
+    for (let i = 0; i < N; i++) {
+      if (i === anchorIdx) {
+        out.push(seedHex);
+        continue;
+      }
+      const targetLum = stepLum(i);
+      let lo = 0,
+        hi = 1,
+        L = 0.5;
+      for (let j = 0; j < 40; j++) {
+        const mid = (lo + hi) / 2;
+        const chroma = f * _maxChromaAtLH(mid, src.H, 0.5);
+        const lum = relLum(oklchToHex(mid, chroma, src.H));
+        L = mid;
+        if (Math.abs((lum ?? 0) - targetLum) < 0.0001) break;
+        if ((lum ?? 0) < targetLum) lo = mid;
+        else hi = mid;
+      }
+      out.push(oklchToHex(L, f * _maxChromaAtLH(L, src.H, 0.5), src.H) || "#000000");
+    }
+    return out;
+  },
 };
 
 export function scaleMaker(hexIn: string, scaleLength: number, scaleAlgo?: ScaleAlgorithm): string[] | null {
@@ -329,30 +380,8 @@ function _processScaleMode(color: Color, mode: Theme, config: EngineInput, scale
     const roleOutput: Record<number, TokenEntry> = (groupOutput[ri] = {});
     const roleVariations = role.variations ?? globalVariations;
 
-    if (role.mappingMethod === "index") {
-      _mapByIndex(color, role, roleVariations, scale, stepNames, modeName, roleOutput);
-    } else {
-      _mapByScaleContrast(color, role, roleVariations, scale, stepNames, modeName, effectiveBg, isDark, roleOutput, errors);
-    }
+    _mapByScaleContrast(color, role, roleVariations, scale, stepNames, modeName, effectiveBg, isDark, roleOutput, errors);
   }
-}
-
-function _mapByIndex(color: Color, role: Role, variations: Variation[], scale: Record<string | number, ScaleStepToken>, stepNames: string[], modeName: string, output: Record<number, TokenEntry>): void {
-  variations.forEach((v, vi) => {
-    const idx = Math.max(0, Math.min(stepNames.length - 1, parseInt(String(v.target ?? Math.floor((stepNames.length * vi) / Math.max(1, variations.length - 1))), 10) || 0));
-    const data = scale[stepNames[idx]];
-    const variation = v.name ?? String(vi);
-    output[vi] = {
-      tokenName: `${color.name}-${role.name}-${variation}`,
-      color: color.name,
-      role: role.name,
-      variation,
-      roleDescription: role.description || "",
-      tokenRef: data.stepName,
-      value: data.value,
-      contrast: { ratio: data.contrast[modeName].ratio, rating: data.contrast[modeName].rating },
-    };
-  });
 }
 
 function _mapByScaleContrast(

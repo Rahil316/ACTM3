@@ -6,6 +6,7 @@ import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS, SOLVER_M
 import { useUiStore, VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
 import { takeSnapshot, restoreSnapshot, clearSnapshot } from "../store/snapshots";
 import { Modal, ModalHeader } from "../components/Modal";
+import { Collapsible } from "../components/Collapsible";
 import { TabBar } from "../components/TabBar";
 import { SettingsCard, PanelRow, SmallRow } from "../components/SettingsCard";
 import { Toggle } from "../components/Toggle";
@@ -242,35 +243,29 @@ function TokensTab() {
 
       {/* Step labels */}
       {isScaleMode && (
-        <SettingsCard>
-          <button type="button" className="flex items-center justify-between w-full text-left" onClick={() => setStepLabelsCollapsed((c) => !c)}>
-            <SectionLabel>Step Labels</SectionLabel>
-            <span className="text-n-tx-muted text-[10px]">{stepLabelsCollapsed ? "▸" : "▾"}</span>
-          </button>
-          {!stepLabelsCollapsed && (
-            <>
-              <HelperText className="mt-1">Names for each scale step. Always {projectStore.scaleLength} entries — leave blank to use step numbers.</HelperText>
-              {scaleSteps.length === 0 && <ActionButton label={`+ Enable Step Labels`} onClick={addScaleStep} />}
-              {scaleSteps.length > 0 && (
-                <>
-                  <ListHeader columns={["Name", "Short"]} withRemoveButton />
-                  {scaleSteps.map((step, i) => (
-                    <ListRow key={step._id || i} onRemove={() => removeScaleStep(i)} removeAriaLabel="Clear step label">
-                      <Input size="sm" value={step.name} placeholder={`Step ${i + 1}`} onChange={(e) => setScaleStep(i, "name", e.target.value)} />
-                      <Input size="sm" value={step.shorthand ?? ""} placeholder="Short" onChange={(e) => setScaleStep(i, "shorthand", e.target.value)} />
-                    </ListRow>
-                  ))}
-                  <ActionButton
-                    label="− Disable Step Labels"
-                    onClick={() => {
-                      for (let k = scaleSteps.length - 1; k >= 0; k--) removeScaleStep(k);
-                    }}
-                  />
-                </>
-              )}
-            </>
-          )}
-        </SettingsCard>
+        <Collapsible open={!stepLabelsCollapsed} onToggle={() => setStepLabelsCollapsed((c) => !c)} header={<SectionLabel>Step Labels</SectionLabel>}>
+          <div className="px-3 py-2 space-y-1.5">
+            <HelperText>Names for each scale step. Always {projectStore.scaleLength} entries — leave blank to use step numbers.</HelperText>
+            {scaleSteps.length === 0 && <ActionButton label={`+ Enable Step Labels`} onClick={addScaleStep} />}
+            {scaleSteps.length > 0 && (
+              <>
+                <ListHeader columns={["Name", "Short"]} withRemoveButton />
+                {scaleSteps.map((step, i) => (
+                  <ListRow key={step._id || i} onRemove={() => removeScaleStep(i)} removeAriaLabel="Clear step label">
+                    <Input size="sm" value={step.name} placeholder={`Step ${i + 1}`} onChange={(e) => setScaleStep(i, "name", e.target.value)} />
+                    <Input size="sm" value={step.shorthand ?? ""} placeholder="Short" onChange={(e) => setScaleStep(i, "shorthand", e.target.value)} />
+                  </ListRow>
+                ))}
+                <ActionButton
+                  label="− Disable Step Labels"
+                  onClick={() => {
+                    for (let k = scaleSteps.length - 1; k >= 0; k--) removeScaleStep(k);
+                  }}
+                />
+              </>
+            )}
+          </div>
+        </Collapsible>
       )}
     </div>
   );
@@ -290,10 +285,10 @@ function RolesTab() {
   return (
     <div className="flex flex-col gap-3">
       <SettingsCard>
-        <SectionLabel>Role Defaults</SectionLabel>
+        <SectionLabel>Role Variations</SectionLabel>
         <PanelRow
-          label="Custom Variation Names for each role"
-          description="Allow each role to define its own variation names."
+          label="Custom Variations per role"
+          description="Allow each role to have its own set of variation names and values."
           control={
             <Toggle
               on={projectStore.canEditRoleVariants}
@@ -310,7 +305,7 @@ function RolesTab() {
         <HelperText>Define the variation levels applied across all roles.</HelperText>
         {variations.length > 0 && (
           <>
-            <ListHeader columns={["Name", "Short", "Target"]} withDragHandle withRemoveButton />
+            <ListHeader columns={["Name", "Short", "Target"]} withRemoveButton />
             {variations.map((v, i) => (
               <ListRow key={v._id || i} onRemove={() => removeVariation(i)} removeDisabled={variations.length <= 1} removeAriaLabel="Remove variation">
                 <Input size="sm" value={v.name ?? ""} placeholder="Name" onChange={(e) => setVariation(i, "name", e.target.value)} />
@@ -357,7 +352,8 @@ function PluginTab() {
         <SectionLabel>About</SectionLabel>
         <div className="space-y-1">
           <CardTitle>Token Wand</CardTitle>
-          <HelperText>Build accessible, scalable color systems for Figma.</HelperText>
+          <HelperText>Point, click, and <em>poof</em> — a full color system appears.</HelperText>
+          <HelperText className="font-mono">Version {__APP_VERSION__}</HelperText>
         </div>
       </SettingsCard>
     </div>

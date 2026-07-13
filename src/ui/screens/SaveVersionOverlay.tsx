@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import { useUiStore } from "../store/uiStore";
 import { useProjectStore } from "../store/projectStore";
 import { toast } from "../store/toastStore";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
+import { Backdrop } from "../components/Backdrop";
+import { Sheet } from "../components/Sheet";
+import { ModalHeader } from "../components/Modal";
 import { HelperText } from "../components/typography";
-import { LucideClose as X } from "../components/icons";
 
 export function SaveVersionOverlay() {
   const isOpen = useUiStore((s) => s.activeOverlay === "save-version");
@@ -16,8 +17,6 @@ export function SaveVersionOverlay() {
 
   const [name, setName] = useState("");
   const [changelog, setChangelog] = useState("");
-
-  if (!isOpen) return null;
 
   function handleSave() {
     if (!name.trim()) return;
@@ -36,20 +35,11 @@ export function SaveVersionOverlay() {
     closeOverlay();
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
-      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.5)" }} onClick={handleClose} />
-      <div className="relative z-10 flex flex-col bg-n-bg-panel rounded-t-[16px] border-t border-n-br-default">
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-n-br-subtle flex items-center justify-between shrink-0">
-          <div>
-            <span className="text-[12px] font-semibold text-n-tx-primary">Save Version</span>
-            <p className="text-[10px] text-n-tx-dim mt-0.5">Snapshot the current configuration as a named version.</p>
-          </div>
-          <button className="text-n-tx-dim hover:text-n-tx-primary cursor-pointer" onClick={handleClose}>
-            <X size={13} />
-          </button>
-        </div>
+  return (
+    <>
+      <Backdrop open={isOpen} onClick={handleClose} />
+      <Sheet open={isOpen}>
+        <ModalHeader title="Save Version" subtitle="Snapshot the current configuration as a named version." actions={<Button variant="ghost" size="sm" label="Close" onClick={handleClose} />} />
 
         {/* Form */}
         <div className="px-4 py-4 flex flex-col gap-3">
@@ -83,8 +73,7 @@ export function SaveVersionOverlay() {
           />
           <Button variant="secondary" size="md" label="Cancel" onClick={handleClose} className="flex-1" />
         </div>
-      </div>
-    </div>,
-    document.body,
+      </Sheet>
+    </>
   );
 }

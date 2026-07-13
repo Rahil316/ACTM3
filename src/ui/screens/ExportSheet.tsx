@@ -11,6 +11,7 @@ import { Spinner } from "../components/Spinner";
 import { toast } from "../store/toastStore";
 import { sendToPlugin, type ExportFormat } from "../types/messages";
 import { HelperText } from "../components/typography";
+import { _slug, _projectSlug, _exportTimestamp } from "../utils/exportNaming";
 import type { LucideIcon } from "lucide-react";
 
 // ── Format catalogue ──────────────────────────────────────────────────────────
@@ -105,17 +106,18 @@ const EXPORT_FORMATS: FormatDef[] = [
 
 // ── Naming helpers ────────────────────────────────────────────────────────────
 
-function fmtTimestamp(ts: number): string {
-  const d = new Date(ts);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    d.getUTCFullYear().toString() +
-    pad(d.getUTCMonth() + 1) +
-    pad(d.getUTCDate()) +
-    "-" +
-    pad(d.getUTCHours()) +
-    pad(d.getUTCMinutes())
-  );
+const MAX_NAMED_FORMATS = 3;
+const FORMAT_ORDER: ExportFormat[] = EXPORT_FORMATS.map((f) => f.format);
+
+// Builds the tech-name segment of an export filename: up to MAX_NAMED_FORMATS
+// format names (in catalogue order), then a "N-others" suffix for the rest.
+function techListSlug(formats: ExportFormat[]): string {
+  const ordered = FORMAT_ORDER.filter((f) => formats.includes(f));
+  const named = ordered.slice(0, MAX_NAMED_FORMATS);
+  const remaining = ordered.length - named.length;
+  const parts = named.map((f) => _slug(f));
+  if (remaining > 0) parts.push(`${remaining}-others`);
+  return parts.join("-");
 }
 
 // ── Download helpers ──────────────────────────────────────────────────────────
@@ -130,14 +132,14 @@ function downloadBlob(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-async function downloadFiles(files: Array<{ path: string; content: string }>, zipName: string) {
-  if (files.length === 1) {
-    // Single file — direct download using the path as filename
+async function downloadFiles(files: Array<{ path: string; content: string }>, zipName: string, formatCount: number) {
+  if (formatCount === 1 && files.length === 1) {
+    // Exactly one format requested, and it produced exactly one file — direct download.
     const f = files[0];
     const filename = f.path.split("/").pop() ?? f.path;
     downloadBlob(f.content, filename);
   } else {
-    // Multiple files — zip them preserving directory structure
+    // Multiple formats requested, or a single format that expanded into several files — zip them.
     let JSZipModule;
     try {
       JSZipModule = await import("jszip");
@@ -172,8 +174,9 @@ export function ExportSheet() {
   const [building, setBuilding] = useState(false);
   const [downloading, setDownloading] = useState<ExportFormat | null>(null);
 
-  // Holds the zip filename decided at request time so the response handler can use it
+  // Holds the filename + requested format count decided at request time so the response handler can use them
   const pendingZipName = useRef<string>("");
+  const pendingFormatCount = useRef<number>(1);
 
   // ── Bridge callbacks ──────────────────────────────────────────────────────
 
@@ -186,7 +189,7 @@ export function ExportSheet() {
         toast.error("Export returned no files.");
         return;
       }
-      downloadFiles(files, pendingZipName.current).then(() => {
+      downloadFiles(files, pendingZipName.current, pendingFormatCount.current).then(() => {
         const label = wasBulk ? `Exported ${files.length} file${files.length > 1 ? "s" : ""}` : `Downloaded ${files.length > 1 ? files.length + " files" : files[0].path.split("/").pop()}`;
         toast.success(label);
         if (wasBulk) setQueue(new Set());
@@ -211,8 +214,9 @@ export function ExportSheet() {
   function handleSingleDownload(format: ExportFormat) {
     if (downloading) return;
     const ts = Date.now();
-    const projectSlug = (projectStore.name || "tokens").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    pendingZipName.current = `${projectSlug}_${format}_${fmtTimestamp(ts)}`;
+    const projectSlug = _projectSlug(projectStore.name);
+    pendingZipName.current = `${projectSlug}_${_slug(format)}_${_exportTimestamp(ts)}`;
+    pendingFormatCount.current = 1;
     setDownloading(format);
     sendToPlugin({ type: "request-processed-data", exportType: format, state: projectStore, timestamp: ts });
   }
@@ -220,10 +224,10 @@ export function ExportSheet() {
   function handleBulkExport() {
     if (queue.size === 0) return;
     const ts = Date.now();
-    const projectSlug = (projectStore.name || "tokens").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const projectSlug = _projectSlug(projectStore.name);
     const formats = Array.from(queue);
-    const techSuffix = formats.length <= 2 ? formats.join("-") : `${formats.length}-formats`;
-    pendingZipName.current = `${projectSlug}_${techSuffix}_${fmtTimestamp(ts)}`;
+    pendingZipName.current = `${projectSlug}_${techListSlug(formats)}_${_exportTimestamp(ts)}`;
+    pendingFormatCount.current = formats.length;
     setBuilding(true);
     sendToPlugin({
       type: "request-export-bundle",
@@ -284,31 +288,26 @@ export function ExportSheet() {
                 {/* Action buttons */}
                 <div className="flex items-center gap-1 shrink-0">
                   {/* + / ✕ queue toggle */}
-                  <button
-                    type="button"
+                  <Button
+                    variant={inQueue ? "primary" : "secondary"}
+                    size="sm"
+                    square
+                    icon={inQueue ? <X size={11} strokeWidth={2.5} /> : <Plus size={11} strokeWidth={2.5} />}
                     onClick={() => toggleQueue(format)}
                     disabled={isEmpty}
                     title={inQueue ? "Remove from bulk export" : "Add to bulk export"}
-                    className={[
-                      "w-6 h-6 rounded-[6px] flex items-center justify-center transition-colors",
-                      isEmpty ? "opacity-30 cursor-default" : "cursor-pointer",
-                      inQueue ? "bg-b-fi-btn-default text-b-tx-btn-default hover:opacity-80" : "bg-n-sf-input border border-n-br-default text-n-tx-muted hover:bg-n-sf-hover hover:text-n-tx-primary",
-                    ].join(" ")}
-                  >
-                    {inQueue ? <X size={11} strokeWidth={2.5} /> : <Plus size={11} strokeWidth={2.5} />}
-                  </button>
+                  />
 
                   {/* Download button */}
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<Download size={11} strokeWidth={2} />}
+                    loading={isLoading}
                     onClick={() => handleSingleDownload(format)}
                     disabled={downloading !== null || isEmpty}
                     title={`Download ${label}`}
-                    className="h-6 px-2 rounded-[6px] flex items-center gap-1 text-[10px] font-semibold bg-n-sf-input border border-n-br-default text-n-tx-primary hover:bg-n-sf-hover transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default"
-                  >
-                    {isLoading ? <Spinner size="sm" /> : <Download size={11} strokeWidth={2} />}
-                    <span className="hidden sm:inline">{isLoading ? "…" : ""}</span>
-                  </button>
+                  />
                 </div>
               </div>
             );
@@ -327,11 +326,7 @@ export function ExportSheet() {
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
                 <PackageOpen size={13} strokeWidth={1.75} className={queue.size > 0 ? "text-b-tx-muted" : "text-n-tx-dim"} />
                 <span className={["text-[11px]", queue.size > 0 ? "text-n-tx-muted" : "text-n-tx-dim"].join(" ")}>{queue.size > 0 ? `${queue.size} format${queue.size > 1 ? "s" : ""} queued` : "No formats queued"}</span>
-                {queue.size > 0 && (
-                  <button type="button" onClick={() => setQueue(new Set())} className="text-[10px] text-n-tx-dim hover:text-d-tx-muted cursor-pointer ml-1">
-                    Clear
-                  </button>
-                )}
+                {queue.size > 0 && <Button variant="underlined" size="xs" label="Clear" onClick={() => setQueue(new Set())} className="ml-1" />}
               </div>
               <Button variant="primary" size="md" label="Export All" leftIcon={<Package size={13} strokeWidth={2} />} onClick={handleBulkExport} disabled={queue.size === 0 || isEmpty} />
             </div>

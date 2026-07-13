@@ -130,7 +130,6 @@ const tokenWandUi: Preset = {
     // Brand generates CTA fills, focus rings, active states.
     // Danger/Success/Warning generate status fills, text, and borders automatically.
     roles: [
-
       // ── BG ──────────────────────────────────────────────────────────────────
       // Outermost chrome. Two steps: the plugin window background and the
       // slightly lighter panel/header/tab bar that sits on top of it.
@@ -140,9 +139,9 @@ const tokenWandUi: Preset = {
         shorthand: "bg",
         solverMode: "natural",
         variations: [
-          { name: "App",    shorthand: "app",    target: 1.0  }, // plugin window chrome
-          { name: "Panel",  shorthand: "panel",  target: 1.15 }, // header, tab bar, sidebar
-          { name: "Overly", shorthand: "overly", target: 2.0  }, // overlay tint / scrim base
+          { name: "App", shorthand: "app", target: 1.0 }, // plugin window chrome
+          { name: "Panel", shorthand: "panel", target: 1.15 }, // header, tab bar, sidebar
+          { name: "Overly", shorthand: "overly", target: 2.0 }, // overlay tint / scrim base
         ],
         description: "App chrome · window bg → panel/header → overlay tint",
       },
@@ -157,13 +156,13 @@ const tokenWandUi: Preset = {
         shorthand: "sf",
         solverMode: "natural",
         variations: [
-          { name: "Sunken",  shorthand: "sunken",  target: 1.05 }, // recessed inset / dim well
-          { name: "Default", shorthand: "default", target: 1.2  }, // card / list item
-          { name: "Input",   shorthand: "input",   target: 1.35 }, // input field background
-          { name: "Raised",  shorthand: "raised",  target: 1.5  }, // popover / dropdown / tooltip
-          { name: "Overlay", shorthand: "overlay", target: 1.7  }, // sheet / drawer / modal bg
-          { name: "Hover",   shorthand: "hover",   target: 1.55 }, // hover state on interactive surface
-          { name: "Active",  shorthand: "active",  target: 1.85 }, // pressed / mouse-down
+          { name: "Sunken", shorthand: "sunken", target: 1.05 }, // recessed inset / dim well
+          { name: "Default", shorthand: "default", target: 1.2 }, // card / list item
+          { name: "Input", shorthand: "input", target: 1.35 }, // input field background
+          { name: "Raised", shorthand: "raised", target: 1.5 }, // popover / dropdown / tooltip
+          { name: "Overlay", shorthand: "overlay", target: 1.7 }, // sheet / drawer / modal bg
+          { name: "Hover", shorthand: "hover", target: 1.55 }, // hover state on interactive surface
+          { name: "Active", shorthand: "active", target: 1.85 }, // pressed / mouse-down
         ],
         description: "Raised surfaces · sunken → card → input → popover → sheet · hover · active",
       },
@@ -181,9 +180,9 @@ const tokenWandUi: Preset = {
         solverMode: "natural",
         variations: [
           { name: "Hairline", shorthand: "hairline", target: 1.3 }, // structural divider / separator
-          { name: "Subtle",   shorthand: "subtle",   target: 1.7 }, // card border at rest
-          { name: "Default",  shorthand: "default",  target: 2.4 }, // card hover, input rest
-          { name: "Strong",   shorthand: "strong",   target: 4.5 }, // emphasis outline, focus ring
+          { name: "Subtle", shorthand: "subtle", target: 1.7 }, // card border at rest
+          { name: "Default", shorthand: "default", target: 2.4 }, // card hover, input rest
+          { name: "Strong", shorthand: "strong", target: 4.5 }, // emphasis outline, focus ring
         ],
         description: "Borders · hairline → card rest → card hover/input → emphasis/focus",
       },
@@ -199,11 +198,11 @@ const tokenWandUi: Preset = {
         shorthand: "tx",
         solverMode: "hue-locked",
         variations: [
-          { name: "Primary",   shorthand: "primary",   target: 12.0 }, // AAA — headings, active labels, toolbar icons
-          { name: "Secondary", shorthand: "secondary", target: 7.0  }, // AA — body copy, descriptions, icons
-          { name: "Muted",     shorthand: "muted",     target: 4.5  }, // AA — field labels, supporting text, secondary icons
-          { name: "Dim",       shorthand: "dim",       target: 3.0  }, // AA-large — placeholders, timestamps, ghost text
-          { name: "Disabled",  shorthand: "disabled",  target: 1.8  }, // clearly inactive
+          { name: "Primary", shorthand: "primary", target: 12.0 }, // AAA — headings, active labels, toolbar icons
+          { name: "Secondary", shorthand: "secondary", target: 7.0 }, // AA — body copy, descriptions, icons
+          { name: "Muted", shorthand: "muted", target: 4.5 }, // AA — field labels, supporting text, secondary icons
+          { name: "Dim", shorthand: "dim", target: 3.0 }, // AA-large — placeholders, timestamps, ghost text
+          { name: "Disabled", shorthand: "disabled", target: 1.8 }, // clearly inactive
         ],
         description: "Text + icon hierarchy · AAA headings → AA body → AA labels → placeholder → disabled",
       },
@@ -218,11 +217,11 @@ const tokenWandUi: Preset = {
         shorthand: "fi",
         solverMode: "natural",
         variations: [
-          { name: "Subtle",   shorthand: "subtle",   target: 1.3 }, // barely-there tint wash
-          { name: "Default",  shorthand: "default",  target: 1.8 }, // badge bg, chip, tag
-          { name: "Strong",   shorthand: "strong",   target: 3.0 }, // bolder decorative fill
-          { _id: "6xil5fgggq8v", name: "Stronger",  shorthand: "stronger", target: 4.5 }, // high-contrast fill
-          { _id: "lneogcit96cu", name: "Strongest",  shorthand: "strongest", target: 4.5 }, // max fill
+          { name: "Subtle", shorthand: "subtle", target: 1.3 }, // barely-there tint wash
+          { name: "Default", shorthand: "default", target: 1.8 }, // badge bg, chip, tag
+          { name: "Strong", shorthand: "strong", target: 3.0 }, // bolder decorative fill
+          { _id: "6xil5fgggq8v", name: "Stronger", shorthand: "stronger", target: 4.5 }, // high-contrast fill
+          { _id: "lneogcit96cu", name: "Strongest", shorthand: "strongest", target: 4.5 }, // max fill
         ],
         description: "Tinted fills · badge bg · chip · subtle wash · not interactive",
       },
@@ -241,10 +240,10 @@ const tokenWandUi: Preset = {
         solverMode: "constant-chroma",
         variations: [
           { name: "Disabled", shorthand: "disabled", target: 2.0 }, // clearly inactive
-          { name: "Subtle",   shorthand: "subtle",   target: 3.0 }, // ghost / secondary button
-          { name: "Default",  shorthand: "default",  target: 5.0 }, // primary CTA at rest (AA)
-          { name: "Hover",    shorthand: "hover",    target: 6.5 }, // hover
-          { name: "Pressed",  shorthand: "pressed",  target: 8.0 }, // mouse-down / active
+          { name: "Subtle", shorthand: "subtle", target: 3.0 }, // ghost / secondary button
+          { name: "Default", shorthand: "default", target: 5.0 }, // primary CTA at rest (AA)
+          { name: "Hover", shorthand: "hover", target: 6.5 }, // hover
+          { name: "Pressed", shorthand: "pressed", target: 8.0 }, // mouse-down / active
         ],
         description: "CTA fills · 5 states · all colors get brand/danger/success buttons (saturated)",
       },
@@ -266,14 +265,13 @@ const tokenWandUi: Preset = {
         },
         variations: [
           { name: "Disabled", shorthand: "disabled", target: 2.0 }, // label on disabled button
-          { name: "Subtle",   shorthand: "subtle",   target: 3.0 }, // label on ghost button
-          { name: "Default",  shorthand: "default",  target: 4.5 }, // label on primary CTA
-          { name: "Hover",    shorthand: "hover",    target: 6.0 }, // label on hovered button
-          { name: "Pressed",  shorthand: "pressed",  target: 7.5 }, // label on pressed button
+          { name: "Subtle", shorthand: "subtle", target: 3.0 }, // label on ghost button
+          { name: "Default", shorthand: "default", target: 4.5 }, // label on primary CTA
+          { name: "Hover", shorthand: "hover", target: 6.0 }, // label on hovered button
+          { name: "Pressed", shorthand: "pressed", target: 7.5 }, // label on pressed button
         ],
         description: "On-button labels · contrast against [color]/fill/button/default · luminance solver",
       },
-
     ],
 
     // ── Themes ────────────────────────────────────────────────────────────────
@@ -281,7 +279,7 @@ const tokenWandUi: Preset = {
     // Dark = near-black matching the plugin's current --bg-app.
     themes: [
       { name: "Light", bg: "F2F2F7" },
-      { name: "Dark",  bg: "0D0D0D" },
+      { name: "Dark", bg: "0D0D0D" },
     ],
   },
 };
