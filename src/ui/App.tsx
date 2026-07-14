@@ -6,6 +6,7 @@ import { useAutoSave } from "./hooks/useAutoSave";
 import { useLocalField } from "./hooks/useLocalField";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useUiPrefs } from "./hooks/useUiPrefs";
+import { useViewportWidth } from "./hooks/useViewportWidth";
 import { useUiStore } from "./store/uiStore";
 import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations } from "./store/projectStore";
 import { engine } from "./store/engineStore";
@@ -19,7 +20,7 @@ import { LucidePreview as Eye, LucideRun as Play, LucideExport as Download, Luci
 import { ColorsScreen } from "./screens/ColorsScreen";
 import { RolesScreen } from "./screens/RolesScreen";
 import { SettingsOverlay } from "./screens/SettingsOverlay";
-import { PreviewScreen } from "./screens/PreviewScreen";
+import { PreviewScreen, PreviewSidePanel, SIDE_PANEL_MIN_WIDTH } from "./screens/PreviewScreen";
 import { RunDialog } from "./screens/run-dialog";
 import { ProjectScreen, VersionsScreen } from "./screens/ProjectScreen";
 import { SaveVersionOverlay } from "./screens/SaveVersionOverlay";
@@ -95,6 +96,12 @@ export default function App() {
   const openOverlay = useUiStore((s) => s.openOverlay);
   const activeOverlay = useUiStore((s) => s.activeOverlay);
 
+  // Above SIDE_PANEL_MIN_WIDTH there's enough room to dock the preview next
+  // to the editor instead of covering it as a full-screen modal.
+  const viewportWidth = useViewportWidth();
+  const isPreviewOpen = activeOverlay === "preview";
+  const isSidePanelPreview = isPreviewOpen && viewportWidth >= SIDE_PANEL_MIN_WIDTH;
+
   const loadState = useProjectStore((s) => s.loadState);
   const saveBlockedReason = useProjectStore((s) => s.versionSaveBlockedReason());
   const projectStore = useProjectStore((s) => s.projectStore);
@@ -166,7 +173,7 @@ export default function App() {
       {/* Overlays — conditionally mounted so closed overlays don't subscribe to the store */}
       {activeOverlay === "theme-shop" && <ThemeShopOverlay />}
       {activeOverlay === "settings" && <SettingsOverlay />}
-      {activeOverlay === "preview" && <PreviewScreen />}
+      {isPreviewOpen && !isSidePanelPreview && <PreviewScreen />}
       {activeOverlay === "run-dialog" && <RunDialog />}
       {(activeOverlay === "export-sheet" || activeOverlay === "design-lab") && <ExportSheet />}
       {activeOverlay === "save-version" && <SaveVersionOverlay />}
@@ -187,50 +194,61 @@ export default function App() {
       {/* Banner slot */}
       <BannerSlot />
 
-      {/* ── Tab bar ── */}
-      <div className="shrink-0 flex gap-1 px-3 py-2 border-b border-n-br-default overflow-x-auto">
-        {TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setActiveTab(tab.value)}
-            className={clsx(
-              "shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap transition-all duration-150",
-              activeTab === tab.value ? "bg-b-fi-btn-default border-b-br-default text-b-tx-btn-default" : "border-n-br-default bg-transparent text-n-tx-muted hover:bg-n-sf-hover hover:text-n-tx-primary",
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* ── Tab bar + content row (row includes the docked preview panel when open) ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="shrink-0 flex gap-1 px-3 py-2 border-b border-n-br-default overflow-x-auto">
+          {TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={clsx(
+                "shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap transition-all duration-150",
+                activeTab === tab.value ? "bg-b-fi-btn-default border-b-br-default text-b-tx-btn-default" : "border-n-br-default bg-transparent text-n-tx-muted hover:bg-n-sf-hover hover:text-n-tx-primary",
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
 
-        <div className="flex items-center gap-0.5 ml-auto">
-          <Button variant="ghost" size="sm" square icon={<ShoppingBag size={14} strokeWidth={1.75} />} onClick={() => openOverlay("theme-shop")} title="Theme Shop" aria-label="Theme Shop" />
-          <Button variant="ghost" size="sm" square icon={<RotateCcw size={14} strokeWidth={1.75} />} onClick={() => setConfirmReset(true)} title="Reset all (clears everything)" aria-label="Reset all" />
-          <Button
-            variant="ghost"
-            size="sm"
-            square
-            icon={<Upload size={14} strokeWidth={1.75} />}
-            onClick={() => {
-              if (importRef.current) {
-                importRef.current.value = "";
-                importRef.current.click();
-              }
-            }}
-            title="Import .wand / JSON  (Alt+I)"
-            aria-label="Import .wand / JSON"
-          />
-          <Button variant="ghost" size="sm" square icon={<Bookmark size={14} strokeWidth={1.75} />} onClick={() => !saveBlockedReason && openOverlay("save-version")} title={saveBlockedReason ?? "Save state  (Alt+S)"} aria-label="Save state" disabled={!!saveBlockedReason} />
-          <Button variant="ghost" size="sm" square icon={<Settings size={14} strokeWidth={1.75} />} onClick={() => openOverlay("settings")} title="Settings  (Alt+K)" aria-label="Settings" />
+          <div className="flex items-center gap-0.5 ml-auto">
+            <Button variant="ghost" size="sm" square icon={<ShoppingBag size={14} strokeWidth={1.75} />} onClick={() => openOverlay("theme-shop")} title="Theme Shop" aria-label="Theme Shop" />
+            <Button variant="ghost" size="sm" square icon={<RotateCcw size={14} strokeWidth={1.75} />} onClick={() => setConfirmReset(true)} title="Reset all (clears everything)" aria-label="Reset all" />
+            <Button
+              variant="ghost"
+              size="sm"
+              square
+              icon={<Upload size={14} strokeWidth={1.75} />}
+              onClick={() => {
+                if (importRef.current) {
+                  importRef.current.value = "";
+                  importRef.current.click();
+                }
+              }}
+              title="Import .wand / JSON  (Alt+I)"
+              aria-label="Import .wand / JSON"
+            />
+            <Button variant="ghost" size="sm" square icon={<Bookmark size={14} strokeWidth={1.75} />} onClick={() => !saveBlockedReason && openOverlay("save-version")} title={saveBlockedReason ?? "Save state  (Alt+S)"} aria-label="Save state" disabled={!!saveBlockedReason} />
+            <Button variant="ghost" size="sm" square icon={<Settings size={14} strokeWidth={1.75} />} onClick={() => openOverlay("settings")} title="Settings  (Alt+K)" aria-label="Settings" />
+          </div>
+        </div>
+
+        <div className="flex-1 flex overflow-hidden">
+          {/* ── Screen content ── */}
+          <main className="flex-1 overflow-y-auto overflow-x-hidden">
+            {activeTab === "color-groups" && <ColorsScreen />}
+            {activeTab === "roles" && <RolesScreen />}
+            {activeTab === "project" && <ProjectScreen />}
+            {activeTab === "versions" && <VersionsScreen />}
+          </main>
+
+          {/* ── Docked preview panel (wide window only — see SIDE_PANEL_MIN_WIDTH) ── */}
+          {isSidePanelPreview && (
+            <div className="shrink-0 w-[40%] min-w-[360px] max-w-[560px]">
+              <PreviewSidePanel />
+            </div>
+          )}
         </div>
       </div>
-
-      {/* ── Screen content ── */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden">
-        {activeTab === "color-groups" && <ColorsScreen />}
-        {activeTab === "roles" && <RolesScreen />}
-        {activeTab === "project" && <ProjectScreen />}
-        {activeTab === "versions" && <VersionsScreen />}
-      </main>
 
       <ToastHub />
       <ResizeHandle />

@@ -1,14 +1,24 @@
 // Generates a wide-ranging matrix of EngineInput configs for stress-testing
 // variableMaker() in src/shared/engine/clrEngine.ts. Pure config generation —
 // no engine calls happen here (see run-stress-test.ts).
+//
+// Seed coverage is built from named, composable groups (see SEED_GROUPS
+// below) rather than one flat loop, so each generated case carries *why* its
+// seed exists (systematic grid vs. a targeted problem cluster) — this lets
+// analyze-results.ts and build-report.ts break anomalies down by coverage
+// intent instead of just by raw hex value.
 
-import type { Color, Theme, Role, Variation, ScaleAlgorithm, SolverMode, EngineInput } from "../../src/shared/types";
+import type { Color, Theme, Role, Variation, ScaleAlgorithm, SolverMode } from "../../src/shared/types";
+import type { EngineInput } from "../../src/shared/engine/clrEngine";
+
+export type SeedGroup = "grid" | "warm-hue-cluster" | "low-chroma-cluster" | "edge-case";
 
 export interface GeneratedCase {
   caseId: string;
   pluginMode: "scale" | "direct";
   seedHex: string;
   seedLabel: string;
+  seedGroup: SeedGroup;
   scaleAlgorithm?: ScaleAlgorithm;
   solverMode?: SolverMode;
   scaleLength?: number;
@@ -17,7 +27,7 @@ export interface GeneratedCase {
 }
 
 const SCALE_ALGORITHMS: ScaleAlgorithm[] = ["Natural", "Uniform", "Expressive", "Symmetric", "OKLCH", "Material", "Linear", "Fidelity"];
-const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "hue-locked", "max-chroma"];
+const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "hue-locked", "max-chroma", "gamut-cusp", "apca-natural"];
 const SCALE_LENGTHS = [5, 9, 12];
 const CONTRAST_TARGET_SETS: number[][] = [
   [1.5, 3, 4.5, 7, 12],
@@ -27,9 +37,6 @@ const CONTRAST_TARGET_SETS: number[][] = [
 ];
 
 // ── Seed color generation ────────────────────────────────────────────────────
-// Hue wheel at fine steps x a spread of saturation/lightness combos, plus
-// explicit edge cases (pure grayscale, near-black, near-white, primaries,
-// max-chroma extremes).
 
 function hslToHexLocal(h: number, s: number, l: number): string {
   // local, dependency-free HSL->hex so config generation never depends on the
@@ -49,46 +56,115 @@ function hslToHexLocal(h: number, s: number, l: number): string {
 interface SeedSpec {
   hex: string;
   label: string;
+  group: SeedGroup;
 }
 
-function generateSeedColors(): SeedSpec[] {
-  const seeds: SeedSpec[] = [];
+interface SeedGroupSpec {
+  group: SeedGroup;
+  generate: () => SeedSpec[];
+}
 
-  const HUE_STEPS = 12; // every 30deg
-  const SAT_LEVELS = [15, 50, 90];
-  const LIGHT_LEVELS = [10, 30, 50, 70, 90];
+// Systematic hue/sat/light grid — the broad, unbiased coverage sweep.
+// 24 hues (15° steps) x 5 saturations x 7 lightness levels = 840 seeds.
+function generateSystematicGrid(): SeedSpec[] {
+  const seeds: SeedSpec[] = [];
+  const HUE_STEPS = 24; // every 15deg
+  const SAT_LEVELS = [10, 30, 50, 70, 90];
+  const LIGHT_LEVELS = [10, 25, 40, 50, 60, 75, 90];
 
   for (let hi = 0; hi < HUE_STEPS; hi++) {
     const h = (360 / HUE_STEPS) * hi;
     for (const s of SAT_LEVELS) {
       for (const l of LIGHT_LEVELS) {
-        seeds.push({ hex: hslToHexLocal(h, s, l), label: `h${Math.round(h)}_s${s}_l${l}` });
+        seeds.push({ hex: hslToHexLocal(h, s, l), label: `h${Math.round(h)}_s${s}_l${l}`, group: "grid" });
       }
     }
   }
-
-  // Explicit edge cases
-  const edgeCases: SeedSpec[] = [
-    { hex: "#000000", label: "pure_black" },
-    { hex: "#FFFFFF", label: "pure_white" },
-    { hex: "#808080", label: "mid_gray" },
-    { hex: "#010101", label: "near_black" },
-    { hex: "#FEFEFE", label: "near_white" },
-    { hex: "#FF0000", label: "primary_red" },
-    { hex: "#00FF00", label: "primary_green" },
-    { hex: "#0000FF", label: "primary_blue" },
-    { hex: "#FFFF00", label: "primary_yellow" },
-    { hex: "#00FFFF", label: "primary_cyan" },
-    { hex: "#FF00FF", label: "primary_magenta" },
-    { hex: "#F2F2F2", label: "very_light_gray" },
-    { hex: "#0D0D0D", label: "very_dark_gray" },
-    { hex: "#7FFF00", label: "chartreuse_high_chroma" },
-    { hex: "#FF4500", label: "orange_red_high_chroma" },
-    { hex: "#8A2BE2", label: "blue_violet_high_chroma" },
-  ];
-  seeds.push(...edgeCases);
-
   return seeds;
+}
+
+// Warm-hue cluster — dense sampling of yellow/lime/warm-green (45-90°), the
+// hue range documented in color-system-guidelines.md as showing HSL-lightness
+// collapse in the four HSL-search-based scale algorithms (Natural, Uniform,
+// Expressive, Symmetric): a yellow seed's HSL lightness crashes far faster
+// than a blue seed's at the same step index, because the WCAG relative-
+// luminance formula those algorithms search against weights green/red far
+// more than blue. Fine 5° hue steps across the exact problem range, crossed
+// with high saturation (worst case, per the same doc) and every lightness
+// band, to give that specific failure mode real statistical weight instead
+// of the ~2 grid points/hue it'd otherwise get.
+function generateWarmHueCluster(): SeedSpec[] {
+  const seeds: SeedSpec[] = [];
+  const HUES = [45, 50, 55, 60, 65, 70, 75, 80, 85, 90];
+  const SAT_LEVELS = [60, 80, 100];
+  const LIGHT_LEVELS = [15, 30, 45, 60, 75, 90];
+
+  for (const h of HUES) {
+    for (const s of SAT_LEVELS) {
+      for (const l of LIGHT_LEVELS) {
+        seeds.push({ hex: hslToHexLocal(h, s, l), label: `warm_h${h}_s${s}_l${l}`, group: "warm-hue-cluster" });
+      }
+    }
+  }
+  return seeds;
+}
+
+// Low-chroma cluster — seeds with deliberately muted/near-neutral chroma at
+// every hue, dense enough to exercise gamut-cusp's and apca-natural's
+// seed-fraction math (srcC / maxChromaAtLH(srcL, srcH)) at fraction values
+// close to 0, where a implementation bug would most likely round to a
+// degenerate case (fraction 0 or NaN) rather than showing up as a subtly
+// wrong color the way it might at high chroma.
+function generateLowChromaCluster(): SeedSpec[] {
+  const seeds: SeedSpec[] = [];
+  const HUE_STEPS = 12; // every 30deg — hue matters less here than chroma level
+  const SAT_LEVELS = [3, 6, 10, 15, 20];
+  const LIGHT_LEVELS = [20, 35, 50, 65, 80];
+
+  for (let hi = 0; hi < HUE_STEPS; hi++) {
+    const h = (360 / HUE_STEPS) * hi;
+    for (const s of SAT_LEVELS) {
+      for (const l of LIGHT_LEVELS) {
+        seeds.push({ hex: hslToHexLocal(h, s, l), label: `lowc_h${Math.round(h)}_s${s}_l${l}`, group: "low-chroma-cluster" });
+      }
+    }
+  }
+  return seeds;
+}
+
+// Hand-picked edge cases: pure grayscale, near-black/white, primaries/
+// secondaries, and known high-chroma extremes.
+function generateEdgeCases(): SeedSpec[] {
+  const cases: [string, string][] = [
+    ["#000000", "pure_black"],
+    ["#FFFFFF", "pure_white"],
+    ["#808080", "mid_gray"],
+    ["#010101", "near_black"],
+    ["#FEFEFE", "near_white"],
+    ["#FF0000", "primary_red"],
+    ["#00FF00", "primary_green"],
+    ["#0000FF", "primary_blue"],
+    ["#FFFF00", "primary_yellow"],
+    ["#00FFFF", "primary_cyan"],
+    ["#FF00FF", "primary_magenta"],
+    ["#F2F2F2", "very_light_gray"],
+    ["#0D0D0D", "very_dark_gray"],
+    ["#7FFF00", "chartreuse_high_chroma"],
+    ["#FF4500", "orange_red_high_chroma"],
+    ["#8A2BE2", "blue_violet_high_chroma"],
+  ];
+  return cases.map(([hex, label]) => ({ hex, label, group: "edge-case" as const }));
+}
+
+const SEED_GROUPS: SeedGroupSpec[] = [
+  { group: "grid", generate: generateSystematicGrid },
+  { group: "warm-hue-cluster", generate: generateWarmHueCluster },
+  { group: "low-chroma-cluster", generate: generateLowChromaCluster },
+  { group: "edge-case", generate: generateEdgeCases },
+];
+
+function generateSeedColors(): SeedSpec[] {
+  return SEED_GROUPS.flatMap((g) => g.generate());
 }
 
 // ── Fixed rig: themes/colors/roles/variations wrapper per case ──────────────
@@ -154,6 +230,7 @@ export function generateAllCases(): GeneratedCase[] {
         pluginMode: "scale",
         seedHex: seed.hex,
         seedLabel: seed.label,
+        seedGroup: seed.group,
         scaleAlgorithm: algo,
         scaleLength,
         contrastTargets: targets,
@@ -186,6 +263,7 @@ export function generateAllCases(): GeneratedCase[] {
           pluginMode: "direct",
           seedHex: seed.hex,
           seedLabel: seed.label,
+          seedGroup: seed.group,
           solverMode,
           contrastTargets: targets,
           config,
@@ -199,5 +277,8 @@ export function generateAllCases(): GeneratedCase[] {
 
 if (require.main === module) {
   const cases = generateAllCases();
+  const byGroup = new Map<SeedGroup, number>();
+  for (const c of cases) byGroup.set(c.seedGroup, (byGroup.get(c.seedGroup) ?? 0) + 1);
   console.log(`Generated ${cases.length} cases.`);
+  for (const [group, count] of byGroup) console.log(`  ${group}: ${count}`);
 }

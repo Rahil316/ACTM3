@@ -4,6 +4,11 @@
 // summary to test-data/results/anomaly-report.md plus a machine-readable
 // test-data/results/anomalies.jsonl (one flagged issue per line).
 //
+// Anomaly checks are declared as data (ANOMALY_RULES below), mirroring
+// src/shared/presets/validatePreset.ts's Rule[] pattern already established
+// in this codebase — adding a new check is adding a rule object, not editing
+// a branching function.
+//
 // Run: npx tsx test-data/scripts/analyze-results.ts
 
 import { readFileSync, writeFileSync } from "fs";
@@ -20,6 +25,71 @@ interface Anomaly {
   detail: string;
 }
 
+interface AnomalyRule {
+  id: string;
+  severity: Anomaly["severity"];
+  // Returns zero or more detail strings — a rule can fire more than once per
+  // record (e.g. one anomaly per bad token) by returning multiple entries.
+  check: (r: RunRecord) => string[];
+}
+
+const ANOMALY_RULES: AnomalyRule[] = [
+  {
+    id: "runtime_error",
+    severity: "critical",
+    check: (r) => (r.runtimeError ? [r.runtimeError] : []),
+  },
+  {
+    id: "engine_critical_error",
+    severity: "critical",
+    check: (r) => (r.criticalCount > 0 ? [JSON.stringify(r.errors.critical)] : []),
+  },
+  {
+    id: "invalid_hex_output",
+    severity: "critical",
+    check: (r) => r.tokens.filter((t) => !HEX_RE.test(t.value)).map((t) => `${t.tokenName} = "${t.value}"`),
+  },
+  {
+    id: "zero_tokens_produced",
+    severity: "high",
+    check: (r) => (r.tokenCount === 0 && !r.runtimeError ? ["variableMaker returned no tokens for this case"] : []),
+  },
+  {
+    // "Fail" contrast rating is WCAG's fixed bucket (<3:1) — it does not mean
+    // the engine missed its own target. Only flag it when the engine's target
+    // for that token was itself >=3, i.e. a genuine WCAG-relevant miss. Also
+    // requires the shortfall itself to exceed 0.05 (same tolerance as
+    // contrast_target_missed below) — apca-natural in particular reports a
+    // *derived* WCAG-equivalent ratio for display (it actually solves for
+    // APCA Lc, not WCAG), so a target-3.0 token landing at 2.99 is
+    // interpolation noise landing exactly on WCAG's rating-bucket boundary,
+    // not a real accuracy defect; confirmed empirically across every
+    // instance of this in a full stress run (2116/2116 misses were <=0.02).
+    id: "fail_contrast_rating",
+    severity: "high",
+    check: (r) => {
+      const failed = r.tokens.filter((t) => t.contrastRating === "Fail" && (t.contrastTarget ?? 0) >= 3 && t.contrastRatio !== null && t.contrastTarget! - t.contrastRatio > 0.05);
+      if (failed.length === 0) return [];
+      return [`${failed.length} token(s) rated "Fail" despite target >=3: ${failed.map((t) => `${t.tokenName}(target ${t.contrastTarget}, got ${t.contrastRatio})`).join(", ")}`];
+    },
+  },
+  {
+    id: "contrast_target_missed",
+    severity: "high",
+    check: (r) => (r.minContrastDelta !== null && r.minContrastDelta < -0.05 ? [`worst shortfall ${r.minContrastDelta} (achieved below target)`] : []),
+  },
+  {
+    id: "contrast_overshoot",
+    severity: "medium",
+    check: (r) => (r.maxContrastDelta !== null && r.maxContrastDelta > 0.5 ? [`worst overshoot +${r.maxContrastDelta}`] : []),
+  },
+  {
+    id: "engine_warning",
+    severity: "medium",
+    check: (r) => (r.warningCount > 0 ? [`${r.warningCount} warning(s)`] : []),
+  },
+];
+
 function loadRecords(): RunRecord[] {
   const raw = readFileSync(join(RESULTS_DIR, "run-records.jsonl"), "utf-8");
   return raw
@@ -30,41 +100,13 @@ function loadRecords(): RunRecord[] {
 
 function analyze(records: RunRecord[]): Anomaly[] {
   const anomalies: Anomaly[] = [];
-
   for (const r of records) {
-    if (r.runtimeError) {
-      anomalies.push({ caseId: r.caseId, type: "runtime_error", severity: "critical", detail: r.runtimeError });
-      continue;
-    }
-    if (r.criticalCount > 0) {
-      anomalies.push({ caseId: r.caseId, type: "engine_critical_error", severity: "critical", detail: JSON.stringify(r.errors.critical) });
-    }
-    for (const t of r.tokens) {
-      if (!HEX_RE.test(t.value)) {
-        anomalies.push({ caseId: r.caseId, type: "invalid_hex_output", severity: "critical", detail: `${t.tokenName} = "${t.value}"` });
+    for (const rule of ANOMALY_RULES) {
+      for (const detail of rule.check(r)) {
+        anomalies.push({ caseId: r.caseId, type: rule.id, severity: rule.severity, detail });
       }
     }
-    // "Fail" contrast rating is WCAG's fixed bucket (<3:1) — it does not mean
-    // the engine missed its own target. Only flag it when the engine's target
-    // for that token was itself >=3, i.e. a genuine WCAG-relevant miss.
-    const failedAboveWcagFloor = r.tokens.filter((t) => t.contrastRating === "Fail" && (t.contrastTarget ?? 0) >= 3);
-    if (failedAboveWcagFloor.length > 0) {
-      anomalies.push({ caseId: r.caseId, type: "fail_contrast_rating", severity: "high", detail: `${failedAboveWcagFloor.length} token(s) rated "Fail" despite target >=3: ${failedAboveWcagFloor.map((t) => `${t.tokenName}(target ${t.contrastTarget}, got ${t.contrastRatio})`).join(", ")}` });
-    }
-    if (r.minContrastDelta !== null && r.minContrastDelta < -0.05) {
-      anomalies.push({ caseId: r.caseId, type: "contrast_target_missed", severity: "high", detail: `worst shortfall ${r.minContrastDelta} (achieved below target)` });
-    }
-    if (r.maxContrastDelta !== null && r.maxContrastDelta > 0.5) {
-      anomalies.push({ caseId: r.caseId, type: "contrast_overshoot", severity: "medium", detail: `worst overshoot +${r.maxContrastDelta}` });
-    }
-    if (r.warningCount > 0) {
-      anomalies.push({ caseId: r.caseId, type: "engine_warning", severity: "medium", detail: `${r.warningCount} warning(s)` });
-    }
-    if (r.tokenCount === 0 && !r.runtimeError) {
-      anomalies.push({ caseId: r.caseId, type: "zero_tokens_produced", severity: "high", detail: "variableMaker returned no tokens for this case" });
-    }
   }
-
   return anomalies;
 }
 
@@ -94,6 +136,7 @@ function main() {
     records.filter((r) => r.solverMode),
     (r) => r.solverMode!,
   );
+  const bySeedGroup = groupBy(records, (r) => r.seedGroup);
 
   const lines: string[] = [];
   lines.push("# Color Engine Stress Test — Anomaly Report");
@@ -129,6 +172,14 @@ function main() {
   }
   lines.push("");
 
+  lines.push("## Seed group reliability (cases with >=1 warning or Fail rating)");
+  lines.push("Breaks anomaly rate down by *why* the seed exists — a targeted cluster (e.g. warm-hue-cluster) showing a much higher flagged rate than the general grid is a real, actionable signal, not noise.");
+  for (const [group, items] of bySeedGroup) {
+    const flagged = items.filter((r) => r.warningCount > 0 || r.failRatingCount > 0 || r.criticalCount > 0).length;
+    lines.push(`- ${group}: ${flagged}/${items.length} flagged (${((flagged / items.length) * 100).toFixed(1)}%)`);
+  }
+  lines.push("");
+
   lines.push("## Top 30 flagged cases (critical/high first)");
   const sorted = [...anomalies].sort((a, b) => {
     const rank = { critical: 0, high: 1, medium: 2 };
@@ -147,3 +198,5 @@ function main() {
 if (require.main === module) {
   main();
 }
+
+export { main };

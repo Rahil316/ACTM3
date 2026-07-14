@@ -9,7 +9,7 @@ import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { variableMaker } from "../../src/shared/engine/clrEngine";
 import type { EngineResult, TokenEntry } from "../../src/shared/engine/clrEngine";
-import { generateAllCases, type GeneratedCase } from "./generate-configs";
+import { generateAllCases, type GeneratedCase, type SeedGroup } from "./generate-configs";
 
 const RESULTS_DIR = join(__dirname, "..", "results");
 mkdirSync(RESULTS_DIR, { recursive: true });
@@ -33,6 +33,7 @@ interface RunRecord {
   pluginMode: "scale" | "direct";
   seedHex: string;
   seedLabel: string;
+  seedGroup: SeedGroup;
   scaleAlgorithm: string | null;
   solverMode: string | null;
   scaleLength: number | null;
@@ -89,6 +90,7 @@ function buildRecord(c: GeneratedCase): RunRecord {
     pluginMode: c.pluginMode,
     seedHex: c.seedHex,
     seedLabel: c.seedLabel,
+    seedGroup: c.seedGroup,
     scaleAlgorithm: c.scaleAlgorithm ?? null,
     solverMode: c.solverMode ?? null,
     scaleLength: c.scaleLength ?? null,
@@ -113,8 +115,14 @@ function buildRecord(c: GeneratedCase): RunRecord {
       adjustedTokenCount: tokens.filter((t) => t.isAdjusted).length,
       // WCAG "Fail" is only meaningful QA signal when the engine's own target
       // for that token was itself in WCAG-checkable range (>=3:1) — a token
-      // targeting 1.5:1 rating "Fail" (WCAG's <3:1 bucket) is expected, not a bug.
-      failRatingCount: tokens.filter((t) => t.contrastRating === "Fail" && (t.contrastTarget ?? 0) >= 3).length,
+      // targeting 1.5:1 rating "Fail" (WCAG's <3:1 bucket) is expected, not a
+      // bug. The shortfall must also exceed 0.05 (same tolerance used for
+      // minContrastDelta-based flags elsewhere): apca-natural reports a
+      // *derived* WCAG-equivalent ratio for display (it actually solves for
+      // APCA Lc, not WCAG), so a target-3.0 token landing at 2.99 is
+      // interpolation noise landing exactly on WCAG's rating-bucket
+      // boundary, not a real accuracy defect.
+      failRatingCount: tokens.filter((t) => t.contrastRating === "Fail" && (t.contrastTarget ?? 0) >= 3 && t.contrastRatio !== null && t.contrastTarget! - t.contrastRatio > 0.05).length,
       tokens,
       errors: result.errors,
       runtimeError: null,
@@ -154,6 +162,9 @@ function main() {
   writeFileSync(jsonlPath, records.map((r) => JSON.stringify(r)).join("\n") + "\n", "utf-8");
   console.log(`Wrote ${records.length} records to ${jsonlPath}`);
 
+  const seedGroupCounts: Record<string, number> = {};
+  for (const r of records) seedGroupCounts[r.seedGroup] = (seedGroupCounts[r.seedGroup] ?? 0) + 1;
+
   const metaPath = join(RESULTS_DIR, "run-meta.json");
   writeFileSync(
     metaPath,
@@ -163,6 +174,7 @@ function main() {
         totalCases: records.length,
         scaleModeCases: records.filter((r) => r.pluginMode === "scale").length,
         directModeCases: records.filter((r) => r.pluginMode === "direct").length,
+        seedGroupCounts,
       },
       null,
       2,

@@ -38,10 +38,6 @@ export function useKeyboardShortcuts(importRef: React.RefObject<HTMLInputElement
           e.preventDefault();
           openOverlay("run-dialog");
           break;
-        case "Digit0":
-          e.preventDefault();
-          setActiveTab("project");
-          break;
         case "Digit1":
           e.preventDefault();
           setActiveTab("color-groups");
@@ -51,6 +47,14 @@ export function useKeyboardShortcuts(importRef: React.RefObject<HTMLInputElement
           setActiveTab("roles");
           break;
         case "Digit3":
+          e.preventDefault();
+          setActiveTab("project");
+          break;
+        case "Digit4":
+          e.preventDefault();
+          setActiveTab("versions");
+          break;
+        case "Digit0":
           e.preventDefault();
           openOverlay("theme-shop");
           break;

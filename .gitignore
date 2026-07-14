@@ -13,6 +13,11 @@ storybook-static/
 # Generated preset bundle — built from src/ui/presets/raw/*.ts
 src/ui/presets/presets.json
 
+# Stress-test harness output — regenerated via `npx tsx test-data/run.ts`,
+# can reach 100MB+ at full test density. Keep the harness code (test-data/scripts/,
+# test-data/run.ts) tracked; never the generated results.
+test-data/results/
+
 # Export output folders
 lib/*/
 

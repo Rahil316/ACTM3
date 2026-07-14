@@ -10,6 +10,7 @@
 
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
+import { oklch } from "culori";
 import type { RunRecord } from "./run-stress-test";
 
 const RESULTS_DIR = join(__dirname, "..", "results");
@@ -139,6 +140,71 @@ function computeMetrics(records: RunRecord[], flaggedCaseIds: Set<string>, anoma
   };
 }
 
+// ── "For Users" quality metrics ──────────────────────────────────────────────
+// Reframes engine-internal numbers (contrast deltas, adjusted counts) into
+// what someone picking an algorithm in the Settings dropdown actually
+// experiences: does my brand color stay recognizable, does it ever collapse
+// to gray, does the plugin deliver what I asked for. Chroma is read via
+// culori's real OKLCH conversion (a color-math *library*, not the engine
+// under test) rather than hand-rolled — same rigor as the engine itself,
+// but this script still never imports clrEngine/solverEngine directly,
+// matching generate-configs.ts's existing "never depend on the engine under
+// test" convention.
+
+const NEAR_NEUTRAL_CHROMA = 0.02; // below this, OKLCH chroma reads as visually gray
+const CLEARLY_COLORFUL_CHROMA = 0.05; // seed chroma above this = "this was a real color, not a gray"
+
+function chromaOf(hex: string): number {
+  const c = oklch(hex);
+  return c?.c ?? 0;
+}
+
+interface QualityMetrics {
+  n: number; // tokens considered (seed was clearly colorful, not gray/near-gray)
+  avgVividnessPreserved: number | null; // mean of min(1, outputChroma/seedChroma)
+  wentGrayRate: number | null; // fraction of colorful-seed tokens whose output collapsed to near-gray
+  deliversTargetRate: number | null; // 1 - adjusted rate, i.e. "gave you what you asked for"
+  bestExample: { seedHex: string; outputHex: string; caseId: string; vividness: number } | null;
+  worstExample: { seedHex: string; outputHex: string; caseId: string; vividness: number } | null;
+}
+
+function computeQualityMetrics(records: RunRecord[]): QualityMetrics {
+  const vividnessRatios: number[] = [];
+  const wentGrayFlags: number[] = [];
+  let bestExample: QualityMetrics["bestExample"] = null;
+  let worstExample: QualityMetrics["worstExample"] = null;
+
+  for (const r of records) {
+    const seedC = chromaOf(r.seedHex);
+    if (seedC < CLEARLY_COLORFUL_CHROMA) continue; // skip near-neutral seeds — "stay vivid" is meaningless for gray input
+    for (const t of r.tokens) {
+      const outC = chromaOf(t.value);
+      const vividness = Math.min(1, seedC > 0 ? outC / seedC : 0);
+      vividnessRatios.push(vividness);
+      wentGrayFlags.push(outC < NEAR_NEUTRAL_CHROMA ? 1 : 0);
+
+      if (!bestExample || vividness > bestExample.vividness) {
+        bestExample = { seedHex: r.seedHex, outputHex: t.value, caseId: r.caseId, vividness };
+      }
+      if (!worstExample || vividness < worstExample.vividness) {
+        worstExample = { seedHex: r.seedHex, outputHex: t.value, caseId: r.caseId, vividness };
+      }
+    }
+  }
+
+  const adjustedRates = records.map((r) => (r.tokenCount > 0 ? r.adjustedTokenCount / r.tokenCount : 0));
+  const deliversTargetRate = adjustedRates.length ? 1 - mean(adjustedRates)! : null;
+
+  return {
+    n: vividnessRatios.length,
+    avgVividnessPreserved: mean(vividnessRatios),
+    wentGrayRate: mean(wentGrayFlags),
+    deliversTargetRate,
+    bestExample,
+    worstExample,
+  };
+}
+
 // ── Row shapes for each drilldown level ──────────────────────────────────────
 
 interface ConfigRow {
@@ -146,6 +212,7 @@ interface ConfigRow {
   pluginMode: string;
   seedLabel: string;
   seedHex: string;
+  seedGroup: string;
   hue: number;
   sat: number;
   lum: number;
@@ -179,10 +246,17 @@ interface SetRow {
 interface ColorRow {
   seedLabel: string;
   seedHex: string;
+  seedGroup: string;
   hue: number;
   sat: number;
   lum: number;
   metrics: Metrics;
+}
+
+interface QualityRow {
+  dimension: "scaleAlgorithm" | "solverMode";
+  value: string;
+  quality: QualityMetrics;
 }
 
 function main() {
@@ -209,6 +283,7 @@ function main() {
     pluginMode: r.pluginMode,
     seedLabel: r.seedLabel,
     seedHex: r.seedHex,
+    seedGroup: r.seedGroup,
     hue: hsl.h,
     sat: hsl.s,
     lum: hsl.l,
@@ -254,6 +329,27 @@ function main() {
   }
   for (const [mode, recs] of bySolver) {
     setRows.push({ setKey: `solver:${mode}`, pluginMode: "direct", dimension: "solverMode", value: mode, metrics: computeMetrics(recs, flaggedCaseIds, anomaliesByCase) });
+  }
+
+  // ── "For Users" quality rollups — same byAlgo/bySolver grouping, reframed ──
+  const qualityRows: QualityRow[] = [];
+  for (const [algo, recs] of byAlgo) {
+    qualityRows.push({ dimension: "scaleAlgorithm", value: algo, quality: computeQualityMetrics(recs) });
+  }
+  for (const [mode, recs] of bySolver) {
+    qualityRows.push({ dimension: "solverMode", value: mode, quality: computeQualityMetrics(recs) });
+  }
+
+  // Break down by seed group (grid / warm-hue-cluster / low-chroma-cluster /
+  // edge-case) so a targeted cluster's flagged rate can be compared directly
+  // against the general grid's — the whole reason those clusters exist.
+  const bySeedGroup = new Map<string, RunRecord[]>();
+  for (const r of records) {
+    if (!bySeedGroup.has(r.seedGroup)) bySeedGroup.set(r.seedGroup, []);
+    bySeedGroup.get(r.seedGroup)!.push(r);
+  }
+  for (const [group, recs] of bySeedGroup) {
+    setRows.push({ setKey: `seedGroup:${group}`, pluginMode: "both", dimension: "seedGroup", value: group, metrics: computeMetrics(recs, flaggedCaseIds, anomaliesByCase) });
   }
 
   // Also break down by scaleLength and by contrastTargets set, since those are
@@ -303,6 +399,7 @@ function main() {
     return {
       seedLabel,
       seedHex: recs[0].seedHex,
+      seedGroup: recs[0].seedGroup,
       hue: hsl.h,
       sat: hsl.s,
       lum: hsl.l,
@@ -317,13 +414,14 @@ function main() {
     configRows,
     setRows,
     colorRows,
+    qualityRows,
   };
 
   // dashboard-data.json is still written standalone for anyone who wants to
   // jq/pandas over it directly, but the dashboard itself gets its own inlined
   // copy so the HTML is fully self-contained and opens via plain double-click.
   writeFileSync(join(RESULTS_DIR, "dashboard-data.json"), JSON.stringify(dataset), "utf-8");
-  console.log(`Wrote dashboard-data.json (${configRows.length} config rows, ${setRows.length} set rows, ${colorRows.length} color rows)`);
+  console.log(`Wrote dashboard-data.json (${configRows.length} config rows, ${setRows.length} set rows, ${colorRows.length} color rows, ${qualityRows.length} quality rows)`);
 
   writeFileSync(join(RESULTS_DIR, "dashboard.html"), buildHtml(dataset), "utf-8");
   console.log(`Wrote dashboard.html (data inlined — open the file directly, no server needed)`);
@@ -434,6 +532,21 @@ td.oob, span.oob { background: var(--oob); color: var(--critical); font-weight: 
 .radar-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
 .radar-card .radar-title { font-size: 12.5px; font-weight: 600; margin-bottom: 4px; }
 .radar-card .radar-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.quality-intro { font-size: 13px; color: var(--muted); max-width: 780px; margin-bottom: 18px; line-height: 1.5; }
+.quality-grid { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; max-width: 720px; }
+.quality-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; min-width: 0; width: 100%; }
+.quality-card-title { font-size: 18px; font-weight: 700; overflow-wrap: break-word; }
+.quality-card-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.03em; }
+.quality-score-block { margin-top: 16px; }
+.quality-score-toprow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.quality-score-label { font-size: 13.5px; min-width: 0; overflow-wrap: break-word; font-weight: 500; }
+.quality-score-tag { flex-shrink: 0; font-size: 12px; font-weight: 600; }
+.quality-score-hint { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 5px; }
+.big-swatch { display: inline-block; width: 52px; height: 52px; border-radius: 8px; border: 1px solid var(--border); vertical-align: middle; flex-shrink: 0; }
+.quality-examples { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.quality-example { flex: 1; min-width: 120px; }
+.quality-example-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.quality-example-swatches { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); flex-wrap: wrap; }
 .scroll-panel { overflow-y: auto; flex: 1; min-height: 0; }
 .drilldown {
   position: fixed; top: 0; right: 0; width: 460px; height: 100%; background: var(--bg);
@@ -525,12 +638,13 @@ const JS = `
 
   // ── State ────────────────────────────────────────────────────────────────
   const state = {
-    tab: "configs",
+    tab: "quality",
     configFilter: "",
     configSort: { key: "minContrastRatio", dir: 1 },
     configPluginMode: "",
     configAlgo: "",
     configSolver: "",
+    configSeedGroup: "",
     configCategory: "",
     configFlaggedOnly: false,
     configHue: [0, 360],
@@ -556,9 +670,10 @@ const JS = `
 
   const tabsEl = el("div", {class:"tabs"});
   const tabDefs = [
-    {id:"configs", label:"Per-Config"},
-    {id:"sets", label:"Per-Set (Algorithm/Solver)"},
-    {id:"colors", label:"Per-Color"},
+    {id:"quality", label:"Which Algorithm Should I Use?"},
+    {id:"configs", label:"Per-Config (engineering)"},
+    {id:"sets", label:"Per-Set (engineering)"},
+    {id:"colors", label:"Per-Color (engineering)"},
   ];
   tabDefs.forEach(t => {
     const b = el("button", {class:"tab" + (t.id===state.tab?" active":""), onclick: () => { state.tab = t.id; render(); }}, [t.label]);
@@ -843,6 +958,85 @@ const JS = `
   }
   function inRange(val, range) { return val >= range[0] && val <= range[1]; }
 
+  // ── Panel: Which Algorithm Should I Use? ────────────────────────────────
+  // Written for someone picking an algorithm/solver in the Settings dropdown,
+  // not for reading engine internals — plain language, real color swatches,
+  // no HSL coordinates or raw deltas.
+
+  function bigSwatch(hex) {
+    return el("span", {class:"big-swatch", style:"background:" + hex, title: hex});
+  }
+
+  function qualityScoreLabel(frac) {
+    if (frac === null || frac === undefined) return "—";
+    if (frac >= 0.9) return "Excellent";
+    if (frac >= 0.75) return "Good";
+    if (frac >= 0.5) return "Fair";
+    return "Weak";
+  }
+
+  function qualityCard(row) {
+    const q = row.quality;
+    const card = el("div", {class:"quality-card"});
+    card.appendChild(el("div", {class:"quality-card-title"}, [row.value]));
+    card.appendChild(el("div", {class:"quality-card-sub"}, [row.dimension === "scaleAlgorithm" ? "Scale algorithm" : "Direct-mode solver"]));
+
+    const scoreRow = (label, frac, hint) => {
+      const wrap = el("div", {class:"quality-score-block"});
+      const top = el("div", {class:"quality-score-toprow"});
+      top.appendChild(el("div", {class:"quality-score-label"}, [label]));
+      top.appendChild(el("div", {class:"quality-score-tag"}, [qualityScoreLabel(frac)]));
+      wrap.appendChild(top);
+      wrap.appendChild(barCell(frac ?? 0));
+      wrap.appendChild(el("div", {class:"quality-score-hint"}, [hint]));
+      return wrap;
+    };
+
+    card.appendChild(scoreRow("Keeps your color's vividness", q.avgVividnessPreserved, "How close the output stays to your seed color's saturation, on average — 100% means it never gets muddier than the color you picked."));
+    card.appendChild(scoreRow("Never turns your color gray", q.wentGrayRate !== null ? 1 - q.wentGrayRate : null, q.wentGrayRate ? \`Collapsed to a near-gray output in \${pct(q.wentGrayRate)} of test cases where the seed was clearly a color, not a neutral.\` : "Never collapsed a real color to gray in testing."));
+    card.appendChild(scoreRow("Delivers the contrast you asked for", q.deliversTargetRate, "How often the result hits your exact target instead of the closest achievable compromise."));
+
+    if (row.dimension === "solverMode" && q.bestExample && q.worstExample) {
+      const examples = el("div", {class:"quality-examples"});
+      const bestWrap = el("div", {class:"quality-example"});
+      bestWrap.appendChild(el("div", {class:"quality-example-label"}, ["Best-case result"]));
+      const bestRow = el("div", {class:"quality-example-swatches"}, [bigSwatch(q.bestExample.seedHex), el("span", {}, ["→"]), bigSwatch(q.bestExample.outputHex)]);
+      bestWrap.appendChild(bestRow);
+      const worstWrap = el("div", {class:"quality-example"});
+      worstWrap.appendChild(el("div", {class:"quality-example-label"}, ["Worst-case result"]));
+      const worstRow = el("div", {class:"quality-example-swatches"}, [bigSwatch(q.worstExample.seedHex), el("span", {}, ["→"]), bigSwatch(q.worstExample.outputHex)]);
+      worstWrap.appendChild(worstRow);
+      examples.appendChild(bestWrap);
+      examples.appendChild(worstWrap);
+      card.appendChild(examples);
+    }
+
+    return card;
+  }
+
+  function renderQualityPanel() {
+    const panel = el("div", {class:"panel active", id:"panel-quality"});
+    panel.appendChild(el("h2", {}, ["Which algorithm should I use?"]));
+    panel.appendChild(el("div", {class:"quality-intro"}, [
+      "Every algorithm and solver mode was run against thousands of test colors covering the full hue wheel, muted brand colors, and known tricky cases (yellows, near-neutrals). These scores reflect what actually happens to a color you pick — not engine internals. The left swatch is the color you'd pick; the right swatch is what the plugin produces.",
+    ]));
+
+    const scaleRows = DATA.qualityRows.filter(r => r.dimension === "scaleAlgorithm").sort((a,b) => (b.quality.avgVividnessPreserved ?? 0) - (a.quality.avgVividnessPreserved ?? 0));
+    const solverRows = DATA.qualityRows.filter(r => r.dimension === "solverMode").sort((a,b) => (b.quality.avgVividnessPreserved ?? 0) - (a.quality.avgVividnessPreserved ?? 0));
+
+    panel.appendChild(el("h3", {}, ["Scale algorithms (Scale mode)"]));
+    const scaleGrid = el("div", {class:"quality-grid"});
+    scaleRows.forEach(r => scaleGrid.appendChild(qualityCard(r)));
+    panel.appendChild(scaleGrid);
+
+    panel.appendChild(el("h3", {}, ["Solver modes (Direct mode)"]));
+    const solverGrid = el("div", {class:"quality-grid"});
+    solverRows.forEach(r => solverGrid.appendChild(qualityCard(r)));
+    panel.appendChild(solverGrid);
+
+    panelsWrap.appendChild(panel);
+  }
+
   // ── Panel: Per-Config ────────────────────────────────────────────────────
   function renderConfigsPanel() {
     const panel = el("div", {class:"panel active", id:"panel-configs"});
@@ -887,6 +1081,14 @@ const JS = `
     solvers.forEach(s => { const opt = el("option", {value:s}, [s]); if (s === state.configSolver) opt.selected = true; solverSel.appendChild(opt); });
     toolbar.appendChild(solverSel);
 
+    const seedGroups = [...new Set(DATA.configRows.map(r=>r.seedGroup).filter(Boolean))];
+    const seedGroupSel = el("select", {onchange: (e) => { state.configSeedGroup = e.target.value; state.configPage = 1; renderConfigTable(); }});
+    const seedGroupAllOpt = el("option", {value:""}, ["All seed groups"]);
+    if (!state.configSeedGroup) seedGroupAllOpt.selected = true;
+    seedGroupSel.appendChild(seedGroupAllOpt);
+    seedGroups.forEach(g => { const opt = el("option", {value:g}, [g]); if (g === state.configSeedGroup) opt.selected = true; seedGroupSel.appendChild(opt); });
+    toolbar.appendChild(seedGroupSel);
+
     const categories = [...new Set(DATA.configRows.flatMap(r => (r.errorCategories||"").split(",").filter(Boolean)))];
     const catSel = el("select", {onchange: (e) => { state.configCategory = e.target.value; state.configPage = 1; renderConfigTable(); }});
     const catAllOpt = el("option", {value:""}, ["All error categories"]);
@@ -925,6 +1127,7 @@ const JS = `
     if (state.configPluginMode) rows = rows.filter(r => r.pluginMode === state.configPluginMode);
     if (state.configAlgo) rows = rows.filter(r => r.scaleAlgorithm === state.configAlgo);
     if (state.configSolver) rows = rows.filter(r => r.solverMode === state.configSolver);
+    if (state.configSeedGroup) rows = rows.filter(r => r.seedGroup === state.configSeedGroup);
     if (state.configCategory) rows = rows.filter(r => (r.errorCategories||"").split(",").includes(state.configCategory));
     if (state.configFlaggedOnly) rows = rows.filter(r => r.highSeverityAnomalyTypes && r.highSeverityAnomalyTypes.length);
     rows = rows.filter(r => inRange(r.hue, state.configHue) && inRange(r.sat, state.configSat) && inRange(r.lum, state.configLum));
@@ -939,6 +1142,7 @@ const JS = `
     {key:"caseId", label:"Case ID"},
     {key:"pluginMode", label:"Mode"},
     {key:"seedLabel", label:"Color"},
+    {key:"seedGroup", label:"Seed Group"},
     {key:"scaleAlgorithm", label:"Algo"},
     {key:"solverMode", label:"Solver"},
     {key:"scaleLength", label:"Len"},
@@ -994,6 +1198,7 @@ const JS = `
       tr.appendChild(el("td", {}, [r.caseId]));
       tr.appendChild(el("td", {}, [r.pluginMode]));
       tr.appendChild(el("td", {}, [el("span",{class:"swatch", style:"background:"+r.seedHex},[]), r.seedLabel]));
+      tr.appendChild(el("td", {}, [r.seedGroup || "—"]));
       tr.appendChild(el("td", {}, [r.scaleAlgorithm || "—"]));
       tr.appendChild(el("td", {}, [r.solverMode || "—"]));
       tr.appendChild(el("td", {}, [r.scaleLength ?? "—"]));
@@ -1036,6 +1241,13 @@ const JS = `
 
     scroll.appendChild(el("h2", {}, ["Solver mode — flagged case rate"]));
     scroll.appendChild(buildChart(solverRows, r => r.value, r => r.metrics.flaggedCaseCount / r.metrics.n));
+
+    // Seed group — compares each targeted cluster's flagged rate against the
+    // general grid's, the whole reason the clusters (warm-hue, low-chroma)
+    // exist as a separate coverage axis instead of just denser grid points.
+    const seedGroupRows = DATA.setRows.filter(r => r.dimension === "seedGroup");
+    scroll.appendChild(el("h2", {}, ["Seed group — flagged case rate"]));
+    scroll.appendChild(buildChart(seedGroupRows, r => r.value, r => r.metrics.flaggedCaseCount / r.metrics.n));
 
     const lenRows = DATA.setRows.filter(r => r.dimension === "scaleLength").sort((a,b)=>+a.value - +b.value);
     scroll.appendChild(el("h2", {}, ["Scale length — flagged case rate"]));
@@ -1209,6 +1421,7 @@ const JS = `
       const memberRows = DATA.configRows.filter(cr => {
         if (r.dimension === "scaleAlgorithm") return cr.scaleAlgorithm === r.value;
         if (r.dimension === "solverMode") return cr.solverMode === r.value;
+        if (r.dimension === "seedGroup") return cr.seedGroup === r.value;
         if (r.dimension === "scaleLength") return String(cr.scaleLength) === r.value;
         if (r.dimension === "contrastTargets") return cr.contrastTargets === r.value;
         if (r.dimension === "algoLength") { const [algo, len] = r.value.split("__"); return cr.scaleAlgorithm === algo && String(cr.scaleLength) === len; }
@@ -1263,6 +1476,7 @@ const JS = `
 
   const COLOR_COLS = [
     {key:"seedLabel", label:"Color"},
+    {key:"seedGroup", label:"Seed Group"},
     {key:"n", label:"Configs"},
     {key:"flaggedRate", label:"Flagged %"},
     {key:"avgMinContrastRatio", label:"Avg Min Contrast"},
@@ -1272,6 +1486,7 @@ const JS = `
 
   function colorAccessor(r, k) {
     if (k === "seedLabel") return r.seedLabel;
+    if (k === "seedGroup") return r.seedGroup;
     if (k === "n") return r.metrics.n;
     if (k === "flaggedRate") return r.metrics.flaggedCaseCount / r.metrics.n;
     return r.metrics[k];
@@ -1306,6 +1521,7 @@ const JS = `
       const tr = el("tr", {onclick: () => openColorDrill(r, memberRows)});
       const flaggedRate = r.metrics.flaggedCaseCount / r.metrics.n;
       tr.appendChild(el("td", {}, [el("span",{class:"swatch", style:"background:"+r.seedHex},[]), r.seedLabel]));
+      tr.appendChild(el("td", {}, [r.seedGroup || "—"]));
       tr.appendChild(el("td", {}, [String(r.metrics.n)]));
       tr.appendChild(el("td", {}, [barCell(flaggedRate)]));
       tr.appendChild(ratioTd(r.metrics.avgMinContrastRatio));
@@ -1325,7 +1541,8 @@ const JS = `
   function render() {
     [...tabsEl.children].forEach(b => b.classList.toggle("active", b.dataset.tabId === state.tab));
     panelsWrap.innerHTML = "";
-    if (state.tab === "configs") renderConfigsPanel();
+    if (state.tab === "quality") renderQualityPanel();
+    else if (state.tab === "configs") renderConfigsPanel();
     else if (state.tab === "sets") renderSetsPanel();
     else if (state.tab === "colors") renderColorsPanel();
   }
@@ -1338,3 +1555,5 @@ const JS = `
 if (require.main === module) {
   main();
 }
+
+export { main };

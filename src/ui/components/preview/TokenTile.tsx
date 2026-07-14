@@ -16,7 +16,7 @@ export function TokenTile({ hex, ratio, rating, varLabel, tokenName, ink }: Toke
   const safeHex = hex.startsWith('#') ? hex : '#' + hex;
   const swatchInk = getInkMode(safeHex);
   const swatchTextColor = inkColor(swatchInk);
-  const ratioStr = typeof ratio === 'number' ? ratio.toFixed(1) : '—';
+  const ratioStr = typeof ratio === 'number' ? ratio.toFixed(2) : '—';
 
   return (
     <div className="flex flex-col min-w-0">

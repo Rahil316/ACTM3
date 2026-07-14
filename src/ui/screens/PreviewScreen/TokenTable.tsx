@@ -8,7 +8,7 @@ import { RatingBadge, getInkMode, inkColor, normalizeHex, copyText } from "../..
 export const TABLE_COL = "minmax(80px,1fr) 64px 56px 48px minmax(120px,2fr)";
 
 function TokenRow({ token, varLabel, ink }: { token: TokenEntry; varLabel: string; ink: "light" | "dark" }) {
-  const ratioStr = typeof token.contrast?.ratio === "number" ? token.contrast.ratio.toFixed(1) : "—";
+  const ratioStr = typeof token.contrast?.ratio === "number" ? token.contrast.ratio.toFixed(2) : "—";
   return (
     <div
       className="grid items-center h-9 cursor-pointer hover:opacity-80 transition-opacity"

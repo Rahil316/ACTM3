@@ -40,7 +40,7 @@ function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
             {Object.entries(scale).map(([stepName, stepData]) => {
               const firstTheme = themes[0];
               const contrast = firstTheme ? stepData.contrast?.[firstTheme.name.toLowerCase()] : null;
-              const ratioStr = typeof contrast?.ratio === "number" ? contrast.ratio.toFixed(1) : "—";
+              const ratioStr = typeof contrast?.ratio === "number" ? contrast.ratio.toFixed(2) : "—";
 
               return (
                 <div key={stepName} className="grid items-center h-9 border-t border-n-br-subtle cursor-pointer hover:bg-n-sf-hover transition-colors" style={{ gridTemplateColumns: COL }} onClick={() => copyText(stepData.value, `${color.name}/${stepName}`)}>
@@ -69,7 +69,7 @@ function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
                       .slice(1)
                       .map((t) => {
                         const c = stepData.contrast?.[t.name.toLowerCase()];
-                        return c ? `${t.name}: ${c.ratio?.toFixed(1)}` : "";
+                        return c ? `${t.name}: ${c.ratio?.toFixed(2)}` : "";
                       })
                       .filter(Boolean)
                       .join(" · ")}
@@ -126,7 +126,7 @@ export function ScaleSection({ result, projectStore, groupByStep = false, viewMo
                   if (!stepData) return null;
                   const srcHex = normalizeHex(color.value);
                   const contrast = themeKeys.length > 0 ? stepData.contrast?.[themeKeys[0]] : null;
-                  const ratioStr = typeof contrast?.ratio === "number" ? contrast.ratio.toFixed(1) : "—";
+                  const ratioStr = typeof contrast?.ratio === "number" ? contrast.ratio.toFixed(2) : "—";
                   return (
                     <div
                       key={color._id}
