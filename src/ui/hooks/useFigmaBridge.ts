@@ -19,26 +19,69 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
   const pm = msg.pluginMessage;
 
   if (pm.type === "check-collections") {
-    setTimeout(() => {
-      _nativePost(
-        {
-          pluginMessage: {
-            type: "collection-check-result",
-            existing: [],
-            renames: { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } },
-            conflicts: [
-              {
-                tokenRef: "token:primary/text/default",
-                figmaName: "Primary/Text/Default-custom-name",
-                suggestedName: "Primary/Text/Default",
-                type: "token",
+    // Standalone mode has no persisted Figma document to diff against, so
+    // there's no real create/update/rename/delete distinction available —
+    // but computing a real syncPreview/items from the actual engine output
+    // (everything treated as "create", since nothing exists yet) is still
+    // far more useful than always reporting zero changes: it's what
+    // RunDialog's Summary/Changes tabs need to render their non-empty states
+    // at all while developing/testing outside a real Figma sandbox.
+    Promise.all([import("../../shared/engine/clrEngine"), import("../../shared/engine/clrUtils")])
+      .then(([{ variableMaker }, { translateLocalBg }]) => {
+        const projectStore = pm.state as ProjectStore;
+        const config = {
+          ...projectStore,
+          roles: (projectStore.roles ?? []).map((r: Role) => ({
+            ...r,
+            ...translateLocalBg(r.localBg, projectStore.colors ?? [], projectStore.themes ?? []),
+          })),
+        } as Parameters<typeof variableMaker>[0];
+        const result = variableMaker(config);
+
+        const items: { tokenRef: string; name: string; collection: "token" | "scale" | "source"; action: "create" }[] = [];
+        for (const [colorName, scale] of Object.entries(result.scales)) {
+          for (const [step, stepEntry] of Object.entries(scale)) {
+            items.push({ tokenRef: `scale:${colorName}/${step}`, name: stepEntry.stepName, collection: "scale", action: "create" });
+          }
+        }
+        for (const colorMap of Object.values(result.tokens)) {
+          for (const roleMap of Object.values(colorMap)) {
+            for (const varMap of Object.values(roleMap)) {
+              for (const entry of Object.values(varMap)) {
+                items.push({ tokenRef: `token:${entry.tokenName}`, name: entry.tokenName, collection: "token", action: "create" });
+              }
+            }
+          }
+        }
+
+        setTimeout(() => {
+          _nativePost(
+            {
+              pluginMessage: {
+                type: "collection-check-result",
+                existing: [],
+                renames: { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } },
+                syncPreview: { toCreate: items.length, toUpdate: 0, toRename: 0, toDelete: 0, total: items.length, items },
+                items,
+                structuralChanges: [],
+                conflicts: [
+                  {
+                    tokenRef: "token:primary/text/default",
+                    figmaName: "Primary/Text/Default-custom-name",
+                    suggestedName: "Primary/Text/Default",
+                    type: "token",
+                  },
+                ],
               },
-            ],
-          },
-        },
-        "*",
-      );
-    }, 50);
+            },
+            "*",
+          );
+        }, 50);
+      })
+      .catch((err) => {
+        console.error("[standalone check-collections] failed:", err);
+        _nativePost({ pluginMessage: { type: "error", message: String(err) } }, "*");
+      });
     return;
   }
 

@@ -26,11 +26,19 @@ function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
         const srcHex = normalizeHex(color.value);
         const hdrInk = getInkMode(srcHex);
 
+        // Fixed 5-column layout: Step / Hex / Ratio (first theme) / WCAG (first
+        // theme) / a single summary cell for every additional theme. The data
+        // row below always squeezes all extra themes into that one 5th cell, so
+        // the header must label it as a single "other themes" summary rather
+        // than trying to list one name per extra theme — with 2+ themes there's
+        // no 1:1 column to put each name in.
+        const lastHeaderLabel = themes.length <= 1 ? "" : themes.length === 2 ? themes[1].name : "Other Themes";
+
         return (
           <div key={color._id} className="rounded-[10px] overflow-hidden border border-n-br-default">
             {/* Color header */}
             <div className="grid items-center h-8 sticky top-0 z-10" style={{ background: srcHex, gridTemplateColumns: COL }}>
-              {(["Step", "Hex", "Ratio", "WCAG", ""].concat(themes.map((t) => t.name)) as string[]).slice(0, 4 + themes.length).map((h, i) => (
+              {["Step", "Hex", "Ratio", "WCAG", lastHeaderLabel].map((h, i) => (
                 <div key={i} className="px-2 text-[10px] font-bold tracking-[0.07em] uppercase truncate" style={{ color: inkColor(hdrInk, 0.75), paddingLeft: i === 0 ? 12 : undefined }}>
                   {i === 0 ? color.name : h}
                 </div>

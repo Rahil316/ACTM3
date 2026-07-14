@@ -70,7 +70,7 @@ export const VariableManager = {
     return renamed;
   },
 
-  async sync(result: AnyObj, config: AnyObj, scope: "all" | "scale" | "roles" = "all", projectStore: AnyObj | null = null, savedProjectStore: AnyObj | null = null, decisions: Record<string, "keep" | "revert"> = {}): Promise<void> {
+  async sync(result: AnyObj, config: AnyObj, scope: "all" | "scale" | "roles" | "none" = "all", projectStore: AnyObj | null = null, savedProjectStore: AnyObj | null = null, decisions: Record<string, "keep" | "revert"> = {}): Promise<void> {
     this.tally = { created: 0, updated: 0, renamed: 0, removed: 0, failed: 0 };
     this.mutations = new Map<string, "created" | "renamed" | "updated">();
     this.scaleVarNameMap = {};
