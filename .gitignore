@@ -5,11 +5,6 @@ node_modules/
 dist/
 dist-release/
 
-# Storybook
-.storybook/
-storybook-static/
-*storybook.log
-
 # Generated preset bundle — built from src/ui/presets/raw/*.ts
 src/ui/presets/presets.json
 
