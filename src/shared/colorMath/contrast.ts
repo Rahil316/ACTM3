@@ -12,6 +12,7 @@
 // does not).
 
 import { rgb, wcagContrast, wcagLuminance } from "culori";
+import { APCAcontrast, sRGBtoY } from "./apca-vendor";
 
 export function validHex(hex: unknown): hex is string {
   if (typeof hex !== "string") return false;
@@ -48,4 +49,13 @@ export function contrastRatio(hex1: string, hex2: string): number | null {
     n2 = normalizeHex(hex2);
   if (!n1 || !n2) return null;
   return Number(wcagContrast(n1, n2).toFixed(2));
+}
+
+// Signed APCA Lc: positive = dark text on light background, negative = light
+// text on dark background. textHex/bgHex order matters — see apca-vendor.ts.
+export function apcaContrast(textHex: string, bgHex: string): number {
+  const textRgb = hexToRgb(textHex);
+  const bgRgb = hexToRgb(bgHex);
+  if (!textRgb || !bgRgb) return 0;
+  return APCAcontrast(sRGBtoY(textRgb), sRGBtoY(bgRgb));
 }

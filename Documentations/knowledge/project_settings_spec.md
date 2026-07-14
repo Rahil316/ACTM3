@@ -4,29 +4,35 @@ description: Actual settings module design — what is in the UI, what is wired,
 type: project
 ---
 
-Last updated: 2026-05-22
-Source: `src/ui/screens/SettingsOverlay.tsx`, `src/ui/store/projectStore.ts`, `src/figma/config.ts` — direct code audit
+Last updated: 2026-07-14
+Source: `src/ui/screens/SettingsOverlay.tsx`, `src/ui/store/projectStore.ts`, `src/ui/store/snapshots.ts`, `src/ui/hooks/useAutoSave.ts` — direct code audit
 
 ---
 
 ## Settings screen layout
 
-Full-screen overlay. Fixed header with Cancel / Done. **Two** tab pills.
-Cancel snapshots state on open, restores on cancel. Done calls `updateSettingsFromInputs()`.
+Full-screen overlay. Fixed header with Cancel / Done. **Three** tab pills: Tokens, Labels (internal tab value is still `"roles"` — only the display label changed), Plugin.
 
 ```
 ┌─────────────────────────────────────────┐
 │ Settings              [Cancel]  [Done]  │
 ├─────────────────────────────────────────┤
-│  [Token Settings]  [Plugin]             │
+│  [Tokens]  [Labels]  [Plugin]           │
 ├─────────────────────────────────────────┤
 │  scrollable tab content                 │
 └─────────────────────────────────────────┘
 ```
 
+### Cancel / Done lifecycle (`src/ui/store/snapshots.ts`)
+
+- **On open**: `takeSnapshot()` deep-clones the current `projectStore` into a module-level variable.
+- **On Cancel**: `restoreSnapshot()` reverts `projectStore` to that snapshot, then `clearSnapshot()` clears it (both must run — a Cancel that only restores without clearing leaves autosave paused for the rest of the session).
+- **On Done**: `clearSnapshot()` clears the snapshot, then the current `projectStore` is force-saved immediately (`save(...)` from `useAutoSave.ts`) — necessary because autosave may have skipped saving anything during the time Settings was open.
+- **Autosave pause while Settings is open**: `useAutoSave`'s debounced save and its `beforeunload`/unmount flush both check `hasSnapshot()` before persisting. While a snapshot is active, no `save-config` message is sent regardless of what changes. This means **closing the plugin while Settings is open (without clicking Cancel or Done) behaves like Cancel** — nothing typed in Settings reaches Figma's persisted storage.
+
 ---
 
-## Token Settings Tab
+## Tokens Tab
 
 ### Token Creation Mode card
 
@@ -50,13 +56,6 @@ Visibility rules:
 | ------- | ------------ | -------------------------- | -------- |
 | Steps   | number input | `projectStore.scaleLength` | ✅ wired |
 
-### Variations card
-
-| Control                  | Type         | State key                                     | Status                                                        |
-| ------------------------ | ------------ | --------------------------------------------- | ------------------------------------------------------------- |
-| Role-specific Variations | toggle       | `projectStore.useSharedRoleVariants`          | ✅ wired — enables per-role customVariationList on role cards |
-| Global Variations list   | dynamic list | `projectStore.variations[]` (name, shorthand) | ✅ wired                                                      |
-
 ### Token Naming card
 
 | Control                   | Type         | State key                             | Status                                                                 |
@@ -71,24 +70,50 @@ Visibility rules:
 
 ### Collections card
 
-| Control                       | Type       | State key                                       | Status                                                      |
-| ----------------------------- | ---------- | ----------------------------------------------- | ----------------------------------------------------------- |
-| Palettes collection toggle    | toggle     | `projectStore.includeColorScalesCollection`     | ✅ wired — suppresses `_scale` collection from Figma output |
-| Palettes collection name      | text input | `projectStore.scaleCollectionName`              | ✅ wired (hidden when toggle off)                           |
-| Color role collection name    | text input | `projectStore.tokenCollectionName`              | ✅ wired                                                    |
-| Link tokens to color scale    | toggle     | `projectStore.resolveTokensDirectly` (inverted) | ✅ wired — when OFF, tokens embed hex instead of aliases    |
-| Source Colors                 | toggle     | `projectStore.includeSourceColors`              | ✅ wired                                                    |
-| Source Colors collection name | text input | `projectStore.sourceCollectionName`             | ✅ wired (shown when Source Colors on)                      |
-| Alpha Tints                   | toggle     | `projectStore.includeAlphaTints`                | ✅ wired (shown when Source Colors on)                      |
-| Alpha Values CSV              | text input | `projectStore.alphaValues`                      | ✅ wired (shown when Alpha Tints on)                        |
+Each collection is a single `CollectionRow` (`src/ui/components/SettingsCard.tsx`): a checkbox + label on the left (click anywhere on the button to toggle) and the collection's name input on the right, capped at half the row width so all rows line up. The checkbox visually dims when locked/off; the label never dims (stays legible for identifying the row).
 
-Note: "Link tokens to color scale" toggle is **inverted** — the UI button renders `on` when `resolveTokensDirectly === false` (aliases enabled). Toggle-off = resolve directly.
+| Control           | Type                         | State key                                                                        | Status                                                             |
+| ------------------ | ---------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Token Collection   | `CollectionRow`, always checked + disabled | `projectStore.tokenCollectionName`                                | ✅ wired — mandatory, can't be turned off; name input always editable |
+| Scale Collection   | `CollectionRow`               | `projectStore.includeColorScalesCollection` / `projectStore.scaleCollectionName`  | ✅ wired — Scale mode only; name input disables when unchecked        |
+| Source Collection  | `CollectionRow`               | `projectStore.includeSourceColors` / `projectStore.sourceCollectionName`          | ✅ wired — name input disables when unchecked                        |
+| Alpha Tint Values  | `SmallRow` + `TagInput`       | `projectStore.alphaValues`                                                        | ✅ wired — shown only when Source Collection is on                    |
 
-### Scale Step Labels card (Scale mode only — hidden in Direct)
+---
 
-| Control         | Type         | State key                                         | Status                                  |
-| --------------- | ------------ | ------------------------------------------------- | --------------------------------------- |
-| Step label list | dynamic list | `projectStore.scaleStepNames[]` (name, shorthand) | ✅ wired — if empty, steps numbered 1…N |
+## Labels Tab
+
+Internal tab value is still `"roles"` (`SettingsTab` union in `src/ui/types/state.ts`) — only the display label was changed from "Roles" to "Labels". Hosts role-variation sharing and the Step Labels card (moved here from the Tokens tab).
+
+### Role Variations card
+
+| Control                       | Type   | State key                            | Status                                                                                          |
+| ------------------------------ | ------ | -------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Custom Variations per role     | toggle | `projectStore.useSharedRoleVariants` (inverted) | ✅ wired — UI shows `on` when `useSharedRoleVariants === false`; toggling is a one-way sync (see below) |
+
+**Toggle semantics** — `useSharedRoleVariants: true` means every role defers to the global `variations` list; `false` means each role owns its own array. Flipping this in `setProjectField` is a one-time sync, not just a display switch:
+- Turning it **off** (custom per-role ON) rebuilds every role's array from the current shared variations — name/shorthand/count always match shared, but a target the role already had at that index is preserved rather than overwritten; only indices the role didn't have before pick up the shared default target.
+- Turning it **on** (shared ON) sets every role's `variations` to `null`.
+- `ensureVariations()` (`src/ui/store/projectStore.ts`) respects this on every reload: when `useSharedRoleVariants` is `true` it does NOT backfill roles' `null` variations — otherwise the toggle's ON state couldn't survive a reload, since the engine reads `role.variations ?? globalVariations`.
+
+### Shared Variations card (hidden when Custom Variations per role is ON)
+
+| Control                | Type          | State key                                     | Status                                                        |
+| ------------------------ | ------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| Global Variations list  | `ListRow` list (Name, Short, Target) | `projectStore.variations[]`         | ✅ wired                                                       |
+| + Add Variation          | button        | `addVariation()`                                | ✅ wired                                                       |
+| Reset to Defaults        | button        | `resetVariations()`                             | ✅ wired — replaces with fresh `DEFAULT_VARIATIONS` (Subtle/Soft/Default/Strong/Bold), new `_id`s |
+
+### Step Labels card (Scale mode only)
+
+Moved here from the Tokens tab. Lives in `StepLabelsCard()`. Restyled to match Shared Variations: a `SettingsCard` with `ListHeader`/`ListRow` (no accordion), always showing the full step table rather than requiring an explicit "enable" action first.
+
+| Control              | Type                          | State key                                            | Status                                                                      |
+| --------------------- | ------------------------------ | ------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Step label list       | `ListRow` list (Name, Short)    | `projectStore.scaleSteps[]` (name, shorthand)          | ✅ wired — `null` displays as numeric defaults `1…N`; editing a cell materializes the array |
+| Insert step after row | `+` button per row              | `insertScaleStepAt(i + 1)`                             | ✅ wired — grows `scaleLength` by 1 (max 100)                                    |
+| Remove step           | remove button per row           | `removeScaleStepAt(i)`                                 | ✅ wired — shrinks `scaleLength` by 1 (min 5)                                    |
+| Reset to Defaults     | button                          | renumbers all rows back to `1…N`, collapses to `null`  | ✅ wired — replaces the old "Enable/Disable Step Labels" toggle pair              |
 
 ---
 

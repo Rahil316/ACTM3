@@ -1,10 +1,10 @@
 // resolver
-import type { Role } from "./types";
+import type { Role } from "../types";
 import type { EngineInput } from "./clrEngine";
-import type { EngineResult } from "./exportEng/types";
-import { contrastRatio } from "./colorMath";
+import type { EngineResult } from "../exportEng/types";
+import { contrastRatio } from "../colorMath";
 
-export { contrastRatio } from "./colorMath";
+export { contrastRatio } from "../colorMath";
 
 /** Matches the [color] placeholder in dynamic token refs. */
 export const COLOR_PLACEHOLDER_RE = /\[color\]/i;
@@ -241,7 +241,7 @@ export function sanitizeHex(val: string): string {
     .substring(0, 6);
 }
 
-import type { RoleLocalBg, Color, Theme } from "./types";
+import type { RoleLocalBg, Color, Theme } from "../types";
 
 /**
  * Translate a UI-state localBg shape into the three engine runtime fields.

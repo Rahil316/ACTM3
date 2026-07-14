@@ -1,8 +1,8 @@
-export { variableMaker } from "../../shared/clrEngine";
-export { contrastRatio, contrastRating, resolveTokenRefBgs } from "../../shared/clrUtils";
-export { translateLocalBg } from "../../shared/clrUtils";
+export { variableMaker } from "../../shared/engine/clrEngine";
+export { contrastRatio, contrastRating, resolveTokenRefBgs } from "../../shared/engine/clrUtils";
+export { translateLocalBg } from "../../shared/engine/clrUtils";
 
-import { contrastRatio, contrastRating } from "../../shared/clrUtils";
+import { contrastRatio, contrastRating } from "../../shared/engine/clrUtils";
 import { ratingFromRatio } from "../types/state";
 import type { ContrastRating } from "../types/state";
 

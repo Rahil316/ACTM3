@@ -1,10 +1,14 @@
-import { contrastRating, hexToHue, hexToSat, hslToHex, seriesMaker, shortestHueDiff, srgbLinearize } from "./clrUtils";
-import { contrastRatio, hexToOklch, oklchToHex, maxChromaAtLH, hexToHct, hctToHex, lstarFromY, normalizeHex, relLum } from "./colorMath";
+import { contrastRating, hexToHue, hexToSat, hslToHex, seriesMaker, shortestHueDiff } from "./clrUtils";
+import { contrastRatio, hexToOklch, oklchToHex, maxChromaAtLH, hexToHct, hctToHex, lstarFromY, normalizeHex, relLum } from "../colorMath";
+import { solveColorForContrast } from "./solverEngine";
 
 import type { ContrastRating } from "./clrUtils";
-import type { Color, Theme, Variation, Role, ScaleAlgorithm, SolverMode, ScaleStepToken } from "./types";
+import type { Color, Theme, Variation, Role, ScaleAlgorithm, SolverMode, ScaleStepToken } from "../types";
+import type { SolverResult } from "./solverEngine";
 
 export type { ScaleAlgorithm, SolverMode };
+export { solveColorForContrast };
+export type { SolverResult };
 
 // variableMaker accepts ProjectStore directly — imported lazily via the type-only
 // import below to avoid a circular dependency (shared ← ui).
@@ -43,6 +47,12 @@ export interface TokenEntry {
   contrast: ContrastInfo;
   contrastTarget?: number;
   isAdjusted?: boolean;
+  // Only set when solved via the apca-natural solver mode — contrast.ratio
+  // above always stays a genuine WCAG ratio (recomputed from the actual
+  // output hex) regardless of solver mode, so every existing consumer of
+  // contrast.ratio keeps working unmodified. This is purely additive detail
+  // for UI that wants to show what apca-natural actually optimized for.
+  achievedLc?: number;
 }
 
 export interface EngineErrors {
@@ -56,13 +66,6 @@ export interface EngineResult {
   tokens: Record<string, Record<string, Record<number, Record<number, TokenEntry>>>>;
   errors: EngineErrors;
 }
-
-// ── SOLVER CONSTANTS ──────────────────────────────────────────────────────────
-
-const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "hue-locked", "max-chroma"];
-const OVERSHOOT_WARN = 0.3;
-const MAX_ITER = 60;
-const L_EPS = 1e-5;
 
 // ── COLOR SCALE ALGORITHMS ────────────────────────────────────────────────────
 
@@ -363,6 +366,11 @@ function _solveDirectMode(color: Color, mode: Theme, config: EngineInput, global
       const solved = solveColorForContrast(color.value, targetContrast, bgHex, solverMode);
       if (solved.warning) errors.warnings.push({ color: color.name, role: role.name, variation, theme: modeName, warning: solved.warning });
       if (solved.chromaReduced) errors.notices.push({ color: color.name, role: role.name, variation, theme: modeName, notice: "Chroma reduced to fit gamut." });
+      // solved.achievedContrast is in Lc units (not WCAG) for apca-natural —
+      // always recompute the genuine WCAG ratio for contrast.ratio/isAdjusted
+      // so every downstream consumer (health report, preview screens, dev
+      // overlay) keeps treating this field as WCAG-scale unconditionally.
+      const wcagRatio = solved.metric === "apca" ? (contrastRatio(solved.hex, bgHex) ?? 0) : solved.achievedContrast;
       roleOutput[vi] = {
         tokenName: `${color.name}/${role.name}/${variation}`,
         color: color.name,
@@ -371,9 +379,10 @@ function _solveDirectMode(color: Color, mode: Theme, config: EngineInput, global
         roleDescription: role.description || "",
         tokenRef: null,
         value: solved.hex,
-        contrast: { ratio: solved.achievedContrast, rating: contrastRating(solved.hex, bgHex) },
+        contrast: { ratio: wcagRatio, rating: contrastRating(solved.hex, bgHex) },
         contrastTarget: targetContrast,
-        isAdjusted: solved.clipped || solved.achievedContrast > targetContrast + 0.3,
+        isAdjusted: solved.clipped || wcagRatio > targetContrast + 0.3,
+        ...(solved.metric === "apca" ? { achievedLc: solved.achievedContrast } : {}),
       };
     });
   }
@@ -460,172 +469,6 @@ function _mapByScaleContrast(
       isAdjusted: !found,
     };
   });
-}
-
-// ── COLOR SPACES ──────────────────────────────────────────────────────────────
-
-type Vec3 = [number, number, number];
-
-function _h2lr(hex: string): Vec3 {
-  const n = parseInt((normalizeHex(hex) || "#000000").replace("#", ""), 16);
-  return [srgbLinearize((n >> 16) & 255), srgbLinearize((n >> 8) & 255), srgbLinearize(n & 255)];
-}
-
-// ── CONTRAST SOLVER ───────────────────────────────────────────────────────────
-//
-// _relLumFromLinear/_wcagContrast/_lumOfHex are a second, private luminance
-// implementation kept deliberately separate from colorMath's relLum —
-// benchmarked directly: colorMath's culori-backed relLum is ~7x slower per
-// call (general-purpose parse/mode-conversion overhead vs. this tight inline
-// calculation), and _searchL below calls this on every one of its up to 60
-// bisection iterations, for every color/role/variation/theme combination in
-// a full variableMaker() run. Not migrated; kept as a documented,
-// performance-motivated exception rather than a leftover oversight.
-
-function _relLumFromLinear(r: number, g: number, b: number): number {
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function _wcagContrast(lum1: number, lum2: number): number {
-  const hi = Math.max(lum1, lum2),
-    lo = Math.min(lum1, lum2);
-  return (hi + 0.05) / (lo + 0.05);
-}
-
-function _lumOfHex(hex: string): number {
-  const [r, g, b] = _h2lr(hex);
-  return _relLumFromLinear(r, g, b);
-}
-
-function _targetChroma(L: number, srcL: number, srcC: number, _srcH: number, mode: SolverMode): number {
-  if (srcC < 0.001) return 0;
-  switch (mode) {
-    case "constant-chroma":
-      return srcC;
-    case "symmetric":
-      return srcC * (1 - Math.pow(Math.abs(2 * L - 1), 1.5));
-    case "natural":
-      return (srcC / Math.max(srcL, 1 - srcL)) * Math.min(L, 1 - L);
-    default:
-      return srcC;
-  }
-}
-
-function _searchL(bgLum: number, targetContrast: number, lo: number, hi: number, getHexAtL: (L: number) => string | null): number | null {
-  let bestL: number | null = null;
-  let failedConversions = 0;
-  for (let i = 0; i < MAX_ITER; i++) {
-    if (hi - lo < L_EPS) break;
-    const mid = (lo + hi) / 2;
-    const hex = getHexAtL(mid);
-    if (!hex) {
-      if (++failedConversions > 8) {
-        console.warn("_searchL: too many failed hex conversions, aborting search");
-        break;
-      }
-      lo = mid;
-      continue;
-    }
-    const contrast = _wcagContrast(_lumOfHex(hex), bgLum);
-    if (contrast >= targetContrast) {
-      bestL = mid;
-      if (bgLum > 0.5) lo = mid;
-      else hi = mid;
-    } else {
-      if (bgLum > 0.5) hi = mid;
-      else lo = mid;
-    }
-  }
-  return bestL;
-}
-
-export interface SolverResult {
-  hex: string;
-  achievedContrast: number;
-  solverMode: SolverMode;
-  chromaReduced: boolean;
-  clipped: boolean;
-  warning: string | null;
-}
-
-export function solveColorForContrast(sourceHex: string, targetContrast: number, bgHex: string, solverMode: SolverMode | string): SolverResult {
-  const mode: SolverMode = SOLVER_MODES.includes(solverMode as SolverMode) ? (solverMode as SolverMode) : "natural";
-  const src = hexToOklch(sourceHex);
-  const bgLum = _lumOfHex(bgHex);
-  const bgIsLight = bgLum > 0.18;
-
-  const maxTheoreticalContrast = _wcagContrast(bgLum, bgIsLight ? 0 : 1);
-  if (targetContrast > maxTheoreticalContrast + 0.01) {
-    const fallback = bgIsLight ? "#000000" : "#FFFFFF";
-    return {
-      hex: fallback,
-      achievedContrast: parseFloat(maxTheoreticalContrast.toFixed(2)),
-      solverMode: mode,
-      chromaReduced: true,
-      clipped: true,
-      warning: `Target contrast ${targetContrast} is unreachable against this background (max ${maxTheoreticalContrast.toFixed(2)}). Black/white used.`,
-    };
-  }
-
-  const lLow = 0.001,
-    lHigh = 0.999;
-  let solvedL: number | null = null,
-    solvedC: number | null = null,
-    chromaReduced = false;
-
-  if (mode === "max-chroma") {
-    const getHex = (L: number) => {
-      const maxC = Math.min(Math.max(src.C, 0.2), maxChromaAtLH(L, src.H));
-      return oklchToHex(L, maxC < 0.001 ? 0 : maxC, src.H);
-    };
-    solvedL = _searchL(bgLum, targetContrast, lLow, lHigh, getHex);
-    if (solvedL !== null) solvedC = Math.min(Math.max(src.C, 0.2), maxChromaAtLH(solvedL, src.H));
-  } else if (mode === "hue-locked") {
-    const getHex = (L: number) => {
-      const rawC = _targetChroma(L, src.L, src.C, src.H, "natural");
-      return oklchToHex(L, Math.min(rawC, maxChromaAtLH(L, src.H)), src.H);
-    };
-    solvedL = _searchL(bgLum, targetContrast, lLow, lHigh, getHex);
-    if (solvedL !== null) {
-      const rawC = _targetChroma(solvedL, src.L, src.C, src.H, "natural");
-      solvedC = Math.min(rawC, maxChromaAtLH(solvedL, src.H));
-      if (solvedC < src.C - 0.01) chromaReduced = true;
-    }
-  } else {
-    const getHex = (L: number) => {
-      const rawC = _targetChroma(L, src.L, src.C, src.H, mode);
-      return oklchToHex(L, Math.min(rawC, maxChromaAtLH(L, src.H)), src.H);
-    };
-    solvedL = _searchL(bgLum, targetContrast, lLow, lHigh, getHex);
-    if (solvedL !== null) {
-      const rawC = _targetChroma(solvedL, src.L, src.C, src.H, mode);
-      solvedC = Math.min(rawC, maxChromaAtLH(solvedL, src.H));
-      if (rawC > 0.001 && solvedC < rawC - 0.01) chromaReduced = true;
-    }
-  }
-
-  if (solvedL === null) {
-    const fallback = bgIsLight ? "#000000" : "#FFFFFF";
-    return {
-      hex: fallback,
-      achievedContrast: parseFloat(_wcagContrast(_lumOfHex(fallback), bgLum).toFixed(2)),
-      solverMode: mode,
-      chromaReduced: true,
-      clipped: true,
-      warning: `Solver could not find a solution for target contrast ${targetContrast}. Black/white used.`,
-    };
-  }
-
-  const resultHex = oklchToHex(solvedL, solvedC || 0, src.H);
-  const achievedContrast = parseFloat(_wcagContrast(_lumOfHex(resultHex), bgLum).toFixed(2));
-  // achievedContrast is rounded to 2dp above; round targetContrast the same way
-  // before comparing so rounding alone can't produce a spurious shortfall warning.
-  const roundedTarget = parseFloat(targetContrast.toFixed(2));
-  let warning: string | null = null;
-  if (achievedContrast < roundedTarget) warning = `Achieved contrast ${achievedContrast} is below target ${targetContrast}. Possible floating-point edge case.`;
-  else if (achievedContrast > targetContrast + OVERSHOOT_WARN) warning = `Target ${targetContrast} not achievable precisely; nearest is ${achievedContrast} (overshoot ${(achievedContrast - targetContrast).toFixed(2)}).`;
-
-  return { hex: resultHex, achievedContrast, solverMode: mode, chromaReduced, clipped: false, warning };
 }
 
 export function validateVariationContrasts(targets: number[]): { valid: boolean; errors: string[] } {

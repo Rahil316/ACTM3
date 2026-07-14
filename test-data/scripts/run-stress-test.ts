@@ -7,8 +7,8 @@
 
 import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
-import { variableMaker } from "../../src/shared/clrEngine";
-import type { EngineResult, TokenEntry } from "../../src/shared/clrEngine";
+import { variableMaker } from "../../src/shared/engine/clrEngine";
+import type { EngineResult, TokenEntry } from "../../src/shared/engine/clrEngine";
 import { generateAllCases, type GeneratedCase } from "./generate-configs";
 
 const RESULTS_DIR = join(__dirname, "..", "results");

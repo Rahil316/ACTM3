@@ -12,7 +12,7 @@ Solves each token color directly to a WCAG contrast target without generating an
 
 ### Per-Role Variation Override
 
-A role can define its own variation set independently from the global list. Enable `customVariationList: true` on a role and provide `customVariations` with name and shorthand per slot. The engine uses these slots instead of the global list for that role only. Enable via the **Role-specific Variations** toggle in Token Settings, then toggle the per-role custom option on the role card.
+A role can define its own variation set independently from the global list. When `projectStore.useSharedRoleVariants` is `false`, each role's `variations[]` (name/shorthand/target per slot) is used by the engine instead of the global list (`role.variations ?? globalVariations` in `clrEngine.ts`). Toggle **Custom Variations per role** on the **Labels** settings tab — turning it off rebuilds every role's list from the current Shared Variations (preserving any target the role already had at each index), turning it back on reverts every role to `null` (defer to Shared Variations).
 
 ### Mapping Method: Contrast vs Index (Scale Mode)
 

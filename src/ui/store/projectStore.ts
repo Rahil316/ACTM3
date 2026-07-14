@@ -9,6 +9,8 @@ export const SOLVER_MODE_OPTIONS: [string, string, string][] = [
   ["symmetric",        "Symmetric",       "Chroma follows a bell curve peaking at mid-lightness and collapsing toward zero at both white and black. Results are near-neutral at extremes. Use for text-on-button where readability matters more than hue."],
   ["hue-locked",       "Hue Locked",      "Stays on the seed's exact hue, pushes to the maximum in-gamut chroma at each lightness. Vivid but never out-of-gamut."],
   ["max-chroma",       "Max Chroma",      "Ignores seed chroma entirely — finds the most vivid color the display gamut allows at each lightness. Applies to all colors including neutrals. Rarely correct as a global setting."],
+  ["gamut-cusp",       "Balanced",        "Keeps the seed's vividness as a fraction of what each lightness can actually support for that hue, instead of a fixed taper curve. Every hue looks equally saturated for what it can achieve — no muddy yellows, no washed-out blues."],
+  ["apca-natural",     "Perceptual",      "Same gamut-aware chroma as Balanced, but targets APCA — a newer, more perceptually accurate contrast model than WCAG that accounts for light-on-dark vs. dark-on-light reading differently. Closest to how the color will actually read on screen."],
 ];
 
 export const SCALE_ALGORITHM_OPTIONS = ["Natural", "Uniform", "Linear", "Expressive", "Symmetric", "OKLCH", "Material", "Fidelity"] as const;

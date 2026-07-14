@@ -26,10 +26,10 @@ const TITLE_COLOR: Record<CalloutVariant, string> = {
 };
 
 const ACTION_COLOR: Record<CalloutVariant, string> = {
-  warning: 'text-w-tx-muted hover:text-w-tx-strong',
+  warning: 'text-w-tx-muted hover:text-w-tx-primary',
   info:    'text-n-tx-secondary hover:text-n-tx-primary',
-  success: 'text-s-tx-muted hover:text-s-tx-strong',
-  danger:  'text-d-tx-muted hover:text-d-tx-strong',
+  success: 'text-s-tx-muted hover:text-s-tx-primary',
+  danger:  'text-d-tx-muted hover:text-d-tx-primary',
 };
 
 const DEFAULT_ICON: Record<CalloutVariant, ReactNode> = {

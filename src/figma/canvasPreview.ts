@@ -2,12 +2,12 @@
 type AnyObj = any;
 
 import { hexToFigmaRgb, isColorDark, bindFill } from "./figmaComponents/helpers";
-import { contrastRatio, contrastRating } from "../shared/clrUtils";
+import { contrastRatio, contrastRating } from "../shared/engine/clrUtils";
 import { buildScaleStepMaster } from "./figmaComponents/ScaleStepTile";
 import { buildSourceAlphaMaster } from "./figmaComponents/SourceAlphaTile";
 import { buildRoleTokenMaster } from "./figmaComponents/RoleTokenTile";
 import { translateConfig } from "./config";
-import { variableMaker } from "../shared/clrEngine";
+import { variableMaker } from "../shared/engine/clrEngine";
 
 function yieldFrame(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));

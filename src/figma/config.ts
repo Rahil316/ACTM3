@@ -1,9 +1,9 @@
 // CONFIG TRANSLATOR: Converts projectStore (UI format) into the format expected by variableMaker.
 // Ported from vanilla_archive/src/shared/config.js
 
-import { translateLocalBg } from "../shared/clrUtils";
+import { translateLocalBg } from "../shared/engine/clrUtils";
 import type { ProjectStore, TokenNameSegment } from "../ui/types/state";
-import type { EngineInput } from "../shared/clrEngine";
+import type { EngineInput } from "../shared/engine/clrEngine";
 import type { Color, Role, Theme, Variation } from "../shared/types";
 export interface StepNames {
   name: string;
@@ -143,7 +143,7 @@ function _mapRoles(projectStore: ProjectStore, _variations: Variation[]): Role[]
 
 // ── TOKEN-REF LOCAL BG RESOLUTION ────────────────────────────────────────────
 // Re-exported here so existing plugin imports are unchanged.
-export { resolveTokenRefBgs } from "../shared/clrUtils";
+export { resolveTokenRefBgs } from "../shared/engine/clrUtils";
 
 // ── RENAME MAP ────────────────────────────────────────────────────────────────
 

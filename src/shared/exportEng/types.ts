@@ -1,5 +1,5 @@
 import type { Color, Variation, Role } from '../../shared/types';
-import type { TokenEntry, EngineErrors, EngineResult } from '../../shared/clrEngine';
+import type { TokenEntry, EngineErrors, EngineResult } from '../../shared/engine/clrEngine';
 
 export type { Color, Variation, Role, TokenEntry, EngineErrors, EngineResult };
 

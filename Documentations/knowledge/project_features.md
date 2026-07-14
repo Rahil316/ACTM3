@@ -55,8 +55,8 @@ Last updated: 2026-05-22
 - `ToastManager` — lightweight stacking toast system (defined in `notifications.js`)
 - Preview panel (`preview.js`) — live token preview before syncing to Figma; "Solved Colors" label in Direct mode
 - Run dialog — shows existing collections, rename summary before sync
-- Full-screen settings panel with 2 tabs: **Token Settings** and **Plugin**
-- Settings Cancel/Done — Cancel snapshots and reverts, Done applies
+- Full-screen settings panel with 3 tabs: **Tokens**, **Labels**, and **Plugin**
+- Settings Cancel/Done — snapshot taken on open; Cancel reverts and clears the snapshot, Done clears the snapshot and force-saves; autosave is paused entirely while the snapshot is active, so closing the plugin mid-edit (without Cancel/Done) discards changes same as Cancel
 - UI Scale + Theme preference (persisted in Figma clientStorage)
 - Figma theme detection (MutationObserver on html/body + matchMedia)
 - Config persistence in `figma.root.setPluginData("tw_state")`

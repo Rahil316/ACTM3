@@ -6,7 +6,7 @@
 
 import { translateConfig, resolveTokenRefBgs, buildVariableRenameMap, type PluginConfig } from "./config";
 import { VariableManager, saveUiState } from "./figmaVars";
-import { variableMaker, type EngineResult } from "../shared/clrEngine.js";
+import { variableMaker, type EngineResult } from "../shared/engine/clrEngine.js";
 import { ExportFormatter } from "./docGen";
 import { buildExportBundle } from "../shared/exportEng/bundler";
 import { runPrePublishAnalysis } from "./variableTracker";

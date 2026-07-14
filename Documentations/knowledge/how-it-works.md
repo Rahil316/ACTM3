@@ -9,7 +9,12 @@ A Figma plugin runs in two isolated JavaScript contexts that communicate by mess
 
 No shared memory exists between threads. Every data exchange is a serialized message via `figma.ui.postMessage` (main → UI) and `parent.postMessage` (UI → main).
 
-Config is persisted by the main thread using `figma.root.setPluginData("tw_state", JSON.stringify(projectStore))`. On the next launch, the main thread reads this string and sends it back to the UI as a `load-config` message.
+Config is persisted by the main thread under **two** separate `figma.root.setPluginData` keys, not one (`src/figma/index.ts:95-96`):
+
+- `"tw_ui_state"` — auto-saved on every UI store change; what gets restored into the editor on next launch.
+- `"tw_state"` — written only after a successful `VariableManager.sync()`; the rename/diff baseline used by `buildVariableRenameMap()`.
+
+On `ui-ready`, the main thread reads both and sends them together: `figma.ui.postMessage({ type: "load-config", state: uiState, syncedState })` (`src/figma/index.ts:96-100`). `state` falls back to `syncedState` if no UI-state save exists yet (first sync before any further edits).
 
 ---
 
@@ -25,13 +30,12 @@ Seed hex colors
      │   → N-step hex[] (light → dark)                                            │
      │   _generateScales() — wraps all colors, stores contrast per theme          │
      │   _processScaleMode() — for each role/variation:                            │
-     │     _mapByScaleContrast(): walk scale for first step ≥ variationTarget      │
-     │     _mapByIndex(): pin variation to explicit step index                     │
+     │     _mapByScaleContrast(): walk scale for first step ≥ variation.target     │
      │                                                                              │
      └── Direct mode ───────────────────────────────────────────────────────────────┤
          _solveDirectMode() — for each role/variation:                             │
          solveColorForContrast(src, target, bg, mode)                              │
-         binary-search OKLCH L until contrast ≥ variationTarget                   │
+         binary-search OKLCH L until contrast ≥ variation.target                  │
                                                                                     ▼
                                                { scales, tokens, errors }
                                                variableMaker() return value
@@ -40,17 +44,17 @@ Seed hex colors
                                                → Figma variable collections
 ```
 
+> **Note:** There is no `role.mappingMethod` field and no index-pinning mapping method (`_mapByIndex`) anywhere in the codebase. Every role in Scale mode is resolved by `_mapByScaleContrast` only — there is nothing else to dispatch to. Contrast targets live on each `Variation` object's `target: number` field, not a role-level `variationTargets` array; the variations iterated for a role are `role.variations ?? globalVariations` (see `useSharedRoleVariants` below).
+
 ---
 
 ## Scale Mode Pipeline
 
-1. **`scaleMaker(hexIn, scaleLength, scaleAlgo)`** — generates an array of N hex colors from light to dark. Steps are spaced geometrically in log-luminance so perceptual contrast between adjacent steps is consistent across the full lightness range.
+1. **`scaleMaker(hexIn, scaleLength, scaleAlgo)`** — generates an array of N hex colors from light to dark. Steps are spaced geometrically in log-luminance (`clrEngine.ts:256-262`: `uMax`/`uMin` bound a log-luminance range, `u` is linearly interpolated across the N steps, then exponentiated back to a luminance target) so perceptual contrast between adjacent steps is consistent across the full lightness range. **Caveat:** for `Natural`/`Uniform`/`Expressive`/`Symmetric`, the actual binary search that hits this luminance target operates in HSL lightness via plain sRGB relative luminance, which is not hue-uniform — see `Documentations/knowledge/color-algorithm-roadmap.md`'s "Confirmed issues" entry on this. `OKLCH`/`Material`/`Fidelity` search in genuinely perceptual coordinates instead and don't have this skew.
 
-2. **`_generateScales()`** — calls `scaleMaker` for each color. For every step, it stores the hex value, a `stepName`, and pre-computed contrast ratios against every theme background.
+2. **`_generateScales()`** — calls `scaleMaker` for each color. For every step, it stores (`clrEngine.ts:330-336`): `value` (hex), `stepName` (**not** the bare step key — it's `` `${color.name}-${step}` ``, e.g. `Primary-12`, hyphen-joined and distinct from the `/`-joined Figma variable path built later by `makeLabelHelpers`), `shorthand` (`` `${color.shorthand}-${step}` ``), `description`, and pre-computed `contrast` keyed by theme name (`{ ratio, rating }` per theme).
 
-3. **`_processScaleMode()`** — for each role and each variation, delegates to one of two mapping methods:
-   - **`_mapByScaleContrast()` (default, `mappingMethod: "contrast"`)** — walks the scale steps in order (light→dark on light themes, dark→light on dark themes) and returns the first step whose pre-computed contrast ratio against the theme background is `≥ variationTargets[vi]`. If no step meets the target, it falls back to the highest-contrast step available and emits a warning.
-   - **`_mapByIndex()` (`mappingMethod: "index"`)** — treats each value in `variationTargets` as a zero-based array index into the scale. Pins the variation to that exact step, regardless of contrast.
+3. **`_processScaleMode()`** — for each role and each variation, calls **`_mapByScaleContrast()`** — the only mapping path in Scale mode. It walks the scale steps in order (light→dark on light themes, dark→light on dark themes) and returns the first step whose contrast ratio against the effective background is `≥ variation.target`. If no step meets the target, it falls back to the highest-contrast step available and emits a warning (`isAdjusted: true`).
 
 ---
 
@@ -71,18 +75,20 @@ The five solver modes control how chroma changes as L is adjusted:
 | `natural`          | C tapers as L moves away from mid — most natural-looking results                        |
 | `constant-chroma`  | C held fixed at seed value — maximum color retention throughout the scale               |
 | `symmetric`        | C follows a bell curve peaking at mid-L, collapsing toward zero at white and black      |
-| `hue-locked`       | H fixed to source; pushes to maximum in-gamut C at the target contrast level            |
+| `hue-locked`       | H fixed to source; chroma computed via the same `_targetChroma(..., "natural")` taper curve as `natural` mode, clamped to gamut — see caveat below |
 | `max-chroma`       | L solved for contrast, then C pushed to maximum in-gamut value at that L                |
+
+**Caveat on `hue-locked`:** as implemented (`clrEngine.ts:583-593`), this mode does **not** push to maximum in-gamut chroma — it hardcodes `_targetChroma(..., "natural")` regardless of which mode was requested, so its chroma curve is currently identical to `natural` mode's. The only observable difference is a slightly different `chromaReduced` flagging threshold. Root-caused in `Documentations/knowledge/color-algorithm-roadmap.md`'s "Confirmed issues" section — check that doc before relying on `hue-locked` producing visibly different output from `natural`.
 
 ---
 
 ## Per-Role Variation Override
 
-By default, every role uses the global `variations` list.
+By default (`useSharedRoleVariants: true`), every role uses the global `variations` list — a role's own `variations` field is `null`, which `clrEngine` reads as "defer to global" (`role.variations ?? globalVariations`).
 
-When a role has `customVariationList: true` and a non-empty `customVariations` array, the engine substitutes that array in place of the global list for that role only. The number of entries in `customVariations` must match the number of entries in the role's `variationTargets`.
+When `useSharedRoleVariants` is `false`, each role owns its own populated `variations` array instead, substituted in place of the global list for that role only. There is no separate `customVariationList`/`customVariations` field pair — `useSharedRoleVariants` is the single toggle, and its polarity is the opposite of what a `customVariationList: true` name would suggest (the flag is *true* when roles share the global list, not when they have custom ones).
 
-This path is taken in both `_processScaleMode` and `_solveDirectMode` via the same guard in `src/ui/store/projectStore.ts`.
+This path is taken in both `_processScaleMode` and `_solveDirectMode` via the identical `role.variations ?? globalVariations` fallback (`clrEngine.ts:339`, `clrEngine.ts:357`) — not a guard in `projectStore.ts`. The UI-side backfill logic that keeps saved state consistent with this toggle (`ensureVariations()`) does live in `src/ui/store/projectStore.ts`.
 
 ---
 
@@ -115,8 +121,10 @@ The `/` character in any name segment creates a Figma variable folder group.
 
 Two fields control how scale algorithms and solver modes are assigned per color:
 
-- **`useUniformAlgorithm`** — when `true` (default), all colors use the global `scaleAlgorithm`. When `false`, each color can specify its own `color.scaleAlgorithm` field.
-- **`algorithmScopeLevel`** — `"color"` (default) or `"role"`. In Direct mode with `useUniformAlgorithm: false`, this controls whether solver mode is read from `color.solverMode` or `role.solverMode`.
+- **`useUniformAlgorithm`** — when `true` (default), all colors use the global `scaleAlgorithm`/`solverMode`. When `false`, per-color or per-role overrides apply per `algorithmScopeLevel`.
+- **`algorithmScopeLevel`** — `"color"` (default) or `"role"`. Priority chain in `_getSolverMode` (`clrEngine.ts:342-346`): (1) `useUniformAlgorithm !== false` → always `config.solverMode`, ignoring role/color; (2) `algorithmScopeLevel === "role"` → `role.solverMode ?? config.solverMode`; (3) else → `color.solverMode ?? config.solverMode`.
+
+**Scale mode caveat — role-scoping is dead here.** The priority chain above is real, but only for **Direct mode's solver**. In **Scale mode**, `_generateScales` (`clrEngine.ts:315`) reads `color.scaleAlgorithm` only — `role.scaleAlgorithm` is never consulted anywhere in the pipeline, so `algorithmScopeLevel: "role"` has no effect on which scale algorithm gets used. This is a known, documented gap (`Documentations/knowledge/color-algorithm-roadmap.md`'s "Confirmed issues" section) — the field is fully wired through the UI (a live per-role Algorithm dropdown exists, is persisted, and is exported), so users can set it believing it does something, and it's silently ignored. Structurally this follows from the one-scale-per-color data model (a scale is generated once per color; two roles sharing that color's scale can't each get a different ramp) — but nothing in the UI currently communicates the limitation.
 
 ---
 
@@ -134,36 +142,44 @@ color tokens collection
 
 Token variables alias into scale variables. Changing a seed color regenerates the scale hex values; all token aliases update automatically in Figma.
 
-### Direct mode / `resolveTokensDirectly: true`
+### Direct mode / `includeColorScalesCollection: false`
+
+There is no `resolveTokensDirectly` field anywhere in the codebase — the real gate is a single computed flag, `skipScales` (`src/figma/figmaVars.ts:85`):
+
+```
+skipScales = config.pluginMode === "direct"
+          || config.includeColorScalesCollection === false
+          || (!scaleColExists && scope !== "all" && scope !== "scale")
+```
+
+Whenever `skipScales` is true — whether because `pluginMode === "direct"`, or because `includeColorScalesCollection` was turned off in Scale mode, or because the scale collection doesn't exist yet and the sync scope excludes it (third disjunct, see below) — **both** of the following happen together, not independently:
 
 ```
 color tokens collection
   └── Primary/Background/Subtle  (COLOR, hex value — no alias)
 ```
 
-Hex values are written directly into token variables. The `_scale` collection is not created.
-
-### `includeColorScalesCollection: false`
-
-Same result as Direct mode above — the `_scale` collection is suppressed even in Scale mode. Tokens still alias scale variables; the scale collection just isn't written. (This flag is wired in `src/figma/config.ts` and checked in `src/figma/figmaVars.ts`.)
+Hex values are written directly into token variables, and the `_scale` collection is not created (or, if it already exists from a prior sync, is simply not touched by this run). **Correction:** an earlier version of this doc claimed `includeColorScalesCollection: false` still aliases tokens to scale variables while only suppressing the collection — that is wrong. `figmaVars.ts:182` (`if (skipScales) { value = token.value; } else { ...VARIABLE_ALIAS... }`) uses the exact same `skipScales` flag to decide both things at once. Turning off `includeColorScalesCollection` in Scale mode produces raw-hex tokens, identical in kind to Direct mode — not scale-backed aliases with a hidden collection.
 
 ---
 
-## Figma Variable Sync: Three Stages
+## Figma Variable Sync: Four Stages
 
-`VariableManager.sync()` writes to Figma in three sequential stages:
+`VariableManager.sync()` writes to Figma in **four** sequential stages, not three:
 
-1. **Scale collection** (`_scale` by default, name from `scaleCollectionName`) — writes one `COLOR` variable per color × step. Skipped when `resolveTokensDirectly: true`, `pluginMode: "direct"`, or `includeColorScalesCollection: false`.
+1. **Scale collection** (`_scale` by default, name from `scaleCollectionName`, `figmaVars.ts:98`) — writes one `COLOR` variable per color × step. Skipped whenever `skipScales` is true (see above — covers `pluginMode: "direct"`, `includeColorScalesCollection: false`, and the not-yet-existing-collection-plus-narrow-scope case).
 
-2. **Token collection** (`color tokens` by default, name from `tokenCollectionName`) — writes one `COLOR` variable per color × role × variation × theme-mode. In Scale mode, values are Figma variable aliases pointing into stage 1. In Direct mode or when `resolveTokensDirectly` is true, values are raw hex.
+2. **Token collection** (`color tokens` by default, name from `tokenCollectionName`, `figmaVars.ts:138`) — writes one `COLOR` variable per color × role × variation × theme-mode. Values are Figma variable aliases pointing into stage 1 when `skipScales` is false; raw hex when `skipScales` is true.
 
-3. **Source colors collection** (name from `sourceCollectionName`, default `"_constants"`) — writes raw brand hex values as a separate single-mode collection. Enabled by `includeSourceColors: true`. Alpha tint variables (`Opacities/10`, `Opacities/25`, etc.) are also written here when the sting is not empty.
+3. **Source colors collection** (name from `sourceCollectionName`, default `"_constants"`, `figmaVars.ts:216` via `syncGlobalColors()`) — writes raw brand hex values as a separate single-mode collection. Enabled by `includeSourceColors: true`. Alpha tint variables (e.g. `Red/Opacities/10`, `Red/Opacities/25`) are also written here when `alphaValues` is non-empty.
+
+4. **Purge orphaned variables** (`figmaVars.ts:229-235`, via `purgeOrphanedVars()`) — deletes variables left behind by a structural change (mode switch, scale shrink, collection rename/removal, alpha value removed, etc. — see `StructuralChangeKind` in `BLUEPRINT.md`). Only runs when `structuralChanges.length > 0`; contributes to `tally.removed`.
 
 ---
 
 ## Rename-Safety: The `_id` System
 
-Every color, role, and theme carries a stable `_id` field generated at creation time (`generateId()` in `src/ui/store/projectStore.ts`). The rename-safety system in `buildVariableRenameMap()` uses `_id` — not array position — to track identity.
+Every color, role, and theme carries a stable `_id` field generated at creation time (`generateId()` in `src/ui/store/projectStore.ts`). The rename-safety system in `buildVariableRenameMap()` (`src/figma/config.ts:156` — **not** `variableTracker.ts`) uses `_id` — not array position — to track identity.
 
 When the user renames a color from "Primary" to "Brand/Primary", the function compares saved state to new state by matching `_id` values, detects the label change, and produces a rename map:
 
@@ -171,6 +187,6 @@ When the user renames a color from "Primary" to "Brand/Primary", the function co
 { "Primary/12": "Brand/Primary/12", ... }
 ```
 
-`VariableManager.applyRenames()` executes this map before upserting, using a two-pass strategy to handle chain renames (A→B when B is being renamed to C). The result: existing Figma variables are renamed in place rather than deleted and recreated.
+`applyRenames()` (`src/figma/figmaVars.ts:40` — a method on `VariableManager`, **not** in `variableTracker.ts`) executes this map before upserting, using a two-pass strategy (`figmaVars.ts:46-68`) to handle chain renames (A→B when B is being renamed to C). The result: existing Figma variables are renamed in place rather than deleted and recreated.
 
-**Current limitation:** Per-role custom variation renames (when `customVariationList: true`) are not tracked by `buildVariableRenameMap`. Renaming a custom variation creates a new variable instead of renaming the existing one.
+Variation renames — including per-role custom lists, not just the global list — **are** tracked, contrary to an earlier version of this doc. `_getTokenRenames`'s `getVarMap` (`src/figma/config.ts:236-245`) reads `roleItem?.variations ?? cfg.variations` and matches entries by each `Variation`'s own `_id`, so renaming a variation — global or per-role — renames the existing Figma variable rather than creating a new one.

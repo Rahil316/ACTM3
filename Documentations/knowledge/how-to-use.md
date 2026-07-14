@@ -40,15 +40,16 @@ Three to six colors is typical: one neutral, one or two brand colors, and status
 
 In **Scale mode**, the plugin generates a tonal ramp for each color before mapping roles onto it.
 
-In the **Token Settings** settings tab:
+In the **Tokens** settings tab:
 
 - **Scale Length** — number of steps in the ramp. 11 for utility palettes, 23–25 for semantic systems.
 - **Algorithm** — controls how steps are distributed (see guidelines for selection advice).
-- **Scale Step Labels** — optionally override step names. Add individual step label entries (name + optional shorthand) in the Step Labels section. Steps without labels are numbered 1…N automatically.
+
+Step names can be overridden in the **Step Labels** card on the **Labels** settings tab — add individual entries (name + optional shorthand) per step. Steps without labels are numbered 1…N automatically.
 
 In **Direct mode**, there is no scale. The plugin skips ramp generation and solves each token color independently. Scale settings are hidden.
 
-Switch between modes using the **Scale / Direct** segmented control in the Token Settings tab.
+Switch between modes using the **Scale / Direct** segmented control in the Tokens settings tab.
 
 ---
 
@@ -60,11 +61,10 @@ A role is a semantic intent group — Background, Surface, Border, Fill, Text, e
 
 - **Name** — the middle segment of the token path. Use `/` for folder nesting.
 - **Shorthand** — optional abbreviation.
-- **Variation Targets** — one value per variation. In Scale mode with `contrast` mapping: WCAG contrast ratio targets. In `index` mapping: zero-based scale step indices. In Direct mode: WCAG contrast ratios solved directly.
-- **Mapping Method** (Scale mode only) — `contrast` (default: walk scale for first step meeting the WCAG target) or `index` (pin to explicit step number).
+- **Contrast Target** — set per variation (in the variation table, not on the role itself): a WCAG contrast ratio. In Scale mode, the engine walks the scale for the first step meeting this target; in Direct mode, it's solved directly. There is no "mapping method" setting and no index-based mapping — every role always resolves by contrast.
 - **Custom Variations** — enable to define a custom variation set for this role instead of using the global list.
 
-Enable **Role-specific Variations** in the Token Settings tab to expose the custom variation option per role.
+Enable **Custom Variations per role** on the Labels settings tab to expose the custom variation option per role.
 
 ---
 
@@ -72,12 +72,13 @@ Enable **Role-specific Variations** in the Token Settings tab to expose the cust
 
 Variations are the steps within a role — e.g. Subtle / Soft / Default / Strong / Bold, or 50 / 100 / 200.
 
-The global variations list is defined in the Token Settings tab (Variations section). Each variation has:
+The global variations list is defined in the Labels settings tab (Shared Variations card). Each variation has:
 
 - **Name** — the last segment of the token path.
 - **Shorthand** — used when shorthand is enabled.
+- **Target** — WCAG contrast target for this tier.
 
-To give a single role its own variation structure, enable **Role-specific Variations** globally, then toggle the per-role custom variations on that role card.
+To give a single role its own variation structure, enable **Custom Variations per role** on the Labels tab, then edit that role's variations on its role card.
 
 ---
 
@@ -96,15 +97,15 @@ Add as many themes as needed. Multiple modes per collection requires a paid Figm
 
 ## 8. Settings Walkthrough
 
-Open **Settings** via the gear icon in the top-right toolbar. Settings is a full-screen overlay with two tabs: **Token Settings** and **Plugin**.
+Open **Settings** via the gear icon in the top-right toolbar. Settings is a full-screen overlay with three tabs: **Tokens**, **Labels**, and **Plugin**. Changes only persist if you click **Done** — clicking **Cancel**, or closing the plugin without clicking either, discards everything changed since Settings was opened.
 
-### Token Settings Tab
+### Tokens Tab
 
 **Token Creation Mode**
 - `Scale` — generates a tonal ramp per color; roles map to scale steps.
 - `Direct` — solves each token color directly to a WCAG contrast target; no ramp.
 
-**Use Global Algorithm** toggle
+**Uniform Algorithm** toggle
 - On (default): all colors use the single global algorithm selector.
 - Off: each color card shows its own algorithm or solver mode selector.
 
@@ -112,25 +113,27 @@ Open **Settings** via the gear icon in the top-right toolbar. Settings is a full
 
 **Solver** (Direct mode, global) — Natural, Constant Chroma, Symmetric, Hue Locked, Max Chroma.
 
-**Solver scope** (Direct mode, global off) — By Color or By Role.
+**Algorithm Scope** (Uniform Algorithm off) — Per Color or Per Role.
 
 **Palette** — Scale Length input (number of steps, Scale mode only).
-
-**Variations** — Role-specific Variations toggle; Global Variations list (name + shorthand per slot).
 
 **Token Naming**
 - Shorthand toggles: Colors, Roles, Variations, Scale Steps.
 - Token Name Format: drag pills to reorder the [color, role, variation] path segments; live preview updates.
 - Variable Descriptions: write WCAG contrast metadata into Figma variable description fields.
 
-**Collections**
-- Palettes collection toggle + name (`_scale` default) — suppressed when disabled or in Direct mode.
-- Color role collection name (`color tokens` default).
-- Link tokens to color scale toggle (when off, tokens embed hex values instead of Figma aliases).
-- Source Colors toggle + collection name (`_constants` default) — raw brand hex, no theme processing.
-- Alpha Tints toggle + Alpha Values CSV (only shown when Source Colors is on).
+**Collections** — each collection row is checkbox + label + name input in one row (click the checkbox to enable/disable; the name input disables when the row is off).
+- Token Collection — always on, can't be disabled (`color tokens` default name).
+- Scale Collection toggle + name (`_scale` default) — Scale mode only.
+- Source Collection toggle + name (`_constants` default) — raw brand hex, no theme processing. Alpha Tint Values (comma-separated %) shown only when this is on.
 
-**Scale Step Labels** (Scale mode only) — add individual label entries with name and shorthand for each scale step.
+### Labels Tab
+
+**Custom Variations per role** toggle — off by default (shared variations apply to every role). Turning it on is a one-way sync: every role's variation list is rebuilt from whatever Shared Variations currently holds (existing per-role contrast targets are preserved by position; new slots get the shared default target). Turning it back off reverts every role to following Shared Variations directly.
+
+**Shared Variations** (hidden while Custom Variations per role is on) — the list of variation tiers (e.g. Subtle/Soft/Default/Strong/Bold) with name, shorthand, and contrast target, applied to every role. "+ Add Variation" appends a row; "Reset to Defaults" restores the five built-in tiers.
+
+**Step Labels** (Scale mode only) — name each scale step (e.g. instead of showing "1, 2, 3…"). Add/remove rows with the per-row `+`/remove buttons; "Reset to Defaults" renumbers everything back to `1…N`.
 
 ### Plugin Tab
 
@@ -145,10 +148,11 @@ Click **Run** to open the Run dialog. The dialog shows:
 
 - Existing collections in the current Figma file that match configured collection names.
 - A rename summary: variables that will be renamed in place due to color or role label changes.
-- A **Scope** selector:
-  - `all` ("Everything") — rebuild the scale collection and the token collection.
-  - `scale` ("Scale Only") — rebuild the scale collection only.
-  - `roles` ("Roles Only") — rebuild the token collection only (skips scale regeneration — faster for token-only changes).
+- A **collections checklist**, not a single scope dropdown: independent "Scale" and "Tokens" toggle rows (each with its own editable collection-name field), plus a separate "Source Colors" toggle. Their combination determines what gets rebuilt:
+  - Scale on + Tokens on — rebuild both the scale collection and the token collection.
+  - Scale on + Tokens off — rebuild the scale collection only.
+  - Scale off + Tokens on — rebuild the token collection only (skips scale regeneration — faster for token-only changes).
+  - Source Colors is independent of the other two and always syncs when enabled, regardless of their state.
 
 Click **Sync** to write variables to Figma. A tally shows how many variables were created, updated, renamed, or failed.
 
@@ -156,12 +160,19 @@ Click **Sync** to write variables to Figma. A tally shows how many variables wer
 
 ## 10. Exports
 
-Use the export buttons in the **•••** (More Options) sheet to download:
+Use the export buttons in the **•••** (More Options) sheet to download. Eleven formats are available:
 
+- **Token Wand Config (.wand)** — full plugin state snapshot; re-importable to restore the project.
 - **CSS** — custom properties in `:root` (scales) and `[data-theme="name"]` blocks (tokens), with `@media (prefers-color-scheme: dark)` fallback.
 - **SCSS** — flat scale variables, per-color scale maps, per-theme token maps, an `apply-theme` mixin, and theme selector blocks.
+- **Tailwind Config** — a `tailwind.config.js` extending `theme.colors`, plus companion CSS files.
+- **W3C Design Tokens (DTCG)** — scale and per-theme token files in the W3C Design Token Community Group JSON format.
+- **Style Dictionary** — a `global.json` scale source plus per-theme token override files.
+- **iOS / Swift** — one `{Theme}Colors.swift` file per theme with static Color properties.
+- **Android XML** — `res/{qualifier}/colors.xml` per theme (uses Android's native `values`/`values-night` qualifiers where they apply, `values-{theme}` otherwise).
+- **React Native** — a TypeScript `tokens/index.ts` barrel plus a typed per-theme token file.
 - **CSV** — an audit sheet with color, step, hex, contrast ratios, and ratings for both scales and role tokens.
-- **JSON** — full plugin state including config, scales, tokens, and errors. Also usable to restore plugin state.
+- **JSON** — raw scales/tokens/errors data (not the full plugin config — use the `.wand` export to restore plugin state).
 
 Exports do not require a Figma sync first — they run directly from the current UI state.
 
@@ -183,7 +194,7 @@ To safely rename a color or role:
 
 To safely reorder colors or roles: drag to reorder, then sync. `_id` tracking ensures the right variables are renamed.
 
-**Current limitation:** Per-role custom variation renames are not tracked — renaming a custom variation creates a new variable instead of renaming the old one.
+Variation renames — including per-role custom variation lists — are tracked by `_id` the same way colors and roles are (`src/figma/config.ts:236-245`), so renaming a variation (global or per-role) renames the existing Figma variable rather than creating a new one.
 
 ---
 
@@ -193,14 +204,14 @@ To safely reorder colors or roles: drag to reorder, then sync. `_id` tracking en
 
 **Flat Tailwind-style names:** Set `tokenNameSegments: ["color", "variation"]` (two elements, no role) and enable shorthand. With color `bl` and variation `500`, the output is `bl/500`. Full names produce `Blue/500`.
 
-**Descriptions** — enable in Token Settings to write contrast ratios into each variable's description. Useful for accessibility audits without leaving Figma.
+**Descriptions** — enable in the Tokens tab to write contrast ratios into each variable's description. Useful for accessibility audits without leaving Figma.
 
-**JSON export/import** — the JSON export contains the full plugin config. Commit it to version-control the token configuration.
+**Config export/import** — use the **Token Wand Config (.wand)** export (not the JSON export, which only contains raw scales/tokens/errors) to commit the full plugin config to version control. Re-import it via the import button to restore a project.
 
-**Scope: roles only** — after the initial sync, use `roles` scope to skip scale regeneration and sync significantly faster.
+**Tokens-only sync** — after the initial sync, turn off the "Scale" toggle in the Run dialog's collections checklist to skip scale regeneration and sync significantly faster when only roles/tokens changed.
 
 **Preview panel** — review all computed token hex values before syncing to Figma.
 
 **Per-role variation override** — use when a role needs a fundamentally different structure than the global one. Status colors are the common case: `BG/Subtle`, `BG/Default`, `FG/Default`, `Border` are four purpose-specific slots.
 
-**Alpha Tints** — enable Source Colors + Alpha Tints in Token Settings. Configures RGBA variables at `ColorName/Opacities/10`, `ColorName/Opacities/25`, etc.
+**Alpha Tints** — enable Source Collection in the Tokens tab, then set Alpha Tint Values (comma-separated percentages). Configures RGBA variables at `ColorName/Opacities/10`, `ColorName/Opacities/25`, etc.

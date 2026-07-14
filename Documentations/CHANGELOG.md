@@ -6,6 +6,20 @@ Entries are in reverse-chronological order. Each entry covers a logical unit of 
 
 ## [Unreleased]
 
+### Settings — Roles/Labels tab rework, snapshot/autosave fixes, collection rows
+
+**Roles tab renamed to "Labels" tab** (`src/ui/screens/SettingsOverlay.tsx`) — internal `SettingsTab` value stays `"roles"`, only the display label changed. Step Labels card moved here from the Tokens tab and restyled from a `Collapsible` accordion + enable/disable button pair to a `ListHeader`/`ListRow` list (matching Shared Variations) with a "Reset to Defaults" button that always shows the full step table.
+
+**`canEditRoleVariants` renamed to `useSharedRoleVariants`** — the polarity of the field also flipped in the process (old: `true` = per-role custom; new: `true` = shared/global). Fixed every consumer that assumed the old polarity: the Settings toggle display, the Shared Variations card visibility guard, `canEditNames` in `RoleGroupCard.tsx` and `HealthTab.tsx`, and all 18 occurrences across `src/shared/presets/raw/*.ts` (regenerated `presets.json`). Flipping the toggle is now a one-way sync in `setProjectField`: turning shared OFF rebuilds every role's variation list from the current shared values (preserving existing per-index targets), turning it ON reverts every role to `null`. Added `resetVariations()` action (restores `DEFAULT_VARIATIONS`) and a "Reset to Defaults" button next to "+ Add Variation".
+
+**`ensureVariations()` now respects `useSharedRoleVariants`** (`src/ui/store/projectStore.ts`) — previously it unconditionally backfilled any role's `null` variations from global on every load, which meant the toggle's ON state (shared) couldn't survive a reload (a preset apply, `.wand` import, or plugin restart would silently repopulate every role with its own copy again). Now it returns early when `useSharedRoleVariants` is `true`, leaving `null` in place so `clrEngine`'s `role.variations ?? globalVariations` fallback is actually reachable.
+
+**Settings Cancel/Done lifecycle fixed** (`src/ui/screens/SettingsOverlay.tsx`, `src/ui/hooks/useAutoSave.ts`) — `handleCancel` previously never called `clearSnapshot()`, which would have permanently wedged autosave off after the first-ever Cancel (since `hasSnapshot()` never returned to `false` again); it now clears the snapshot right after restoring. `useAutoSave`'s debounced save and its `beforeunload`/unmount flush now both check `hasSnapshot()` before persisting, so edits made while Settings is open never reach Figma storage until Done — closing the plugin mid-edit (without Cancel/Done) now behaves the same as clicking Cancel. `handleDone` force-saves immediately after clearing the snapshot, since the debounce may have already skipped a save while paused.
+
+**Figma Collections rows redesigned** — Token/Scale/Source Collection rows are now a single `CollectionRow` component (`src/ui/components/SettingsCard.tsx`): checkbox + label on the left (checkbox dims when locked/off, label never dims), name input capped at half the row width on the right. Token Collection is always checked and disabled (mandatory, can't be turned off).
+
+---
+
 ### Screens Layer — Bug Fixes and Structural Refactor
 
 A targeted audit and cleanup of the entire `src/ui/screens/` layer. Addressed five real bugs, eliminated ~400 lines of structural duplication between `ColorsScreen` and `RolesScreen`, and applied several minor cleanups across the run dialog and preview screen.

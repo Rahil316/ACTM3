@@ -8,7 +8,7 @@ All commands are run from the project root via `npm run <command>`.
 
 | Command | What it does |
 |---|---|
-| `build` | typecheck → lint → theme CSS → presets (with dev presets) → UI bundle via Vite → figma bundle via esbuild → `dist/` |
+| `build` | typecheck → lint → presets (with dev presets) → UI bundle via Vite → figma bundle via esbuild → `dist/` |
 | `build:release` | Same pipeline, release mode: dev presets excluded, `__RELEASE__=true` strips dev overlay + console.logs, writes `manifest.json` → `dist-release/` |
 
 ---

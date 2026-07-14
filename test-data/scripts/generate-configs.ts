@@ -1,6 +1,6 @@
 // Generates a wide-ranging matrix of EngineInput configs for stress-testing
-// variableMaker() in src/shared/clrEngine.ts. Pure config generation — no
-// engine calls happen here (see run-stress-test.ts).
+// variableMaker() in src/shared/engine/clrEngine.ts. Pure config generation —
+// no engine calls happen here (see run-stress-test.ts).
 
 import type { Color, Theme, Role, Variation, ScaleAlgorithm, SolverMode, EngineInput } from "../../src/shared/types";
 

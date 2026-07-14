@@ -58,11 +58,12 @@ Mutates state in place. Walks `colors`, `roles`, `themes`, and `scaleSteps` arra
 
 ### `ensureVariations(state)`
 
-Mutates state in place. Three jobs:
+Mutates state in place. Four jobs:
 
 1. **Normalise `alphaValues`** — legacy saves stored this as a comma-string (`"10, 25, 50"`). Converts to `number[]` and filters invalid values. If not an array at all, resets to `[]`.
 2. **Seed global variations** — if `state.variations` is empty or absent, fills it with `DEFAULT_VARIATIONS` (each gets a fresh `_id`). Otherwise ensures every existing variation has a `_id`.
 3. **Seed variation targets** — any variation with a `null`/`undefined` target gets defaulted to `4.5`.
+4. **Conditionally backfill per-role variations** — if `state.useSharedRoleVariants` is `true`, returns immediately: a role's `variations: null` is left alone, since that's the sentinel `clrEngine` reads as "defer to global" (`role.variations ?? globalVariations`), and backfilling it here would make the toggle's ON state unable to survive a reload. Only when `useSharedRoleVariants` is `false` (custom-per-role mode) does every role get its own populated copy — any role with an empty/absent `variations` array is seeded from global; roles that already have one just get missing `_id`s/targets filled in.
 
 ```
 
@@ -107,7 +108,7 @@ interface ProjectStore {
   // Entities
   scaleSteps: ScaleStepName[] | null; // null = numeric 1…N
   variations: Variation[] | null; // global variation list
-  useSharedRoleVariants: boolean; // allow roles to override variations
+  useSharedRoleVariants: boolean; // true = all roles use the global `variations` list; false = each role owns its own custom list (role.variations non-null)
   colors: Color[];
   roles: Role[];
   themes: Theme[];
@@ -131,14 +132,22 @@ interface Role {
   _id: string;
   name: string; // supports "/" nesting: "status/success"
   shorthand: string;
-  mappingMethod: "contrast" | "index";
-  variations: Variation[]; // used when customVariationList=true
+  variations?: Variation[] | null; // null = defer to global `variations` list (see useSharedRoleVariants)
   scaleAlgorithm?: ScaleAlgorithm;
   solverMode?: SolverMode;
   scopedColorIds?: string[] | null; // null = all colors; [] = no colors; [...] = specific ids
   localBg?: RoleLocalBg | null;
   description?: string;
   scopes?: VariableScope[] | null; // Figma variable scopes (FRAME_FILL, TEXT_FILL, etc.)
+}
+// No `mappingMethod` field exists: every role is mapped via `_mapByScaleContrast` in scale mode
+// (there is no index-based `_mapByIndex` path — see §4), or `_solveDirectMode` in direct mode.
+
+interface Variation {
+  _id?: string;
+  name: string;
+  shorthand: string;
+  target?: number; // WCAG contrast target for this variation; falls back to [1.5,3,4.5,7,12][index] ?? 4.5
 }
 
 export type RoleLocalBgKind = "theme" | "token-static" | "token-dynamic" | "color" | "hex";
@@ -162,54 +171,53 @@ interface Theme {
 
 ## 3. Config Translation
 
-Before any engine call, `translateConfig(projectStore)` converts ProjectStore into the engine's flat format.
+Before any engine call, `translateConfig(projectStore)` (`src/figma/config.ts:30`) converts ProjectStore into the engine's flat format (`PluginConfig`, which extends the engine's `EngineInput`).
+
+> Note: there is no `role.mappingMethod` field and no index-vs-contrast mapping switch anywhere in the codebase. Scale mode always maps roles via `_mapByScaleContrast` (§4) — `_mapByIndex` does not exist. Likewise there is no `role.variationTargets` array; each `Variation` object carries its own `target: number` (see §2), and `role.variations` (or the global `variations` list when a role's is `null`) is what's iterated.
 
 ```
-translateConfig(projectStore) → EngineConfig
+translateConfig(projectStore) → PluginConfig
 
-  count        = parseInt(scaleLength)            // clamped to ≥1
-  stepNames    = _parseStepNames(projectStore, count) // null if not set → numeric
-  variations   = projectStore.variations || [1,2,3,4,5]
-  themes       = _deduplicateThemeNames(projectStore.themes)
+  scaleLength  = projectStore.scaleLength || 23
+  stepNames    = _parseStepNames(projectStore, scaleLength) // null if not set → numeric
+  variations   = _parseVariations(projectStore)   // projectStore.variations, or [1..5] with target=n as fallback
+  themes       = _deduplicateThemeNames(projectStore.themes || [Light, Dark])
 
   colors[] = projectStore.colors.map(c => {
     name, shorthand, value, _id, description
     solverMode  = c.solverMode || 'natural'
-    scaleAlgorithm = c.scaleAlgorithm || null
+    scaleAlgorithm = c.scaleAlgorithm || undefined
   })
 
   roles[] = _mapRoles(projectStore, variations)
     → for each role:
-        mappingMethod = role.mappingMethod === 'index' ? 'index' : 'contrast'
-        variationTargets = role.variationTargets || fallback[4.5,…]
+        variations = role.variations ?? null       // null = defer to global variations list
         scopedColorIds = role.scopedColorIds ?? null
-        localBg = _resolveLocalBg(role, projectStore)      // see §4
-        localBgTokenRef  = (kind='token-static')  ? value : null
-        localBgDynamicRef = (kind='token-dynamic') ? value : null
+        scopes = role.scopes || undefined
+        ...translateLocalBg(role.localBg, colors, themes)   // see below — spreads localBgResolved/localBgTokenRef/localBgDynamicRef
 ```
 
-### `_resolveLocalBg` — pre-engine resolution
+### `translateLocalBg` — pre-engine resolution (`src/shared/clrUtils.ts:250`)
 
 ```
-_resolveLocalBg(role, projectStore):
-  if !role.localBg → return null
+translateLocalBg(roleLocalBg, colors, themes):
+  if !roleLocalBg || kind === 'theme':
+    return { localBgResolved: null, localBgTokenRef: null, localBgDynamicRef: null }
+    // theme: use global theme.bg — no override needed
 
   if kind === 'hex':
-    return role.localBg.value          // already { themeName: hex }
+    return { localBgResolved: roleLocalBg.value, ... }   // already { themeName: hex }
 
   if kind === 'color':
-    color = projectStore.colors.find(c => c.name === role.localBg.value)
-    if !color → return null
-    return { themeName: color.value }  // same hex for every theme
+    color = colors.find(c => c.name === roleLocalBg.value)
+    localBgResolved = color ? { [themeName.lower()]: color.value, ... for every theme } : null
+    return { localBgResolved, ... }
 
   if kind === 'token-static':
-    return null   // localBgTokenRef set; resolved post-engine (see §5)
+    return { localBgTokenRef: roleLocalBg.value, ... }     // resolved post-engine (see §6)
 
   if kind === 'token-dynamic':
-    return null   // localBgDynamicRef set; resolved post-engine with [color] substitution (see §5)
-
-  if kind === 'theme':
-    return null   // use global theme.bg — no override needed
+    return { localBgDynamicRef: roleLocalBg.value, ... }   // resolved post-engine with [color] substitution (see §6)
 ```
 
 ---
@@ -268,39 +276,40 @@ for each color:
 - `Linear` — linear HSL lightness steps, fixed saturation
 - `Fidelity` — perceptual lightness steps in OKLCH space; chroma held as a fraction of the seed hue's real max-chroma envelope (not a raw value or a guessed taper curve), and the seed's exact hex always appears as one step
 
-### `_solveDirectMode`
+### `_solveDirectMode` (`src/shared/clrEngine.ts:348`)
 
 ```
 for each role in config.roles:
 
   // Scope guard
-  if role.scopedColorIds !== null && !role.scopedColorIds.includes(color._id):
+  if role.scopedColorIds !== null && !role.scopedColorIds.includes(color._id ?? color.name):
     continue
 
-  solverMode = _getSolverMode(config, color, role)
-  // Priority chain:
-  //   1. useUniformAlgorithm=true  → always config.solverMode (global, no overrides)
-  //   2. algorithmScopeLevel='role' → role.solverMode ?? config.solverMode
-  //   3. algorithmScopeLevel='color'→ color.solverMode ?? config.solverMode
+  bgHex = (role.localBgPerColor?.[color.name]?.[theme.name.lower()])
+          ?? (role.localBgResolved?.[theme.name.lower()])
+          ?? theme.bg
 
-  // Local bg resolution
-  perColorBg = role.localBgPerColor?.[color.name]?.[theme.name.lower()]
-  bgHex = perColorBg ?? role.localBg?.[theme.name.lower()] ?? theme.bg
+  roleVariations = role.variations ?? globalVariations   // per-role list, or global fallback
 
-  // Solve each variation
-  for each variation at index i:
-    target = role.variationTargets[i]
+  for each variation v at index i:
+    solverMode = _getSolverMode(config, color, role)
+    // Priority chain (src/shared/clrEngine.ts:342):
+    //   1. config.useUniformAlgorithm !== false (default true) → config.solverMode || 'natural'
+    //   2. algorithmScopeLevel === 'role'  → role.solverMode || config.solverMode || 'natural'
+    //   3. else (algorithmScopeLevel==='color') → color.solverMode || config.solverMode || 'natural'
 
-    // mappingMethod is always 'contrast' in direct mode
-    solved = _solveForContrast(color.value, bgHex, target, solverMode)
-    // → iterates lightness/chroma to reach WCAG contrast ratio `target` vs bgHex
-    // → returns { value: hex, isAdjusted: bool }
+    targetContrast = v.target ?? [1.5, 3, 4.5, 7, 12][i] ?? 4.5
+
+    solved = solveColorForContrast(color.value, targetContrast, bgHex, solverMode)
+    // → binary-searches OKLCH lightness/chroma to reach WCAG contrast ratio `targetContrast` vs bgHex
+    // → returns { hex, achievedContrast, clipped, warning?, chromaReduced? }
 
     result.tokens[theme][color.name][roleIdx][i] = {
-      value: solved.value,
+      value: solved.hex,
       tokenRef: null,          // direct mode: no scale step reference
-      tokenName: buildTokenName(config, color.name, role.name, variation.name),
-      isAdjusted: solved.isAdjusted,
+      tokenName: `${color.name}/${role.name}/${variation}`,   // NOT segment/shorthand-aware — see §5 caveat
+      isAdjusted: solved.clipped || solved.achievedContrast > targetContrast + 0.3,
+      contrast: { ratio: solved.achievedContrast, rating: contrastRating(solved.hex, bgHex) },
       role: role.name,
       roleDescription: role.description,
     }
@@ -314,87 +323,73 @@ for each role in config.roles:
 - `hue-locked` — stays on the seed's exact hue, pushes to maximum in-gamut chroma at the target contrast
 - `max-chroma` — ignores seed chroma entirely, always uses the most vivid in-gamut color at the target contrast
 
-### `_processScaleMode`
+### `_processScaleMode` (`src/shared/clrEngine.ts:382`)
 
 ```
 for each role in config.roles:
 
   // Scope guard
-  if role.scopedColorIds !== null && !role.scopedColorIds.includes(color._id):
+  if role.scopedColorIds !== null && !role.scopedColorIds.includes(color._id ?? color.name):
     continue
 
-  perColorBg = role.localBgPerColor?.[color.name]?.[theme.name.lower()]
-  effectiveBg = perColorBg ?? role.localBg?.[theme.name.lower()] ?? null
-  bgForContrast = effectiveBg ?? theme.bg
-  isDark = relLum(bgForContrast) < 0.4
+  effectiveBg = (role.localBgPerColor?.[color.name]?.[theme.name.lower()])
+                ?? (role.localBgResolved?.[theme.name.lower()])
+                ?? theme.bg
+  isDark = relLum(effectiveBg) < 0.4
+  roleVariations = role.variations ?? globalVariations
 
-  if role.mappingMethod === 'index':
-    _mapByIndex(color, role, variations, scale, stepNames, result)
+  // There is no mappingMethod / _mapByIndex branch — every role in scale mode
+  // is always resolved via _mapByScaleContrast.
+  _mapByScaleContrast(color, role, roleVariations, scale, stepNames,
+                      theme.name, effectiveBg, isDark, result, errors)
+```
+
+### `_mapByScaleContrast` (`src/shared/clrEngine.ts:399`)
+
+```
+for each variation v at index i:
+  target = v.target ?? 4.5
+  getContrast(step) = contrastRatio(scale[step].value, effectiveBg)
+  // Always computed on-the-fly against effectiveBg — there is no separate
+  // "pre-stored per-theme contrast" fast path read back out of the scale here.
+
+  // Walk the scale from one end looking for the FIRST step meeting target contrast
+  // (not "closest to target"):
+  if isDark:
+    walk stepNames from last to first; bestIdx = first step where getContrast(step) >= target
   else:
-    _mapByScaleContrast(color, role, variations, scale, stepNames,
-                        theme.name, bgForContrast, isDark, result)
-```
+    walk stepNames from first to last; bestIdx = first step where getContrast(step) >= target
 
-### `_mapByIndex`
+  if no step met target (found = false):
+    bestIdx = step with the highest contrast achieved (closest-available fallback)
+    push warning: "Target contrast {target} not achievable. Using closest ({maxContrast})."
 
-```
-for each variation at index i:
-  stepIndex = Math.round(role.variationTargets[i])   // treat target as a step index
-  stepIndex = clamp(0, scaleLength-1)
-  stepName = stepNames[stepIndex]
-
-  result token = {
-    value: scale[stepName].value,
-    tokenRef: scale[stepName].stepName,   // alias to this scale step in Figma
-    tokenName: buildTokenName(…),
-  }
-```
-
-### `_mapByScaleContrast`
-
-```
-for each variation at index i:
-  target = role.variationTargets[i]
-
-  if effectiveBg is set (localBg override):
-    // compute contrast on-the-fly against localBg — do NOT use pre-stored scale contrast
-    best = null
-    for each step in scale:
-      ratio = contrastRatio(step.value, bgForContrast)
-      if |ratio - target| < |best.ratio - target|:
-        best = { step, ratio }
-    winner = best.step
-
-  else:
-    // use pre-stored contrast for this theme (fast path)
-    // scale[step].contrast[modeName] was computed against this exact theme.bg
-    // during _generateScales — no approximation, values are per-theme-accurate
-    winner = scale step whose contrast[modeName].ratio is closest to target
-
-  // minContrast guard: if winner.contrast < role.minContrast → flag isAdjusted
-  isAdjusted = winner.contrast < role.minContrast
+  winner = scale[stepNames[bestIdx]]
+  isAdjusted = !found   // true only when no step actually reached the target
 
   result token = {
     value: winner.value,
     tokenRef: winner.stepName,    // for Figma variable alias
-    tokenName: buildTokenName(…),
+    tokenName: `${color.name}-${role.name}-${variation}`,   // NOTE: hyphen-joined here, unlike direct mode's slash-joined name — neither respects tokenNameSegments, see §5 caveat
+    contrast: { ratio: contrastRatio(winner.value, effectiveBg), rating: contrastRating(...) },
     isAdjusted,
   }
 ```
 
-### Token name construction
+### Token name construction — no `buildTokenName` function exists
 
-```
-buildTokenName(config, colorName, roleName, variationName):
-  segments = {
-    color:     useShorthandColors ? color.shorthand : colorName,
-    role:      useShorthandRoles  ? role.shorthand  : roleName,
-    variation: useShorthandVariations ? var.shorthand : variationName,
-  }
-  return config.tokenNameSegments.map(s => segments[s]).join('/')
-  // e.g. ['color','role','variation'] → "Brand/Primary/fill/default"
-  // e.g. ['role','variation']         → "fill/default"
-```
+There is no shared `buildTokenName` helper, and the engine's own `tokenName` field is **not** segment/shorthand-aware — it's a hardcoded placeholder built inline at each call site:
+
+- `_solveDirectMode` (`clrEngine.ts:367`): `` `${color.name}/${role.name}/${variation}` `` (slash-joined)
+- `_mapByScaleContrast` (`clrEngine.ts:451`): `` `${color.name}-${role.name}-${variation}` `` (hyphen-joined — inconsistent with direct mode)
+
+Neither honors `tokenNameSegments` ordering, shorthands, or segment omission. The real, correct, segment/shorthand-aware Figma variable name is built **later**, only at sync/preview time, via `makeLabelHelpers(config)` (`src/figma/variableTracker.ts:9`) — see §5 below. `EngineResult.tokens[...].tokenName` should be treated as an internal placeholder, not the name written to Figma.
+
+**Two independent, parallel naming implementations exist** and must be kept in sync by hand:
+- `src/figma/variableTracker.ts`'s `makeLabelHelpers(config)` — used for Figma variable sync/preview/rename (§8).
+- `src/shared/exportEng/helpers.ts`'s `_colorLabel`/`_roleLabel`/`_varLabel`/`_stepLabel`/`_tokenSegments` — used by `buildExportBundle` (§9) for file export naming.
+
+Both correctly honor `tokenNameSegments`, shorthands, and segment omission — neither trusts the raw (non-segment-aware) `EngineResult.tokenName` placeholder described above. But because the logic is duplicated rather than shared, a future change to naming rules (e.g. a new segment type) must be applied in both places or the two output paths will silently diverge.
 
 ### Engine output shape
 
@@ -406,10 +401,13 @@ EngineResult = {
         value: string           // hex
         description?: string
         contrast: {
-          light: { ratio: number, rating: 'Fail'|'AA-Large'|'AA'|'AAA' }
-          dark:  { ratio: number, rating: … }
+          // Keyed by ACTUAL theme name (lowercased), not fixed 'light'/'dark' keys —
+          // e.g. { light: {...}, dark: {...}, brand: {...} } for a 3-theme project.
+          // src/shared/clrEngine.ts:313,326-328
+          [themeNameLower: string]: { ratio: number, rating: 'Fail' | 'AA Large Text' | 'AA' | 'AAA' }
         }
-        stepName: string        // matches key, used as tokenRef
+        stepName: string        // NOT the raw step key — actually `${colorName}-${step}`, e.g. "Neutral-500"
+        shorthand: string       // `${color.shorthand}-${step}`, e.g. "n-500"  (undocumented field)
       }
     }
   },
@@ -529,40 +527,49 @@ function runEngine(config):
     return result1
 ```
 
-### `resolveTokenRefBgs`
+### `resolveTokenRefBgs` (`src/shared/clrUtils.ts:25`)
 
 ```
 // Cycle protection:
 // A role that itself has a token ref → its tokens are "tainted"
-// Any role pointing to a tainted token → ref cleared → falls back to theme.bg
+// If ANY matching token across ANY theme belongs to a tainted role, the ENTIRE
+// resolveRef() call is aborted (returns null for all themes) — not a per-theme partial taint.
 
 taintedRoleNames = roles.filter(r => r.localBgTokenRef).map(r => r.name.lower())
 
-function resolveRef(ref: string) → { themeName: hex } | null:
+function resolveRef(ref: string) → Record<themeName, hex> | null:
+  refSlug = slugify(ref)
+  cycle = false
   for each theme:
-    for each token in result1.tokens[theme][*][*][*]:
-      if slugify(token.tokenName) matches slugify(ref):
-        if token.role ∈ taintedRoleNames → cycle → return null
+    for each token in result.tokens[theme][*][*][*]:
+      // matches against slugified tokenName, tokenRef, OR a reconstructed
+      // "{color}-{role}-{variation}" / "{color}/{role}/{variation}" — whichever the ref looks like
+      if any tokenSlug matches refSlug:
+        if token.role ∈ taintedRoleNames: cycle = true
         resolved[theme] = token.value
-  return resolved if any, else null
+        break  // first match per theme wins
+  if cycle: return null              // whole map discarded, not just the tainted theme's entry
+  return resolved if any keys, else null
 
 // Fixed token refs — one bg map for all colors
 for each role with localBgTokenRef:
   resolved = resolveRef(role.localBgTokenRef)
   if resolved:
-    role.localBg = resolved
+    role.localBgResolved = resolved   // NOT role.localBg — clrUtils.ts:80
     anyResolved = true
   role.localBgTokenRef = null
 
-// Dynamic token refs — [color] placeholder → one bg map per color
+// Dynamic token refs — [color] placeholder (case-insensitive regex) → one bg map per color
 for each role with localBgDynamicRef:
   template = role.localBgDynamicRef    // e.g. "[color]/fill/default"
+  perColor = {}
   for each colorName:
-    ref = template.replace('[color]', colorName)
+    ref = template.replace(/\[color\]/gi, colorName)
     resolved = resolveRef(ref)
-    if resolved:
-      role.localBgPerColor[colorName] = resolved
-      anyResolved = true
+    if resolved: perColor[colorName] = resolved
+  if perColor has any entries:
+    role.localBgPerColor = perColor
+    anyResolved = true
   role.localBgDynamicRef = null
 ```
 
@@ -643,6 +650,10 @@ figma.on('selectionchange', () => {
   // UI uses this to show/hide the canvas preview detail panel
 })
 ```
+
+### Dead message type: `processed-data-response`
+
+`src/ui/types/messages.ts:51` defines a `ProcessedDataResponseMessage` (`type: "processed-data-response"`), and `src/ui/hooks/useFigmaBridge.ts:269` has a live `case` handling it — but nothing in `src/figma/index.ts` ever posts it. `request-processed-data` (the only case that plausibly should respond with it) actually replies with `export-bundle-response` instead (`src/figma/index.ts:184`). This message type is currently unreachable dead code on the sandbox→UI path; either wire it up or remove it.
 
 ---
 
@@ -806,58 +817,71 @@ ensureMode(collection, modeName):
 
 ---
 
-## 9. Export — `buildExportBundle`
+## 9. Export — `buildExportBundle` (`src/shared/exportEng/bundler.ts:33`)
 
 When the user downloads tokens instead of applying to Figma.
 
 ```
-buildExportBundle(result, config, formats[], projectStore) → ExportFile[]
+buildExportBundle(result, config, formats[], projectStore, timestamp) → ExportFile[]
+
+  multi = formats.length > 1
+  pre(tech) = multi ? `${tech}/` : `${projectSlug}_${tech}_${ts}/`
+  // Single-format export: files sit under a "{project}_{tech}_{ts}/" folder.
+  // Multi-format export (zip of several formats): each format gets its own "{tech}/" subfolder
+  // (no project-name prefix inside, since the outer zip already carries it).
+  hasScales = Object.keys(result.scales).length > 0   // scale files are skipped entirely in direct mode
 
 for each fmt in formats:
 
   'css':
-    files += scale.css          // CSS custom properties for scale steps
-    files += {theme}.css        // one file per theme with semantic token vars
-                                // e.g. --brand-primary-fill-default: #0066FF;
+    if hasScales: files += {pre}scale.css          // CSS custom properties for scale steps
+    files += {pre}{slug(themeName)}.css             // one per theme, semantic token vars
 
   'scss':
-    files += _scale.scss        // SCSS variables for scale steps
-    files += _tokens.scss       // SCSS variables for semantic tokens
-    files += index.scss         // @forward both
+    if hasScales: files += {pre}_scale.scss         // SCSS variables for scale steps
+    files += {pre}_tokens.scss                      // SCSS variables for semantic tokens
+    files += {pre}index.scss                        // @forward both
 
   'tailwind':
-    files += tailwind.config.js // extend.colors keyed by token path
-    files += tokens.css         // scale CSS (referenced by config)
-    files += {theme}.css        // per-theme semantic CSS vars
+    files += {pre}tailwind.config.js                // extend.colors keyed by token path
+    if hasScales: files += {pre}tokens.css          // scale CSS (referenced by config)
+    files += {pre}{slug(themeName)}.css             // per-theme semantic CSS vars
 
   'dtcg':
-    files += scale.json         // W3C Design Token Community Group format
-    files += {theme}.json       // per-theme semantic tokens in DTCG format
+    if hasScales: files += {pre}scale.json          // W3C Design Token Community Group format
+    files += {pre}{slug(themeName)}.json            // per-theme semantic tokens, DTCG format
 
   'style-dictionary':
-    files += global.json        // Style Dictionary source (scale)
-    files += {theme}.json       // per-theme semantic token overrides
+    if hasScales: files += {pre}global.json         // Style Dictionary source (scale)
+    files += {pre}{slug(themeName)}.json            // per-theme semantic token overrides
 
   'ios-swift':
-    files += {Theme}Colors.swift  // Swift enum with static Color properties
+    files += {pre}{Capitalize(themeName)}Colors.swift  // one per theme; Swift enum, static Color properties
 
   'android':
-    files += res/values/colors.xml          // default (first theme)
-    files += res/values-{theme}/colors.xml  // per additional theme
+    // _androidQualifiers(themeNames) assigns a resource qualifier per theme:
+    //   first theme     → "values" (Android default)
+    //   theme "dark"    → "values-night" (Android's native dark-mode qualifier)
+    //   any other theme → "values-{slug(themeName)}" (non-standard; formatter adds a comment)
+    // Collision guard: if two themes slug to the same qualifier (e.g. "Dark Mode" and "dark-mode"),
+    // later ones get a numeric suffix ("-2", "-3", …) so no theme's colors.xml is silently dropped.
+    files += {pre}res/{qualifier}/colors.xml        // one per theme
 
   'rn-ts':
-    files += rn/tokens/index.ts    // TypeScript barrel
-    files += rn/tokens/{theme}.ts  // per-theme typed color object
+    files += {pre}tokens/index.ts                   // TypeScript barrel
+    files += {pre}tokens/{slug(themeName)}.ts        // per-theme typed color object
 
   'csv':
-    files += {project}-tokens.csv   // flat table: name, theme, value, contrast
+    files += {projectSlug}_csv_{ts}.csv             // flat table; content filled by docGen in figma/index.ts
 
   'json':
-    files += {project}-tokens.json  // raw { scales, tokens, errors }
+    files += {projectSlug}_json_{ts}.json           // raw { scales, tokens, errors }; content filled by docGen
 
   'wand':
-    files += {project}.wand         // JSON snapshot of projectStore — re-importable
+    files += {projectSlug}_wand_{ts}.wand           // JSON snapshot of projectStore — re-importable
 ```
+
+Note: `csv` and `json` formats push a placeholder `ExportFile` with empty `content` here — the actual content is filled in later by `docGen` in `src/figma/index.ts`, not inside `bundler.ts` itself.
 
 ---
 
@@ -876,7 +900,7 @@ user clicks "Run":
 UI receives 'collection-check-result':
   { existing, renames, conflicts, syncPreview, structuralChanges }
 
-  syncPreview:  SyncPreview  = { toCreate, toUpdate, toRename, total }
+  syncPreview:  SyncPreview  = { toCreate, toUpdate, toRename, toDelete, total }
   conflicts:    NameConflict[] = [{ tokenRef, figmaName, suggestedName, type }]
     // Each conflict = a variable whose computed name differs from its current Figma name.
     // User can 'keep' (preserve current name) or 'revert' (rename to computed name).
@@ -888,11 +912,19 @@ UI receives 'collection-check-result':
 
   show RunDialog:
     - list existing collections that will be updated
-    - show sync preview counts (toCreate / toUpdate / toRename)
+    - show sync preview counts (toCreate / toUpdate / toRename / toDelete)
     - show rename summary (N scale vars, M token vars renamed)
     - show structural change warnings if any orphaning changes detected
     - list name conflicts with keep/revert toggles per conflict
-    - scope selector (SyncScope): 'all' → "Everything" | 'scale' → "Scale Only" | 'roles' → "Roles Only"
+    - scope checklist (`ScopeChecklist`, src/ui/screens/run-dialog/tabs/SummaryTab.tsx:255) — NOT a 3-way
+      radio. Two independent toggle rows, "Scale" and "Tokens", each with an editable collection-name field;
+      their combination derives the `SyncScope` value sent to the plugin:
+        scaleOn=true,  rolesOn=true  → scope = 'all'
+        scaleOn=true,  rolesOn=false → scope = 'scale'
+        scaleOn=false, rolesOn=true  → scope = 'roles'
+      (there is no "neither" state — toggling one off when the other is already off flips scope to 'all')
+      A third row, "Source Colors", toggles `includeSourceColors` directly — it is NOT part of SyncScope
+      and is applied independently (stage 3 of VariableManager.sync, §8, gates on this flag, not on scope).
     - confirm button
 
   user confirms:
@@ -931,6 +963,33 @@ figma.root.setPluginData('tw_state', JSON.stringify(projectStore))
 figma.clientStorage.setAsync('uiPrefsMeta', prefs)
 // clientStorage is per-user, per-plugin; not tied to the file
 ```
+
+### Settings dialog — Cancel/Done snapshot lifecycle (`snapshots.ts`)
+
+`useAutoSave` (above) persists on every `projectStore` change with no awareness of dialogs — the Settings overlay layers a cancel/commit lifecycle on top of it so edits made there are provisional until explicitly confirmed:
+
+```
+Settings opens:
+  takeSnapshot()                    // deep-clones current projectStore into a module-level var
+
+... user edits settings — each edit still writes to projectStore live ...
+
+Cancel clicked:
+  restoreSnapshot()                 // projectStore.setState back to the pre-open snapshot
+  clearSnapshot()                   // snapshot var → null (must run, or autosave stays paused forever)
+  closeOverlay()
+
+Done clicked:
+  clearSnapshot()                   // snapshot var → null
+  save(projectStore)                 // force-save now — the debounced autosave below may have
+  closeOverlay()                     // skipped saving anything in the last <500ms while paused
+
+Plugin closes with Settings still open (no Cancel/Done click):
+  beforeunload → flush() → skipped, because hasSnapshot() is still true
+  // → behaves like Cancel: nothing written to Figma storage since Settings opened
+```
+
+`useAutoSave`'s debounced save and its `beforeunload`/unmount `flush()` both gate on `hasSnapshot()` — while a Settings snapshot is active, no `save-config` message is sent, regardless of how many edits happen or how long the dialog stays open. This is what makes "close the plugin instead of clicking Cancel" behave the same as clicking Cancel.
 
 ---
 
@@ -1002,6 +1061,7 @@ interface SyncPreview {
   toCreate: number;
   toUpdate: number;
   toRename: number;
+  toDelete: number; // orphaned variables (valid tokenRef, no longer in the intended set) — src/figma/variableTracker.ts:247
   total: number;
 }
 
@@ -1044,8 +1104,8 @@ interface StructuralChange {
 | Free plan + multiple themes                | `ensureMode` returns `null`; warning posted to UI; extra themes skipped                             |
 | `localBg` token ref cycle (A→B→A)          | Tainted role detection; ref cleared; falls back to `theme.bg`                                       |
 | `localBg` token ref not found in pass-1    | `resolveRef` returns null; role falls back to `theme.bg`                                            |
-| Color not found for `localBg.kind='color'` | `_resolveLocalBg` returns null; engine uses `theme.bg`                                              |
-| `minContrast` not achievable               | Token still emitted at best available contrast; `isAdjusted=true`; notice added to `errors.notices` |
+| Color not found for `localBg.kind='color'` | `translateLocalBg` returns `localBgResolved: null`; engine uses `theme.bg`                          |
+| Target contrast not achievable             | Token still emitted at best available contrast; `isAdjusted=true`; warning added to `errors.warnings` (there is no `minContrast` field — see §2/§4) |
 | Variable create/rename fails               | `tally.failed++`; error logged; other variables continue                                            |
 | `scaleLength` < 1                          | Clamped to 1                                                                                        |
 | Duplicate theme names                      | `_deduplicateThemeNames` appends counter: "Dark 2"                                                  |

@@ -1,4 +1,4 @@
-import type { EngineResult, TokenEntry } from "../shared/clrEngine";
+import type { EngineResult, TokenEntry } from "../shared/engine/clrEngine";
 import type { PluginConfig } from "./config";
 import type { Role } from "../shared/types";
 import type { ProjectStore } from "../ui/types/state";

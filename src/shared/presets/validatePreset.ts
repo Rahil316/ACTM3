@@ -5,12 +5,12 @@
 //   "scaleModeOnly"    — only checked when the preset's effective pluginMode is "scale"
 //   "directModeOnly"   — only checked when the preset's effective pluginMode is "direct"
 
-import { normalizeHex, validHex } from "../clrUtils";
+import { normalizeHex, validHex } from "../engine/clrUtils";
 import type { Color, PluginMode, Role, ScaleAlgorithm, SolverMode, Theme, Variation } from "../types";
 import type { Preset } from "./themeShop";
 
 const SCALE_ALGORITHMS: ScaleAlgorithm[] = ["Natural", "Uniform", "Expressive", "Symmetric", "OKLCH", "Material", "Linear", "Fidelity"];
-const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "hue-locked", "max-chroma"];
+const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "hue-locked", "max-chroma", "gamut-cusp", "apca-natural"];
 const PLUGIN_MODES: PluginMode[] = ["scale", "direct"];
 const ALGORITHM_SCOPE_LEVELS = ["color", "role"];
 const TOKEN_NAME_SEGMENTS = ["color", "role", "variation"];

@@ -95,6 +95,8 @@ Direct mode gives each variation an exact WCAG guarantee. Scale mode gives palet
 
 When in doubt, use Natural. It produces the most believable results across the widest range of brand colors. Reach for Fidelity when the seed color itself must be reproducible in the palette and its particular vividness — not a generic taper — is the point.
 
+**Caveat for yellow/lime/warm-green seeds:** Natural, Uniform, Expressive, and Symmetric all binary-search HSL lightness against raw WCAG relative luminance (`0.2126·R + 0.7152·G + 0.0722·B`) to place each step — a formula that isn't hue-uniform, since it weights green far more than blue. Measured effect on a 9-step Natural scale: a blue seed and a yellow seed hit the *same* HSL lightness gap of ~30 points by step 2 (yellow already at ~45 vs. blue at ~73), and the yellow ramp collapses to near-black-olive by step 4–5 while blue still has clear light-to-mid steps left — front-loading yellow's usable contrast into the first 2–3 steps. OKLCH, Material, and Fidelity search in genuinely perceptual coordinates (OKLCH L, HCT tone) instead and don't have this problem; Linear is already disclosed above as not perceptually uniform. **For yellow, lime, and warm-green seeds specifically, prefer OKLCH, Material, or Fidelity over Natural/Uniform/Expressive/Symmetric.**
+
 ---
 
 ## Solver Mode Guide (Direct Mode)
@@ -104,10 +106,12 @@ When in doubt, use Natural. It produces the most believable results across the w
 | `natural`          | C tapers as L moves away from mid                               | Balanced, general purpose              |
 | `constant-chroma`  | C held fixed at seed value throughout                           | Vivid palettes, max color retention    |
 | `symmetric`        | C follows a bell curve peaking at mid-L, collapsing at extremes | Calm, harmonically symmetric systems   |
-| `hue-locked`       | H fixed, pushes to maximum in-gamut C at target contrast        | Strict brand hue fidelity              |
-| `max-chroma`       | L solved for contrast, then C maximized at that L               | Maximum energy, bold creative products |
+| `hue-locked`       | H fixed, chroma follows the same taper curve as `natural`, clamped to gamut | Strict brand hue fidelity (see note)   |
+| `max-chroma`       | H fixed, C maximized in-gamut at every candidate L during the search | Maximum energy, bold creative products |
 
 `natural` is the correct choice for most product design systems. Use `max-chroma` when the goal is maximum saturation at every contrast level.
+
+**Note on `hue-locked`:** as currently implemented (`src/shared/clrEngine.ts:583-593`), this mode does not actually push chroma to the gamut maximum — it computes chroma via the exact same `natural`-taper formula as the `natural` solver (`_targetChroma(..., "natural")`, hardcoded regardless of the mode passed in), then clamps to the gamut boundary. In practice its output is currently identical to `natural` mode's chroma curve; the only distinct thing about it is a slightly different `chromaReduced` flagging threshold. If you need visibly different output from `hue-locked` vs `natural`, verify against current source first — this may be fixed in a later version.
 
 ---
 
@@ -149,7 +153,7 @@ Examples:
 
 ## When to Use Per-Role Variation Override
 
-The global variation list works for the majority of roles. Use a per-role override (`customVariationList: true`) when:
+The global variation list works for the majority of roles. Use a per-role override (set `useSharedRoleVariants: false` project-wide, then give the role its own `variations` list) when:
 
 - A role represents a fundamentally different semantic model. Status colors have four fixed slots (`BG/Subtle`, `BG/Default`, `FG/Default`, `Border`) that do not correspond to an intensity scale.
 - A role needs a different number of variations than the global list.

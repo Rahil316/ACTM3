@@ -56,11 +56,13 @@
 | 900       | 16.0            |                                   |
 | 950       | 20.0            | Near-black                        |
 
+**Caveat — low targets are hue-sensitive in Scale mode:** the low end of this scale (50–300, targets 1.0–1.6) and the `Subtle` columns below assume a hue-neutral ramp. In Scale mode, `Natural`, `Uniform`, `Expressive`, and `Symmetric` binary-search HSL lightness against a target that isn't actually hue-uniform (see `Documentations/knowledge/color-algorithm-roadmap.md`'s "Confirmed issues" entry on this) — a yellow/lime/warm-green seed will hit these low-contrast steps at a very different, more washed-out HSL lightness than a blue/violet seed will, so the same numeric target can look meaningfully different across seed colors. For warm seeds, prefer `OKLCH`, `Material`, or `Fidelity` (see `color-system-guidelines.md`'s Algorithm Selection Guide), which don't have this skew.
+
 ---
 
 ## Standard Roles with Recommended Contrast Targets
 
-Columns show suggested `variationTargets` for a 3-variation model (Subtle / Default / Strong).
+Columns show suggested per-variation contrast `target` values for a 3-variation model (Subtle / Default / Strong) — there is no role-level `variationTargets` array; each variation in `role.variations` (or the global list) carries its own `target`.
 
 | Role                | Purpose                             | Subtle | Default | Strong |
 | ------------------- | ----------------------------------- | ------ | ------- | ------ |
@@ -75,7 +77,7 @@ Columns show suggested `variationTargets` for a 3-variation model (Subtle / Defa
 | `Text/Muted`        | Placeholder, caption, helper text   | 7.0    | 10.0    | 13.0   |
 | `Text`              | Body copy (AA)                      | 10.0   | 13.0    | 16.0   |
 | `Text/Strong`       | Headings, labels (AAA)              | 13.0   | 16.0    | 19.0   |
-| `Text/Inverse`      | Text on colored backgrounds         | 1.1    | 1.35    | 1.8    |
+| `Text/Inverse`      | Text on colored backgrounds         | 4.5    | 7.0     | 10.0   |
 
 ### Status Role Slots (per-role override — 4 variations)
 

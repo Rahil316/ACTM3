@@ -85,8 +85,8 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
   if (pm.type === "request-processed-data" || pm.type === "request-export-bundle") {
     const formats: string[] = pm.type === "request-processed-data" ? [pm.exportType as string] : (pm.formats as string[]) ?? [];
     Promise.all([
-      import("../../shared/clrEngine"),
-      import("../../shared/clrUtils"),
+      import("../../shared/engine/clrEngine"),
+      import("../../shared/engine/clrUtils"),
       import("../../shared/exportEng/bundler"),
       import("../../figma/docGen"),
     ]).then(([{ variableMaker }, { resolveTokenRefBgs, translateLocalBg }, { buildExportBundle }, { ExportFormatter }]) => {
