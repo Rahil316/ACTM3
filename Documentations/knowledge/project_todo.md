@@ -1,90 +1,68 @@
 ---
 name: Todo list
-description: Prioritised actionable tasks for the Token Wand plugin — updated 2026-05-22
+description: Prioritised actionable tasks for the Token Wand plugin — updated 2026-07-15
 type: project
 ---
 
-Last updated: 2026-05-22
+Last updated: 2026-07-15
+Source: full rewrite against current code (branch `edit/ColorLibraries`) — the 2026-05-22 version described a vanilla-JS codebase that no longer exists; most of its items were already resolved (rename tracking, `tokenGrouping` UI, alpha tints, project name) or superseded by later architectural changes. See `Documentations/knowledge/project_features.md` for the full feature registry this list is derived from.
 
 ---
 
 ## 🔴 High priority — blocks other work or visible to user
 
-- [ ] **Role variation rename detection**
-      `buildVariableRenameMap` handles shared variations only. Per-role custom variation renames (`customVariationList: true`) silently create new variables instead of renaming. Fix or document the limitation explicitly in the Run dialog.
+- [ ] **`role.scaleAlgorithm` is dead in Scale mode**
+      `_generateScales` (`src/shared/engine/clrEngine.ts:313`) reads `color.scaleAlgorithm` only — never `role.scaleAlgorithm` — even though a live per-role Algorithm dropdown exists in the UI (`RoleGroupCard.tsx`, shown when Scale mode + "Uniform Algorithm" off + scope = "Per Role"), is persisted, and is exported through `figma/config.ts`. Users can set it believing it does something; it's silently ignored. Either implement real per-role scale algorithms (non-trivial — a scale is currently generated once per color; two roles sharing that color's scale can't each get a different ramp under the current data model) or grey out / hide the control in Scale mode and explain why. Full root cause in `Documentations/knowledge/color-algorithm-roadmap.md`.
 
-- [ ] **Alpha tints in preview panel**
-      `includeAlphaTints` flag works in Figma output. `preview.js` doesn't show alpha tokens visually. Add a section to `renderPreviewPanel`.
-
-- [ ] **`tokenGrouping` UI control missing**
-      `projectStore.tokenGrouping` (`"color"` / `"role"`) controls color-first vs role-first variable structure and is wired in the engine, but no settings UI control renders it. Add a segmented control to the Collections section of Token Settings.
-
----
+- [ ] **`hue-locked` solver mode doesn't do what it says**
+      `src/shared/engine/solverEngine.ts:233-243` hardcodes `_targetChroma(..., "natural")` regardless of the mode passed in — its chroma curve is currently identical to `natural`'s. Three different places (Settings UI copy, a dev preset comment, and the actual behavior) disagree about what this mode does. Either implement the "push to max in-gamut chroma at target contrast" behavior the name/copy promises, or repoint the UI copy at what it actually does, or deprecate it in favor of `gamut-cusp` (which already does something close to the promised behavior, just via a gamut-relative-fraction curve rather than a hard max).
 
 ## 🟡 Medium priority — polish and correctness
 
-- [ ] **Role card — full end-to-end test in both modes**
-      Manual test matrix: Scale mode × Direct mode × `mappingMethod: "contrast"` × `mappingMethod: "index"` × `customVariationList: true/false`. Verify Figma variable output is correct in all combinations.
+- [ ] **`apca-natural` solver mode is calibrated, not reference-accurate**
+      Its WCAG-target-to-Lc conversion (`WCAG_TO_LC_ANCHORS` in `solverEngine.ts`) is a hand-fit table from 6 sample hues, not a real APCA font-size/weight-aware target system. Fine for exploratory/experimental use; if this becomes a headline feature, it needs either a proper APCA target picker (Lc entered directly, not derived from a WCAG number) or explicit "experimental" labeling in the UI so users don't mistake it for full APCA compliance.
+
+- [ ] **Two parallel token-naming implementations must be kept in sync by hand**
+      `src/figma/variableTracker.ts`'s `makeLabelHelpers` (Figma sync) and `src/shared/exportEng/helpers.ts`'s `_colorLabel`/`_roleLabel`/etc. (file export) independently reimplement the same `tokenNameSegments`/shorthand logic. Both are correct today, but any future naming-rule change (a new segment type, a new shorthand rule) has to be applied in both places or Figma-synced names and exported-file names will silently diverge. Consider extracting a single shared naming module both call into.
+
+- [ ] **Role card / solver-mode manual test matrix**
+      With 7 solver modes now (not 5) and the confirmed `hue-locked` bug, a manual test pass across Scale mode × Direct mode × all 7 solver modes × `useSharedRoleVariants: true/false` would catch further drift before it's found in production. No automated coverage exists to catch this class of bug (see test suite note below).
 
 - [ ] **Inline validation feedback**
-      Duplicate names and invalid hex currently show in full error overlay. Add inline red border / helper text directly on the offending input field.
-
-- [ ] **`preview.js` — migrate remaining innerHTML to `el()`**
-      Preview panel HTML generation still uses some innerHTML string concatenation. Migrate to `el()` for consistency.
-
-- [ ] **Project Name end-to-end verification**
-      `projectStore.name` is read in `translateConfig`. Verify it is used in: export filenames (CSS, SCSS, CSV, JSON downloads) and Figma sync success messages.
-
-- [ ] **Per-role variation override — full manual test**
-      `customVariationList: true` + `customVariations[]` paths exist in state and UI. Full manual test across Scale and Direct modes not completed. Cover: add/remove custom variations, drag to reorder, sync to Figma, export to CSS/JSON.
-
----
+      Duplicate names and invalid hex currently show in a full error overlay. Add inline red border / helper text directly on the offending input field.
 
 ## 🟢 Low priority — new features, future work
 
-- [ ] **Saved States (version history)**
-      Store snapshot array in `figma.root.setPluginData("tw_snapshots")`.
-      UI: list in Project tab with timestamp, name, View / Restore / Delete buttons.
+- [ ] **Role Labels CSV**
+      Convenience field to rename all variation levels at once via comma-separated string. Currently the only way to rename is per-variation inline in the list. (Carried over from the original settings PDF mockup — still not built.)
 
 - [ ] **Pro mode definition**
-      Before any implementation: define which features are gated, what upgrade UX looks like, and how flags are stored.
-      Current branch: `ProModeBeta_updated`.
+      Before any implementation: define which features are gated, what upgrade UX looks like, and how flags are stored. No current branch or spec exists for this beyond historical naming references.
 
 - [ ] **Plugin tab — Language, Beta Features, About Token Wand**
-      Placeholder UI exists. Implement when content is defined. Language needs i18n infrastructure.
+      Placeholder UI exists for Language and About; the "Beta Features" concept has no real content — only a dead `"design-lab"` keyboard-shortcut alias that routes to the normal export sheet. Implement when content is defined, or remove the dead alias. Language needs i18n infrastructure from scratch (no groundwork currently exists in the React codebase, unlike the old vanilla-JS version which had a working i18n system — that appears to have been dropped in the rewrite; worth confirming whether that was intentional).
 
-- [ ] **Design Lab**
-      `betaLab.js` has `LAB_ENABLED = false`. Button in more-sheet shows an alert. Replace with actual overlay when implemented.
+- [ ] **Reinstate a test suite for the color engine**
+      `tests/` was removed entirely in a past cleanup pass; there is currently zero automated coverage for `clrEngine.ts`/`solverEngine.ts`/the color-math primitives. This directly contributed to how long-lived some of the bugs in `color-algorithm-roadmap.md`'s confirmed-issues list were (multiple hand-rolled CAM16/OKLCH bugs, the `hue-locked` mode, the HSL-luminance hue-skew issue) — all were found by manual numerical investigation rather than a failing test. `test-data/`'s stress-test harness (config-matrix + dashboard) is a useful complement but isn't a substitute for unit tests on the core math.
 
-- [ ] **Offline / inlined font support**
-      Google Fonts loaded at runtime (`fonts.googleapis.com`). Low priority unless offline use case arises.
-
-- [ ] **Role Labels CSV**
-      Convenience field to rename all variation levels at once via comma-separated string. Currently the only way to rename is per-variation inline in the list.
-
-- [ ] **Color algorithm equalizer** (customizer/knob UI over the scale algorithms)
-      Full brainstorm and analysis in `Documentations/knowledge/color-algorithm-roadmap.md`. Explicitly dropped from scope when the "ultimate algorithm" shipped as the `Fidelity` scale algorithm — pinned, not scheduled.
+- [ ] **Color algorithm equalizer** (customizer/knob UI over the scale + solver algorithms)
+      Full brainstorm in `Documentations/knowledge/color-algorithm-roadmap.md` §3. Explicitly dropped from scope once the "ultimate algorithm" idea shipped twice — as `Fidelity` for Scale mode, and as `gamut-cusp`/`apca-natural` for Direct mode. Pinned, not scheduled, unless there's a specific reason to revisit the full equalizer UI.
 
 ---
 
-## ✅ Recently completed
+## ✅ Recently completed (since the 2026-05-22 list)
 
-- [x] **"Fidelity" scale algorithm** shipped — the "ultimate" gamut-relative-chroma algorithm from `Documentations/knowledge/color-algorithm-roadmap.md`, implemented in OKLCH (pivoted from the originally-planned HCT after finding a pre-existing hue-drift bug in `hctToHex` — see that doc's implementation note). New test coverage added in `tests/shared/clrEngine.test.ts` (previously zero tests existed for `clrEngine.ts`).
-- [x] Full file restructure: `color/`, `ui/` folders, dissolved `utils.js`
-- [x] Settings migrated to full-screen 2-tab panel (Token Settings, Plugin)
-- [x] `inputsUI.btn()` — universal button primitive with 5 variants + sizes
-- [x] `RoleGroupCard` fixed — was returning single element, `.forEach` expected array
-- [x] `DEFAULT_VARIATION_TARGETS` duplicate `const` removed
-- [x] `setRole()` and `setRoleVariation()` — bounds checks added
-- [x] `syncInputsFromState()` — now calls plugin tab values sync
-- [x] `uiPrefs` load — validated against allowed scales/themes before applying
-- [x] Dead code cleanup: removed `_demoConfigStr`, removed dead mutation branches in `setRole()`, fixed `run-creater` typo → `run-creator`, fixed Burgundy shorthand collision
-- [x] Terminology refactor: `pluginMode: "tonal"` → `"scale"`, `"adaptiveEngine"` → `"direct"`; `tonalScales`/`colorTokens` → `scales`/`tokens`; `tknName`/`tknRef` → `tokenName`/`tokenRef`; all "ramp" → "scale" references updated
-- [x] Renamed config fields: `tonalScaleCollectionName` → `scaleCollectionName`, `tokenNameOrder` → `tokenNameSegments`, `useGlobalAlgo` → `useUniformAlgorithm`, `perColorAlgoScope` → `algorithmScopeLevel`, `includeGlobalColors` → `includeSourceColors`, `globalColorsCollectionName` → `sourceCollectionName`, `embedDirectly` → `resolveTokensDirectly`
-- [x] `includeColorScalesCollection` verified wired: `src/figma/config.ts` forwards it; `src/figma/figmaVars.ts` checks it in `skipScales` condition
-- [x] `useUniformAlgorithm` / `algorithmScopeLevel` verified wired: `src/figma/config.ts` forwards; `src/shared/clrEngine.ts` reads them
-- [x] `scaleStepNames` verified wired end-to-end
-- [x] `alphaValues` verified wired end-to-end
-- [x] `ctm.js` preset deleted — no longer referenced
-- [x] TW presets moved to `tw.js` (TW Regular, TW Pro, TW Funk)
-- [x] `manifest.json` — only Google Fonts in `allowedDomains`
+- [x] **Full React/TypeScript rewrite** of the UI — the old vanilla-JS `el()`/innerHTML codebase (`preview.js`, `notifications.js`, `betaLab.js`) no longer exists.
+- [x] **Engine split** — `src/shared/clrEngine.ts` divided into `src/shared/engine/clrEngine.ts` (scale algorithms + dispatch) and `src/shared/engine/solverEngine.ts` (Direct-mode solver), so solver-mode code can be maintained independently of scale-algorithm code.
+- [x] **APCA contrast support** — `src/shared/colorMath/apca-vendor.ts` + two new solver modes (`gamut-cusp`, `apca-natural`).
+- [x] **HCT color space replaced with library-backed implementation** — vendored Google `material-color-utilities` `Hct` class, after multiple hand-rolled CAM16/HCT bugs were found and root-caused (see `color-algorithm-roadmap.md`).
+- [x] **OKLCH color space replaced with `culori`-backed implementation** — after a hand-rolled gamut-boundary instability was found during the migration's before/after diff.
+- [x] **"Fidelity" scale algorithm shipped** — the "ultimate" gamut-relative-chroma algorithm, implemented in OKLCH (pivoted from originally-planned HCT after finding a hue-drift bug in the old hand-rolled `hctToHex`, since fixed).
+- [x] **Saved States / version history shipped** — `ProjectScreen.tsx`'s `VersionsScreen`: save/restore/rename/delete/export-as-`.wand` snapshots of the full config. Was a non-functional placeholder as of 2026-05-22.
+- [x] **Variable scoping / collections checklist** — Run dialog now has an independent Scale/Tokens toggle pair (plus a separate Source Colors toggle) instead of syncing everything on every run.
+- [x] **Canvas preview** — real-time on-canvas rendering of scales/tokens/source colors during development, with interruption tracking and fingerprint-based rebuild avoidance.
+- [x] **11-format export bundle** — expanded from the original CSS/SCSS/CSV/JSON set to include Tailwind, DTCG, Style Dictionary, iOS/Swift, Android, React Native, and `.wand` config export.
+- [x] **Rename detection for per-role variations** — was listed as a known gap in the 2026-05-22 todo list; confirmed already fixed in current code (`src/figma/config.ts`'s `_getTokenRenames`/`getVarMap` tracks variation renames by `_id` for both global and per-role lists).
+- [x] **`tokenGrouping` UI control** — was listed as "missing" in the 2026-05-22 todo list; the underlying `ProjectStore.tokenGrouping` field no longer exists at all (removed, not merely un-wired). A same-named preview-rendering utility exists but is unrelated to variable structure.
+- [x] **Alpha tints in Figma output** — confirmed still working (`syncGlobalColors`, gated by `includeSourceColors` + non-empty `alphaValues`).
+- [x] **Project Name end-to-end** — confirmed used in export filenames and `.wand` snapshots via `projectSlug`/`_projectSlug` helpers.

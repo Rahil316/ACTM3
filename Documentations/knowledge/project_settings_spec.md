@@ -4,8 +4,8 @@ description: Actual settings module design — what is in the UI, what is wired,
 type: project
 ---
 
-Last updated: 2026-07-14
-Source: `src/ui/screens/SettingsOverlay.tsx`, `src/ui/store/projectStore.ts`, `src/ui/store/snapshots.ts`, `src/ui/hooks/useAutoSave.ts` — direct code audit
+Last updated: 2026-07-15
+Source: `src/ui/screens/SettingsOverlay.tsx`, `src/ui/store/projectStore.ts`, `src/ui/store/snapshots.ts`, `src/ui/hooks/useAutoSave.ts`, `src/ui/screens/ExportSheet.tsx`, `src/ui/screens/ProjectScreen.tsx` — direct code audit
 
 ---
 
@@ -128,13 +128,19 @@ Moved here from the Tokens tab. Lives in `StepLabelsCard()`. Restyled to match S
 
 ## More-sheet (••• button in toolbar)
 
-The more-sheet is NOT part of the settings overlay. It contains:
+The more-sheet is NOT part of the settings overlay — it opens `ExportSheet.tsx`. **Correction (2026-07-15):** this list was stale — there are 11 export formats now, not 4, and no "Clear All" destructive action exists (the only "Clear" control found in `ExportSheet.tsx` clears the export-format selection queue, not project data):
 
-- Export .Wand
-- Export CSS Variables
-- Export CSV
-- Export SCSS
-- Clear All (destructive)
+- Token Wand Config (.wand)
+- CSS Variables
+- SCSS
+- Tailwind Config
+- W3C Design Tokens (DTCG)
+- Style Dictionary
+- iOS / Swift
+- Android XML
+- React Native
+- CSV Spreadsheet
+- JSON
 
 ---
 
@@ -144,7 +150,9 @@ The more-sheet is NOT part of the settings overlay. It contains:
 | ---------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `projectStore.name`          | Project tab input in sidebar | System name; used in CSS/SCSS export headers and save filenames                                                                                                         |
 | `projectStore.themes[]`      | Project tab in sidebar       | Theme names + background hex — not in the settings overlay                                                                                                              |
-| `projectStore.tokenGrouping` | Token Name Format section    | `"color"` \| `"role"` — variable structure (color-first vs role-first grouping); toggled via `setTokenGrouping()` but not currently exposed as a UI control in settings |
+| `projectStore.versions[]`    | Project tab — Versions view  | Fully wired: `saveVersion`/`restoreVersion`/`renameVersion`/`deleteVersion` all live in `projectStore.ts`; UI is a complete CRUD screen (`ProjectScreen.tsx`'s `VersionsScreen`), not a settings-tab control |
+
+**Correction (2026-07-15):** `projectStore.tokenGrouping` no longer exists — it was removed from `ProjectStore` at some point after 2026-05-22, and there is no `setTokenGrouping()` function in current source. A same-named concept does still exist, but only as a preview-rendering utility module (`src/ui/utils/tokenGrouping.ts`'s `resolveTokenTree()`) used to group tokens hierarchically for display in the Preview screen and dev overlays — it is not a `ProjectStore` field and has no bearing on what gets written to Figma.
 
 ---
 
@@ -152,7 +160,7 @@ The more-sheet is NOT part of the settings overlay. It contains:
 
 | Field                             | Status                                                                                                                                                  |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| (none confirmed as of 2026-05-22) | All previously suspected "dead" keys (`includeColorScalesCollection`, `useUniformAlgorithm`, `algorithmScopeLevel`) are now confirmed wired and working |
+| (none confirmed) | A fresh audit of all `ProjectStore` fields (2026-07-15) found every one wired to a UI control somewhere (settings tabs, sidebar screens, or the Versions view) — no dead fields identified. |
 
 ---
 
@@ -160,12 +168,12 @@ The more-sheet is NOT part of the settings overlay. It contains:
 
 ### In PDF mockup design but NOT in code
 
-1. **Saved States** — version history with View / Restore / Delete (Project tab)
+1. ~~**Saved States** — version history with View / Restore / Delete (Project tab)~~ — **shipped.** `ProjectScreen.tsx`'s `VersionsScreen` is a fully functional CRUD UI: save a named/described snapshot of the current config, then restore/rename/export-as-`.wand`/delete any saved version. Not a placeholder as of an earlier version of this doc.
 2. **Role Labels CSV** — bulk-rename all variation names at once (Roles tab in mockup)
 3. **Language selector** (Plugin tab)
-4. **Beta Features** section (Plugin tab)
+4. **Beta Features** section (Plugin tab) — note: a `"design-lab"` value still exists in the `ActiveOverlay` union and an Alt+L shortcut still opens it, but it's a dead alias that routes to the same `ExportSheet` as the normal export flow; there is no actual beta-features surface behind it.
 5. **About Token Wand** section (Plugin tab)
 
 ### In code / projectStore but NOT exposed in settings UI
 
-- `tokenGrouping` (`"color"` / `"role"`) — controls whether variable structure is color-first or role-first. Logic exists in `setTokenGrouping()` but no settings UI control is rendered.
+- Nothing currently confirmed — see the "Dead state keys" table above and the `tokenGrouping` correction above (that field doesn't exist anymore, so it's not a gap either).

@@ -9,15 +9,15 @@
 5. Select `manifest.json` from the project root.
 6. Open any Figma file and run the plugin from Plugins → Development → Token Wand.
 
-On first launch the plugin loads the TW Regular preset. On subsequent launches it restores the last saved configuration for that Figma file.
+On first launch (no saved state yet), the plugin shows the **QuickStart** screen — a picker over 8 curated presets (Regular Wand, Material 3, Atlassian, Radix UI, Apple HIG, Tailwind CSS, IBM Carbon, Shopify Polaris), plus a "Browse Presets" link into the full Theme Shop. Nothing loads automatically; you pick one. On subsequent launches the plugin restores the last saved configuration for that Figma file instead.
 
 ---
 
 ## 2. Choose a Preset or Start from Scratch
 
-Click **Theme Shop** in the top bar to open the preset browser. Each card shows the seed colors, mode, number of roles, and themes. Click **Load [name]** to replace the current configuration with that preset.
+Click **Theme Shop** in the top bar to open the full preset browser (more options than the first-launch QuickStart screen). Each card shows the seed colors, mode, number of roles, and themes. Click **Load [name]** to replace the current configuration with that preset.
 
-**Recommended starting point:** Load **TW Regular**, change the three seed colors to your brand colors, then run. A complete 12-role semantic system in approximately 30 seconds.
+**Recommended starting point:** Load **Regular Wand**, change the three seed colors to your brand colors, then run. A complete 12-role semantic system in approximately 30 seconds. Note: Regular Wand is a dev-only preset — available when running from source (`npm run build`/`watch`) but not included in `--release` builds; for a shipped-build equivalent, any of the 7 shipped presets (Apple HIG, Atlassian, IBM Carbon, Material 3, Shopify Polaris, Radix UI, Tailwind CSS) works the same way.
 
 ---
 

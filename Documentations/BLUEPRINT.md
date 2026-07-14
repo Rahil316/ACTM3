@@ -276,7 +276,9 @@ for each color:
 - `Linear` — linear HSL lightness steps, fixed saturation
 - `Fidelity` — perceptual lightness steps in OKLCH space; chroma held as a fraction of the seed hue's real max-chroma envelope (not a raw value or a guessed taper curve), and the seed's exact hex always appears as one step
 
-### `_solveDirectMode` (`src/shared/clrEngine.ts:348`)
+### `_solveDirectMode` (`src/shared/engine/clrEngine.ts:351`)
+
+> **Path update (2026-07-15):** the engine was split — `src/shared/clrEngine.ts` no longer exists. Scale algorithms and the mode-dispatch functions below (`_generateScales`, `_getSolverMode`, `_solveDirectMode`, `_processScaleMode`, `_mapByScaleContrast`) stayed in `src/shared/engine/clrEngine.ts`. `solveColorForContrast` and its solver-mode machinery (`_targetChroma`, `_searchL`, `SOLVER_MODES`) moved to a new `src/shared/engine/solverEngine.ts`. `SolverMode` also grew from 5 to 7 values — `gamut-cusp` and `apca-natural` were added (see the Solver modes list below and `Documentations/knowledge/color-algorithm-roadmap.md`'s 2026-07-15 status update for the full mechanism).
 
 ```
 for each role in config.roles:
@@ -293,7 +295,7 @@ for each role in config.roles:
 
   for each variation v at index i:
     solverMode = _getSolverMode(config, color, role)
-    // Priority chain (src/shared/clrEngine.ts:342):
+    // Priority chain (src/shared/engine/clrEngine.ts:345):
     //   1. config.useUniformAlgorithm !== false (default true) → config.solverMode || 'natural'
     //   2. algorithmScopeLevel === 'role'  → role.solverMode || config.solverMode || 'natural'
     //   3. else (algorithmScopeLevel==='color') → color.solverMode || config.solverMode || 'natural'
@@ -315,15 +317,17 @@ for each role in config.roles:
     }
 ```
 
-**Solver modes (direct):**
+**Solver modes (direct) — 7, not 5:**
 
 - `natural` — chroma tapers as lightness moves away from mid; most natural-looking results
 - `constant-chroma` — holds chroma fixed at the seed value throughout the scale
 - `symmetric` — chroma follows a bell curve peaking at mid-lightness and collapsing toward zero at both white and black
-- `hue-locked` — stays on the seed's exact hue, pushes to maximum in-gamut chroma at the target contrast
+- `hue-locked` — stays on the seed's exact hue; **as implemented, its chroma curve is identical to `natural`'s** (`_targetChroma(..., "natural")` is hardcoded regardless of mode — see `color-algorithm-roadmap.md`'s confirmed-issues entry). It does not currently push to maximum in-gamut chroma despite that being its documented intent.
 - `max-chroma` — ignores seed chroma entirely, always uses the most vivid in-gamut color at the target contrast
+- `gamut-cusp` — holds chroma as a constant fraction of the seed's own gamut envelope (`_gamutRelativeChroma`), scaled per candidate lightness; searches for the WCAG target like the other modes
+- `apca-natural` — same gamut-relative chroma curve as `gamut-cusp`, but searches for an APCA Lc target instead (converted from the WCAG-ratio target via a hand-fit anchor table, not a first-class APCA UI)
 
-### `_processScaleMode` (`src/shared/clrEngine.ts:382`)
+### `_processScaleMode` (`src/shared/engine/clrEngine.ts:391`)
 
 ```
 for each role in config.roles:
@@ -344,7 +348,7 @@ for each role in config.roles:
                       theme.name, effectiveBg, isDark, result, errors)
 ```
 
-### `_mapByScaleContrast` (`src/shared/clrEngine.ts:399`)
+### `_mapByScaleContrast` (`src/shared/engine/clrEngine.ts:408`)
 
 ```
 for each variation v at index i:
@@ -380,8 +384,8 @@ for each variation v at index i:
 
 There is no shared `buildTokenName` helper, and the engine's own `tokenName` field is **not** segment/shorthand-aware — it's a hardcoded placeholder built inline at each call site:
 
-- `_solveDirectMode` (`clrEngine.ts:367`): `` `${color.name}/${role.name}/${variation}` `` (slash-joined)
-- `_mapByScaleContrast` (`clrEngine.ts:451`): `` `${color.name}-${role.name}-${variation}` `` (hyphen-joined — inconsistent with direct mode)
+- `_solveDirectMode` (`engine/clrEngine.ts:375`): `` `${color.name}/${role.name}/${variation}` `` (slash-joined)
+- `_mapByScaleContrast` (`engine/clrEngine.ts:460`): `` `${color.name}-${role.name}-${variation}` `` (hyphen-joined — inconsistent with direct mode)
 
 Neither honors `tokenNameSegments` ordering, shorthands, or segment omission. The real, correct, segment/shorthand-aware Figma variable name is built **later**, only at sync/preview time, via `makeLabelHelpers(config)` (`src/figma/variableTracker.ts:9`) — see §5 below. `EngineResult.tokens[...].tokenName` should be treated as an internal placeholder, not the name written to Figma.
 
@@ -403,7 +407,7 @@ EngineResult = {
         contrast: {
           // Keyed by ACTUAL theme name (lowercased), not fixed 'light'/'dark' keys —
           // e.g. { light: {...}, dark: {...}, brand: {...} } for a 3-theme project.
-          // src/shared/clrEngine.ts:313,326-328
+          // src/shared/engine/clrEngine.ts:329-330
           [themeNameLower: string]: { ratio: number, rating: 'Fail' | 'AA Large Text' | 'AA' | 'AAA' }
         }
         stepName: string        // NOT the raw step key — actually `${colorName}-${step}`, e.g. "Neutral-500"
