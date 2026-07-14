@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useProjectStore } from "../../store/projectStore";
 import { useUiStore } from "../../store/uiStore";
 import { useFigmaBridge, type BridgeCallbacks } from "../../hooks/useFigmaBridge";
@@ -37,11 +37,19 @@ export function RunDialog() {
 
   const dialog = useRunDialogState(projectStore, savedState, validate);
 
+  // Only reset/re-initialize the dialog on the closed→open transition — not on
+  // every subsequent skipScales change while it's already open. Once open, a
+  // pluginMode/includeColorScalesCollection edit is just another projectStore
+  // change and is handled by useRunDialogState's own debounced stale-recheck
+  // effect, same as any other config edit; it must not blow away the user's
+  // current tab/filters/tally the way onDialogOpen does.
+  const skipScalesRef = useRef(skipScales);
+  skipScalesRef.current = skipScales;
   useEffect(() => {
     if (isOpen) {
-      dialog.onDialogOpen(skipScales);
+      dialog.onDialogOpen(skipScalesRef.current);
     }
-  }, [isOpen, skipScales]);
+  }, [isOpen]);
 
   const callbacks: BridgeCallbacks = {
     onCollectionCheckResult: dialog.onCollectionCheckResult,

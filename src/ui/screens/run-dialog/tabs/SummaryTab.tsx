@@ -262,14 +262,19 @@ function ScopeChecklist({ scope, setScope }: { scope: SyncScope; setScope: (v: S
   const scaleOn = scope === "all" || scope === "scale";
   const rolesOn = scope === "all" || scope === "roles";
 
+  function scopeFrom(nextScaleOn: boolean, nextRolesOn: boolean): SyncScope {
+    if (nextScaleOn && nextRolesOn) return "all";
+    if (nextScaleOn) return "scale";
+    if (nextRolesOn) return "roles";
+    return "none";
+  }
+
   function toggleScale() {
-    if (scaleOn) setScope("roles");
-    else setScope(rolesOn ? "all" : "scale");
+    setScope(scopeFrom(!scaleOn, rolesOn));
   }
 
   function toggleRoles() {
-    if (rolesOn) setScope("scale");
-    else setScope(scaleOn ? "all" : "roles");
+    setScope(scopeFrom(scaleOn, !rolesOn));
   }
 
   return (
