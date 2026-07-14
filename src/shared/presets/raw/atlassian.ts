@@ -82,7 +82,7 @@ const presets: Preset[] = [
       tokenCollectionName: "color",
 
       scaleSteps: null,
-      canEditRoleVariants: true,
+      useSharedRoleVariants: false,
 
       // Single global variation — not used (every role defines its own).
       variations: [{ name: "default", shorthand: "default" }],

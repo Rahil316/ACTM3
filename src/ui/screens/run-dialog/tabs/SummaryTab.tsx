@@ -1,13 +1,12 @@
 import { useProjectStore } from "../../../store/projectStore";
 import { useHealthReport } from "./health/useHealthReport";
 import { MetricTileRow, type MetricKey } from "./health/HealthTab";
-import { SettingsCard, SmallRow } from "../../../components/SettingsCard";
+import { SettingsCard, SmallRow, CollectionRow } from "../../../components/SettingsCard";
 import { Callout } from "../../../components/Callout";
 import { Badge } from "../../../components/Badge";
 import { EmptyState } from "../../../components/EmptyState";
 import { SectionLabel, HelperText, Mono, Caption, PageTitle } from "../../../components/typography";
 import { IconCheck } from "../../../components/icons";
-import { Checkbox } from "../../../components/Checkbox";
 import { Input } from "../../../components/Input";
 import type { SyncPreview, StructuralChange, ExistingCollection, SyncScope } from "../../../types/messages";
 import type { RunDialogTab } from "../useRunDialogState";
@@ -76,18 +75,18 @@ export function SummaryTab({
               </div>
               <div className="h-[10px] w-40 rounded bg-n-sf-hover" />
             </div>
-          ) : nothingToSync ? (
+          ) : nothingToSync || !syncPreview ? (
             <EmptyState icon={<IconCheck className="w-5 h-5" />} title="Up to date" description="Figma variables already match the current configuration — nothing to sync." />
           ) : (
             <div className="flex flex-col gap-2 py-1">
               <div className="grid grid-cols-4 gap-1.5">
-                <StatChip count={syncPreview!.toCreate} label="Create" variant="success" onClick={() => goToChanges("create")} />
-                <StatChip count={syncPreview!.toUpdate} label="Update" variant="accent" onClick={() => goToChanges("update")} />
-                <StatChip count={syncPreview!.toRename} label="Rename" variant="warning" onClick={() => goToChanges("rename")} />
-                <StatChip count={syncPreview!.toDelete} label="Delete" variant="danger" onClick={() => goToChanges("delete")} />
+                <StatChip count={syncPreview.toCreate} label="Create" variant="success" onClick={() => goToChanges("create")} />
+                <StatChip count={syncPreview.toUpdate} label="Update" variant="accent" onClick={() => goToChanges("update")} />
+                <StatChip count={syncPreview.toRename} label="Rename" variant="warning" onClick={() => goToChanges("rename")} />
+                <StatChip count={syncPreview.toDelete} label="Delete" variant="danger" onClick={() => goToChanges("delete")} />
               </div>
               <Caption className="text-n-tx-dim">
-                {syncPreview!.total} variable change{syncPreview!.total !== 1 ? "s" : ""} across{" "}
+                {syncPreview.total} variable change{syncPreview.total !== 1 ? "s" : ""} across{" "}
                 {existingCollections.length > 0
                   ? `${existingCollections.length} collection${existingCollections.length !== 1 ? "s" : ""}`
                   : "new collections"}.
@@ -211,20 +210,36 @@ export function SummaryTab({
 
 // ── Health summary ─────────────────────────────────────────────────────────────
 
+// The metric with the most issues — where "View details" and a tile click
+// without an explicit selection should land. Falls back to "adjustments" when
+// nothing has issues, matching the tile row's own default.
+function topIssueMetric(report: ReturnType<typeof useHealthReport>): MetricKey {
+  if (!report) return "adjustments";
+  const counts: [MetricKey, number][] = [
+    ["adjustments", report.adjustments.length],
+    ["collisions", report.nameCollisions.length],
+    ["drift", report.modeDrift.length],
+    ["inversions", report.inversions.length],
+  ];
+  const top = counts.reduce((a, b) => (b[1] > a[1] ? b : a));
+  return top[1] > 0 ? top[0] : "adjustments";
+}
+
 function HealthSummary({ onViewHealth }: { onViewHealth: (metric: MetricKey) => void }) {
   const report = useHealthReport();
   const issueCount = report?.issueCount ?? null;
+  const defaultMetric = topIssueMetric(report);
 
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between px-0.5">
         <SectionLabel className="text-n-tx-secondary">Health</SectionLabel>
-        <button type="button" onClick={() => onViewHealth("adjustments")} className="text-[11px] font-medium text-n-tx-dim hover:text-n-tx-primary underline-offset-2 hover:underline transition-colors cursor-pointer">
+        <button type="button" onClick={() => onViewHealth(defaultMetric)} className="text-[11px] font-medium text-n-tx-dim hover:text-n-tx-primary underline-offset-2 hover:underline transition-colors cursor-pointer">
           View details →
         </button>
       </div>
       <SettingsCard className="!space-y-0 !p-2">
-        <MetricTileRow selected="adjustments" onSelect={onViewHealth} onNavigateToHealth={undefined} />
+        <MetricTileRow selected={defaultMetric} onSelect={onViewHealth} onNavigateToHealth={undefined} />
         {issueCount !== null && (
           <Caption className={`text-right pt-1.5 ${issueCount === 0 ? "text-s-tx-muted" : issueCount < 5 ? "text-w-tx-muted" : "text-d-tx-muted"}`}>
             {issueCount === 0 ? "All tokens healthy" : `${issueCount} issue${issueCount !== 1 ? "s" : ""} detected`}
@@ -259,62 +274,28 @@ function ScopeChecklist({ scope, setScope }: { scope: SyncScope; setScope: (v: S
 
   return (
     <SettingsCard className="!space-y-0 divide-y divide-n-br-hairline">
-      <ScopeRow
-        checked={scaleOn}
-        onToggle={toggleScale}
+      <CollectionRow
         label="Scale"
         description="Primitive color collection"
-        collectionName={scaleCollectionName}
-        onNameChange={(v) => setProjectField("scaleCollectionName", v)}
+        checked={scaleOn}
+        onToggle={toggleScale}
+        control={<Input size="sm" value={scaleCollectionName} onChange={(e) => setProjectField("scaleCollectionName", e.target.value)} disabled={!scaleOn} />}
       />
-      <ScopeRow
-        checked={rolesOn}
-        onToggle={toggleRoles}
+      <CollectionRow
         label="Tokens"
         description="Semantic role collection"
-        collectionName={tokenCollectionName}
-        onNameChange={(v) => setProjectField("tokenCollectionName", v)}
+        checked={rolesOn}
+        onToggle={toggleRoles}
+        control={<Input size="sm" value={tokenCollectionName} onChange={(e) => setProjectField("tokenCollectionName", e.target.value)} disabled={!rolesOn} />}
       />
-      <ScopeRow
-        checked={includeSourceColors}
-        onToggle={() => setProjectField("includeSourceColors", !includeSourceColors)}
+      <CollectionRow
         label="Source Colors"
         description="Raw hex reference collection"
-        collectionName={sourceCollectionName}
-        onNameChange={(v) => setProjectField("sourceCollectionName", v)}
-        dimmed={!includeSourceColors}
+        checked={includeSourceColors}
+        onToggle={() => setProjectField("includeSourceColors", !includeSourceColors)}
+        control={<Input size="sm" value={sourceCollectionName} onChange={(e) => setProjectField("sourceCollectionName", e.target.value)} disabled={!includeSourceColors} />}
       />
     </SettingsCard>
-  );
-}
-
-interface ScopeRowProps {
-  checked: boolean;
-  onToggle: () => void;
-  label: string;
-  description: string;
-  collectionName: string;
-  onNameChange: (v: string) => void;
-  dimmed?: boolean;
-}
-
-function ScopeRow({ checked, onToggle, label, description, collectionName, onNameChange, dimmed }: ScopeRowProps) {
-  return (
-    <div className={`flex items-center gap-2.5 py-2.5 transition-opacity ${dimmed ? "opacity-40" : ""}`}>
-      {/* Checkbox */}
-      <button type="button" onClick={onToggle} className="shrink-0 cursor-pointer">
-        <Checkbox checked={checked} />
-      </button>
-
-      {/* Label + description */}
-      <div className="flex-1 min-w-0">
-        <Caption className="font-medium text-n-tx-primary">{label}</Caption>
-        <HelperText className="text-n-tx-dim">{description}</HelperText>
-      </div>
-
-      {/* Editable collection name */}
-      <Input type="text" size="table" mono width="auto" value={collectionName} onChange={(e) => onNameChange(e.target.value)} disabled={dimmed} className="w-[120px] shrink-0 text-right" />
-    </div>
   );
 }
 

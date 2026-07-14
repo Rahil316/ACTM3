@@ -298,7 +298,7 @@ export function makeBootstrapState(): ProjectStore {
     tokenCollectionName: "color tokens",
     scaleSteps: null,
     variations,
-    canEditRoleVariants: true,
+    useSharedRoleVariants: true,
     colors: [
       { _id: generateId(), name: "Primary", shorthand: "pr", value: "#0066FF", description: "" },
       { _id: generateId(), name: "Gray", shorthand: "gr", value: "#6B7280", description: "" },
@@ -344,7 +344,13 @@ export function ensureVariations(state: ProjectStore): void {
     if (v.target == null) v.target = 4.5;
   }
 
-  // Every role always owns a private copy of the variations array.
+  // When useSharedRoleVariants is on, a role's null variations means "defer to
+  // global" (read by clrEngine's role.variations ?? globalVariations) — leave
+  // it null rather than backfilling, or the toggle's ON state can't survive a
+  // reload. Only in custom-per-role mode does every role need its own copy.
+  if (state.useSharedRoleVariants) return;
+
+  // Every role owns a private copy of the variations array.
   // If a role has none (e.g. freshly imported old data), seed it from global.
   for (const role of state.roles) {
     if (!role.variations || role.variations.length === 0) {
@@ -453,11 +459,15 @@ interface projectStoreState {
   projectStore: ProjectStore;
   savedState: ProjectStore | null;
   stateHash: string;
+  // False until the saved project state has been restored (or confirmed absent
+  // on first launch) — lets the UI hold off rendering with bootstrap defaults.
+  isHydrated: boolean;
 
   // Loading
   loadState: (incoming: Partial<ProjectStore>) => void;
   setSavedState: (snapshot: ProjectStore | null) => void;
   getSavedState: () => ProjectStore | null;
+  setHydrated: () => void;
   markClean: () => void;
   isDirty: () => boolean;
 
@@ -488,16 +498,19 @@ interface projectStoreState {
   setRoleLocalBg: (roleIdx: number, localBg: import("../types/state").RoleLocalBg | null) => void;
   setRoleScopes: (roleIdx: number, scopes: VariableScope[] | null) => void;
 
-  // Shared variations — set / add / remove / move
+  // Shared variations — set / add / remove / move / reset
   setVariation: (idx: number, field: string, value: string) => void;
   addVariation: () => void;
   removeVariation: (idx: number) => void;
   moveVariation: (from: number, to: number) => void;
+  resetVariations: () => void;
 
   // Scale step names — set / init / remove
   setScaleStep: (idx: number, field: "name" | "shorthand", value: string) => void;
   addScaleStep: () => void;
   removeScaleStep: (idx: number) => void;
+  insertScaleStepAt: (idx: number) => void;
+  removeScaleStepAt: (idx: number) => void;
 
   // Themes — set / add / remove / move
   setTheme: (idx: number, field: keyof Theme, value: string) => void;
@@ -526,6 +539,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
   projectStore: _bootstrap,
   savedState: null,
   stateHash: computeHash(_bootstrap),
+  isHydrated: false,
 
   // ── Loading ──
 
@@ -535,7 +549,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       ensureIds(next);
       ensureVariations(next);
       const hash = computeHash(next);
-      return { projectStore: next, stateHash: hash };
+      return { projectStore: next, stateHash: hash, isHydrated: true };
     });
   },
 
@@ -544,6 +558,8 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
   },
 
   getSavedState: () => get().savedState,
+
+  setHydrated: () => set({ isHydrated: true }),
 
   markClean: () => {
     set((s) => ({ stateHash: computeHash(s.projectStore) }));
@@ -561,9 +577,24 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
         const existing = s.projectStore.scaleSteps;
         if (existing.length !== len) {
           const padded = [...existing];
-          while (padded.length < len) padded.push({ _id: generateId(), name: "", shorthand: "" });
+          while (padded.length < len) padded.push({ _id: generateId(), name: String(padded.length + 1), shorthand: String(padded.length + 1) });
           next.scaleSteps = padded.slice(0, len);
         }
+      }
+      if (key === "useSharedRoleVariants") {
+        // Flipping this toggle is a one-way sync point, not just a display switch:
+        // ON  -> every role drops its custom array and defers to shared variations.
+        // OFF -> every role's array is rebuilt from the current shared variations
+        // (name/shorthand/count always match shared), but a target the user had
+        // already set for that index is preserved rather than being overwritten —
+        // only indices the role didn't have before pick up the shared default target.
+        const shared = s.projectStore.variations ?? [];
+        next.roles = s.projectStore.roles.map((r) => ({
+          ...r,
+          variations: value
+            ? null
+            : shared.map((v, i) => ({ ...v, _id: generateId(), target: r.variations?.[i]?.target ?? v.target })),
+        }));
       }
       return { projectStore: next };
     });
@@ -796,7 +827,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const parsed = parseFloat(val);
       variations[idx] = { ...variations[idx], [field]: field === "target" ? (isNaN(parsed) ? variations[idx].target : parsed) : val };
       const next: ProjectStore = { ...s.projectStore, variations };
-      if (!s.projectStore.canEditRoleVariants && (field === "name" || field === "shorthand")) {
+      if (!s.projectStore.useSharedRoleVariants && (field === "name" || field === "shorthand")) {
         // Mirror name/shorthand to every role — targets are role-owned, never propagate
         next.roles = s.projectStore.roles.map((r) => ({
           ...r,
@@ -814,7 +845,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const newVar: Variation = { _id: generateId(), name: "Variation", shorthand: "", target: 4.5 };
       const variations = [...(s.projectStore.variations ?? []), newVar];
       const next: ProjectStore = { ...s.projectStore, variations };
-      if (!s.projectStore.canEditRoleVariants) {
+      if (!s.projectStore.useSharedRoleVariants) {
         next.roles = s.projectStore.roles.map((r) => ({
           ...r,
           variations: [...(r.variations ?? variations.slice(0, -1)), { ...newVar, _id: generateId() }],
@@ -828,7 +859,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
     set((s) => {
       const variations = (s.projectStore.variations ?? []).filter((_, i) => i !== idx);
       const next: ProjectStore = { ...s.projectStore, variations };
-      if (!s.projectStore.canEditRoleVariants) {
+      if (!s.projectStore.useSharedRoleVariants) {
         next.roles = s.projectStore.roles.map((r) => ({
           ...r,
           variations: (r.variations ?? []).filter((_, i) => i !== idx),
@@ -844,13 +875,27 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const [item] = variations.splice(from, 1);
       variations.splice(to, 0, item);
       const next: ProjectStore = { ...s.projectStore, variations };
-      if (!s.projectStore.canEditRoleVariants) {
+      if (!s.projectStore.useSharedRoleVariants) {
         next.roles = s.projectStore.roles.map((r) => {
           const rv = [...(r.variations ?? [])];
           const [moved] = rv.splice(from, 1);
           rv.splice(to, 0, moved);
           return { ...r, variations: rv };
         });
+      }
+      return { projectStore: next };
+    });
+  },
+
+  resetVariations: () => {
+    set((s) => {
+      const variations: Variation[] = DEFAULT_VARIATIONS.map((d) => ({ ...d, _id: generateId() }));
+      const next: ProjectStore = { ...s.projectStore, variations };
+      if (!s.projectStore.useSharedRoleVariants) {
+        next.roles = s.projectStore.roles.map((r) => ({
+          ...r,
+          variations: variations.map((v) => ({ ...v, _id: generateId() })),
+        }));
       }
       return { projectStore: next };
     });
@@ -872,7 +917,7 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
       const len = Math.max(1, parseInt(s.projectStore.scaleLength as unknown as string) || 23);
       const existing = s.projectStore.scaleSteps ?? [];
       const steps = [...existing];
-      while (steps.length < len) steps.push({ _id: generateId(), name: "", shorthand: "" });
+      while (steps.length < len) steps.push({ _id: generateId(), name: String(steps.length + 1), shorthand: String(steps.length + 1) });
       return { projectStore: { ...s.projectStore, scaleSteps: steps.slice(0, len) } };
     });
   },
@@ -880,9 +925,45 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
   removeScaleStep: (idx) => {
     set((s) => {
       const steps = [...(s.projectStore.scaleSteps ?? [])];
-      if (steps[idx]) steps[idx] = { ...steps[idx], name: "", shorthand: "" };
-      const allEmpty = steps.every((s) => !s.name && !s.shorthand);
-      return { projectStore: { ...s.projectStore, scaleSteps: allEmpty ? null : steps } };
+      if (steps[idx]) steps[idx] = { ...steps[idx], name: String(idx + 1), shorthand: String(idx + 1) };
+      const allDefault = steps.every((s, i) => s.name === String(i + 1) && s.shorthand === String(i + 1));
+      return { projectStore: { ...s.projectStore, scaleSteps: allDefault ? null : steps } };
+    });
+  },
+
+  // Insert a new row at idx and grow scaleLength by 1 (clamped to 100).
+  // Purely-numeric names/shorthands are treated as auto-generated defaults
+  // and renumbered after the shift; custom (non-numeric) labels are left alone.
+  insertScaleStepAt: (idx) => {
+    set((s) => {
+      const oldLen = Math.max(1, parseInt(s.projectStore.scaleLength as unknown as string) || 23);
+      const newLen = Math.min(100, oldLen + 1);
+      if (newLen === oldLen) return s;
+      const steps = [...(s.projectStore.scaleSteps ?? [])];
+      steps.splice(idx, 0, { _id: generateId(), name: String(idx + 1), shorthand: String(idx + 1) });
+      const renumbered = steps.map((step, i) => ({
+        ...step,
+        name: /^\d+$/.test(step.name) ? String(i + 1) : step.name,
+        shorthand: /^\d+$/.test(step.shorthand ?? "") ? String(i + 1) : step.shorthand,
+      }));
+      return { projectStore: { ...s.projectStore, scaleLength: newLen, scaleSteps: renumbered.slice(0, newLen) } };
+    });
+  },
+
+  // Remove the row at idx and shrink scaleLength by 1 (clamped to 5).
+  removeScaleStepAt: (idx) => {
+    set((s) => {
+      const oldLen = Math.max(1, parseInt(s.projectStore.scaleLength as unknown as string) || 23);
+      const newLen = Math.max(5, oldLen - 1);
+      if (newLen === oldLen) return s;
+      const steps = [...(s.projectStore.scaleSteps ?? [])];
+      steps.splice(idx, 1);
+      const renumbered = steps.map((step, i) => ({
+        ...step,
+        name: /^\d+$/.test(step.name) ? String(i + 1) : step.name,
+        shorthand: /^\d+$/.test(step.shorthand ?? "") ? String(i + 1) : step.shorthand,
+      }));
+      return { projectStore: { ...s.projectStore, scaleLength: newLen, scaleSteps: renumbered.slice(0, newLen) } };
     });
   },
 

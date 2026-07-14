@@ -96,7 +96,7 @@ const nmobile: Preset = {
     tokenCollectionName: "nmobile/tokens",
 
     scaleSteps: null,
-    canEditRoleVariants: true,
+    useSharedRoleVariants: false,
 
     // Global fallback variation — all roles override with their own variation list.
     variations: [{ name: "default", shorthand: "1" }],

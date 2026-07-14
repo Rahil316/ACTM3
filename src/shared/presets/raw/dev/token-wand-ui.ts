@@ -78,7 +78,7 @@ const tokenWandUi: Preset = {
     tokenCollectionName: "tw-ui/tokens",
 
     scaleSteps: null,
-    canEditRoleVariants: true,
+    useSharedRoleVariants: false,
 
     // Global fallback — all roles define their own variations
     variations: [{ _id: "twui-v-default", name: "default", shorthand: "default" }],

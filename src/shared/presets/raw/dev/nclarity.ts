@@ -98,7 +98,7 @@ const nclarity: Preset = {
     tokenCollectionName: "nclarity/tokens",
 
     scaleSteps: null,
-    canEditRoleVariants: true,
+    useSharedRoleVariants: false,
 
     // Global fallback variation — all roles override with their own variation list.
     variations: [{ _id: "nc-v-default", name: "default", shorthand: "default" }],

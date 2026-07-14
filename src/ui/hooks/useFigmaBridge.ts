@@ -134,7 +134,7 @@ if (isStandalone) {
 // ── Boot: load state from localStorage in standalone mode ────────────────────
 
 function bootStandalone(): void {
-  const { loadState, setSavedState } = useProjectStore.getState();
+  const { loadState, setSavedState, setHydrated } = useProjectStore.getState();
   const { applyUiPrefs } = useUiStore.getState();
 
   // Load saved state
@@ -146,7 +146,10 @@ function bootStandalone(): void {
       loadState({ ...JSON.parse(JSON.stringify(makeBootstrapState())), ...parsed });
     } catch {
       // Corrupt storage — start fresh
+      setHydrated();
     }
+  } else {
+    setHydrated();
   }
 
   // Load ui prefs
@@ -174,13 +177,14 @@ function bootStandalone(): void {
 // ── Incoming message dispatcher ───────────────────────────────────────────────
 
 function handleMessage(msg: PluginToUiMessage, callbacks: BridgeCallbacks): void {
-  const { loadState, setSavedState, markClean } = useProjectStore.getState();
+  const { loadState, setSavedState, setHydrated, markClean } = useProjectStore.getState();
   const { applyUiPrefs, openOverlay } = useUiStore.getState();
 
   switch (msg.type) {
     case "load-config": {
       const isFirstLaunch = !msg.state || !Array.isArray(msg.state.colors);
       if (isFirstLaunch) {
+        setHydrated();
         openOverlay("quick-start");
       } else {
         const merged = { ...JSON.parse(JSON.stringify(makeBootstrapState())), ...(msg.state as Partial<ProjectStore>) } as ProjectStore;
@@ -229,9 +233,21 @@ function handleMessage(msg: PluginToUiMessage, callbacks: BridgeCallbacks): void
     }
 
     case "finish": {
-      const { projectStore } = useProjectStore.getState();
+      const { projectStore, saveVersion, versionSaveBlockedReason } = useProjectStore.getState();
       setSavedState(projectStore);
       markClean();
+      if (!versionSaveBlockedReason()) {
+        const { created, updated, renamed, removed, failed } = msg.tally;
+        const parts = [
+          created > 0 && `${created} created`,
+          updated > 0 && `${updated} updated`,
+          renamed > 0 && `${renamed} renamed`,
+          removed > 0 && `${removed} removed`,
+          failed > 0 && `${failed} failed`,
+        ].filter(Boolean);
+        const changelog = parts.length > 0 ? parts.join(", ") : "No variable changes";
+        saveVersion(`Published — ${new Date().toLocaleString()}`, changelog);
+      }
       callbacks.onFinish?.(msg.tally, msg.errors);
       break;
     }

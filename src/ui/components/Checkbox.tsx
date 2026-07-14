@@ -3,10 +3,11 @@ import clsx from "clsx";
 
 interface CheckboxProps {
   checked: boolean;
+  disabled?: boolean;
   className?: string;
 }
 
-export function Checkbox({ checked, className }: CheckboxProps) {
+export function Checkbox({ checked, disabled, className }: CheckboxProps) {
   return (
     <div
       className={clsx(
@@ -14,6 +15,7 @@ export function Checkbox({ checked, className }: CheckboxProps) {
         checked
           ? "bg-b-fi-btn-default border-b-fi-btn-default"
           : "border-n-br-strong bg-n-sf-input",
+        disabled && "opacity-40",
         className,
       )}
     >

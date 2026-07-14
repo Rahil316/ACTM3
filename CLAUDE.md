@@ -58,9 +58,12 @@ UI code (`src/ui/**`, except `src/ui/types/**` and `src/ui/utils/**`) may **not*
 
 Full pipeline detail, the alias-chain Figma writes (`_scale` collection → `color tokens` collection), the three-stage `VariableManager.sync()` write order, and the `_id`-based rename-safety system are documented in `Documentations/knowledge/how-it-works.md` — read it before touching `clrEngine.ts`, `figmaVars.ts`, or `variableTracker.ts`.
 
+Color-space conversions live in `src/shared/colorMath/`: `oklch.ts` (used by Direct mode's solver) and `hct.ts`, which wraps the vendored Google Material `hct-vendor/` implementation (CAM16 + HCT solver, ported from the `material-color-utilities` reference source — treat `hct-vendor/*` as third-party and prefer changing `hct.ts`'s thin wrapper over editing it).
+
 ## Other repo-specific conventions
 
 - **Rename safety**: every color/role/theme has a stable `_id` (`generateId()` in `src/ui/store/projectStore.ts`). Renames are tracked by `_id`, not array position or name, via `buildVariableRenameMap()` — don't reintroduce position-based diffing.
 - **Presets**: authored as typed `.ts` files in `src/shared/presets/raw/*.ts`, compiled by `scripts/build-presets.ts` into the gitignored `src/shared/presets/presets.json`. Files under `raw/dev/` are picked up automatically and excluded from `--release` builds — no registration list to edit.
 - **Dev-only code** gated by the `__RELEASE__` global (injected by `vite.config.ts`) is tree-shaken out of release builds; release builds also strip `console.log` (not `warn`/`error`) via a Rollup plugin.
 - Project-specific design/domain knowledge (color role naming, contrast target conventions, algorithm selection guidance, feature status, outstanding todos) lives in `Documentations/knowledge/` — check `Documentations/knowledge/MEMORY.md` for the index before starting nontrivial feature or design work.
+- **`test-data/`** — a standalone stress-test harness for the color engine (`scripts/generate-configs.ts`, `run-stress-test.ts`, `analyze-results.ts`, `build-report.ts`), separate from the plugin build; not covered by `npm run check` and excluded from ESLint.

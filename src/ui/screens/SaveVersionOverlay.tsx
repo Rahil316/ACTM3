@@ -50,6 +50,7 @@ export function SaveVersionOverlay() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSave()}
+            surface="raised"
           />
           <Input
             label="Changelog"
@@ -57,12 +58,14 @@ export function SaveVersionOverlay() {
             placeholder="What changed in this version?"
             value={changelog}
             onChange={(e) => setChangelog(e.target.value)}
+            surface="raised"
           />
           {reason && <HelperText>{reason}</HelperText>}
         </div>
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-n-br-subtle flex gap-2 shrink-0">
+          <Button variant="secondary" size="md" label="Cancel" onClick={handleClose} className="flex-1" />
           <Button
             variant="primary"
             size="md"
@@ -71,7 +74,6 @@ export function SaveVersionOverlay() {
             disabled={!name.trim() || !!reason}
             className="flex-1"
           />
-          <Button variant="secondary" size="md" label="Cancel" onClick={handleClose} className="flex-1" />
         </div>
       </Sheet>
     </>

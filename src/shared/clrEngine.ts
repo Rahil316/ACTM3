@@ -618,8 +618,11 @@ export function solveColorForContrast(sourceHex: string, targetContrast: number,
 
   const resultHex = oklchToHex(solvedL, solvedC || 0, src.H);
   const achievedContrast = parseFloat(_wcagContrast(_lumOfHex(resultHex), bgLum).toFixed(2));
+  // achievedContrast is rounded to 2dp above; round targetContrast the same way
+  // before comparing so rounding alone can't produce a spurious shortfall warning.
+  const roundedTarget = parseFloat(targetContrast.toFixed(2));
   let warning: string | null = null;
-  if (achievedContrast < targetContrast) warning = `Achieved contrast ${achievedContrast} is below target ${targetContrast}. Possible floating-point edge case.`;
+  if (achievedContrast < roundedTarget) warning = `Achieved contrast ${achievedContrast} is below target ${targetContrast}. Possible floating-point edge case.`;
   else if (achievedContrast > targetContrast + OVERSHOOT_WARN) warning = `Target ${targetContrast} not achievable precisely; nearest is ${achievedContrast} (overshoot ${(achievedContrast - targetContrast).toFixed(2)}).`;
 
   return { hex: resultHex, achievedContrast, solverMode: mode, chromaReduced, clipped: false, warning };

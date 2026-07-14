@@ -32,10 +32,12 @@ Logic is written in pseudocode/TypeScript to eliminate ambiguity.
 ### UI receives `load-config`
 
 The plugin responds to `ui-ready` by loading two persisted state keys:
+
 - `tw_ui_state` — last auto-saved UI state (restored into the editor)
 - `tw_state` — last successfully synced state (rename/diff baseline)
 
 Both are sent together:
+
 ```
 postMessage({ type: 'load-config', state: uiState, syncedState })
 ```
@@ -51,15 +53,19 @@ if (state === null) {
 ```
 
 ### `ensureIds(state)`
+
 Mutates state in place. Walks `colors`, `roles`, `themes`, and `scaleSteps` arrays and calls `generateId()` for any entity missing a `_id`. Safe to call on both loaded state and preset configs (presets may omit IDs).
 
 ### `ensureVariations(state)`
+
 Mutates state in place. Three jobs:
+
 1. **Normalise `alphaValues`** — legacy saves stored this as a comma-string (`"10, 25, 50"`). Converts to `number[]` and filters invalid values. If not an array at all, resets to `[]`.
 2. **Seed global variations** — if `state.variations` is empty or absent, fills it with `DEFAULT_VARIATIONS` (each gets a fresh `_id`). Otherwise ensures every existing variation has a `_id`.
 3. **Seed variation targets** — any variation with a `null`/`undefined` target gets defaulted to `4.5`.
 
 ```
+
 ```
 
 ---
@@ -101,11 +107,10 @@ interface ProjectStore {
   // Entities
   scaleSteps: ScaleStepName[] | null; // null = numeric 1…N
   variations: Variation[] | null; // global variation list
-  canEditRoleVariants: boolean; // allow roles to override variations
+  useSharedRoleVariants: boolean; // allow roles to override variations
   colors: Color[];
   roles: Role[];
   themes: Theme[];
-
 }
 ```
 
@@ -133,7 +138,7 @@ interface Role {
   scopedColorIds?: string[] | null; // null = all colors; [] = no colors; [...] = specific ids
   localBg?: RoleLocalBg | null;
   description?: string;
-  scopes?: VariableScope[] | null;  // Figma variable scopes (FRAME_FILL, TEXT_FILL, etc.)
+  scopes?: VariableScope[] | null; // Figma variable scopes (FRAME_FILL, TEXT_FILL, etc.)
 }
 
 export type RoleLocalBgKind = "theme" | "token-static" | "token-dynamic" | "color" | "hex";
@@ -497,9 +502,9 @@ sourceFigmaName = colorLabel + "/" + colorLabel
 All label resolution is centralised in `makeLabelHelpers`, which returns three functions:
 
 ```ts
-colorLabel(name)         // → shorthand if useShorthandColors, else full name
-roleLabel(name, roleIdx) // → shorthand if useShorthandRoles, else full name
-stepLabel(name)          // → shorthand if useShorthandSteps && scaleStepShorthands[name], else name
+colorLabel(name); // → shorthand if useShorthandColors, else full name
+roleLabel(name, roleIdx); // → shorthand if useShorthandRoles, else full name
+stepLabel(name); // → shorthand if useShorthandSteps && scaleStepShorthands[name], else name
 ```
 
 Used by `VariableManager.sync`, `computeSyncPreview`, and `analyzeNameConflicts` — all three use the same helpers so rename detection and sync write identical names.
@@ -736,6 +741,7 @@ Every Figma variable written by Token Wand has a `tokenRef` stored as Figma plug
 ```
 
 `buildMetadataMap(collection, allVars, prefix)` reads these refs and returns a `Map<tokenRef, Variable>`, giving O(1) lookup by stable identity. This map is used by:
+
 - `upsertVariables` — to find the existing variable to update (not by name)
 - `analyzeNameConflicts` — to compare current name vs computed name
 - `computeSyncPreview` — to classify each variable as create/update/rename
@@ -977,18 +983,18 @@ EngineResult (final)
 
 ```ts
 // ── Sync scope ────────────────────────────────────────────────────────────
-type SyncScope = "all" | "scale" | "roles"
+type SyncScope = "all" | "scale" | "roles";
 // 'all'    → write scale collection + token collection + source colors
 // 'scale'  → scale collection only
 // 'roles'  → token collection only (skips scale write)
 
 // ── Sync tally ────────────────────────────────────────────────────────────
 interface SyncTally {
-  created: number;   // new variables written
-  updated: number;   // existing variables updated
-  renamed: number;   // variables renamed
-  removed: number;   // orphaned variables removed
-  failed:  number;   // variables that errored
+  created: number; // new variables written
+  updated: number; // existing variables updated
+  renamed: number; // variables renamed
+  removed: number; // orphaned variables removed
+  failed: number; // variables that errored
 }
 
 // ── Sync preview ─────────────────────────────────────────────────────────
@@ -996,36 +1002,36 @@ interface SyncPreview {
   toCreate: number;
   toUpdate: number;
   toRename: number;
-  total:    number;
+  total: number;
 }
 
 // ── Name conflict ─────────────────────────────────────────────────────────
 interface NameConflict {
-  tokenRef:      string;             // plugin data key linking variable to token
-  figmaName:     string;             // current name of the variable in Figma
-  suggestedName: string;             // what the engine would name it now
-  type:          'token' | 'scale' | 'source';
+  tokenRef: string; // plugin data key linking variable to token
+  figmaName: string; // current name of the variable in Figma
+  suggestedName: string; // what the engine would name it now
+  type: "token" | "scale" | "source";
 }
 
 // ── Structural change ─────────────────────────────────────────────────────
 type StructuralChangeKind =
-  | "mode-direct-to-scale"       // pluginMode changed → orphans old variables
+  | "mode-direct-to-scale" // pluginMode changed → orphans old variables
   | "mode-scale-to-direct"
-  | "scale-shrunk"               // scaleLength reduced → some steps no longer exist
-  | "scale-collection-renamed"   // collection rename
+  | "scale-shrunk" // scaleLength reduced → some steps no longer exist
+  | "scale-collection-renamed" // collection rename
   | "token-collection-renamed"
   | "source-collection-renamed"
-  | "source-removed"             // includeSourceColors turned off → source collection orphaned
-  | "alpha-removed"              // an alpha value removed → alpha variable orphaned
-  | "alpha-changed"              // alpha value changed
-  | "scale-collection-removed";  // includeColorScalesCollection turned off
+  | "source-removed" // includeSourceColors turned off → source collection orphaned
+  | "alpha-removed" // an alpha value removed → alpha variable orphaned
+  | "alpha-changed" // alpha value changed
+  | "scale-collection-removed"; // includeColorScalesCollection turned off
 
 interface StructuralChange {
-  kind:                StructuralChangeKind;
-  detail:              string;        // human-readable description
-  oldValue?:           string;
-  newValue?:           string;
-  orphanedCollection?: string;        // name of collection that will be orphaned
+  kind: StructuralChangeKind;
+  detail: string; // human-readable description
+  oldValue?: string;
+  newValue?: string;
+  orphanedCollection?: string; // name of collection that will be orphaned
 }
 ```
 

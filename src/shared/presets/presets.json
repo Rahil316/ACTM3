@@ -54,7 +54,7 @@
       "scaleCollectionName": "_scale",
       "tokenCollectionName": "color tokens",
       "scaleSteps": null,
-      "canEditRoleVariants": true,
+      "useSharedRoleVariants": false,
       "variations": [
         {
           "name": "default",
@@ -428,7 +428,7 @@
       "scaleCollectionName": "color-palette",
       "tokenCollectionName": "color",
       "scaleSteps": null,
-      "canEditRoleVariants": true,
+      "useSharedRoleVariants": false,
       "variations": [
         {
           "name": "default",
@@ -1426,7 +1426,7 @@
       "scaleCollectionName": "primitives",
       "tokenCollectionName": "tokens",
       "scaleSteps": null,
-      "canEditRoleVariants": true,
+      "useSharedRoleVariants": false,
       "variations": [
         {
           "name": "default",
@@ -1646,7 +1646,7 @@
       "scaleCollectionName": "system-colors",
       "tokenCollectionName": "semantic-colors",
       "scaleSteps": null,
-      "canEditRoleVariants": true,
+      "useSharedRoleVariants": false,
       "variations": [
         {
           "name": "default",
@@ -1977,7 +1977,7 @@
       "scaleCollectionName": "palette",
       "tokenCollectionName": "tokens",
       "scaleSteps": null,
-      "canEditRoleVariants": true,
+      "useSharedRoleVariants": false,
       "variations": [
         {
           "name": "default",
@@ -2238,7 +2238,7 @@
       "scaleCollectionName": "ibm-colors",
       "tokenCollectionName": "carbon",
       "scaleSteps": null,
-      "canEditRoleVariants": true,
+      "useSharedRoleVariants": false,
       "variations": [
         {
           "name": "default",
@@ -2590,7 +2590,7 @@
       "scaleCollectionName": "color-palette",
       "tokenCollectionName": "color",
       "scaleSteps": null,
-      "canEditRoleVariants": true,
+      "useSharedRoleVariants": false,
       "variations": [
         {
           "name": "default",

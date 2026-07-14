@@ -132,11 +132,20 @@ export async function generateCanvasPreview(projectStore: AnyObj, result?: AnyOb
     result = variableMaker(cfg);
   }
 
-  // Mark as in-progress immediately — cleared at the very end.
-  // If the plugin is closed before we finish, this flag survives and signals
-  // the next run to re-render rather than trust stale fingerprints.
+  // Mark as in-progress immediately — cleared in the finally block below.
+  // If the plugin is closed (or an error is thrown) before we finish, this
+  // flag survives and signals the next run to re-render rather than trust
+  // stale fingerprints.
   markPreviewInterrupted();
 
+  try {
+    await generateCanvasPreviewBody(projectStore, result);
+  } finally {
+    clearPreviewInterrupted();
+  }
+}
+
+async function generateCanvasPreviewBody(projectStore: AnyObj, result: AnyObj): Promise<void> {
   // ── 1. Page ───────────────────────────────────────────────────────────────
   let previewPage = figma.root.children.find((p) => p.getPluginData("previewPage") === "1") as PageNode | undefined;
 
@@ -652,7 +661,4 @@ export async function generateCanvasPreview(projectStore: AnyObj, result?: AnyOb
     loveSub.textAutoResize = "WIDTH_AND_HEIGHT";
     loveCard.appendChild(loveSub);
   }
-
-  // All sections complete — clear the interrupted flag.
-  clearPreviewInterrupted();
 }

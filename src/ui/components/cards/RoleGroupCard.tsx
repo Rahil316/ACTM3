@@ -57,7 +57,7 @@ export const RoleGroupCard = React.memo(function RoleGroupCard({ role, idx, drag
   const pluginMode = useProjectStore((s) => s.projectStore.pluginMode);
   const useUniformAlgo = useProjectStore((s) => s.projectStore.useUniformAlgorithm);
   const algoScope = useProjectStore((s) => s.projectStore.algorithmScopeLevel);
-  const canEditNames = useProjectStore((s) => s.projectStore.canEditRoleVariants);
+  const canEditNames = useProjectStore((s) => !s.projectStore.useSharedRoleVariants);
   const roleCount = useProjectStore((s) => s.projectStore.roles.length);
 
   // Role-level fields — subscribed directly to avoid stale-prop re-render issues

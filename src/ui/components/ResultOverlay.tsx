@@ -4,6 +4,7 @@ import { Spinner } from './Spinner';
 import { Button } from './Button';
 import { IconCheck, IconClose, IconAlertTriangle } from './icons';
 import { ModalTitle, SheetTitle, HelperText, StatValue } from './typography';
+import { ResizeHandle } from './Modal';
 import type { SyncTally } from '../types/messages';
 
 // ── Operation overlay ────────────────────────────────────────────────────────
@@ -158,6 +159,7 @@ export function CentredOverlay({ open, children, className, zIndex = 80 }: Centr
       style={{ zIndex }}
     >
       {children}
+      <ResizeHandle zIndex={zIndex + 10} />
     </div>
   );
 }

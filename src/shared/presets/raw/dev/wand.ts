@@ -34,7 +34,7 @@ const presets: Preset[] = [
       includeDescriptions: false,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
-      canEditRoleVariants: false,
+      useSharedRoleVariants: true,
 
       // Global variations — 5 semantic intensity levels used by all 12 roles.
       variations: [
@@ -241,7 +241,7 @@ const presets: Preset[] = [
       includeDescriptions: true,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
-      canEditRoleVariants: true,
+      useSharedRoleVariants: false,
       // Global variations — interaction states. Used by Primary, Secondary, and Action roles.
       variations: [
         { name: "State/Rest", shorthand: "r", target: 4.5 },
@@ -469,7 +469,7 @@ const presets: Preset[] = [
       includeDescriptions: false,
       scaleCollectionName: "_scale",
       tokenCollectionName: "color tokens",
-      canEditRoleVariants: false,
+      useSharedRoleVariants: true,
       // Ghost=barely visible tint, Whisper=hover, Core=primary, Loud=bold, Max=near-black.
       // Contrast targets: 1.5 / 2.5 / 4.5 / 7.0 / 12.0
       variations: [
@@ -703,7 +703,7 @@ const presets: Preset[] = [
       tokenCollectionName: "tokens",
 
       scaleSteps: null,
-      canEditRoleVariants: true,
+      useSharedRoleVariants: false,
 
       // Global variations — not used directly (every role defines its own).
       variations: [{ name: "default", shorthand: "default", target: 1 }],
@@ -918,7 +918,7 @@ const presets: Preset[] = [
       scaleCollectionName: "palette",
       tokenCollectionName: "tokens",
       scaleSteps: null,
-      canEditRoleVariants: true,
+      useSharedRoleVariants: false,
 
       // Global variations — not used directly (every role defines its own).
       variations: [{ name: "default", shorthand: "default", target: 1 }],

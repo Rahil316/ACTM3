@@ -111,20 +111,35 @@ figma.ui.onmessage = async (msg: any) => {
       }
 
       case "run-creator": {
-        const config = translateConfig(msg.state);
-        const result = runEngine(config);
-        await VariableManager.sync(result, config, msg.scope || "all", msg.state, msg.savedState || null, msg.decisions || {});
+        if (syncOrPreviewInFlight) {
+          figma.ui.postMessage({ type: "error", message: "Another run is already in progress. Please wait for it to finish." });
+          break;
+        }
+        syncOrPreviewInFlight = true;
+        try {
+          const config = translateConfig(msg.state);
+          const result = runEngine(config);
+          await VariableManager.sync(result, config, msg.scope || "all", msg.state, msg.savedState || null, msg.decisions || {});
+        } finally {
+          syncOrPreviewInFlight = false;
+        }
         break;
       }
 
       case "run-preview": {
-        const config = translateConfig(msg.state);
-        const result = runEngine(config);
+        if (syncOrPreviewInFlight) {
+          figma.ui.postMessage({ type: "error", message: "Another run is already in progress. Please wait for it to finish." });
+          break;
+        }
+        syncOrPreviewInFlight = true;
         previewRunning = true;
         try {
+          const config = translateConfig(msg.state);
+          const result = runEngine(config);
           await generateCanvasPreview(msg.state, result);
         } finally {
           previewRunning = false;
+          syncOrPreviewInFlight = false;
         }
         figma.ui.postMessage({ type: "preview-done" });
         break;
@@ -203,6 +218,10 @@ figma.ui.onmessage = async (msg: any) => {
 // Track whether a preview render is currently in flight so the close handler
 // knows whether to persist the interrupted flag.
 let previewRunning = false;
+
+// Guards against overlapping "run-creator"/"run-preview" invocations, which
+// would race on VariableManager's shared mutable cache/tally/mutations state.
+let syncOrPreviewInFlight = false;
 
 // If the plugin is closed mid-render, write the interrupted flag so the next
 // open can warn the user and force a re-render of the affected sections.

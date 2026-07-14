@@ -82,7 +82,7 @@ const presets: Preset[] = [
       tokenCollectionName: "carbon",
 
       scaleSteps: null,
-      canEditRoleVariants: true,
+      useSharedRoleVariants: false,
 
       // Global variations — not used directly (every role defines its own).
       variations: [{ name: "default", shorthand: "default" }],

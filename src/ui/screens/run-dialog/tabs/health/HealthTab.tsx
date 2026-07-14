@@ -219,7 +219,7 @@ function InversionRow({ item }: { item: InversionItem }) {
   const { roles, scaleLength, canEditNames, globalVariations } = useProjectStore((s) => ({
     roles: s.projectStore.roles,
     scaleLength: s.projectStore.scaleLength,
-    canEditNames: s.projectStore.canEditRoleVariants,
+    canEditNames: !s.projectStore.useSharedRoleVariants,
     globalVariations: s.projectStore.variations ?? [],
   }));
   const roleIdx = roles.findIndex((r) => r.name === item.role);

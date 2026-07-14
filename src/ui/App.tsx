@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useDeferredValue } from "react";
+import { useEffect, useRef, useState, useDeferredValue } from "react";
 import logoSvg from "./assets/logo.svg";
 import clsx from "clsx";
 import { useFigmaBridge } from "./hooks/useFigmaBridge";
@@ -7,12 +7,13 @@ import { useLocalField } from "./hooks/useLocalField";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useUiPrefs } from "./hooks/useUiPrefs";
 import { useUiStore } from "./store/uiStore";
-import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations, UI_DIMS } from "./store/projectStore";
+import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations } from "./store/projectStore";
 import { engine } from "./store/engineStore";
 import { toast } from "./store/toastStore";
 import { BannerSlot } from "./components/Banner";
 import { ToastHub } from "./components/Toast";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { ResizeHandle } from "./components/Modal";
 import { Button } from "./components/Button";
 import { LucidePreview as Eye, LucideRun as Play, LucideExport as Download, LucideSettings as Settings, LucideReset as RotateCcw, LucideImport as Upload, LucideBookmark as Bookmark, LucideShop as ShoppingBag } from "./components/icons";
 import { ColorsScreen } from "./screens/ColorsScreen";
@@ -28,7 +29,6 @@ import { CanvasPreviewDevOverlay } from "./screens/CanvasPreviewDevOverlay";
 
 declare const __RELEASE__: boolean;
 import { ExportSheet } from "./screens/ExportSheet";
-import { sendToPlugin } from "./types/messages";
 import type { ProjectStore, SidebarTab } from "./types/state";
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
@@ -39,40 +39,6 @@ const TABS: { value: SidebarTab; label: string }[] = [
   { value: "project", label: "Themes" },
   { value: "versions", label: "Versions" },
 ];
-
-// ── Resize handle ─────────────────────────────────────────────────────────────
-
-function ResizeHandle() {
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startW = window.innerWidth;
-    const startH = window.innerHeight;
-
-    function onMove(ev: MouseEvent) {
-      const w = Math.max(UI_DIMS.minWidth, Math.min(UI_DIMS.maxWidth, startW + ev.clientX - startX));
-      const h = Math.max(UI_DIMS.minHeight, Math.min(UI_DIMS.maxHeight, startH + ev.clientY - startY));
-      sendToPlugin({ type: "resize", width: Math.round(w), height: Math.round(h) });
-    }
-
-    function onUp() {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    }
-
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  }, []);
-
-  return (
-    <div onMouseDown={handleMouseDown} className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-50 opacity-30 hover:opacity-70 transition-opacity" style={{ touchAction: "none" }} title="Drag to resize">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-n-tx-muted">
-        <path d="M14 10l-4 4h4v-4zm0-6l-10 10h2l8-8V4zM8 14l6-6v2l-4 4H8z" />
-      </svg>
-    </div>
-  );
-}
 
 // ── Project name inline editor ────────────────────────────────────────────────
 
@@ -96,6 +62,27 @@ function ProjectNameInput({ projectStore }: { projectStore: ProjectStore }) {
   );
 }
 
+// ── Boot skeleton ─────────────────────────────────────────────────────────────
+// Shown while the saved project state is still loading from Figma, so the
+// bootstrap defaults never flash on screen before the real data arrives.
+
+function AppSkeleton() {
+  return (
+    <div className="relative flex flex-col h-full bg-n-bg-app text-n-tx-primary font-sans text-xs overflow-hidden">
+      <header className="shrink-0 px-3 py-2 flex gap-2 items-center border-b border-n-br-default bg-n-bg-app">
+        <img src={logoSvg} alt="Token Wand" className="h-[18px] w-auto shrink-0 opacity-50" />
+        <div className="h-[14px] w-24 rounded bg-n-sf-hover animate-pulse" />
+      </header>
+      <div className="shrink-0 flex gap-1.5 px-3 py-2 border-b border-n-br-default">
+        {[64, 56, 64, 64].map((w, i) => (
+          <div key={i} className="h-[26px] rounded-full bg-n-sf-hover animate-pulse" style={{ width: w }} />
+        ))}
+      </div>
+      <div className="flex-1" />
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -111,6 +98,7 @@ export default function App() {
   const loadState = useProjectStore((s) => s.loadState);
   const saveBlockedReason = useProjectStore((s) => s.versionSaveBlockedReason());
   const projectStore = useProjectStore((s) => s.projectStore);
+  const isHydrated = useProjectStore((s) => s.isHydrated);
 
   // Single engine run for the whole app — all screens read from useEngineStore
   const deferredStore = useDeferredValue(projectStore);
@@ -153,6 +141,8 @@ export default function App() {
   }
 
   useKeyboardShortcuts(importRef);
+
+  if (!isHydrated) return <AppSkeleton />;
 
   return (
     <div className="relative flex flex-col h-full bg-n-bg-app text-n-tx-primary font-sans text-xs overflow-hidden">

@@ -5,10 +5,10 @@ import { CSS } from "@dnd-kit/utilities";
 import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS, SOLVER_MODE_DESCRIPTIONS } from "../store/projectStore";
 import { useUiStore, VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
 import { takeSnapshot, restoreSnapshot, clearSnapshot } from "../store/snapshots";
+import { save } from "../hooks/useAutoSave";
 import { Modal, ModalHeader } from "../components/Modal";
-import { Collapsible } from "../components/Collapsible";
 import { TabBar } from "../components/TabBar";
-import { SettingsCard, PanelRow, SmallRow } from "../components/SettingsCard";
+import { SettingsCard, PanelRow, SmallRow, CollectionRow } from "../components/SettingsCard";
 import { Toggle } from "../components/Toggle";
 import { Select } from "../components/Select";
 import { SegmentedControl } from "../components/SegmentedControl";
@@ -109,13 +109,13 @@ function TokensTab() {
     { value: "role", label: "Per Role" },
   ] as const;
 
-  const scaleStepsRaw = useProjectStore((s) => s.projectStore.scaleSteps);
-  const scaleSteps = scaleStepsRaw ?? [];
-  const setScaleStep = useProjectStore((s) => s.setScaleStep);
-  const addScaleStep = useProjectStore((s) => s.addScaleStep);
-  const removeScaleStep = useProjectStore((s) => s.removeScaleStep);
-  const [stepLabelsCollapsed, setStepLabelsCollapsed] = useState(true);
   const [scaleLengthDraft, setScaleLengthDraft] = useState<string>(String(projectStore.scaleLength));
+
+  // Keep the draft in sync when scaleLength changes from elsewhere (e.g. a
+  // step-labels table row add/remove), not just from this input's own onChange.
+  useEffect(() => {
+    setScaleLengthDraft(String(projectStore.scaleLength));
+  }, [projectStore.scaleLength]);
 
   const tokenNameSegments = projectStore.tokenNameSegments ?? ["color", "role", "variation"];
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -221,53 +221,94 @@ function TokensTab() {
       {/* Collections */}
       <SettingsCard>
         <SectionLabel>Figma Collections</SectionLabel>
-        <SmallRow label="Token Collection Name" control={<Input size="md" value={projectStore.tokenCollectionName} onChange={(e) => setProjectField("tokenCollectionName", e.target.value)} />} />
+        <CollectionRow
+          label="Token Collection"
+          checked
+          disabled
+          control={<Input size="md" value={projectStore.tokenCollectionName} onChange={(e) => setProjectField("tokenCollectionName", e.target.value)} />}
+        />
         {isScaleMode && (
-          <>
-            <PanelRow label="Include Scale Collection" control={<Toggle on={projectStore.includeColorScalesCollection} onChange={() => setProjectField("includeColorScalesCollection", !projectStore.includeColorScalesCollection)} />} />
-            {projectStore.includeColorScalesCollection && <SmallRow label="Scale Collection Name" control={<Input size="md" value={projectStore.scaleCollectionName} onChange={(e) => setProjectField("scaleCollectionName", e.target.value)} />} />}
-          </>
+          <CollectionRow
+            label="Scale Collection"
+            checked={projectStore.includeColorScalesCollection}
+            onToggle={() => setProjectField("includeColorScalesCollection", !projectStore.includeColorScalesCollection)}
+            control={
+              <Input
+                size="md"
+                disabled={!projectStore.includeColorScalesCollection}
+                value={projectStore.scaleCollectionName}
+                onChange={(e) => setProjectField("scaleCollectionName", e.target.value)}
+              />
+            }
+          />
         )}
-        <PanelRow
-          label="Include Source Colors"
-          description="Creates a separate collection for seed hex values."
-          control={<Toggle on={projectStore.includeSourceColors} onChange={() => setProjectField("includeSourceColors", !projectStore.includeSourceColors)} />}
+        <CollectionRow
+          label="Source Collection"
+          checked={projectStore.includeSourceColors}
+          onToggle={() => setProjectField("includeSourceColors", !projectStore.includeSourceColors)}
+          control={
+            <Input
+              size="md"
+              disabled={!projectStore.includeSourceColors}
+              value={projectStore.sourceCollectionName}
+              onChange={(e) => setProjectField("sourceCollectionName", e.target.value)}
+            />
+          }
         />
         {projectStore.includeSourceColors && (
-          <>
-            <SmallRow label="Source Collection Name" control={<Input size="md" value={projectStore.sourceCollectionName} onChange={(e) => setProjectField("sourceCollectionName", e.target.value)} />} />
-            <SmallRow label="Alpha Tint Values (%)" control={<TagInput values={projectStore.alphaValues || []} placeholder="Type a number and press Enter (e.g. 10, 25, 50)" onChange={(newValues) => setProjectField("alphaValues", newValues)} />} />
-          </>
+          <SmallRow label="Alpha Tint Values (%)" control={<TagInput values={projectStore.alphaValues || []} placeholder="Type a number and press Enter (e.g. 10, 25, 50)" onChange={(newValues) => setProjectField("alphaValues", newValues)} />} />
         )}
       </SettingsCard>
-
-      {/* Step labels */}
-      {isScaleMode && (
-        <Collapsible open={!stepLabelsCollapsed} onToggle={() => setStepLabelsCollapsed((c) => !c)} header={<SectionLabel>Step Labels</SectionLabel>}>
-          <div className="px-3 py-2 space-y-1.5">
-            <HelperText>Names for each scale step. Always {projectStore.scaleLength} entries — leave blank to use step numbers.</HelperText>
-            {scaleSteps.length === 0 && <ActionButton label={`+ Enable Step Labels`} onClick={addScaleStep} />}
-            {scaleSteps.length > 0 && (
-              <>
-                <ListHeader columns={["Name", "Short"]} withRemoveButton />
-                {scaleSteps.map((step, i) => (
-                  <ListRow key={step._id || i} onRemove={() => removeScaleStep(i)} removeAriaLabel="Clear step label">
-                    <Input size="sm" value={step.name} placeholder={`Step ${i + 1}`} onChange={(e) => setScaleStep(i, "name", e.target.value)} />
-                    <Input size="sm" value={step.shorthand ?? ""} placeholder="Short" onChange={(e) => setScaleStep(i, "shorthand", e.target.value)} />
-                  </ListRow>
-                ))}
-                <ActionButton
-                  label="− Disable Step Labels"
-                  onClick={() => {
-                    for (let k = scaleSteps.length - 1; k >= 0; k--) removeScaleStep(k);
-                  }}
-                />
-              </>
-            )}
-          </div>
-        </Collapsible>
-      )}
     </div>
+  );
+}
+
+// ── Step labels card ─────────────────────────────────────────────────────────
+
+function StepLabelsCard() {
+  const projectStore = useProjectStore((s) => s.projectStore);
+  const isScaleMode = projectStore.pluginMode === "scale";
+
+  const scaleStepsRaw = useProjectStore((s) => s.projectStore.scaleSteps);
+  const scaleSteps =
+    scaleStepsRaw ??
+    Array.from({ length: projectStore.scaleLength }, (_, i) => ({ _id: String(i + 1), name: String(i + 1), shorthand: String(i + 1) }));
+  const setScaleStep = useProjectStore((s) => s.setScaleStep);
+  const addScaleStep = useProjectStore((s) => s.addScaleStep);
+  const removeScaleStep = useProjectStore((s) => s.removeScaleStep);
+  const insertScaleStepAt = useProjectStore((s) => s.insertScaleStepAt);
+  const removeScaleStepAt = useProjectStore((s) => s.removeScaleStepAt);
+
+  // Editing a cell while scaleSteps is still null (defaults, not yet materialized
+  // in the store) must first realize the default rows so setScaleStep has
+  // something to write into.
+  function editScaleStep(idx: number, field: "name" | "shorthand", value: string) {
+    if (!scaleStepsRaw) addScaleStep();
+    setScaleStep(idx, field, value);
+  }
+
+  if (!isScaleMode) return null;
+
+  return (
+    <SettingsCard>
+      <SectionLabel>Step Labels</SectionLabel>
+      <HelperText>Names for each scale step. Adding/removing a row changes Scale Length ({projectStore.scaleLength}, 5–100) — defaults to 1, 2, 3…</HelperText>
+      <ListHeader columns={["Name", "Short"]} withDragHandle withRemoveButton />
+      {scaleSteps.map((step, i) => (
+        <ListRow key={step._id || i} onRemove={() => removeScaleStepAt(i)} removeDisabled={scaleSteps.length <= 5} removeAriaLabel="Remove this step">
+          <span className="w-[18px] shrink-0 text-[11px] text-n-tx-muted tabular-nums text-center">{i + 1}</span>
+          <Input size="sm" value={step.name} onChange={(e) => editScaleStep(i, "name", e.target.value)} />
+          <Input size="sm" value={step.shorthand ?? ""} onChange={(e) => editScaleStep(i, "shorthand", e.target.value)} />
+          <Button variant="secondary" size="md" square label="+" onClick={() => insertScaleStepAt(i + 1)} disabled={scaleSteps.length >= 100} aria-label="Add step after this row" title="Add step after this row" />
+        </ListRow>
+      ))}
+      <ActionButton
+        label="Reset to Defaults"
+        onClick={() => {
+          for (let k = scaleSteps.length - 1; k >= 0; k--) removeScaleStep(k);
+        }}
+      />
+    </SettingsCard>
   );
 }
 
@@ -281,6 +322,7 @@ function RolesTab() {
   const setVariation = useProjectStore((s) => s.setVariation);
   const addVariation = useProjectStore((s) => s.addVariation);
   const removeVariation = useProjectStore((s) => s.removeVariation);
+  const resetVariations = useProjectStore((s) => s.resetVariations);
 
   return (
     <div className="flex flex-col gap-3">
@@ -291,32 +333,43 @@ function RolesTab() {
           description="Allow each role to have its own set of variation names and values."
           control={
             <Toggle
-              on={projectStore.canEditRoleVariants}
+              on={!projectStore.useSharedRoleVariants}
               onChange={() => {
-                setProjectField("canEditRoleVariants", !projectStore.canEditRoleVariants);
+                setProjectField("useSharedRoleVariants", !projectStore.useSharedRoleVariants);
               }}
             />
           }
         />
       </SettingsCard>
 
-      <SettingsCard>
-        <SectionLabel>Shared Variations</SectionLabel>
-        <HelperText>Define the variation levels applied across all roles.</HelperText>
-        {variations.length > 0 && (
-          <>
-            <ListHeader columns={["Name", "Short", "Target"]} withRemoveButton />
-            {variations.map((v, i) => (
-              <ListRow key={v._id || i} onRemove={() => removeVariation(i)} removeDisabled={variations.length <= 1} removeAriaLabel="Remove variation">
-                <Input size="sm" value={v.name ?? ""} placeholder="Name" onChange={(e) => setVariation(i, "name", e.target.value)} />
-                <Input size="sm" value={v.shorthand ?? ""} placeholder="Short" onChange={(e) => setVariation(i, "shorthand", e.target.value)} />
-                <Input size="sm" type="number" value={String(v.target ?? 4.5)} min="1" max="21" step="0.1" onChange={(e) => setVariation(i, "target", e.target.value)} />
-              </ListRow>
-            ))}
-          </>
-        )}
-        <ActionButton label="+ Add Variation" onClick={addVariation} />
-      </SettingsCard>
+      {projectStore.useSharedRoleVariants && (
+        <SettingsCard>
+          <SectionLabel>Shared Variations</SectionLabel>
+          <HelperText>Define the variation levels applied across all roles.</HelperText>
+          {variations.length > 0 && (
+            <>
+              <ListHeader columns={["Name", "Short", "Target"]} withRemoveButton />
+              {variations.map((v, i) => (
+                <ListRow key={v._id || i} onRemove={() => removeVariation(i)} removeDisabled={variations.length <= 1} removeAriaLabel="Remove variation">
+                  <Input size="sm" value={v.name ?? ""} placeholder="Name" onChange={(e) => setVariation(i, "name", e.target.value)} />
+                  <Input size="sm" value={v.shorthand ?? ""} placeholder="Short" onChange={(e) => setVariation(i, "shorthand", e.target.value)} />
+                  <Input size="sm" type="number" value={String(v.target ?? 4.5)} min="1" max="21" step="0.1" onChange={(e) => setVariation(i, "target", e.target.value)} />
+                </ListRow>
+              ))}
+            </>
+          )}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <ActionButton label="+ Add Variation" onClick={addVariation} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <ActionButton label="Reset to Defaults" onClick={resetVariations} />
+            </div>
+          </div>
+        </SettingsCard>
+      )}
+
+      <StepLabelsCard />
     </div>
   );
 }
@@ -364,7 +417,7 @@ function PluginTab() {
 
 const SETTINGS_TABS: { value: SettingsTab; label: string }[] = [
   { value: "tokens", label: "Tokens" },
-  { value: "roles", label: "Roles" },
+  { value: "roles", label: "Labels" },
   { value: "plugin", label: "Plugin" },
 ];
 
@@ -380,11 +433,16 @@ export function SettingsOverlay() {
 
   function handleCancel() {
     restoreSnapshot();
+    clearSnapshot();
     closeOverlay();
   }
 
   function handleDone() {
     clearSnapshot();
+    // The debounced autosave subscription may have skipped a save while this
+    // snapshot was active (paused so edits weren't committed before Done) —
+    // force one now so Settings changes are never left un-persisted.
+    save(useProjectStore.getState().projectStore);
     closeOverlay();
   }
 

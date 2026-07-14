@@ -133,7 +133,7 @@ const scaleShowcase: Preset = {
     tokenCollectionName: "tokens",
 
     scaleSteps: null,
-    canEditRoleVariants: true,
+    useSharedRoleVariants: false,
 
     // Global variations — fallback only; all roles override with custom variation arrays.
     variations: [{ name: "default", shorthand: "default", target: 1 }],
@@ -265,7 +265,7 @@ const directShowcase: Preset = {
     tokenCollectionName: "tokens",
 
     scaleSteps: null,
-    canEditRoleVariants: true,
+    useSharedRoleVariants: false,
 
     variations: [{ name: "default", shorthand: "default", target: 1 }],
 

@@ -54,7 +54,7 @@ Visibility rules:
 
 | Control                  | Type         | State key                                     | Status                                                        |
 | ------------------------ | ------------ | --------------------------------------------- | ------------------------------------------------------------- |
-| Role-specific Variations | toggle       | `projectStore.canEditRoleVariants`            | ✅ wired — enables per-role customVariationList on role cards |
+| Role-specific Variations | toggle       | `projectStore.useSharedRoleVariants`          | ✅ wired — enables per-role customVariationList on role cards |
 | Global Variations list   | dynamic list | `projectStore.variations[]` (name, shorthand) | ✅ wired                                                      |
 
 ### Token Naming card

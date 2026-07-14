@@ -35,7 +35,7 @@ const STATE_HINT: Record<InputState, string> = {
 // ── Base classes ──────────────────────────────────────────────────────────────
 
 const BASE_INPUT =
-  "w-full bg-n-sf-input text-n-tx-primary border outline-none transition-colors " +
+  "text-n-tx-primary border outline-none transition-colors " +
   "placeholder:text-n-tx-dim " +
   "disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none";
 
@@ -86,9 +86,19 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   leadingIcon?: ReactNode;
   trailingIcon?: ReactNode;
   infoIcon?: ReactNode;
+  // Background surface token. Default (n-sf-input) reads correctly against a
+  // card (n-bg-card); use "raised" when the input sits directly on a panel/sheet
+  // background (n-bg-panel) that's too close in value to n-sf-input to read as
+  // a distinct surface.
+  surface?: "input" | "raised";
 }
 
-export function Input({ size = "lg", inputState = "default", width = "full", label, hint, mono = false, leadingIcon, trailingIcon, infoIcon, disabled, className, id: idProp, ...rest }: InputProps) {
+const SURFACE_BG: Record<"input" | "raised", string> = {
+  input: "bg-n-sf-input",
+  raised: "bg-n-sf-raised",
+};
+
+export function Input({ size = "lg", inputState = "default", width = "full", label, hint, mono = false, leadingIcon, trailingIcon, infoIcon, surface = "input", disabled, className, id: idProp, ...rest }: InputProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
   const s = SIZE[size];
@@ -100,6 +110,7 @@ export function Input({ size = "lg", inputState = "default", width = "full", lab
       disabled={disabled}
       className={clsx(
         BASE_INPUT,
+        SURFACE_BG[surface],
         s.h, s.text, s.px, s.r,
         leadingIcon  && (size === "table" || size === "sm" ? "pl-6" : "pl-8"),
         trailingIcon && (size === "table" || size === "sm" ? "pr-6" : "pr-8"),
@@ -132,9 +143,10 @@ export interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaE
   mono?: boolean;
   infoIcon?: ReactNode;
   minRows?: number;
+  surface?: "input" | "raised";
 }
 
-export function Textarea({ size = "md", inputState = "default", width = "full", label, hint, mono = false, infoIcon, minRows = 3, disabled, className, id: idProp, style, ...rest }: TextareaProps) {
+export function Textarea({ size = "md", inputState = "default", width = "full", label, hint, mono = false, infoIcon, minRows = 3, surface = "input", disabled, className, id: idProp, style, ...rest }: TextareaProps) {
   const autoId = useId();
   const id = idProp ?? autoId;
   const s = SIZE[size];
@@ -147,6 +159,7 @@ export function Textarea({ size = "md", inputState = "default", width = "full", 
       style={{ minHeight: `calc(${minRows} * 1.5em + 1rem)`, resize: "vertical", ...style }}
       className={clsx(
         BASE_INPUT,
+        SURFACE_BG[surface],
         s.text, s.px, s.r, "py-2",
         STATE_BORDER[inputState],
         mono && "font-mono",
