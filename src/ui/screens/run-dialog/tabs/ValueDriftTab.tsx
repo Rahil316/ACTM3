@@ -18,7 +18,7 @@ export function ValueDriftTab({ items, decisions, setDecision, isChecking }: Val
   if (isChecking) {
     return (
       <div className="flex flex-col gap-0 animate-pulse">
-        {[80, 60, 72].map((w, i) => (
+        {[80, 60, 72, 55].map((w, i) => (
           <div key={i} className="flex items-center gap-3 py-2.5 border-b border-n-br-hairline last:border-0">
             <div className="w-5 h-5 rounded-md bg-n-sf-hover shrink-0" />
             <div className="flex flex-col gap-1.5 flex-1">
