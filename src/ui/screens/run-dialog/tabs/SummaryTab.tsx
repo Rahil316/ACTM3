@@ -103,13 +103,12 @@ export function SummaryTab({
       {/* ── Sync scope ──────────────────────────────────────────────── */}
       <div className="flex flex-col gap-1.5">
         <SectionLabel className="text-n-tx-secondary px-0.5">Sync Scope</SectionLabel>
-        {skipScales ? (
-          <Callout variant="info" title="Direct Sync Mode">
-            Color variables are synced directly — no scale collection will be created.
-          </Callout>
-        ) : (
-          <ScopeChecklist scope={scope} setScope={setScope} />
+        {skipScales && (
+          <HelperText className="text-n-tx-dim px-0.5">
+            {pluginMode === "direct" ? "Direct mode — no scale collection will be created." : "Scale collection disabled in Settings."}
+          </HelperText>
         )}
+        <ScopeChecklist scope={scope} setScope={setScope} showScaleRow={!skipScales} />
       </div>
 
       {/* ── Configuration ───────────────────────────────────────────── */}
@@ -252,7 +251,7 @@ function HealthSummary({ onViewHealth }: { onViewHealth: (metric: MetricKey) => 
 
 // ── Scope checklist ────────────────────────────────────────────────────────────
 
-function ScopeChecklist({ scope, setScope }: { scope: SyncScope; setScope: (v: SyncScope) => void }) {
+function ScopeChecklist({ scope, setScope, showScaleRow }: { scope: SyncScope; setScope: (v: SyncScope) => void; showScaleRow: boolean }) {
   const setProjectField = useProjectStore((s) => s.setProjectField);
   const scaleCollectionName = useProjectStore((s) => s.projectStore.scaleCollectionName);
   const tokenCollectionName = useProjectStore((s) => s.projectStore.tokenCollectionName);
@@ -267,26 +266,33 @@ function ScopeChecklist({ scope, setScope }: { scope: SyncScope; setScope: (v: S
     else setScope(rolesOn ? "all" : "scale");
   }
 
+  // With no scale collection available (showScaleRow false), Tokens is the only
+  // thing SyncScope can represent — "off" has no valid scope value to fall back
+  // to (turning it off would silently re-introduce a scale-only sync via
+  // setScope("scale")), so the row is locked on rather than toggleable.
   function toggleRoles() {
+    if (!showScaleRow) return;
     if (rolesOn) setScope("scale");
     else setScope(scaleOn ? "all" : "roles");
   }
 
   return (
     <SettingsCard className="!space-y-0 divide-y divide-n-br-hairline">
-      <CollectionRow
-        label="Scale"
-        description="Primitive color collection"
-        checked={scaleOn}
-        onToggle={toggleScale}
-        control={<Input size="sm" value={scaleCollectionName} onChange={(e) => setProjectField("scaleCollectionName", e.target.value)} disabled={!scaleOn} />}
-      />
+      {showScaleRow && (
+        <CollectionRow
+          label="Scale"
+          description="Primitive color collection"
+          checked={scaleOn}
+          onToggle={toggleScale}
+          control={<Input size="sm" value={scaleCollectionName} onChange={(e) => setProjectField("scaleCollectionName", e.target.value)} disabled={!scaleOn} />}
+        />
+      )}
       <CollectionRow
         label="Tokens"
         description="Semantic role collection"
-        checked={rolesOn}
+        checked={rolesOn || !showScaleRow}
         onToggle={toggleRoles}
-        control={<Input size="sm" value={tokenCollectionName} onChange={(e) => setProjectField("tokenCollectionName", e.target.value)} disabled={!rolesOn} />}
+        control={<Input size="sm" value={tokenCollectionName} onChange={(e) => setProjectField("tokenCollectionName", e.target.value)} disabled={!(rolesOn || !showScaleRow)} />}
       />
       <CollectionRow
         label="Source Colors"

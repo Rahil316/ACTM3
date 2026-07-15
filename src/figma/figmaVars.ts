@@ -71,6 +71,7 @@ export const VariableManager = {
   },
 
   async sync(result: AnyObj, config: AnyObj, scope: "all" | "scale" | "roles" = "all", projectStore: AnyObj | null = null, savedProjectStore: AnyObj | null = null, decisions: Record<string, "keep" | "revert"> = {}): Promise<void> {
+    const startedAt = Date.now();
     this.tally = { created: 0, updated: 0, renamed: 0, removed: 0, failed: 0 };
     this.mutations = new Map<string, "created" | "renamed" | "updated">();
     this.scaleVarNameMap = {};
@@ -220,10 +221,22 @@ export const VariableManager = {
 
     if (projectStore) savePluginConfig(projectStore);
 
-    for (const type of this.mutations.values()) {
+    // tokenRef keys are always prefixed "scale:"/"token:"/"source:" (see the
+    // three sync stages above) — bucket by that prefix as we aggregate so the
+    // success screen can break totals down per collection for free, with no
+    // separate per-stage counters to keep in sync.
+    const perCollection: Partial<Record<"scale" | "token" | "source", { created: number; updated: number; renamed: number }>> = {};
+    const bucketFor = (ref: string) => (ref.startsWith("scale:") ? "scale" : ref.startsWith("token:") ? "token" : ref.startsWith("source:") ? "source" : null);
+
+    for (const [ref, type] of this.mutations.entries()) {
       if (type === "created") this.tally.created++;
       else if (type === "renamed") this.tally.renamed++;
       else if (type === "updated") this.tally.updated++;
+
+      const bucket = bucketFor(ref);
+      if (!bucket) continue;
+      const entry = (perCollection[bucket] ??= { created: 0, updated: 0, renamed: 0 });
+      entry[type]++;
     }
 
     // STAGE 4: Purge orphans from structural setting changes
@@ -238,6 +251,8 @@ export const VariableManager = {
       type: "finish",
       tally: this.tally,
       errors: result ? result.errors : null,
+      perCollection,
+      durationMs: Date.now() - startedAt,
     });
   },
 

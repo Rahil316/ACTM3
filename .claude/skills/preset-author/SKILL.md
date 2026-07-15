@@ -12,7 +12,7 @@ the `Preset` schema exposes. You decide what the system *is made of*. You are no
 responsible for making the resulting colors look harmonic or maximally vivid/consistent
 — that is the **color-master** skill's job, and it does that job by running the
 engine's own tools (the stress-test harness, Preview, contrast math), not by eyeballing
-swatches. Hand off to color-master once the structure is in place (§12).
+swatches. Hand off to color-master once the structure is in place (§13).
 
 A preset is a **constraint structure**, not a color library. Its job is to make the
 right token easy to reach and the wrong one hard to reach. Design the constraints
@@ -52,7 +52,7 @@ Answer these, in order, using `color-system-guidelines.md` for the reasoning:
 4. **Variations per role** — 3 is the minimum useful set (subtle/default/strong), 5 is
    the sweet spot for most product teams. Decide whether all roles share one global
    variation list (`useSharedRoleVariants: true`) or whether specific roles need their
-   own slots (status colors almost always do — see §6).
+   own slots (status colors almost always do — see §7).
 5. **Themes** — Light + Dark minimum. Each theme is just a name + background hex;
    contrast is evaluated against that background independently, so a target tuned for
    a white background may need raising for a colored or dark one.
@@ -60,7 +60,79 @@ Answer these, in order, using `color-system-guidelines.md` for the reasoning:
    tables rather than inventing numbers. Backgrounds live in 1.0–2.5, text lives in
    4.5–21 — a role spanning both ranges is conflating two semantic purposes.
 
-## 2. Choose the algorithm/solver
+## 2. The token template: `color.role[.modifier].variation`, and where "/" belongs
+
+Decide this **before** naming a single role — it determines whether "/" in a role
+name means something different from "/" in a color name, and it's the single most
+common naming mistake this skill has seen corrected after the fact (see the nmobile
+preset's history: it went through three different role-naming schemes before landing
+here, purely because this wasn't decided up front).
+
+**The template has two independent, non-interchangeable jobs for `/`-nesting:**
+
+- **In a color name**, `/` is for **category grouping** — bundling colors that are
+  conceptually siblings under one Figma folder, e.g. `Spare/1`…`Spare/5` grouping raw
+  unused swatches, or `Status/Success`, `Status/Error` grouping a status color family.
+  It says nothing about how the color's *tokens* behave.
+- **In a role name**, `/` is for the **modifier level** — marking that this role only
+  makes sense in a specific component/context, not as a general-purpose semantic
+  role. `fill/button` and `text/button` are real modifier roles: a button fill has
+  interaction states (disabled/hover/pressed) a generic `fill` role doesn't need, and
+  the modifier segment says so in the assembled path (`Primary/fill/button/Default`
+  vs. the modifier-less `Primary/fill/Default`).
+
+**Two concrete shapes, both valid, both cheap to reach for**:
+
+```
+{color}.{role}.{variation}              // no modifier — bg, text, fill, border
+{color}.{role}.{modifier}.{variation}   // with modifier — fill.button, text.button
+```
+
+`error.text.dim`, `success.bg.dim`, `gray.text.default` are all no-modifier — every
+plain structural/semantic role (background wash, body text, structural fill, border)
+stays **flat**, with no `/` in its name at all, regardless of how many colors it's
+scoped to. `primary.fill.button.default`, `gray.text.button.hover` are modifier
+roles — reach for a `/` in the role name only when the role is genuinely tied to one
+component context, not as a way to "organize" an otherwise-ordinary role.
+
+**Be deliberate about nesting depth — it has a real cost.** Every `/` segment adds to
+token length (`Primary/fill/button/Default` vs. a flat `btn-fill` or `pr-fl-btn-3`
+with shorthand), and adds a lookup/navigation cost for whoever consumes the token
+later. Don't nest a role "for consistency" if it has no real modifier — a flat `fill`
+or `border` role that never needs component context should stay flat forever, not
+gain a `/` segment just because a sibling role has one. Ask: *does this role only make
+sense attached to one specific component, or is it a general-purpose semantic role
+that happens to also apply to a button?* If the latter, no modifier.
+
+### The key mechanical fact that makes "one shared role across many colors" cheap
+
+A single role definition scoped via `scopedColorIds` to N colors produces N separate
+token instances — one per color — **without duplicating the role in source**. This is
+what makes the "every semantic color shares the same `bg`/`text`/`fill`/`border`
+vocabulary" pattern practical instead of a copy-paste chore: write `bg` once, set
+`scopedColorIds: [[the full list of semantic color ids]]`, and the engine emits
+`success.bg.*`, `error.bg.*`, `neutral.bg.*`, etc. automatically (verified directly:
+`clrEngine.ts`'s per-color role loop checks `role.scopedColorIds.includes(color._id ||
+color.name)` and simply `continue`s past colors not in scope — nothing about the
+mechanism requires or expects a separate role per color). This also means a preset
+with a genuinely status-driven palette doesn't need a dedicated `status/success`-style
+role at all — if `Success`/`Error`/`Warning`/etc. are already colors, they can just
+plug into the same shared `bg`/`text`/`fill`/`border` roles as every other color,
+scoped alongside `Neutral`/`Primary`/`Secondary`. Only reach for a status-specific role
+shape (distinct fixed slots like `Bg`/`Tint`/`Fill`/`Text`/`Border` that don't match
+the shared intensity ladder) when the status colors genuinely need a *different*
+variation vocabulary than everything else — not by default just because they're
+"status colors."
+
+**Caveat inherited from §7's `scopedColorIds` uniqueness rule**: `role.name` and
+`role.shorthand` must still be globally unique across the whole preset (Layer 1
+checks this regardless of scoping) — so five differently-scoped instances of a
+conceptually-shared status role (if you do need one) cannot literally all be named
+`"Default"`. A shared role reused via `scopedColorIds` (one definition, many colors)
+is fine because it's genuinely one role; five *separate* role definitions that only
+conceptually share a name still need distinct `name`/`shorthand` per definition.
+
+## 3. Choose the algorithm/solver
 
 Read `color-system-guidelines.md`'s "Algorithm Selection Guide" and "Solver Mode Guide"
 tables in full before picking, and read the **color-master** skill for the exact
@@ -76,13 +148,12 @@ Three load-bearing gotchas, easy to miss:
   has clear light-to-mid steps left. **For warm seeds, use `OKLCH`, `Material`, or
   `Fidelity` instead** — they search in genuinely perceptual coordinates (OKLCH L or
   HCT tone) and don't inherit the skew.
-- **`hue-locked` solver mode is currently a no-op alias for `natural`.** Despite its
-  name and despite Settings UI copy suggesting otherwise, it hardcodes the same
-  `natural`-taper chroma curve — verified in `Documentations/knowledge/
-  color-algorithm-roadmap.md`'s confirmed-issues section and numerically proven
-  (byte-identical aggregate metrics) in the color-master skill. If you want a mode that
-  actually maximizes chroma relative to the seed's own gamut envelope, use
-  `gamut-cusp`, not `hue-locked`.
+- **`hue-locked` no longer exists as a solver mode** (removed from `SolverMode` as of
+  2026-07-15 — it was a no-op alias for `natural`, hardcoding the same `natural`-taper
+  chroma curve; see `Documentations/knowledge/color-algorithm-roadmap.md`'s history and
+  the color-master skill's numeric proof from the last run that included it). There is
+  no successor value — if you want a mode that actually maximizes chroma relative to
+  the seed's own gamut envelope, use `gamut-cusp`.
 - **Per-role scale-algorithm scoping does nothing in Scale mode.** `algorithmScopeLevel:
   "role"` only affects Direct mode's solver (`role.solverMode`). In Scale mode, only
   `color.scaleAlgorithm` is ever read — a role-level algorithm override is silently
@@ -95,7 +166,7 @@ point somewhere else for your specific case.
 
 ---
 
-## 3. The `Preset` shape, complete
+## 4. The `Preset` shape, complete
 
 ```ts
 // src/shared/presets/themeShop.ts
@@ -114,7 +185,7 @@ export interface Preset {
 don't need to override; `makeBootstrapState()` (`src/ui/store/projectStore.ts:273`)
 supplies defaults for everything else, and `ensureIds()` auto-generates missing `_id`s
 on load. Copy the shape of an existing preset rather than inventing field names — see
-§10 for which one to copy. Every top-level `config` field, verified against
+§11 for which one to copy. Every top-level `config` field, verified against
 `makeBootstrapState()`'s literal defaults:
 
 ```ts
@@ -125,8 +196,7 @@ scaleAlgorithm: ScaleAlgorithm;                      // default "Natural"
 scaleLength: number;                                  // default 25 — scale mode only
 solverMode: SolverMode;                               // default "natural"
                                                        // "natural" | "constant-chroma" | "symmetric"
-                                                       // | "hue-locked" | "max-chroma" | "gamut-cusp"
-                                                       // | "apca-natural"
+                                                       // | "max-chroma" | "gamut-cusp" | "apca-natural"
 useUniformAlgorithm: boolean;                         // default true — one algorithm/solver for all colors
 algorithmScopeLevel: "color" | "role";                // default "color" — only matters when
                                                        // useUniformAlgorithm: false, and only affects Direct mode
@@ -146,7 +216,7 @@ includeDescriptions: boolean;                         // default false
 scaleCollectionName: string;                          // default "_scale"
 tokenCollectionName: string;                          // default "color tokens"
 
-scaleSteps: ScaleStep[] | string[] | null;            // default null — see §9, genuinely underused
+scaleSteps: ScaleStep[] | string[] | null;            // default null — see §10, genuinely underused
 useSharedRoleVariants: boolean;                       // default true — roles use the global `variations` list
 
 name: string;                                          // project display name (not the Preset's own id/name)
@@ -183,12 +253,12 @@ interface Role {
   name: string;
   shorthand: string;
   variations?: Variation[] | null; // null ⇒ defer to global `variations` list (see useSharedRoleVariants)
-  scaleAlgorithm?: ScaleAlgorithm;  // per-role override — DEAD in Scale mode, see §2
+  scaleAlgorithm?: ScaleAlgorithm;  // per-role override — DEAD in Scale mode, see §3
   solverMode?: SolverMode;          // per-role override — works in Direct mode when algorithmScopeLevel: "role"
   description?: string;
-  scopedColorIds?: string[] | null; // restrict this role to specific colors (by _id or name) — see §6
-  localBg?: RoleLocalBg | null;      // contrast-chain against something other than the theme bg — see §7
-  scopes?: VariableScope[];          // Figma variable-consumption scoping — see §8, unused by every shipped preset
+  scopedColorIds?: string[] | null; // restrict this role to specific colors (by _id or name) — see §7
+  localBg?: RoleLocalBg | null;      // contrast-chain against something other than the theme bg — see §8
+  scopes?: VariableScope[];          // Figma variable-consumption scoping — see §9, unused by every shipped preset
 }
 
 interface Theme {
@@ -199,14 +269,14 @@ interface Theme {
 }
 
 type ScaleAlgorithm = "Natural" | "Uniform" | "Expressive" | "Symmetric" | "OKLCH" | "Material" | "Linear" | "Fidelity";
-type SolverMode = "natural" | "constant-chroma" | "symmetric" | "hue-locked" | "max-chroma" | "gamut-cusp" | "apca-natural";
+type SolverMode = "natural" | "constant-chroma" | "symmetric" | "max-chroma" | "gamut-cusp" | "apca-natural";
 type TokenNameSegment = "color" | "role" | "variation";
 type VariableScope = "FRAME_FILL" | "SHAPE_FILL" | "TEXT_FILL" | "STROKE_COLOR" | "EFFECT_COLOR" | "ALL_SCOPES";
 ```
 
 ---
 
-## 4. The complete validation and dependency matrix
+## 5. The complete validation and dependency matrix
 
 There are **three separate, non-overlapping validation layers** in this codebase, and
 none of them catches everything the others miss. Know all three, and know exactly what
@@ -311,7 +381,7 @@ don't mistake "the engine didn't crash" for "the configuration is correct":
   does push a `warning` string into `result.errors.warnings` — but no layer surfaces it
   as a per-token flag the way `isAdjusted` does in Scale mode, so it's practically
   invisible unless you read the warnings array directly. Every variation past the
-  achievable ceiling collapses onto the same clipped black/white hex. See §7's `localBg`
+  achievable ceiling collapses onto the same clipped black/white hex. See §8's `localBg`
   gotcha above — this is a real, previously-undetected defect in the shipped
   `nclarity.ts` preset, not a hypothetical.
 
@@ -330,7 +400,7 @@ don't mistake "the engine didn't crash" for "the configuration is correct":
 
 | Field | Dead in | Why |
 | --- | --- | --- |
-| `role.scaleAlgorithm` | Scale mode (always) | `_generateScales` only ever reads `color.scaleAlgorithm`, never `role.scaleAlgorithm`, regardless of `algorithmScopeLevel` — see §2 |
+| `role.scaleAlgorithm` | Scale mode (always) | `_generateScales` only ever reads `color.scaleAlgorithm`, never `role.scaleAlgorithm`, regardless of `algorithmScopeLevel` — see §3 |
 | `color.scaleAlgorithm` | Direct mode | `variableMaker` never calls `_generateScales` at all when `pluginMode === "direct"` (`clrEngine.ts:294`) — there's no scale to apply an algorithm to |
 | `color.solverMode` | whenever `useUniformAlgorithm !== false` (i.e. the default) | `_getSolverMode` returns `config.solverMode` unconditionally in this case (`clrEngine.ts:346`) |
 | `role.solverMode` | whenever `useUniformAlgorithm !== false`, OR `algorithmScopeLevel !== "role"` | same function, second/third branch |
@@ -392,7 +462,7 @@ someone looks.
 
 ---
 
-## 5. Metadata quality: `id`/`name`/`description`/`tags`/`badge`/`swatches`
+## 6. Metadata quality: `id`/`name`/`description`/`tags`/`badge`/`swatches`
 
 These aren't decoration — they're the entire Theme Shop / QuickStart browsing
 experience, and a "godly" preset makes them earn their keep:
@@ -414,7 +484,7 @@ experience, and a "godly" preset makes them earn their keep:
 
 ---
 
-## 6. Per-role variation override and color scoping
+## 7. Per-role variation override and color scoping
 
 Most roles should defer to the global `variations` list. Give a role its own
 `variations[]` (and set `useSharedRoleVariants: false` project-wide) when the role has
@@ -448,7 +518,7 @@ the current color isn't in it).
 
 ---
 
-## 7. `localBg`: five ways to chain contrast against something other than the theme
+## 8. `localBg`: five ways to chain contrast against something other than the theme
 
 `role.localBg` lets a role's contrast be evaluated against something other than the raw
 theme background — essential for text-on-fill, layered surfaces, or anything that
@@ -531,7 +601,7 @@ step-search fallback), so every variation past the ceiling silently collapses on
 identical clipped hex with nothing in Preview's per-token badges calling it out — you
 have to actually read `result.errors.warnings`.
 
-This is exactly the trap the `text/buttonLabel` pattern (§7's own worked example above)
+This is exactly the trap the `text/buttonLabel` pattern (§8's own worked example above)
 walks straight into if copied uncritically: chaining a full interaction-state ladder
 (Disabled → Hovered → Pressed) to one fixed `fill/button/default` ref. Verified: this
 exact defect exists today, undetected, in the shipped `nclarity.ts` reference preset
@@ -576,7 +646,7 @@ not the way you intended.
 
 ---
 
-## 8. Figma variable scoping (`role.scopes`) — real, engine-supported, unused everywhere
+## 9. Figma variable scoping (`role.scopes`) — real, engine-supported, unused everywhere
 
 `role.scopes: VariableScope[]` restricts which Figma property pickers a token appears
 in — `"FRAME_FILL"`, `"SHAPE_FILL"`, `"TEXT_FILL"`, `"STROKE_COLOR"`, `"EFFECT_COLOR"`,
@@ -605,7 +675,7 @@ tool level, for free.
 
 ---
 
-## 9. Custom scale-step labels (`scaleSteps`) — also real, also unused everywhere
+## 10. Custom scale-step labels (`scaleSteps`) — also real, also unused everywhere
 
 Every shipped preset — including Radix (whose real-world system uses named 1–12 steps)
 and Tailwind (50/100/.../950) — leaves `scaleSteps: null`. With `null`, Scale mode's
@@ -643,7 +713,7 @@ correctly is a genuine improvement over copying the existing pattern.
 
 ---
 
-## 10. Reference presets to copy from
+## 11. Reference presets to copy from
 
 Don't start from a blank object — copy the closest existing preset and adapt:
 
@@ -664,7 +734,7 @@ that even `showcase.ts` — the widest feature-coverage dev preset — still doe
 `role.scopes` or custom `scaleSteps`; don't assume "the reference preset does it" is a
 ceiling on what's possible.
 
-## 11. Writing and wiring the file
+## 12. Writing and wiring the file
 
 1. Create `src/shared/presets/raw/dev/<name>.ts` (dev-only — fast iteration, excluded
    from `--release` builds, **auto-discovered**, no registration needed) or
@@ -711,7 +781,7 @@ ceiling on what's possible.
    or remove a `/` segment, immediately re-check its shorthand in the same edit — don't
    rely on the build to catch it later, because it won't.
 
-## 12. After the first draft: hand off to color-master
+## 13. After the first draft: hand off to color-master
 
 A preset that builds cleanly and looks right in Preview for one seed color is not
 proven — you've fixed the *structure* (roles, variations, targets, naming, contrast

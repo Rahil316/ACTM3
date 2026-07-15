@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useDeferredValue } from "react";
-import { sendToPlugin, type SyncScope, type SyncTally, type ExistingCollection, type CollectionCheckResultMessage } from "../../types/messages";
+import { sendToPlugin, type SyncScope, type SyncTally, type PerCollectionTally, type ExistingCollection, type CollectionCheckResultMessage } from "../../types/messages";
 import type { SyncPreview, StructuralChange, SyncPreviewItem } from "../../types/messages";
 import type { ProjectStore } from "../../types/state";
 import { useSyncSession } from "../../hooks/useSyncSession";
@@ -34,6 +34,8 @@ export function useRunDialogState(
   const [activeTab, setActiveTab] = useState<RunDialogTab>("summary");
   const [scope, setScope] = useState<SyncScope>("all");
   const [tally, setTally] = useState<SyncTally | null>(null);
+  const [perCollection, setPerCollection] = useState<PerCollectionTally | undefined>(undefined);
+  const [syncDurationMs, setSyncDurationMs] = useState<number | undefined>(undefined);
   const [errorMsg, setErrorMsg] = useState("");
   const [issues, setIssues] = useState<string[]>([]);
   const [existingCollections, setExistingCollections] = useState<ExistingCollection[]>([]);
@@ -174,8 +176,10 @@ export function useRunDialogState(
     setPhase("config");
   }, []);
 
-  const onFinish = useCallback((finishTally: SyncTally, errors: string[] | null) => {
+  const onFinish = useCallback((finishTally: SyncTally, errors: string[] | null, finishPerCollection?: PerCollectionTally, finishDurationMs?: number) => {
     setTally(finishTally);
+    setPerCollection(finishPerCollection);
+    setSyncDurationMs(finishDurationMs);
     setPhase("success");
     return errors;
   }, []);
@@ -199,6 +203,8 @@ export function useRunDialogState(
     setScope,
     // results
     tally,
+    perCollection,
+    syncDurationMs,
     errorMsg,
     issues,
     // check-collections data

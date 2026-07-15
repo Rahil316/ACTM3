@@ -45,8 +45,8 @@ export function RunDialog() {
 
   const callbacks: BridgeCallbacks = {
     onCollectionCheckResult: dialog.onCollectionCheckResult,
-    onFinish: (tally, errors) => {
-      const errs = dialog.onFinish(tally, errors);
+    onFinish: (tally, errors, perCollection, durationMs) => {
+      const errs = dialog.onFinish(tally, errors, perCollection, durationMs);
       if (errs && errs.length > 0) {
         banner.show({
           id: "run-errors",
@@ -173,7 +173,18 @@ export function RunDialog() {
       <OperationOverlay open={dialog.phase === "loading-preview"} kind="preview" />
 
       {/* Success */}
-      <SuccessOverlay open={dialog.phase === "success"} tally={dialog.tally} onDismiss={closeOverlay} />
+      <SuccessOverlay
+        open={dialog.phase === "success"}
+        tally={dialog.tally}
+        perCollection={dialog.perCollection}
+        durationMs={dialog.syncDurationMs}
+        collectionNames={{
+          scale: projectStore.scaleCollectionName,
+          token: projectStore.tokenCollectionName,
+          source: projectStore.sourceCollectionName,
+        }}
+        onDismiss={closeOverlay}
+      />
 
       {/* Error */}
       <ErrorOverlay open={dialog.phase === "error"} message={dialog.errorMsg} onDismiss={closeOverlay} />

@@ -33,6 +33,8 @@ export interface FinishMessage {
   type: "finish";
   tally: SyncTally;
   errors: string[] | null;
+  perCollection?: PerCollectionTally;
+  durationMs?: number;
 }
 
 export interface PreviewDoneMessage {
@@ -164,6 +166,13 @@ export interface SyncTally {
   removed: number;
   failed: number;
 }
+
+export type SyncCollectionKind = "scale" | "token" | "source";
+
+// created/updated/renamed only — removed/failed are cross-cutting (orphan
+// purges and hard failures aren't attributed to one collection) and stay on
+// the flat SyncTally instead.
+export type PerCollectionTally = Partial<Record<SyncCollectionKind, Pick<SyncTally, "created" | "updated" | "renamed">>>;
 
 export interface ExistingCollection {
   name: string;

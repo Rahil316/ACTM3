@@ -234,7 +234,7 @@ export default function App() {
 
         <div className="flex-1 flex overflow-hidden">
           {/* ── Screen content ── */}
-          <main className="flex-1 overflow-y-auto overflow-x-hidden">
+          <main className={clsx("flex-1 overflow-y-auto overflow-x-hidden", isSidePanelPreview && "max-w-[45%] min-w-[560px]")}>
             {activeTab === "color-groups" && <ColorsScreen />}
             {activeTab === "roles" && <RolesScreen />}
             {activeTab === "project" && <ProjectScreen />}
@@ -243,7 +243,7 @@ export default function App() {
 
           {/* ── Docked preview panel (wide window only — see SIDE_PANEL_MIN_WIDTH) ── */}
           {isSidePanelPreview && (
-            <div className="shrink-0 w-[40%] min-w-[360px] max-w-[560px]">
+            <div className="shrink-0 flex-1 min-w-[360px]">
               <PreviewSidePanel />
             </div>
           )}

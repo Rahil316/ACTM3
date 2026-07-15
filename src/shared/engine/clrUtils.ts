@@ -213,11 +213,11 @@ export function shortestHueDiff(current: number, target: number): number {
   return ((((target - current + 180) % 360) + 360) % 360) - 180;
 }
 
-export type ContrastRating = "Fail" | "AA Large Text" | "AA" | "AAA";
+export type ContrastRating = "Fail" | "AA-" | "AA" | "AAA";
 
 export function ratingFromRatio(ratio: number): ContrastRating {
   if (ratio < 3) return "Fail";
-  if (ratio < 4.5) return "AA Large Text";
+  if (ratio < 4.5) return "AA-";
   if (ratio < 7) return "AA";
   return "AAA";
 }

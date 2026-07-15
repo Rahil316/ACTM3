@@ -10,7 +10,7 @@ export function contrastRatingColor(rating: ContrastRating | null): string {
   switch (rating) {
     case "AAA": return "#34d399";
     case "AA": return "#86efac";
-    case "AA Large Text": return "#fbbf24";
+    case "AA-": return "#fbbf24";
     case "Fail": return "#f87171";
     default: return "#52525b";
   }

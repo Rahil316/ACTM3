@@ -1,15 +1,15 @@
 /**
  * nMobile — Mobile app preset built around a vibrant teal accent.
  *
- * Scale mode (Fidelity algorithm) · Light + Dark · 13 colors · 6 roles
+ * Direct mode (gamut-cusp solver) · Light + Dark · 13 colors · 6 roles
  *
- * Token template: color.role.variation (no modifier) or
- *                 color.role.modifier.variation (component-scoped roles).
- * Nesting ("/") in a role name IS the modifier level — it's reserved for
- * component-context roles (fill/button, text/button), not for the plain
- * structural roles, which stay flat on purpose (bg, text, fill, border).
- * Nesting in color names is reserved for category grouping (unused here —
- * all 8 semantic colors are flat; only Spare/N groups under a folder).
+ * Token template: color.role.variation. All 6 roles are flat (no "/" modifier
+ * segment anywhere) — button and label used to be modifier-scoped
+ * (fill/brand, text/onBrand) restricted to Primary/Secondary only; both are
+ * now flat, standalone roles scoped to all 8 semantic colors, since every
+ * status/semantic color can have its own solid button and ghost-style
+ * label/tag, not just the two brand colors. Nesting in color names is still
+ * reserved for category grouping (unused here except Spare/N).
  *
  * Colors:
  *   Primary (teal brand) · Secondary (indigo)
@@ -17,19 +17,18 @@
  *   Neutral (cool blue-gray)
  *   Spare/1–5 (raw values only, no roles — source collection)
  *
- * Roles (no modifier — shared vocabulary, scoped to all 8 semantic colors):
- *   bg      — 5 steps, e.g. success.bg.1 (dim) … success.bg.5 (strong)
- *   text    — 5 steps, e.g. error.text.1 (dim) … error.text.5 (strong)
- *   fill    — 5 steps, e.g. neutral.fill.1 (dim) … neutral.fill.5 (strong)
- *   border  — 5 steps, e.g. neutral.border.1 (dim) … neutral.border.5 (strong)
- *
- * Roles (component modifier — Primary + Secondary only):
- *   fill/button  — 5 steps, e.g. primary.fill.button.1 (disabled) … .5 (pressed)
- *   text/button  — 1 step only (primary.text.button.3 / "default"), localBg-
- *                  chained to fill/button's own step-3 fill. See that role's
- *                  comment for why it's 1 step, not 5 — a single fixed
- *                  localBg background has a hard contrast ceiling that a
- *                  5-step ladder chained to it would silently overshoot.
+ * Roles (all flat, shared vocabulary, scoped to all 8 semantic colors):
+ *   bg      — 5 steps, e.g. success.bg.1 (dim) … success.bg.5 (max)
+ *   text    — 5 steps, e.g. error.text.1 (dim) … error.text.5 (max)
+ *   fill    — 5 steps, structural/status solid fills (tags, badges, dividers)
+ *   border  — 5 steps, general outlines/dividers AND outlined-button strokes
+ *   button  — 5 steps, solid interactive-element fill (Disabled → Pressed);
+ *             solved against the theme bg (button sits on page/card)
+ *   label   — 5 steps, colored text/icon used AS the interactive surface
+ *             (ghost buttons, ghost tags) — solved directly against the theme
+ *             bg, NOT chained to button's fill, since a ghost element has no
+ *             solid fill to sit on. Same Disabled → Pressed state model as
+ *             button because it's still an interactive element, just text-only.
  *
  * All variation names are numeric-first (labels are decorative — this preset
  * is meant to be read by shorthand: bg.1 … bg.5, not by name) so the same
@@ -65,8 +64,8 @@ const NM_ROLE_IDS = {
   text: "nm-r-tx",
   fill: "nm-r-fl",
   border: "nm-r-bd",
-  fillButton: "nm-r-flb",
-  textButton: "nm-r-txb",
+  button: "nm-r-flb",
+  label: "nm-r-txb",
 };
 
 // ── Shared 5-step variation ladder ────────────────────────────────────────────
@@ -90,20 +89,20 @@ const nmobile: Preset = {
   name: "nMobile",
   badge: "nM",
   description:
-    "Mobile app preset built around a vibrant teal accent — Scale mode, Light + Dark, a flat color.role.variation token template shared across every semantic color, with modifier-scoped button roles for Primary/Secondary only.",
-  tags: ["nMobile", "Mobile", "Scale", "Teal", "Fidelity"],
+    "Mobile app preset built around a vibrant teal accent — Direct mode (gamut-cusp), Light + Dark, a fully flat color.role.variation token template with the same 6-role vocabulary (bg/text/fill/border/button/label) shared across every semantic color.",
+  tags: ["nMobile", "Mobile", "Direct", "Teal", "gamut-cusp"],
   swatches: ["14B8A6", "6366F1", "22C55E", "EF4444", "F59E0B", "3B82F6", "FACC15"],
   config: {
     name: "nMobile",
     description: "Mobile app — teal-accented Light and Dark themes, one shared role vocabulary across every semantic color.",
 
     // ── Mode ────────────────────────────────────────────────────────────────
-    pluginMode: "scale",
+    pluginMode: "direct",
     scaleAlgorithm: "Fidelity",
     scaleLength: 21,
     useUniformAlgorithm: true,
     algorithmScopeLevel: "color",
-    solverMode: "natural",
+    solverMode: "gamut-cusp",
 
     // ── Token naming ────────────────────────────────────────────────────────
     tokenNameSegments: ["color", "role", "variation"],
@@ -200,50 +199,58 @@ const nmobile: Preset = {
       },
 
       // ── BORDER ──────────────────────────────────────────────────────────────
-      // color.border.{1-5}. Outlines, dividers, focus rings. Scoped to all 8
-      // semantic colors, e.g. error.border.3 for an invalid-field outline.
+      // color.border.{1-5}. Dual-purpose: general outlines/dividers/focus
+      // rings AND the stroke for outlined-button variants (an outlined
+      // button's border sits directly on the theme bg like any other border —
+      // no separate role needed for it). Scoped to all 8 semantic colors,
+      // e.g. error.border.3 for an invalid-field outline, primary.border.4
+      // for an outlined primary button's default stroke.
       {
         _id: NM_ROLE_IDS.border,
         name: "border",
         shorthand: "bd",
         variations: ladder(NM_ROLE_IDS.border, [1.4, 1.8, 2.5, 3.5, 4.5]),
         scopedColorIds: SEMANTIC_COLOR_IDS,
-        description: "Outlines and borders, 5 steps · dim (hairline) → max (focus ring), shared vocabulary across every semantic color",
+        description: "Outlines/dividers/focus rings and outlined-button strokes, 5 steps · dim (hairline) → max (focus ring), shared vocabulary across every semantic color",
       },
 
-      // ── FILL/BUTTON ─────────────────────────────────────────────────────────
-      // color.fill.button.{1-5}. Component-scoped — the "/" here IS the
-      // modifier level per the token template, restricted to Primary and
-      // Secondary (the only colors with dedicated CTA buttons). Solved
-      // against the theme bg (button sits on page/card).
+      // ── BUTTON ──────────────────────────────────────────────────────────────
+      // color.button.{1-5}. Flat role, no modifier — solid fill for buttons
+      // and other solid interactive elements. Scoped to all 8 semantic
+      // colors (every status color can have its own solid button, not just
+      // Primary/Secondary). Solved against the theme bg directly (a solid
+      // button sits on page/card, not on another token) — no localBg.
       {
-        _id: NM_ROLE_IDS.fillButton,
-        name: "fill/button",
-        shorthand: "fl/btn",
-        variations: ladder(NM_ROLE_IDS.fillButton, [1.3, 2.0, 4.5, 6.0, 8.0], ["Disabled", "Subtle", "Default", "Hover", "Pressed"]),
-        scopedColorIds: [NM_IDS.primary, NM_IDS.secondary],
-        description: "Button fill, 5 steps · disabled → pressed, Primary/Secondary only",
+        _id: NM_ROLE_IDS.button,
+        name: "button",
+        shorthand: "btn",
+        variations: ladder(NM_ROLE_IDS.button, [1.3, 2.0, 4.5, 6.0, 8.0], ["Disabled", "Subtle", "Default", "Hover", "Pressed"]),
+        scopedColorIds: SEMANTIC_COLOR_IDS,
+        localBg: null,
+        description: "Solid interactive-element fill, 5 steps · disabled → pressed, shared vocabulary across every semantic color",
       },
 
-      // ── TEXT/BUTTON ─────────────────────────────────────────────────────────
-      // color.text.button.3 ("Default") only — not a 5-step ladder. localBg
-      // fixes ONE background per role (no per-variation override exists in
-      // the schema), so a label role chained to fill/button's Default step
-      // can only reliably support ONE achievable target: the button's fill
-      // has its own hard contrast ceiling (verified ~4.4-5.1:1 against a
-      // mid-tone Primary/Secondary fill), so Hover/Pressed-strength text
-      // targets (6.0+) are mathematically unreachable and silently collapse
-      // to clipped black/white with no isAdjusted flag if you try. A button's
-      // label color doesn't change on hover/press in practice anyway — only
-      // the fill does — so one Default token is what's actually needed.
+      // ── LABEL ───────────────────────────────────────────────────────────────
+      // color.label.{1-5}. Flat role, no modifier — colored text/icon used AS
+      // the interactive surface itself: ghost buttons, ghost tags, any
+      // text-only interactive element with no solid fill behind it. Solved
+      // directly against the theme bg (NOT chained via localBg to button's
+      // fill) — a ghost element has no fill to sit on, so there's nothing to
+      // chain to. This replaces the old chained "text/onBrand"-style role,
+      // which was scoped to Primary/Secondary only and capped at a single
+      // Default variation because a fixed localBg background has a hard
+      // contrast ceiling a 5-step ladder would silently overshoot (see prior
+      // preset history) — solving against the theme bg directly removes that
+      // ceiling entirely, so label gets the same Disabled → Pressed state
+      // model as button, just in text/AA-appropriate contrast ranges instead
+      // of fill-appropriate ones.
       {
-        _id: NM_ROLE_IDS.textButton,
-        name: "text/button",
-        shorthand: "tx/btn",
-        variations: [{ _id: `${NM_ROLE_IDS.textButton}-v3`, name: "Default", shorthand: "3", target: 4.3 }],
-        scopedColorIds: [NM_IDS.primary, NM_IDS.secondary],
-        localBg: { kind: "token-dynamic", value: "[color]/fill/button/Default" },
-        description: "Button label text, single Default token, contrast-chained to the button's own fill, Primary/Secondary only",
+        _id: NM_ROLE_IDS.label,
+        name: "label",
+        shorthand: "lbl",
+        variations: ladder(NM_ROLE_IDS.label, [2.0, 3.2, 4.5, 6.0, 8.0], ["Disabled", "Subtle", "Default", "Hover", "Pressed"]),
+        scopedColorIds: SEMANTIC_COLOR_IDS,
+        description: "Colored text/icon as the interactive surface (ghost buttons, ghost tags), 5 steps · disabled → pressed, shared vocabulary across every semantic color",
       },
     ],
 

@@ -54,7 +54,7 @@ UI code (`src/ui/**`, except `src/ui/types/**` and `src/ui/utils/**`) may **not*
 `variableMaker(config) → { scales, tokens, errors }` is pure and stateless — same input always produces the same output, no Figma calls. Two modes, selected by config, share the same output contract:
 
 - **Scale mode**: `scaleMaker(hex, length, algo)` builds an N-step tonal scale per seed color. Roles/variations then map onto scale steps either by walking for the first step meeting a contrast target (`_mapByScaleContrast`, default) or by pinning to an explicit index (`_mapByIndex`).
-- **Direct mode**: no tonal scale. `solveColorForContrast()` binary-searches OKLCH lightness per role/variation until it meets the target WCAG contrast against the theme background, per one of five chroma-shaping solver modes (`natural`, `constant-chroma`, `symmetric`, `hue-locked`, `max-chroma`).
+- **Direct mode**: no tonal scale. `solveColorForContrast()` binary-searches OKLCH lightness per role/variation until it meets the target WCAG contrast against the theme background, per one of six chroma-shaping solver modes (`natural`, `constant-chroma`, `symmetric`, `max-chroma`, `gamut-cusp`, `apca-natural`).
 
 Full pipeline detail, the alias-chain Figma writes (`_scale` collection → `color tokens` collection), the three-stage `VariableManager.sync()` write order, and the `_id`-based rename-safety system are documented in `Documentations/knowledge/how-it-works.md` — read it before touching `clrEngine.ts`, `figmaVars.ts`, or `variableTracker.ts`.
 

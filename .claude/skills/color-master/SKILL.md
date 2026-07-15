@@ -24,7 +24,7 @@ is the formula working as designed, not a bug."
 
 ## Your instruments
 
-1. **The stress-test harness** (`test-data/`) — runs `variableMaker()` against 48,096
+1. **The stress-test harness** (`test-data/`) — runs `variableMaker()` against 42,752
    generated seed/algorithm/target combinations (see §1 for the exact matrix) and
    produces both a queryable dashboard and raw per-token JSONL you can `jq`/script
    directly. Use this to validate an algorithm/solver choice *in general*, and to check
@@ -54,9 +54,9 @@ is the formula working as designed, not a bug."
 
 Read `Documentations/knowledge/color-algorithm-roadmap.md` in full before starting
 nontrivial harmony work — it documents, with root causes and numeric evidence, every
-known color-math defect and quirk in this engine (hue-uniformity bias, `hue-locked`
-being a no-op, gamut-envelope cliffs). Don't rediscover what's already diagnosed there;
-build on it.
+known color-math defect and quirk in this engine (hue-uniformity bias, gamut-envelope
+cliffs, and the now-removed `hue-locked` mode's history). Don't rediscover what's
+already diagnosed there; build on it.
 
 ---
 
@@ -86,13 +86,16 @@ group exists to stress a *specific*, documented failure mode:
 
 **Total: 1,336 seeds.** Every seed is run through:
 - **Scale mode**: × 8 scale algorithms → **10,688 cases** (1,336 × 8)
-- **Direct mode**: × 7 solver modes × 4 contrast-target-set variants (`[1.5,3,4.5,7,12]`,
-  `[3,4.5]`, `[4.5]`, `[7,12]`) → **37,408 cases** (1,336 × 7 × 4)
-- **Grand total: 48,096 cases** per full run.
+- **Direct mode**: × 6 solver modes × 4 contrast-target-set variants (`[1.5,3,4.5,7,12]`,
+  `[3,4.5]`, `[4.5]`, `[7,12]`) → **32,064 cases** (1,336 × 6 × 4)
+- **Grand total: 42,752 cases** per full run.
 
 This is not an approximation — it's the literal count from `run-meta.json` after a real
-run (`totalCases: 48096, scaleModeCases: 10688, directModeCases: 37408`), and it's
-exactly reproducible from `generate-configs.ts`'s loop structure.
+run (`totalCases: 42752, scaleModeCases: 10688, directModeCases: 32064`), and it's
+exactly reproducible from `generate-configs.ts`'s loop structure. (Direct mode is 6
+solver modes, not 7 — `hue-locked` was removed from `SolverMode` entirely; it was a
+no-op alias for `natural` and has no successor value, see the numeric proof this used to
+cite, now superseded, in `color-algorithm-roadmap.md`.)
 
 ### Where the results actually live
 
@@ -132,10 +135,10 @@ tooling when you just need "is anything broken right now."
 ### Real numbers from an actual run — read before forming any opinion
 
 These are not illustrative — this is what a full run of this exact harness produced
-(`test-data/results/anomaly-report.md`, `dashboard-data.json`, generated 2026-07-14).
-Anchor your reasoning to numbers like these, not intuition:
+(`test-data/results/anomaly-report.md`, `dashboard-data.json`, generated 2026-07-15,
+post-`hue-locked`-removal). Anchor your reasoning to numbers like these, not intuition:
 
-**Anomaly severity, whole run**: 0 critical, 3,233 high, 16,283 medium, out of 48,096
+**Anomaly severity, whole run**: 0 critical, 3,233 high, 16,283 medium, out of 42,752
 cases. All 3,233 "high" anomalies are `contrast_target_missed` — every one of them in
 **Scale mode** (Direct mode's solver had **zero** flagged cases in this run — its
 bisection search essentially always hits target or falls back cleanly with a warning).
@@ -183,22 +186,20 @@ matching a specific documented tonal system.
 | `apca-natural` | 29,600 | 0.788 | 2.79% | **49.06%** |
 | `symmetric` | 29,600 | 0.769 | 0.20% | 100% |
 | `natural` | 29,600 | **0.520** | 6.61% | 100% |
-| `hue-locked` | 29,600 | **0.520** | 6.61% | 100% |
 
-Two things jump out, both already known from code inspection but now **numerically
-confirmed**:
+(`hue-locked` was removed from `SolverMode` entirely as of 2026-07-15 — it was a no-op
+alias for `natural`, verified byte-identical to `natural`'s row above across 29,600
+tokens each in the last run that included it, and had no distinct behavior of its own
+worth keeping as a separate value. `color-algorithm-roadmap.md` has the full history if
+you need it; there is no successor mode — `gamut-cusp` is simply the mode that already
+does what `hue-locked`'s description used to promise.)
 
-- **`natural` and `hue-locked` produce byte-identical aggregate quality numbers** —
-  0.520 vividness, 6.61% went-gray, to three significant figures, across 29,600 tokens
-  each. This is the empirical proof, not just the code-reading proof, that `hue-locked`
-  is a no-op alias for `natural` (`solverEngine.ts:233-243` hardcodes
-  `_targetChroma(..., "natural")` regardless of the mode requested).
-- **`apca-natural`'s "delivers target" rate is 49.06%** — it misses its own effective
-  target roughly half the time. This isn't necessarily a defect (the WCAG→Lc anchor
-  table is a hand-fit approximation, not a reference APCA implementation — see
-  `color-algorithm-roadmap.md`), but it means **`apca-natural` should be treated as
-  experimental and verified per-use, not assumed reliable** the way the other six
-  solver modes can be.
+**`apca-natural`'s "delivers target" rate is 49.06%** — it misses its own effective
+target roughly half the time. This isn't necessarily a defect (the WCAG→Lc anchor
+table is a hand-fit approximation, not a reference APCA implementation — see
+`color-algorithm-roadmap.md`), but it means **`apca-natural` should be treated as
+experimental and verified per-use, not assumed reliable** the way the other five
+solver modes can be.
 
 **Warm-hue-cluster nuance**: the "flagged" (contrast-miss) rate does *not* discriminate
 `Natural` from `OKLCH` on warm hues (both effectively 0% flagged in the harness's
@@ -264,17 +265,18 @@ instead — genuinely hue-normalized coordinates — and don't inherit this.
 
 ## 3. Every solver mode, exact formula (Direct mode, `_targetChroma` + dispatch)
 
-All seven live in `src/shared/engine/solverEngine.ts`. Every mode binary-searches OKLCH
-lightness `L` (`_searchL`, lines 126–152, or `_searchLApca` for `apca-natural`, lines
-160–187 — up to 60 iterations, `1e-5` epsilon) against a target contrast, while shaping
-chroma per-candidate-`L` according to `_targetChroma()` (lines 109–124):
+All six live in `src/shared/engine/solverEngine.ts`. (`hue-locked` was a seventh mode,
+removed entirely as of 2026-07-15 — it was a no-op alias for `natural`; see §1's note.)
+Every mode binary-searches OKLCH lightness `L` (`_searchL`, lines 126–152, or
+`_searchLApca` for `apca-natural`, lines 160–187 — up to 60 iterations, `1e-5` epsilon)
+against a target contrast, while shaping chroma per-candidate-`L` according to
+`_targetChroma()` (lines 109–124):
 
 | Mode | Chroma formula | Character |
 | --- | --- | --- |
 | `constant-chroma` | `C = srcC` (unconditional) | Flat — maximum color retention, most vivid alongside `max-chroma` |
 | `symmetric` | `C = srcC × (1 − \|2L−1\|^1.5)` | Bell curve peaking at `L=0.5` (factor 1.0), collapsing to 0 at `L=0` or `L=1` |
 | `natural` | `C = (srcC / max(srcL, 1−srcL)) × min(L, 1−L)` | Scales seed chroma by how far the *candidate* L sits from an extreme, relative to how far the *seed's own* L sits from its nearest extreme — degenerates toward 0 as L approaches 0 or 1 |
-| `hue-locked` | **identical formula to `natural`** — `solverEngine.ts:233-243` hardcodes `_targetChroma(..., "natural")` regardless of the mode name passed in | No-op alias — see §1's numeric proof. Only clamped-chroma threshold for the `chromaReduced` flag differs, never the actual output color |
 | `max-chroma` | `C = min(max(srcC, 0.2), maxChromaAtLH(L, H))` — pushed to the true in-gamut ceiling at every candidate `L`, floored at 0.2 so low-chroma seeds still get real saturation | Most saturated at every lightness — "bold creative" mode |
 | `gamut-cusp` | `f = min(1, srcC / maxChromaAtLH(srcL, H))` computed once; `C = f × maxChromaAtLH(L, H)` at each candidate | Gamut-relative fraction (same idea as Scale mode's `Fidelity`) — vivid without `max-chroma`'s uniform-saturation look, still gamut-safe by construction since `f ≤ 1` always |
 | `apca-natural` | **identical chroma formula to `gamut-cusp`** (`_gamutRelativeChroma`) — differs only in what the bisection searches for | Same chroma shaping as `gamut-cusp`; the WCAG target is first converted to an APCA Lc value via a 5-point hand-fit anchor table (`WCAG_TO_LC_ANCHORS`: 1.5→23.3, 3→56.4, 4.5→70.7, 7→83.6, 12→96.8, linearly interpolated), then `_searchLApca` bisects on `|apcaContrast(candidate, bg)| ≥ targetLc` instead of WCAG ratio |
@@ -299,9 +301,8 @@ exactly while still having had its chroma silently clamped to near-zero.
 - Want vivid but gamut-honest (respects that some hues can't sustain uniform chroma) →
   `gamut-cusp` (0.829 vividness, near-zero went-gray rate).
 - Want a calm, natural-looking falloff toward the extremes → `symmetric` (0.769).
-- **Avoid `natural` and `hue-locked` when vividness matters** — 0.520 vividness is the
-  weakest of the seven, and they're mechanically the same mode under two names. Use
-  `natural` only when you specifically want that heavy desaturation-toward-extremes
+- **Avoid `natural` when vividness matters** — 0.520 vividness is the weakest of the
+  six. Use it only when you specifically want that heavy desaturation-toward-extremes
   look (it's a legitimate aesthetic, e.g. muted/quiet UI text), not by default.
 - **Treat `apca-natural` as experimental** — 49% delivers-target rate. Don't ship it in
   a preset without running Preview against every one of that preset's actual roles and

@@ -305,6 +305,13 @@ export function variableMaker(config: EngineInput): EngineResult {
       } else {
         _processScaleMode(color, mode, config, scales, stepNames ?? seriesMaker(scaleLength).map(String), variations, themeTokens[color.name], errors);
       }
+      // A color with every role scoped away from it (e.g. a source-only "spare"
+      // swatch) legitimately produces zero tokens — drop the empty bucket rather
+      // than keep a {} entry with nothing in it, so consumers (Preview, Figma
+      // sync, Health) never have to special-case "present but empty" vs. "absent".
+      if (Object.keys(themeTokens[color.name]).length === 0) {
+        delete themeTokens[color.name];
+      }
     }
   }
   return { scales, tokens, errors };

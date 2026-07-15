@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { banner } from "../store/bannerStore";
 import { useUiStore } from "../store/uiStore";
 import { VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
-import type { PluginToUiMessage, CollectionCheckResultMessage, SyncTally } from "../types/messages";
+import type { PluginToUiMessage, CollectionCheckResultMessage, SyncTally, PerCollectionTally } from "../types/messages";
 import type { ProjectStore, Role, UiPrefs } from "../types/state";
 import { useProjectStore, makeBootstrapState, ensureIds, ensureVariations } from "../store/projectStore";
 
@@ -49,8 +49,10 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
         {
           pluginMessage: {
             type: "finish",
-            tally: { created: 12, updated: 4, renamed: 0, failed: 0 },
+            tally: { created: 12, updated: 4, renamed: 0, removed: 0, failed: 0 },
             errors: null,
+            perCollection: { scale: { created: 8, updated: 2, renamed: 0 }, token: { created: 4, updated: 2, renamed: 0 } },
+            durationMs: 1830,
             result: null,
           },
         },
@@ -248,7 +250,7 @@ function handleMessage(msg: PluginToUiMessage, callbacks: BridgeCallbacks): void
         const changelog = parts.length > 0 ? parts.join(", ") : "No variable changes";
         saveVersion(`Published — ${new Date().toLocaleString()}`, changelog);
       }
-      callbacks.onFinish?.(msg.tally, msg.errors);
+      callbacks.onFinish?.(msg.tally, msg.errors, msg.perCollection, msg.durationMs);
       break;
     }
 
@@ -308,7 +310,7 @@ function handleMessage(msg: PluginToUiMessage, callbacks: BridgeCallbacks): void
 
 export interface BridgeCallbacks {
   onCollectionCheckResult?: (msg: CollectionCheckResultMessage) => void;
-  onFinish?: (tally: SyncTally, errors: string[] | null) => void;
+  onFinish?: (tally: SyncTally, errors: string[] | null, perCollection?: PerCollectionTally, durationMs?: number) => void;
   onPreviewDone?: () => void;
   onPreviewInterrupted?: () => void;
   onMultiModeDisabled?: () => void;

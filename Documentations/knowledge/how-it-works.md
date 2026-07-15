@@ -72,19 +72,16 @@ solveColorForContrast(sourceHex, targetContrast, bgHex, solverMode)
 
 This function binary-searches OKLCH lightness (L, 0–1) while shaping chroma (C) according to the chosen solver mode, until the contrast of the output against `bgHex` is `≥ targetContrast` — WCAG ratio for six of the seven modes, APCA Lc for `apca-natural` (see below). The solver guarantees it never undershoots on the metric it's targeting.
 
-There are now **seven** solver modes, not five — `gamut-cusp` and `apca-natural` were added:
+There are **six** solver modes — `gamut-cusp` and `apca-natural` were added later; `hue-locked` was removed entirely as of 2026-07-15 (it was a no-op alias for `natural`, see the caveat this section used to carry, now in `color-algorithm-roadmap.md`'s history):
 
 | Mode               | Chroma behavior                                                                         |
 | ------------------ | --------------------------------------------------------------------------------------- |
 | `natural`          | C tapers as L moves away from mid — most natural-looking results                        |
 | `constant-chroma`  | C held fixed at seed value — maximum color retention throughout the scale               |
 | `symmetric`        | C follows a bell curve peaking at mid-L, collapsing toward zero at white and black      |
-| `hue-locked`       | H fixed to source; chroma computed via the same `_targetChroma(..., "natural")` taper curve as `natural` mode, clamped to gamut — see caveat below |
 | `max-chroma`       | L solved for contrast, then C pushed to maximum in-gamut value at that L                |
 | `gamut-cusp`       | C held as a constant *fraction* of the seed's own gamut envelope (`_gamutRelativeChroma`, `solverEngine.ts:102`), scaled per candidate L; searches for the WCAG target |
 | `apca-natural`     | Same gamut-relative chroma as `gamut-cusp`, but the bisection (`_searchLApca`, `solverEngine.ts:160`) targets an APCA Lc value converted from the WCAG-ratio target via a hand-fit anchor table (`WCAG_TO_LC_ANCHORS`, `solverEngine.ts:47`), not a real APCA font-size/weight lookup |
-
-**Caveat on `hue-locked`:** as implemented (`solverEngine.ts:233-243`), this mode does **not** push to maximum in-gamut chroma — it hardcodes `_targetChroma(..., "natural")` regardless of which mode was requested, so its chroma curve is currently identical to `natural` mode's. The only observable difference is a slightly different `chromaReduced` flagging threshold. `gamut-cusp` (above) is the mode that actually implements "push to gamut maximum, gamut-relative." Root-caused in `Documentations/knowledge/color-algorithm-roadmap.md`'s "Confirmed issues" section — check that doc before relying on `hue-locked` producing visibly different output from `natural`.
 
 ---
 

@@ -14,8 +14,8 @@ Source: full rewrite against current code (branch `edit/ColorLibraries`) — the
 - [ ] **`role.scaleAlgorithm` is dead in Scale mode**
       `_generateScales` (`src/shared/engine/clrEngine.ts:313`) reads `color.scaleAlgorithm` only — never `role.scaleAlgorithm` — even though a live per-role Algorithm dropdown exists in the UI (`RoleGroupCard.tsx`, shown when Scale mode + "Uniform Algorithm" off + scope = "Per Role"), is persisted, and is exported through `figma/config.ts`. Users can set it believing it does something; it's silently ignored. Either implement real per-role scale algorithms (non-trivial — a scale is currently generated once per color; two roles sharing that color's scale can't each get a different ramp under the current data model) or grey out / hide the control in Scale mode and explain why. Full root cause in `Documentations/knowledge/color-algorithm-roadmap.md`.
 
-- [ ] **`hue-locked` solver mode doesn't do what it says**
-      `src/shared/engine/solverEngine.ts:233-243` hardcodes `_targetChroma(..., "natural")` regardless of the mode passed in — its chroma curve is currently identical to `natural`'s. Three different places (Settings UI copy, a dev preset comment, and the actual behavior) disagree about what this mode does. Either implement the "push to max in-gamut chroma at target contrast" behavior the name/copy promises, or repoint the UI copy at what it actually does, or deprecate it in favor of `gamut-cusp` (which already does something close to the promised behavior, just via a gamut-relative-fraction curve rather than a hard max).
+- [x] **`hue-locked` solver mode doesn't do what it says** — resolved 2026-07-15
+      Deprecated and removed entirely rather than fixed or repointed — it hardcoded `_targetChroma(..., "natural")` regardless of the mode passed in, with output byte-identical to `natural`'s. `SolverMode` is now 6 modes, not 7; no successor value. `gamut-cusp` remains the mode that does what `hue-locked`'s description used to promise.
 
 ## 🟡 Medium priority — polish and correctness
 
@@ -26,7 +26,7 @@ Source: full rewrite against current code (branch `edit/ColorLibraries`) — the
       `src/figma/variableTracker.ts`'s `makeLabelHelpers` (Figma sync) and `src/shared/exportEng/helpers.ts`'s `_colorLabel`/`_roleLabel`/etc. (file export) independently reimplement the same `tokenNameSegments`/shorthand logic. Both are correct today, but any future naming-rule change (a new segment type, a new shorthand rule) has to be applied in both places or Figma-synced names and exported-file names will silently diverge. Consider extracting a single shared naming module both call into.
 
 - [ ] **Role card / solver-mode manual test matrix**
-      With 7 solver modes now (not 5) and the confirmed `hue-locked` bug, a manual test pass across Scale mode × Direct mode × all 7 solver modes × `useSharedRoleVariants: true/false` would catch further drift before it's found in production. No automated coverage exists to catch this class of bug (see test suite note below).
+      With 6 solver modes now (not 5, and the `hue-locked` bug that inflated the count to 7 has since been resolved by removal), a manual test pass across Scale mode × Direct mode × all 6 solver modes × `useSharedRoleVariants: true/false` would catch further drift before it's found in production. No automated coverage exists to catch this class of bug (see test suite note below).
 
 - [ ] **Inline validation feedback**
       Duplicate names and invalid hex currently show in a full error overlay. Add inline red border / helper text directly on the offending input field.

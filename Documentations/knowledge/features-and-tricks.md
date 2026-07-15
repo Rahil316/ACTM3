@@ -8,7 +8,7 @@ Generates a tonal ramp of N steps from a seed hex color. Steps are distributed g
 
 ### Direct Mode with 5 Solver Modes
 
-Solves each token color directly to a WCAG contrast target without generating an intermediate tonal scale. The solver binary-searches OKLCH lightness while shaping chroma according to the chosen mode: `natural`, `constant-chroma`, `symmetric`, `hue-locked`, or `max-chroma`. Output always meets or exceeds the target contrast. Useful when exact per-token accessibility guarantees matter more than palette harmony.
+Solves each token color directly to a WCAG contrast target without generating an intermediate tonal scale. The solver binary-searches OKLCH lightness while shaping chroma according to the chosen mode: `natural`, `constant-chroma`, `symmetric`, `max-chroma`, `gamut-cusp`, or `apca-natural`. Output always meets or exceeds the target contrast (`apca-natural` is the exception — see `color-algorithm-roadmap.md`, it misses its own converted target roughly half the time and should be treated as experimental). Useful when exact per-token accessibility guarantees matter more than palette harmony.
 
 ### Per-Role Variation Override
 

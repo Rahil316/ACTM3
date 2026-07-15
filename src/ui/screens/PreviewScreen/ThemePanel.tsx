@@ -32,7 +32,11 @@ export function ThemePanel({ result, projectStore, themeIdx, groupBy, viewMode }
   type VarMap = Record<number, TokenEntry>;
   type ByRole = Record<number, Record<string, VarMap>>;
 
-  const colorEntries = Object.entries(themeTokens) as [string, Record<number, VarMap>][];
+  // Defense-in-depth: the engine already omits colors with zero role tokens
+  // (e.g. a source-only "spare" swatch every role's scopedColorIds excludes),
+  // but filter again here in case a caller hands this component a hand-built
+  // result (mocks, standalone-mode bridging) that wasn't produced by the engine.
+  const colorEntries = (Object.entries(themeTokens) as [string, Record<number, VarMap>][]).filter(([, roles]) => Object.keys(roles).length > 0);
   const byRole = useMemo(() => {
     if (groupBy !== "role") return null;
     const out: ByRole = {};

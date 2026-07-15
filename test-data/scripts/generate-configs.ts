@@ -27,7 +27,7 @@ export interface GeneratedCase {
 }
 
 const SCALE_ALGORITHMS: ScaleAlgorithm[] = ["Natural", "Uniform", "Expressive", "Symmetric", "OKLCH", "Material", "Linear", "Fidelity"];
-const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "hue-locked", "max-chroma", "gamut-cusp", "apca-natural"];
+const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "max-chroma", "gamut-cusp", "apca-natural"];
 const SCALE_LENGTHS = [5, 9, 12];
 const CONTRAST_TARGET_SETS: number[][] = [
   [1.5, 3, 4.5, 7, 12],

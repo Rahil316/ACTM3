@@ -317,12 +317,11 @@ for each role in config.roles:
     }
 ```
 
-**Solver modes (direct) — 7, not 5:**
+**Solver modes (direct) — 6, not 5:**
 
 - `natural` — chroma tapers as lightness moves away from mid; most natural-looking results
 - `constant-chroma` — holds chroma fixed at the seed value throughout the scale
 - `symmetric` — chroma follows a bell curve peaking at mid-lightness and collapsing toward zero at both white and black
-- `hue-locked` — stays on the seed's exact hue; **as implemented, its chroma curve is identical to `natural`'s** (`_targetChroma(..., "natural")` is hardcoded regardless of mode — see `color-algorithm-roadmap.md`'s confirmed-issues entry). It does not currently push to maximum in-gamut chroma despite that being its documented intent.
 - `max-chroma` — ignores seed chroma entirely, always uses the most vivid in-gamut color at the target contrast
 - `gamut-cusp` — holds chroma as a constant fraction of the seed's own gamut envelope (`_gamutRelativeChroma`), scaled per candidate lightness; searches for the WCAG target like the other modes
 - `apca-natural` — same gamut-relative chroma curve as `gamut-cusp`, but searches for an APCA Lc target instead (converted from the WCAG-ratio target via a hand-fit anchor table, not a first-class APCA UI)
@@ -390,6 +389,7 @@ There is no shared `buildTokenName` helper, and the engine's own `tokenName` fie
 Neither honors `tokenNameSegments` ordering, shorthands, or segment omission. The real, correct, segment/shorthand-aware Figma variable name is built **later**, only at sync/preview time, via `makeLabelHelpers(config)` (`src/figma/variableTracker.ts:9`) — see §5 below. `EngineResult.tokens[...].tokenName` should be treated as an internal placeholder, not the name written to Figma.
 
 **Two independent, parallel naming implementations exist** and must be kept in sync by hand:
+
 - `src/figma/variableTracker.ts`'s `makeLabelHelpers(config)` — used for Figma variable sync/preview/rename (§8).
 - `src/shared/exportEng/helpers.ts`'s `_colorLabel`/`_roleLabel`/`_varLabel`/`_stepLabel`/`_tokenSegments` — used by `buildExportBundle` (§9) for file export naming.
 
@@ -408,7 +408,7 @@ EngineResult = {
           // Keyed by ACTUAL theme name (lowercased), not fixed 'light'/'dark' keys —
           // e.g. { light: {...}, dark: {...}, brand: {...} } for a 3-theme project.
           // src/shared/engine/clrEngine.ts:329-330
-          [themeNameLower: string]: { ratio: number, rating: 'Fail' | 'AA Large Text' | 'AA' | 'AAA' }
+          [themeNameLower: string]: { ratio: number, rating: 'Fail' | 'AA-' | 'AA' | 'AAA' }
         }
         stepName: string        // NOT the raw step key — actually `${colorName}-${step}`, e.g. "Neutral-500"
         shorthand: string       // `${color.shorthand}-${step}`, e.g. "n-500"  (undocumented field)
@@ -439,7 +439,7 @@ EngineResult = {
 }
 ```
 
----
+> NOTE: AA large text == AA-
 
 ## 5. Variable Naming — Segments, Shorthands, and "/" Grouping
 
@@ -1103,14 +1103,14 @@ interface StructuralChange {
 
 ## 15. Error Conditions
 
-| Condition                                  | Handling                                                                                            |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| Free plan + multiple themes                | `ensureMode` returns `null`; warning posted to UI; extra themes skipped                             |
-| `localBg` token ref cycle (A→B→A)          | Tainted role detection; ref cleared; falls back to `theme.bg`                                       |
-| `localBg` token ref not found in pass-1    | `resolveRef` returns null; role falls back to `theme.bg`                                            |
-| Color not found for `localBg.kind='color'` | `translateLocalBg` returns `localBgResolved: null`; engine uses `theme.bg`                          |
+| Condition                                  | Handling                                                                                                                                            |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Free plan + multiple themes                | `ensureMode` returns `null`; warning posted to UI; extra themes skipped                                                                             |
+| `localBg` token ref cycle (A→B→A)          | Tainted role detection; ref cleared; falls back to `theme.bg`                                                                                       |
+| `localBg` token ref not found in pass-1    | `resolveRef` returns null; role falls back to `theme.bg`                                                                                            |
+| Color not found for `localBg.kind='color'` | `translateLocalBg` returns `localBgResolved: null`; engine uses `theme.bg`                                                                          |
 | Target contrast not achievable             | Token still emitted at best available contrast; `isAdjusted=true`; warning added to `errors.warnings` (there is no `minContrast` field — see §2/§4) |
-| Variable create/rename fails               | `tally.failed++`; error logged; other variables continue                                            |
-| `scaleLength` < 1                          | Clamped to 1                                                                                        |
-| Duplicate theme names                      | `_deduplicateThemeNames` appends counter: "Dark 2"                                                  |
-| First launch (no saved state)              | QuickStart overlay shown                                                                            |
+| Variable create/rename fails               | `tally.failed++`; error logged; other variables continue                                                                                            |
+| `scaleLength` < 1                          | Clamped to 1                                                                                                                                        |
+| Duplicate theme names                      | `_deduplicateThemeNames` appends counter: "Dark 2"                                                                                                  |
+| First launch (no saved state)              | QuickStart overlay shown                                                                                                                            |

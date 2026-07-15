@@ -241,12 +241,12 @@ get wrong:
   crushes to muddy-dark by step 4–5 while a blue seed at the same step index still
   has clear light-to-mid steps left. **For warm seeds, use `OKLCH`, `Material`, or
   `Fidelity` instead.**
-- **`hue-locked` solver mode is currently a no-op alias for `natural`.** It hardcodes
-  the same `natural`-taper chroma curve (`src/shared/engine/solverEngine.ts:233-243`)
-  regardless of its name or Settings UI copy — numerically confirmed byte-identical
-  aggregate output to `natural` across a full stress-test run. Use `gamut-cusp` if you
-  want a mode that actually maximizes chroma relative to the seed's own gamut
-  envelope.
+- **`hue-locked` no longer exists as a solver mode** (removed entirely as of
+  2026-07-15 — it was a no-op alias for `natural`, hardcoding the same `natural`-taper
+  chroma curve regardless of its name or Settings UI copy, numerically confirmed
+  byte-identical aggregate output to `natural` across a full stress-test run before
+  removal). There is no successor value; use `gamut-cusp` if you want a mode that
+  actually maximizes chroma relative to the seed's own gamut envelope.
 - **Per-role scale-algorithm scoping does nothing in Scale mode.** `algorithmScopeLevel:
   "role"` only affects Direct mode's solver (`role.solverMode`). In Scale mode, only
   `color.scaleAlgorithm` is ever read (`_generateScales`,
@@ -273,7 +273,6 @@ Solver mode guide (Direct mode):
 | `natural` | Chroma tapers as L moves away from mid | Balanced, general purpose |
 | `constant-chroma` | Chroma held fixed at seed value throughout | Vivid palettes, max color retention |
 | `symmetric` | Chroma follows a bell curve peaking at mid-L | Calm, harmonically symmetric systems |
-| `hue-locked` | Same taper as `natural` — see gotcha above | Not recommended — use `gamut-cusp` |
 | `max-chroma` | Chroma maximized in-gamut at every candidate L | Maximum energy, bold creative products |
 | `gamut-cusp` | Chroma held as a constant fraction of the seed's own gamut envelope | Vivid, gamut-honest color without `max-chroma`'s uniform saturation |
 | `apca-natural` | Same gamut-relative chroma as `gamut-cusp`, searches an APCA Lc target instead of WCAG | Perceptual/polarity-aware contrast; experimental — its WCAG→Lc conversion is a 5-point hand-fit anchor table, not a reference APCA implementation |
@@ -325,8 +324,7 @@ scaleAlgorithm: ScaleAlgorithm;                        // default "Natural"
 scaleLength: number;                                   // default 25 — scale mode only
 solverMode: SolverMode;                                // default "natural"
                                                         // "natural" | "constant-chroma" | "symmetric"
-                                                        // | "hue-locked" | "max-chroma" | "gamut-cusp"
-                                                        // | "apca-natural"
+                                                        // | "max-chroma" | "gamut-cusp" | "apca-natural"
 useUniformAlgorithm: boolean;                          // default true — one algorithm/solver for all colors
 algorithmScopeLevel: "color" | "role";                 // default "color" — only matters when
                                                         // useUniformAlgorithm: false, and only affects Direct mode
@@ -399,7 +397,7 @@ interface Theme {
 }
 
 type ScaleAlgorithm = "Natural" | "Uniform" | "Expressive" | "Symmetric" | "OKLCH" | "Material" | "Linear" | "Fidelity";
-type SolverMode = "natural" | "constant-chroma" | "symmetric" | "hue-locked" | "max-chroma" | "gamut-cusp" | "apca-natural";
+type SolverMode = "natural" | "constant-chroma" | "symmetric" | "max-chroma" | "gamut-cusp" | "apca-natural";
 type TokenNameSegment = "color" | "role" | "variation";
 type VariableScope = "FRAME_FILL" | "SHAPE_FILL" | "TEXT_FILL" | "STROKE_COLOR" | "EFFECT_COLOR" | "ALL_SCOPES";
 ```

@@ -41,7 +41,7 @@ export function MetricTile({ label, count, total, state, selected, onClick }: { 
 const RATING_VARIANT: Record<string, "success" | "warning" | "danger" | "muted"> = {
   AAA: "success",
   AA: "success",
-  "AA Large Text": "warning",
+  "AA-": "warning",
   Fail: "danger",
 };
 

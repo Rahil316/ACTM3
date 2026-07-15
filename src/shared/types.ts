@@ -32,7 +32,7 @@ export interface ScaleStepToken {
   stepName: string;
   shorthand: string;
   description: string;
-  contrast: Record<string, { ratio: number | null; rating: "Fail" | "AA Large Text" | "AA" | "AAA" | null }>;
+  contrast: Record<string, { ratio: number | null; rating: "Fail" | "AA-" | "AA" | "AAA" | null }>;
 }
 
 export interface Color {

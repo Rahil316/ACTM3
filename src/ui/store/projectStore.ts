@@ -34,7 +34,7 @@ export const UI_DIMS = {
   defaultHeight: 720,
   minWidth: 560,
   minHeight: 520,
-  maxWidth: 1400,
+  maxWidth: 1800,
   maxHeight: 1400,
 };
 
