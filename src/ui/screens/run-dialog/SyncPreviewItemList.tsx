@@ -80,7 +80,6 @@ export function SyncPreviewItemList({ items, decisions, onDecision, initialFilte
                     <div className="mt-1.5 ml-1 flex flex-col gap-1 pl-[72px]">
                       {item.nameDiff && <NameDiffRow diff={item.nameDiff} />}
                       {item.valueDiff && <ValueDiffRow diff={item.valueDiff} />}
-                      {item.descriptionDiff && <TextDiffRow label="Description" diff={item.descriptionDiff} />}
                       {item.scopesDiff && <ScopesDiffRow diff={item.scopesDiff} />}
                     </div>
                   )}
@@ -149,18 +148,6 @@ function ValueDiffRow({ diff }: { diff: Extract<SyncPreviewItem, { kind: "modify
       <MicroText className="text-n-tx-dim shrink-0">→</MicroText>
       <Swatch hex={diff.newHex} title={`${diff.newRef}${diff.newHex ? ` (${diff.newHex})` : ""}`} />
       <MicroText className="text-n-tx-secondary truncate max-w-[110px]">{diff.newRef}</MicroText>
-    </div>
-  );
-}
-
-function TextDiffRow({ label, diff }: { label: string; diff: { old: string; new: string } }) {
-  return (
-    <div className="flex items-start gap-1.5 min-w-0">
-      <DiffLabel>{label}</DiffLabel>
-      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-        <MicroText className="text-n-tx-dim line-through decoration-n-tx-dim/50 truncate">{diff.old || "(empty)"}</MicroText>
-        <MicroText className="text-n-tx-secondary truncate">{diff.new || "(empty)"}</MicroText>
-      </div>
     </div>
   );
 }

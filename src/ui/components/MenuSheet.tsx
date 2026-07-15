@@ -64,15 +64,20 @@ interface SuggestSheetProps {
 export function SuggestSheet({ label, linkLabel, onLink, onClose, empty, children }: SuggestSheetProps) {
   return (
     <>
-      <Backdrop open onClick={onClose} className="fixed z-40" />
       <div className="fixed inset-0 z-40 pointer-events-none" onClick={onClose}>
+        <Backdrop open className="pointer-events-auto" />
         <div className="pointer-events-auto" onClick={(e) => e.stopPropagation()}>
           <Sheet open className="overflow-y-auto">
             <MenuHeader
               label={label}
-              action={onLink && linkLabel ? (
-                <Button variant="underlined" size="xs" label={linkLabel} onClick={onLink} />
-              ) : undefined}
+              action={(
+                <div className="flex items-center gap-2">
+                  {onLink && linkLabel && (
+                    <Button variant="underlined" size="xs" label={linkLabel} onClick={onLink} />
+                  )}
+                  <Button variant="icon" size="xs" icon={<X size={13} strokeWidth={2} />} onClick={onClose} />
+                </div>
+              )}
             />
             {empty ?? <div className="flex flex-col overflow-y-auto">{children}</div>}
           </Sheet>

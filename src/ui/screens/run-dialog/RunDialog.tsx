@@ -76,7 +76,17 @@ export function RunDialog() {
   // user never acts on counts that no longer match the live config.
   const isChecking = syncPreview === null;
   const isCheckingOrStale = isChecking || isStale;
-  const nothingToSync = !isCheckingOrStale && syncPreview!.total === 0 && conflicts.length === 0;
+
+  // A "modify" item whose ONLY changed field is name, decided "keep" (i.e. the
+  // user is keeping Figma's existing name), writes nothing — figmaVars.ts's
+  // upsertVariables skips the rename when decision === "keep". Same logic for
+  // the separate NameConflict list: "keep" (its default) is also a no-op write.
+  // Both must be excluded here or the button stays enabled/labeled "Update"
+  // for a sync that would touch zero variables.
+  const isNameOnlyKept = (item: { kind: string; changedFields?: string[]; tokenRef: string }) =>
+    item.kind === "modify" && item.changedFields?.length === 1 && item.changedFields[0] === "name" && (decisions[item.tokenRef] ?? "keep") === "keep";
+  const pendingConflicts = conflicts.filter((c) => decisions[c.tokenRef] === "revert");
+  const nothingToSync = !isCheckingOrStale && syncPreview!.items.every(isNameOnlyKept) && pendingConflicts.length === 0;
 
   const syncLabel = isCheckingOrStale ? "Checking…" : nothingToSync ? "Up to Date" : getSyncLabel(syncPreview!);
 
@@ -152,7 +162,7 @@ export function RunDialog() {
               />
             )}
 
-            {dialog.activeTab === "changes" && <ChangesTab previewItems={previewItems} conflicts={conflicts} decisions={decisions} setDecision={dialog.setDecision} total={syncPreview?.total ?? 0} isChecking={isCheckingOrStale} initialFilter={changesFilter} />}
+            {dialog.activeTab === "changes" && <ChangesTab previewItems={previewItems} conflicts={conflicts} decisions={decisions} setDecision={dialog.setDecision} total={syncPreview?.total ?? 0} isChecking={isCheckingOrStale} initialFilter={changesFilter} onOpenConflicts={() => setConflictsOpen(true)} />}
 
             {dialog.activeTab === "value-drift" && <ValueDriftTab items={driftItems} decisions={driftDecisions} setDecision={setDriftDecision} isChecking={isCheckingOrStale} />}
 

@@ -1,6 +1,6 @@
 {
   "name": "token-wand",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Token Wand — Color Token System for Figma",
   "main": "code.js",
   "scripts": {

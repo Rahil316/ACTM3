@@ -94,7 +94,7 @@ export type ValueFieldDiff =
   | { kind: "color"; old: string; new: string }
   | { kind: "reference"; oldRef: string; oldHex: string; newRef: string; newHex: string };
 
-export type ChangedField = "name" | "value" | "description" | "scopes";
+export type ChangedField = "name" | "value" | "scopes";
 
 export type ChangeItemKind = "create" | "modify" | "delete";
 
@@ -106,7 +106,6 @@ export interface ClassifyResult {
   changedFields: ChangedField[];
   nameDiff?: { old: string; new: string };
   valueDiff?: ValueFieldDiff;
-  descriptionDiff?: { old: string; new: string };
   scopesDiff?: { old: VariableScope[]; new: VariableScope[] };
 }
 
@@ -163,10 +162,13 @@ export function classifyEntry(
     }
   }
 
-  if (entry.description !== undefined && existing.description !== entry.description) {
-    changedFields.push("description");
-    result.descriptionDiff = { old: existing.description, new: entry.description };
-  }
+  // Description is intentionally excluded from the diff: Figma variable
+  // descriptions are NOT per-mode, so figmaVars.ts's sync loop overwrites it on
+  // every theme pass — the last theme processed always wins. That makes the
+  // "current" description perpetually one write behind whatever the preview
+  // (or a partial/interrupted sync) expects, so tracking it as a real change
+  // here just produces permanent, unresolvable false positives. The sync
+  // still writes the correct description on every run regardless.
 
   if (!scopesEqual(existing.scopes, entry.scopes)) {
     changedFields.push("scopes");
@@ -222,6 +224,27 @@ export function findVariable(
     metadataMap.set(tokenRef, variable);
   }
   return variable;
+}
+
+// Read-only counterpart to findVariable — same tokenRef-then-name lookup order,
+// but never mutates plugin data or the metadata map. The preview must stay pure
+// (it runs on every keystroke via the debounced re-check), so claiming a
+// variable's tokenRef is left to the real write path (findVariable, called from
+// figmaVars.ts's upsertVariables) once the user actually confirms the sync.
+// Without this fallback, a variable that exists in Figma by name but hasn't
+// been tokenRef-tagged yet (e.g. a fresh plugin install with no prior sync,
+// reading variables an earlier install already created) would be misreported
+// as "create" instead of "modify".
+export function findVariableReadOnly(
+  collection: VariableCollection,
+  tokenRef: string,
+  expectedName: string,
+  metadataMap: Map<string, Variable>,
+  allVariables: Variable[],
+): Variable | null {
+  const byRef = metadataMap.get(tokenRef);
+  if (byRef) return byRef;
+  return allVariables.find((v) => v.variableCollectionId === collection.id && v.name === expectedName) ?? null;
 }
 
 // ── Structural change detection ───────────────────────────────────────────────
@@ -321,7 +344,6 @@ export type SyncPreviewItem =
       changedFields: ChangedField[];
       nameDiff?: { old: string; new: string };
       valueDiff?: ValueFieldDiff;
-      descriptionDiff?: { old: string; new: string };
       scopesDiff?: { old: VariableScope[]; new: VariableScope[] };
     };
 
@@ -451,7 +473,11 @@ export function buildIntendedEntries(result: EngineResult, config: PluginConfig,
       const colorId = color._id || color.name;
       const cLabel = colorLabel(color.name);
       const groupDesc = include ? color.description || "Brand constant — raw hex, no theme processing" : "";
-      source.push({ tokenRef: `source:${colorId}`, name: `${cLabel}/${cLabel}`, value: color.value, description: groupDesc });
+      // Mirrors figmaVars.ts's syncGlobalColors: doubling the label only when it
+      // has no "/" of its own — see the comment there for why (a label that
+      // already contains "/" would otherwise gain a spurious extra folder level).
+      const baseName = cLabel.includes("/") ? cLabel : `${cLabel}/${cLabel}`;
+      source.push({ tokenRef: `source:${colorId}`, name: baseName, value: color.value, description: groupDesc });
       if (config.alphaValues?.length) {
         // Mirrors figmaVars.ts's syncGlobalColors: alpha variants are written as an
         // {r,g,b,a} object (opacity baked into `a`), not the raw hex — classifyEntry
@@ -512,7 +538,7 @@ export function computeSyncPreview(
     }
     const map = buildMetadataMap(col, localVars, prefix);
     for (const entry of entries) {
-      const existing = map.get(entry.tokenRef);
+      const existing = findVariableReadOnly(col, entry.tokenRef, entry.name, map, localVars) ?? undefined;
       const classified = classifyEntry(entry, existing, modeId, localVars);
       if (classified.kind === "create") {
         toCreate++;
@@ -527,7 +553,6 @@ export function computeSyncPreview(
           changedFields: classified.changedFields,
           nameDiff: classified.nameDiff,
           valueDiff: classified.valueDiff,
-          descriptionDiff: classified.descriptionDiff,
           scopesDiff: classified.scopesDiff,
         });
       }
@@ -748,7 +773,9 @@ export function analyzeNameConflicts(
       const colorId = color._id || color.name;
       const label = config.useShorthandColors && color.shorthand ? color.shorthand : color.name;
       const baseRef = `source:${colorId}`;
-      const baseSuggested = `${label}/${label}`;
+      // Mirrors figmaVars.ts's syncGlobalColors — see its comment for why a
+      // label already containing "/" is used as-is instead of doubled.
+      const baseSuggested = label.includes("/") ? label : `${label}/${label}`;
       const baseVar = sourceMetadataMap.get(baseRef);
       if (baseVar && baseVar.name !== baseSuggested) {
         conflicts.push({ tokenRef: baseRef, figmaName: baseVar.name, suggestedName: baseSuggested, type: "source" });

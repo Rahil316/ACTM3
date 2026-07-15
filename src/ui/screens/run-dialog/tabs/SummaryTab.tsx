@@ -58,6 +58,11 @@ export function SummaryTab({
     setActiveTab("changes");
   }
 
+  // Distinct collections that actually HAVE a change — existingCollections.length
+  // counts every collection that exists at all (e.g. both Tokens and Source even
+  // when only Source has any diffs), which overstates the "across N collections" claim.
+  const changedCollectionCount = syncPreview ? new Set(syncPreview.items.map((i) => i.collection)).size : 0;
+
   return (
     <div className="flex flex-col gap-3">
 
@@ -86,8 +91,8 @@ export function SummaryTab({
               </div>
               <Caption className="text-n-tx-dim">
                 {syncPreview.total} variable change{syncPreview.total !== 1 ? "s" : ""} across{" "}
-                {existingCollections.length > 0
-                  ? `${existingCollections.length} collection${existingCollections.length !== 1 ? "s" : ""}`
+                {changedCollectionCount > 0
+                  ? `${changedCollectionCount} collection${changedCollectionCount !== 1 ? "s" : ""}`
                   : "new collections"}.
                 {" "}<button type="button" className="underline cursor-pointer hover:opacity-80" onClick={() => goToChanges("all")}>View all →</button>
               </Caption>

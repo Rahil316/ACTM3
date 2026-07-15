@@ -298,8 +298,15 @@ export const VariableManager = {
       const include = config.includeDescriptions !== false;
       const groupDesc = include ? color.description || "Brand constant — raw hex, no theme processing" : "";
 
+      // label/label groups the color under a folder named after itself in Figma
+      // (e.g. shorthand "pr" -> "pr/pr" = folder "pr" containing swatch "pr").
+      // But if label already contains "/" (shorthands like "sp/4" deliberately
+      // mirror a grouped name such as "Spare/4"), doubling it would nest an
+      // extra, unintended folder level ("sp/4/sp/4" reads as sp -> 4 -> "sp/4").
+      // Using the label as-is in that case keeps exactly one folder level.
       const baseRef = `source:${colorId}`;
-      vars.push([`${label}/${label}`, "COLOR", hex, groupDesc, baseRef]);
+      const baseName = label.includes("/") ? label : `${label}/${label}`;
+      vars.push([baseName, "COLOR", hex, groupDesc, baseRef]);
 
       if (config.alphaValues.length > 0) {
         const rgb = hexToFigmaRgb(hex);
@@ -517,9 +524,14 @@ export const VariableManager = {
           }
         }
 
+        // Description is written every sync but NOT counted toward isUpdated:
+        // Figma variable descriptions aren't per-mode, so this always gets
+        // overwritten once per theme pass (last theme processed wins) even when
+        // nothing meaningfully changed — counting it would report a false
+        // "updated" on every single sync. See variableTracker.ts's classifyEntry
+        // for why the preview excludes description from the diff for the same reason.
         if (varDescription && variable.description !== varDescription) {
           variable.description = varDescription;
-          isUpdated = true;
         }
 
         // A "keep-figma" drift decision means the user chose to preserve a value

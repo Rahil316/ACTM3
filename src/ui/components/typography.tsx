@@ -39,7 +39,7 @@ export function SectionLabel({ children, className }: TypoProps) {
 
 export function FieldLabel({ children, htmlFor, className }: LabelProps) {
   return (
-    <label htmlFor={htmlFor} className={clsx("text-[11px] font-bold tracking-[1.2px] uppercase text-n-tx-muted px-1 mt-1 block", className)}>
+    <label htmlFor={htmlFor} className={clsx("text-[11px] font-bold tracking-[1.2px] text-n-tx-muted px-1 mt-1 block", className)}>
       {children}
     </label>
   );

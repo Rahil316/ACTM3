@@ -27,7 +27,6 @@ export const KIND_LABEL = {
 export const FIELD_LABEL = {
   name: "Name",
   value: "Value",
-  description: "Description",
   scopes: "Scopes",
 } satisfies Record<ChangedField, string>;
 

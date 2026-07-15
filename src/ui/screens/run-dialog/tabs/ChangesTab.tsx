@@ -12,9 +12,10 @@ interface ChangesTabProps {
   total: number;
   isChecking: boolean;
   initialFilter?: FilterAction;
+  onOpenConflicts: () => void;
 }
 
-export function ChangesTab({ previewItems, conflicts, decisions, setDecision, total, isChecking, initialFilter }: ChangesTabProps) {
+export function ChangesTab({ previewItems, conflicts, decisions, setDecision, total, isChecking, initialFilter, onOpenConflicts }: ChangesTabProps) {
   if (isChecking) {
     return (
       <div className="flex flex-col gap-0 animate-pulse">
@@ -47,8 +48,8 @@ export function ChangesTab({ previewItems, conflicts, decisions, setDecision, to
   return (
     <div className="flex flex-col gap-3">
       {conflicts.length > 0 && (
-        <Callout variant="warning">
-          {conflicts.length} naming conflict{conflicts.length !== 1 ? "s" : ""} detected. Review and resolve them in the Summary tab.
+        <Callout variant="warning" action={{ label: "Review names →", onClick: onOpenConflicts }}>
+          {conflicts.length} variable{conflicts.length !== 1 ? "s" : ""} below {conflicts.length !== 1 ? "were" : "was"} renamed directly in Figma — shown as a Name change. By default the Figma name is kept; override per-item here.
         </Callout>
       )}
       {previewItems.length > 0 && <SyncPreviewItemList items={previewItems} decisions={decisions} onDecision={setDecision} initialFilter={initialFilter} />}
