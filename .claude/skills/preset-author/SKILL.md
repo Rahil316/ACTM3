@@ -12,7 +12,7 @@ the `Preset` schema exposes. You decide what the system *is made of*. You are no
 responsible for making the resulting colors look harmonic or maximally vivid/consistent
 — that is the **color-master** skill's job, and it does that job by running the
 engine's own tools (the stress-test harness, Preview, contrast math), not by eyeballing
-swatches. Hand off to color-master once the structure is in place (§9).
+swatches. Hand off to color-master once the structure is in place (§12).
 
 A preset is a **constraint structure**, not a color library. Its job is to make the
 right token easy to reach and the wrong one hard to reach. Design the constraints
@@ -52,7 +52,7 @@ Answer these, in order, using `color-system-guidelines.md` for the reasoning:
 4. **Variations per role** — 3 is the minimum useful set (subtle/default/strong), 5 is
    the sweet spot for most product teams. Decide whether all roles share one global
    variation list (`useSharedRoleVariants: true`) or whether specific roles need their
-   own slots (status colors almost always do — see §5).
+   own slots (status colors almost always do — see §6).
 5. **Themes** — Light + Dark minimum. Each theme is just a name + background hex;
    contrast is evaluated against that background independently, so a target tuned for
    a white background may need raising for a colored or dark one.
@@ -114,7 +114,7 @@ export interface Preset {
 don't need to override; `makeBootstrapState()` (`src/ui/store/projectStore.ts:273`)
 supplies defaults for everything else, and `ensureIds()` auto-generates missing `_id`s
 on load. Copy the shape of an existing preset rather than inventing field names — see
-§7 for which one to copy. Every top-level `config` field, verified against
+§10 for which one to copy. Every top-level `config` field, verified against
 `makeBootstrapState()`'s literal defaults:
 
 ```ts
@@ -146,7 +146,7 @@ includeDescriptions: boolean;                         // default false
 scaleCollectionName: string;                          // default "_scale"
 tokenCollectionName: string;                          // default "color tokens"
 
-scaleSteps: ScaleStep[] | string[] | null;            // default null — see §6, genuinely underused
+scaleSteps: ScaleStep[] | string[] | null;            // default null — see §9, genuinely underused
 useSharedRoleVariants: boolean;                       // default true — roles use the global `variations` list
 
 name: string;                                          // project display name (not the Preset's own id/name)
@@ -186,9 +186,9 @@ interface Role {
   scaleAlgorithm?: ScaleAlgorithm;  // per-role override — DEAD in Scale mode, see §2
   solverMode?: SolverMode;          // per-role override — works in Direct mode when algorithmScopeLevel: "role"
   description?: string;
-  scopedColorIds?: string[] | null; // restrict this role to specific colors (by _id or name) — see §5
-  localBg?: RoleLocalBg | null;      // contrast-chain against something other than the theme bg — see §6
-  scopes?: VariableScope[];          // Figma variable-consumption scoping — see §7, unused by every shipped preset
+  scopedColorIds?: string[] | null; // restrict this role to specific colors (by _id or name) — see §6
+  localBg?: RoleLocalBg | null;      // contrast-chain against something other than the theme bg — see §7
+  scopes?: VariableScope[];          // Figma variable-consumption scoping — see §8, unused by every shipped preset
 }
 
 interface Theme {
@@ -206,7 +206,185 @@ type VariableScope = "FRAME_FILL" | "SHAPE_FILL" | "TEXT_FILL" | "STROKE_COLOR" 
 
 ---
 
-## 4. Metadata quality: `id`/`name`/`description`/`tags`/`badge`/`swatches`
+## 4. The complete validation and dependency matrix
+
+There are **three separate, non-overlapping validation layers** in this codebase, and
+none of them catches everything the others miss. Know all three, and know exactly what
+falls through the cracks of all three combined — that's where a preset silently
+misbehaves instead of erroring.
+
+### Layer 1 — build-time (`validatePreset.ts`, runs in `npm run build`/`watch`)
+
+The complete rule set, verified against the actual `RULES` array
+(`src/shared/presets/validatePreset.ts:103-302`) — **this is the only layer that can
+block a build**:
+
+| Rule | Scope | Checks | Auto-fixes | Errors on |
+| --- | --- | --- | --- | --- |
+| `plugin-mode-enum` | always | `pluginMode` is `"scale"` \| `"direct"` | — | invalid value |
+| `scale-algorithm-enum` | always | `scaleAlgorithm` is one of the 8 valid strings | — | invalid value |
+| `solver-mode-enum` | always | `solverMode` is one of the 7 valid strings | — | invalid value |
+| `scale-length-positive-int` | scale mode only | `scaleLength` is a positive integer | — | zero, negative, non-integer, or missing-and-required |
+| `algorithm-scope-level-enum` | always | `algorithmScopeLevel` is `"color"` \| `"role"` | — | invalid value |
+| `token-name-segments-enum` | always (if array) | every entry is `"color"`\|`"role"`\|`"variation"` | — | invalid entry |
+| `color-hex-format` | always | `color.value` parses as hex | normalizes to `#RRGGBB` | unparsable/empty |
+| `theme-hex-format` | always | `theme.bg` parses as hex | normalizes to `#RRGGBB` | unparsable/empty |
+| `color-required-fields` | always | `color.name`/`.shorthand` non-empty | — | empty |
+| `color-shorthand-unique` | always | no two colors share a `shorthand` | — | duplicate |
+| `role-required-fields` | always | `role.name`/`.shorthand` non-empty | — | empty |
+| `role-shorthand-unique` | always | no two roles share a `shorthand` | — | duplicate |
+| `role-scoped-color-ids-exist` | always (if any role has `scopedColorIds`) | every id/name in the array matches a real color's `_id` or `name` | — | dangling reference |
+| `global-variations` / `role-variations` | always (if array present) | each variation's `name`/`.shorthand` non-empty, `target` is a number in `(0, 21]`, no duplicate shorthand within the array | missing `target` → defaults to **4.5** | out-of-range/non-number target, duplicate shorthand |
+| `scale-step-required-fields` | scale mode only (if `scaleSteps` present) | each step's `name`/`.shorthand` non-empty | — | empty |
+| `theme-required-fields` | always | `theme.name` non-empty | — | empty |
+| `theme-name-unique` | always | no two themes share a `name` | — | duplicate |
+
+`MAX_CONTRAST = 21`, `DEFAULT_VARIATION_TARGET = 4.5` are the only two magic numbers
+this layer enforces.
+
+**Confirmed NOT checked by this layer** (verified by reading every rule — there is no
+rule for any of these): `role.localBg` shape or whether its token references resolve
+to anything real; `role.scopes` contents beyond basic array shape; whether
+`scaleCollectionName`/`tokenCollectionName`/`sourceCollectionName` collide with each
+other; whether `scaleSteps.length` matches `scaleLength`; whether variation `target`s
+within a role are monotonically ordered; whether the final, joined Figma token *path*
+(after applying `tokenNameSegments` + shorthand flags) is unique across the whole
+project — only per-entity name/shorthand uniqueness is checked, never the combined
+path. Every one of these is a real, reachable silent-failure mode — see the subsections
+below.
+
+### Layer 2 — runtime, pre-sync (`validateProjectStore()`, fires when a user clicks Run)
+
+**A separate, differently-scoped validator** — `src/ui/store/projectStore.ts:380-428` —
+that only ever runs inside the live plugin (RunDialog's "validation-warning" phase),
+never during `npm run build`. A preset can pass Layer 1 cleanly and still trip this the
+first time someone runs it. It requires at least one color and one role to exist at
+all, then checks:
+
+- No color/role/variation has an empty `name` (redundant with Layer 1 for colors/roles,
+  but Layer 1 never checks variation names — this is the only layer that does).
+- **Segment-depth matching**: a `shorthand` must have the same number of `/`-separated
+  segments as its `name`. `name: "Brand/Primary"` (2 segments) requires a 2-segment
+  shorthand like `"br/pr"` — a flat `"bp"` fails this check. Checked for colors, roles,
+  the global `variations` list, and every role's own `variations` list independently.
+  **Layer 1 never checks this at all** — a preset file with mismatched segment depths
+  builds cleanly and only surfaces this warning inside the live plugin.
+- **Resolved-label uniqueness**: after applying `useShorthandColors`/`useShorthandRoles`/
+  `useShorthandVariations`, do any two colors/roles/variations (each axis checked
+  independently) resolve to the *same displayed label*? This catches "two colors whose
+  full names differ but whose shorthands collide," which Layer 1's
+  `color-shorthand-unique` rule (raw shorthand string comparison, not label-resolution-
+  aware) already mostly covers — but this check is the one that actually models what
+  `useShorthand*` produces.
+- Plain duplicate-name and duplicate-shorthand checks for colors and roles (case-
+  insensitive), independent of the segment/label checks above.
+
+**Still not checked by Layer 1 or 2 combined**: the *joined, cross-entity* token path.
+Both layers check "are all color labels unique among colors" and "are all role labels
+unique among roles" separately — neither checks whether a specific (color, role,
+variation) triple, once assembled via `tokenNameSegments` into a final path, collides
+with a *different* triple's assembled path. This is a real, reachable gap — see
+"Token-path collisions" below.
+
+### Layer 3 — silent runtime fallbacks (the engine itself, no warning ever shown)
+
+Below Layer 1 and 2, the engine has its own defense-in-depth fallbacks for malformed
+data that reaches it anyway (e.g. hand-edited live plugin state, not a build-validated
+preset file). These **never produce an error or a visible warning** — know them so you
+don't mistake "the engine didn't crash" for "the configuration is correct":
+
+- **Empty `role.shorthand`/`color.shorthand`** → the Figma-sync layer derives a 2-character
+  fallback from the name (`role.name.substring(0, 2).toLowerCase()`,
+  `src/figma/config.ts:133`) rather than crashing. Unreachable via a Layer-1-validated
+  preset (which requires non-empty shorthand), but real if the plugin's own UI ever
+  produces one.
+- **Duplicate theme names** reaching the Figma-sync layer get auto-suffixed
+  (`"Light"`, `"Light 2"`, `"Light 3"`, …) rather than erroring
+  (`_deduplicateThemeNames`, `src/figma/config.ts:100-116`). Also unreachable via a
+  Layer-1-validated preset (`theme-name-unique` already blocks this at build time).
+- **Invalid `theme.bg`** falls back to `"#FFFFFF"` at this same layer.
+- **Invalid `solverMode`/`algorithmScopeLevel` strings** reaching the engine silently
+  fall back to `"natural"`/`"color"` respectively — Layer 1 already rejects these as
+  build errors, so this only matters for hand-edited state.
+
+### Field-level valid ranges and defaults, precise
+
+| Field | Type/range | Default | Notes |
+| --- | --- | --- | --- |
+| `variation.target` | number, `(0, 21]` | `4.5` (Layer 1 auto-fix) | `21` is the mathematical WCAG contrast ceiling (pure black on pure white) |
+| `alphaValues[]` | integers `0-100` | `[]` | **Whole-number percentages, not fractions** — `alpha = value / 100` (`figmaVars.ts:292`). Passing `0.5` intending "half" produces a ~0.5% (nearly invisible) alpha, not 50%; use `50`. Out-of-range values are silently dropped when the string-input parser runs (`ensureVariations()`), not when passed as a real preset array — a preset's raw `.ts` array is not re-clamped, so double-check values are in range yourself |
+| `scaleLength` | positive integer | `25` | No explicit maximum anywhere; the log-luminance step math (`scaleMaker`) stays numerically stable across any practical N (verified N=1 through N=500 by direct calculation) — there's no engine-side reason to avoid a large value, only Figma-side practicality (that many scale variables). `0` or negative is a hard build-time error (Layer 1) because the math produces `NaN`/`-Infinity` if it ever reached the engine ungated |
+| `scaleSteps` length vs `scaleLength` | should match | `null` (falls back to bare `"1".."N"`) | **Silently tolerated if they don't match** — extra `scaleSteps` entries beyond `scaleLength` are simply never consulted; if `scaleSteps` is shorter than `scaleLength`, the missing trailing steps just use their bare numeric name with no shorthand. Not an error at any layer — verify by counting yourself |
+| `sourceCollectionName`/`scaleCollectionName`/`tokenCollectionName` | any string | `"_constants"` / `"_scale"` / `"color tokens"` | **Not validated for collisions against each other, at any layer.** Figma collections are matched purely by name (`getOrCreateCollection`, `figmaVars.ts:249-255`) — if two of these three fields share a literal string, both feature areas write into the *same* Figma collection, since Figma has no separate namespacing beyond name. Always pick three distinct names |
+| `localBg: { kind: "hex", value: {...} }` keys | must be **lowercase theme name** | — | The engine looks up `role.localBgResolved[mode.name.toLowerCase()]` (`clrEngine.ts:358`) — a theme named `"Light"` needs the record key `"light"`, not `"Light"`. Get this wrong and it silently falls through to the theme's own background, no warning |
+
+### Dead-in-a-mode fields, consolidated
+
+| Field | Dead in | Why |
+| --- | --- | --- |
+| `role.scaleAlgorithm` | Scale mode (always) | `_generateScales` only ever reads `color.scaleAlgorithm`, never `role.scaleAlgorithm`, regardless of `algorithmScopeLevel` — see §2 |
+| `color.scaleAlgorithm` | Direct mode | `variableMaker` never calls `_generateScales` at all when `pluginMode === "direct"` (`clrEngine.ts:294`) — there's no scale to apply an algorithm to |
+| `color.solverMode` | whenever `useUniformAlgorithm !== false` (i.e. the default) | `_getSolverMode` returns `config.solverMode` unconditionally in this case (`clrEngine.ts:346`) |
+| `role.solverMode` | whenever `useUniformAlgorithm !== false`, OR `algorithmScopeLevel !== "role"` | same function, second/third branch |
+| `includeColorScalesCollection` | has no effect when `pluginMode === "direct"` | Direct mode already never computes or syncs a scale; this flag only matters in Scale mode |
+
+**Subtle, verified distinction**: `pluginMode: "scale"` + `includeColorScalesCollection:
+false` is **not** identical to `pluginMode: "direct"`, even though both produce
+raw-hex tokens with no `_scale` collection. In the former, the engine still fully
+**computes** the tonal scale for every color (`_generateScales` runs, since
+`config.pluginMode !== "direct"` is true) — it's simply never synced to Figma
+(`figmaVars.ts`'s `skipScales` flag discards it at the sync layer, one level higher
+than the engine). In true Direct mode, the scale is never computed at all. No
+functional difference in the final Figma output, but real (if usually negligible)
+wasted computation in the former.
+
+### Token-path collisions — the gap no validator catches
+
+Both Layer 1 and Layer 2 check *per-axis* uniqueness (all color names distinct from
+each other; all role names distinct from each other; all variation names distinct from
+each other) — **neither ever checks the final, joined Figma variable path** that
+`tokenNameSegments` assembles from a specific (color, role, variation) triple
+(`figmaVars.ts:174`: `tokenNameOrder.map((s) => segParts[s] || s).join("/")`). This
+matters most when `tokenNameSegments` **omits a segment**:
+
+```
+tokenNameSegments: ["role", "variation"]   // "color" segment dropped
+```
+
+If two different colors each have a role named `"Primary"` with a variation named
+`"Default"`, **both produce the literal token path `"Primary/Default"`** — a genuine
+collision no validator flags. At sync time, Figma variables are matched by name
+(`upsertVariables`), so the second color's token silently overwrites the first's
+variable on every sync, even though Token Wand's internal `tokenRef` (a separate,
+always-3-part `color/role/variation` identity key used for rename tracking) correctly
+still treats them as two distinct tokens. **When a preset uses a `tokenNameSegments`
+array shorter than 3, manually verify — by reading the assembled paths in Preview, not
+by trusting a validator — that no two (color, role, variation) triples can produce an
+identical joined string.** The Tailwind-style `["color", "variation"]` pattern (role
+omitted) is safe specifically because every role's variations are typically the same
+shared ladder and each color still contributes a distinct first segment; the risk is
+concentrated in `["role", "variation"]` (color omitted) or any custom subset that drops
+the one segment that would have kept two otherwise-identical triples apart.
+
+### Monotonicity is checked, but never blocks anything
+
+A dedicated function for this exists — `validateVariationContrasts()`
+(`src/shared/engine/clrEngine.ts:474-480`), which checks that a `target[]` array is
+strictly increasing — but it has **zero call sites anywhere in the codebase**. It is
+completely dead code. The actual, *working* monotonicity check lives entirely
+separately, inside the plugin's own Health tab (`src/ui/screens/run-dialog/tabs/health/
+useHealthReport.ts`'s "Inversions" metric) — which detects
+non-monotonic variation targets **after** tokens are generated and displays them as an
+informational metric a user can choose to ignore. **There is no layer, at any point in
+the pipeline, that blocks a build or a sync because a role's variation targets aren't
+in increasing order.** If your preset's variation ladder isn't monotonic (e.g. targets
+`[4.5, 3.0, 7.0]` instead of `[3.0, 4.5, 7.0]`), it will build, validate, and sync
+without complaint — only the live plugin's Health tab will ever surface it, and only if
+someone looks.
+
+---
+
+## 5. Metadata quality: `id`/`name`/`description`/`tags`/`badge`/`swatches`
 
 These aren't decoration — they're the entire Theme Shop / QuickStart browsing
 experience, and a "godly" preset makes them earn their keep:
@@ -228,7 +406,7 @@ experience, and a "godly" preset makes them earn their keep:
 
 ---
 
-## 5. Per-role variation override and color scoping
+## 6. Per-role variation override and color scoping
 
 Most roles should defer to the global `variations` list. Give a role its own
 `variations[]` (and set `useSharedRoleVariants: false` project-wide) when the role has
@@ -262,7 +440,7 @@ the current color isn't in it).
 
 ---
 
-## 6. `localBg`: five ways to chain contrast against something other than the theme
+## 7. `localBg`: five ways to chain contrast against something other than the theme
 
 `role.localBg` lets a role's contrast be evaluated against something other than the raw
 theme background — essential for text-on-fill, layered surfaces, or anything that
@@ -361,7 +539,7 @@ not the way you intended.
 
 ---
 
-## 7. Figma variable scoping (`role.scopes`) — real, engine-supported, unused everywhere
+## 8. Figma variable scoping (`role.scopes`) — real, engine-supported, unused everywhere
 
 `role.scopes: VariableScope[]` restricts which Figma property pickers a token appears
 in — `"FRAME_FILL"`, `"SHAPE_FILL"`, `"TEXT_FILL"`, `"STROKE_COLOR"`, `"EFFECT_COLOR"`,
@@ -390,7 +568,7 @@ tool level, for free.
 
 ---
 
-## 8. Custom scale-step labels (`scaleSteps`) — also real, also unused everywhere
+## 9. Custom scale-step labels (`scaleSteps`) — also real, also unused everywhere
 
 Every shipped preset — including Radix (whose real-world system uses named 1–12 steps)
 and Tailwind (50/100/.../950) — leaves `scaleSteps: null`. With `null`, Scale mode's
@@ -428,7 +606,7 @@ correctly is a genuine improvement over copying the existing pattern.
 
 ---
 
-## 9. Reference presets to copy from
+## 10. Reference presets to copy from
 
 Don't start from a blank object — copy the closest existing preset and adapt:
 
@@ -449,7 +627,7 @@ that even `showcase.ts` — the widest feature-coverage dev preset — still doe
 `role.scopes` or custom `scaleSteps`; don't assume "the reference preset does it" is a
 ceiling on what's possible.
 
-## 10. Writing and wiring the file
+## 11. Writing and wiring the file
 
 1. Create `src/shared/presets/raw/dev/<name>.ts` (dev-only — fast iteration, excluded
    from `--release` builds, **auto-discovered**, no registration needed) or
@@ -483,7 +661,7 @@ ceiling on what's possible.
    Theme Shop, load your preset, and use the **Preview tab** to check every token's hex
    and contrast rating before running a real sync.
 
-## 11. After the first draft: hand off to color-master
+## 12. After the first draft: hand off to color-master
 
 A preset that builds cleanly and looks right in Preview for one seed color is not
 proven — you've fixed the *structure* (roles, variations, targets, naming, contrast
