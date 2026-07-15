@@ -41,6 +41,16 @@ is the formula working as designed, not a bug."
    modes, `_targetChroma`, lines 109–124). Both files are short (480 and 302 lines) —
    read them directly rather than working from memory of what an algorithm "roughly"
    does. §§2–3 below summarize every formula verbatim.
+5. **A headless run of the actual preset** — when you're not inside a live Figma session
+   (no Preview screen available) and the question is specific to *this preset's real
+   role graph* rather than the general algorithm grid, run the preset's own config
+   straight through the engine in a throwaway script. This is the only instrument that
+   exercises a preset's actual `scopedColorIds`, `localBg` chaining, and per-role
+   variation ladders exactly as configured — the stress harness's synthetic 2-role rig
+   doesn't model any of those, and Preview isn't scriptable outside the plugin. See §8
+   for the exact recipe; this is not optional busywork; it is how the nmobile preset's
+   `text/onBrand` bug (§8) was actually caught, and Preview/harness alone would not have
+   caught it.
 
 Read `Documentations/knowledge/color-algorithm-roadmap.md` in full before starting
 nontrivial harmony work — it documents, with root causes and numeric evidence, every
@@ -375,3 +385,95 @@ After any algorithm/solver change, re-run the relevant stress-test stage (or the
 `npx tsx test-data/run.ts` if the change is global) and re-check Preview for the actual
 preset. A harmony fix isn't done until the numbers — not just the swatch you're looking
 at — confirm it.
+
+## 8. Headless preset verification — the recipe, and why it exists
+
+The stress harness proves an algorithm/solver is good *in general*. It cannot prove a
+*specific* preset's role graph is sound, because its own test rig is a synthetic 2-role
+setup that never exercises `scopedColorIds`, `localBg` chaining, or a preset's actual
+per-role variation ladders. Preview does exercise the real config, but only inside a
+live Figma session you may not have. When you need "does this exact preset, as authored,
+produce clean output" and neither instrument fits, run the real engine directly:
+
+```ts
+// throwaway script, e.g. scripts/_verify-<preset>.ts — delete when done, it is not
+// a permanent addition to the repo
+import { variableMaker } from "../src/shared/engine/clrEngine";
+import { resolveTokenRefBgs, translateLocalBg } from "../src/shared/engine/clrUtils";
+import presets from "../src/shared/presets/raw/dev/<name>";
+
+const cfg = presets[0].config as any;
+const engineConfig = {
+  colors: cfg.colors, themes: cfg.themes, scaleLength: cfg.scaleLength,
+  scaleSteps: cfg.scaleSteps ?? undefined, scaleAlgorithm: cfg.scaleAlgorithm,
+  pluginMode: cfg.pluginMode,
+  roles: cfg.roles.map((r: any) => {
+    const { localBgResolved, localBgTokenRef, localBgDynamicRef } =
+      translateLocalBg(r.localBg, cfg.colors, cfg.themes);
+    return { ...r, localBgResolved, localBgTokenRef, localBgDynamicRef };
+  }),
+  variations: (cfg.variations ?? []).map((v: any) => ({ name: v.name, shorthand: v.shorthand })),
+  useUniformAlgorithm: cfg.useUniformAlgorithm,
+  algorithmScopeLevel: cfg.algorithmScopeLevel, solverMode: cfg.solverMode,
+};
+
+// Two-pass, exactly like buildEngineConfig's real consumers (src/ui/store/engineStore.ts,
+// src/figma/index.ts) — pass 1 resolves theme-bg fallbacks; resolveTokenRefBgs() then
+// looks up any token-static/token-dynamic localBg against pass 1's real output; pass 2
+// re-solves every chained role against the now-real background.
+const pass1 = variableMaker(engineConfig as any);
+const result = resolveTokenRefBgs(engineConfig as any, pass1)
+  ? variableMaker(engineConfig as any)
+  : pass1;
+
+console.log(JSON.stringify(result.errors, null, 2)); // critical/warnings/notices — read every warning
+```
+
+Two import-path gotchas that cost time the first pass: `variableMaker` lives in
+`clrEngine.ts`, but `resolveTokenRefBgs`/`translateLocalBg` live in the separate
+`clrUtils.ts` — importing all three from `clrEngine` fails at runtime, not at
+typecheck (both files export loosely-typed `any`-friendly shapes in a `.ts` script run
+via `tsx`, so a wrong import only surfaces as `TypeError: ... is not a function`).
+
+**Read `result.errors.warnings` before anything else.** This is the check that actually
+matters: a role's variation can pass `isAdjusted: false` while still having silently
+missed its target contrast, if the miss happened inside a `localBg`-chained solve — see
+§8.1. Don't treat "no `isAdjusted: true` anywhere" as "nothing is wrong" until you've
+also confirmed `result.errors.warnings` is empty.
+
+### 8.1. The bug this catches that nothing else does: over-demanding `localBg` chains
+
+`role.localBg` resolves to **exactly one background hex per (role, color, theme)** —
+there is no per-variation override in the schema (confirmed: `clrEngine.ts:357-358,
+398-399` look up `localBgResolved[modeName]`/`localBgPerColor`, keyed only by theme, not
+by variation). A role with a 5-step variation ladder (e.g. Disabled 1.5 → Subtle 3.0 →
+Rest 4.5 → Hover 6.0 → Pressed 8.0) that chains **all five** variations to the same
+`token-dynamic` ref (e.g. `"[color]/fill/button/default"`) is asking all five targets to
+be met against one fixed, usually mid-tone background. That background has a hard
+contrast ceiling — often only ~4.4–5.1:1 for a mid-saturation brand color against a
+light-ish surface — so any target above that ceiling (Hover 6.0, Pressed 8.0 in the
+example) is mathematically unreachable. The solver's fallback fires: it returns clipped
+black/white and emits a `warning` in `result.errors.warnings`, but **does not set
+`isAdjusted`** (that flag is Scale-mode-specific, from `_mapByScaleContrast`'s
+step-search fallback — this is a Direct-mode/localBg-chained solve, a different code
+path entirely). The practical result: every variation above the ceiling collapses onto
+the *identical* clipped hex, invisibly, unless you specifically read the warnings array.
+
+This is not a synthetic concern — it was found, empirically, in **two** real presets by
+running this exact recipe: it was introduced fresh while authoring `nmobile.ts`'s
+`text/onBrand`/`text/onSecondary` roles, and the *same* defect already existed,
+undetected, in the shipped reference preset `nclarity.ts`'s `text/buttonLabel` role,
+across all 13 of its colors and all 3 of its themes (Hovered/Pressed targets 6.0/8.0
+against `fill/button/default`, silently missed everywhere in Light and Dark, plus
+several harder failures in Midnight where even the Default target came back
+"Solver could not find a solution"). **Don't copy the "chain every variation of a
+button-label role to one fixed fill step" pattern from an existing preset without
+running this check** — its presence in a shipped preset is not proof it works.
+
+**The fix, once you find this**: this is preset-author's call (structural), not
+color-master's to silently patch, but the diagnosis is squarely a color-master
+verification finding — report it with the concrete warning text and the achievable
+ceiling number, and let preset-author choose between collapsing the role to 1–2
+achievable states (a button label realistically only needs a Default/Enabled color and
+a Disabled color — Hover/Pressed change the fill, not the label) or splitting into
+separate single-variation roles each chained to its own matching fill-state token.

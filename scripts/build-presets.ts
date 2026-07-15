@@ -91,9 +91,12 @@ async function main() {
   // ── Validate & auto-fix each preset ─────────────────────────────────────────
   const validationErrors: string[] = [];
   for (const preset of all as Preset[]) {
-    const { errors, fixed } = validateAndFixPreset(preset);
+    const { errors, fixed, warnings } = validateAndFixPreset(preset);
     if (fixed.length > 0) {
       console.log(`[presets] ${preset.id}: auto-fixed ${fixed.length} issue${fixed.length !== 1 ? "s" : ""}`);
+    }
+    if (warnings.length > 0) {
+      for (const w of warnings) console.warn(`[presets] ${preset.id}: WARNING ${w.path} — ${w.message}`);
     }
     if (errors.length > 0) {
       validationErrors.push(...errors.map((e) => `${preset.id}: ${e.path} — ${e.message}`));

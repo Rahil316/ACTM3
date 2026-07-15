@@ -22,7 +22,9 @@
  *   fill/button   — Interactive CTA fills with 5 interaction states (constant-chroma solver)
  *                   brand → blue button, danger → red delete button, etc.
  *   text/button   — On-button labels, contrast chained to [color]/fill/button/default
- *                   hue-locked solver picks light or dark text per color automatically
+ *                   natural solver (was labeled "hue-locked" — that mode was a no-op
+ *                   alias for natural; relabeled to match actual runtime behavior, see
+ *                   color-master skill §8.1)
  *
  * Colors:
  *   Neutral — pure gray seed (787878) · all chrome, surface, border, text work
@@ -196,7 +198,7 @@ const tokenWandUi: Preset = {
       {
         name: "text",
         shorthand: "tx",
-        solverMode: "hue-locked",
+        solverMode: "natural",
         variations: [
           { name: "Primary", shorthand: "primary", target: 12.0 }, // AAA — headings, active labels, toolbar icons
           { name: "Secondary", shorthand: "secondary", target: 7.0 }, // AA — body copy, descriptions, icons
@@ -258,7 +260,7 @@ const tokenWandUi: Preset = {
       {
         name: "text/button",
         shorthand: "tx/btn",
-        solverMode: "hue-locked",
+        solverMode: "natural",
         localBg: {
           kind: "token-dynamic",
           value: "[color]/fill/button/default",

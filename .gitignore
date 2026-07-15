@@ -13,6 +13,12 @@ src/ui/presets/presets.json
 # test-data/run.ts) tracked; never the generated results.
 test-data/results/
 
+# Preset-verification dashboard output — regenerated via `npx tsx preset-data/run.ts`.
+# Keep the harness code (preset-data/scripts/, preset-data/run.ts) tracked;
+# never the generated results (much smaller than test-data/'s, since it runs
+# real presets rather than a synthetic seed grid, but still regenerated data).
+preset-data/results/
+
 # Export output folders
 lib/*/
 

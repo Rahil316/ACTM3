@@ -306,6 +306,14 @@ don't mistake "the engine didn't crash" for "the configuration is correct":
 - **Invalid `solverMode`/`algorithmScopeLevel` strings** reaching the engine silently
   fall back to `"natural"`/`"color"` respectively — Layer 1 already rejects these as
   build errors, so this only matters for hand-edited state.
+- **A `localBg`-chained role whose variation ladder demands a contrast target above
+  what its fixed chained background can achieve.** Technically not silent — the engine
+  does push a `warning` string into `result.errors.warnings` — but no layer surfaces it
+  as a per-token flag the way `isAdjusted` does in Scale mode, so it's practically
+  invisible unless you read the warnings array directly. Every variation past the
+  achievable ceiling collapses onto the same clipped black/white hex. See §7's `localBg`
+  gotcha above — this is a real, previously-undetected defect in the shipped
+  `nclarity.ts` preset, not a hypothetical.
 
 ### Field-level valid ranges and defaults, precise
 
@@ -509,6 +517,35 @@ and engine-supported even though no preset demonstrates `token-static` specifica
 See `src/shared/presets/raw/dev/nclarity.ts` and `raw/dev/showcase.ts` in full for
 `token-dynamic` used together with scoped status roles in a real preset.
 
+### Gotcha: `localBg` resolves once per role — don't chain a multi-step ladder to it
+
+`localBg` produces **exactly one background hex per (role, color, theme)** — there is
+no per-variation override in the schema. If a role has a 5-step variation ladder (say,
+Disabled 1.5 → Subtle 3.0 → Rest 4.5 → Hover 6.0 → Pressed 8.0) and every variation
+chains to the *same* `token-dynamic`/`token-static` ref, all five targets are being
+solved against one fixed background — which has its own hard contrast ceiling (often
+only ~4.4–5.1:1 for a mid-tone brand fill against a light surface). Any target above
+that ceiling is mathematically unreachable: the solver clips to black/white and emits a
+`warning`, but **does not set `isAdjusted`** (that flag only exists in Scale mode's
+step-search fallback), so every variation past the ceiling silently collapses onto the
+identical clipped hex with nothing in Preview's per-token badges calling it out — you
+have to actually read `result.errors.warnings`.
+
+This is exactly the trap the `text/buttonLabel` pattern (§7's own worked example above)
+walks straight into if copied uncritically: chaining a full interaction-state ladder
+(Disabled → Hovered → Pressed) to one fixed `fill/button/default` ref. Verified: this
+exact defect exists today, undetected, in the shipped `nclarity.ts` reference preset
+itself, across all 13 colors × 3 themes (color-master skill's §8.1 has the full
+diagnosis and the recipe to check for it). **A role that sits on another token via
+`localBg` should carry at most 1–2 variations** — realistically "Default/Enabled" and
+"Disabled" — not a full 5-step intensity or interaction ladder, because a label/icon
+color on top of a fill doesn't itself have Hover/Pressed states; only the fill it sits
+on does. If a role genuinely needs multiple on-fill states, split it into one
+single-variation role per fill-state, each chained to that exact matching step (e.g.
+`text/onBrand/disabled` → `fill/brand/Disabled`, `text/onBrand/default` →
+`fill/brand/Rest`), so each solve has its own achievable background rather than sharing
+one that only supports the lowest common target.
+
 ### How resolution actually works (two-pass, with cycle protection)
 
 `localBg` in preset source is a *config-time* shape; the engine translates it into
@@ -660,6 +697,19 @@ ceiling on what's possible.
 6. Load the plugin in Figma (`manifest.json` via Plugins → Development → Import), open
    Theme Shop, load your preset, and use the **Preview tab** to check every token's hex
    and contrast rating before running a real sync.
+7. **A clean `npm run build` is not proof the preset is correct — it only proves Layer
+   1.** Before calling the file done, manually re-check every `name`/`shorthand` pair
+   (colors, roles, the global `variations` list, and every role's own `variations`
+   list) for **segment-depth matching**: a `name` with N `/`-separated segments needs a
+   `shorthand` with the same N segments (`"Spare/1"` needs `"sp/1"`, not a flat `"s1"`).
+   Layer 1 (the build) **never checks this** — only Layer 2, which fires inside the
+   live plugin's own Colors/Roles tab UI (visible as a segment-count mismatch warning
+   right in the row), not at build time. This is not a hypothetical: it was missed in a
+   real `nmobile.ts` draft that had already passed `npm run build` cleanly — every
+   `Spare/N` color kept a flat `sN` shorthand from before the color was renamed to add
+   a `/` segment, and nothing in the build caught it. If you rename a color/role to add
+   or remove a `/` segment, immediately re-check its shorthand in the same edit — don't
+   rely on the build to catch it later, because it won't.
 
 ## 12. After the first draft: hand off to color-master
 

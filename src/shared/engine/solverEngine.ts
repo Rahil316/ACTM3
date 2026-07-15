@@ -23,7 +23,7 @@ export type { SolverMode };
 
 // ── SOLVER CONSTANTS ──────────────────────────────────────────────────────────
 
-const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "hue-locked", "max-chroma", "gamut-cusp", "apca-natural"];
+const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "max-chroma", "gamut-cusp", "apca-natural"];
 const OVERSHOOT_WARN = 0.3;
 const MAX_ITER = 60;
 const L_EPS = 1e-5;
@@ -230,17 +230,6 @@ export function solveColorForContrast(sourceHex: string, targetContrast: number,
     };
     solvedL = _searchL(bgLum, targetContrast, lLow, lHigh, getHex);
     if (solvedL !== null) solvedC = Math.min(Math.max(src.C, 0.2), maxChromaAtLH(solvedL, src.H));
-  } else if (mode === "hue-locked") {
-    const getHex = (L: number) => {
-      const rawC = _targetChroma(L, src.L, src.C, src.H, "natural");
-      return oklchToHex(L, Math.min(rawC, maxChromaAtLH(L, src.H)), src.H);
-    };
-    solvedL = _searchL(bgLum, targetContrast, lLow, lHigh, getHex);
-    if (solvedL !== null) {
-      const rawC = _targetChroma(solvedL, src.L, src.C, src.H, "natural");
-      solvedC = Math.min(rawC, maxChromaAtLH(solvedL, src.H));
-      if (solvedC < src.C - 0.01) chromaReduced = true;
-    }
   } else if (mode === "apca-natural") {
     const targetLc = _wcagTargetToLc(targetContrast);
     const getHex = (L: number) => {

@@ -6,11 +6,12 @@
 //   "directModeOnly"   — only checked when the preset's effective pluginMode is "direct"
 
 import { normalizeHex, validHex } from "../engine/clrUtils";
+import { validateVariationContrasts } from "../engine/clrEngine";
 import type { Color, PluginMode, Role, ScaleAlgorithm, SolverMode, Theme, Variation } from "../types";
 import type { Preset } from "./themeShop";
 
 const SCALE_ALGORITHMS: ScaleAlgorithm[] = ["Natural", "Uniform", "Expressive", "Symmetric", "OKLCH", "Material", "Linear", "Fidelity"];
-const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "hue-locked", "max-chroma", "gamut-cusp", "apca-natural"];
+const SOLVER_MODES: SolverMode[] = ["natural", "constant-chroma", "symmetric", "max-chroma", "gamut-cusp", "apca-natural"];
 const PLUGIN_MODES: PluginMode[] = ["scale", "direct"];
 const ALGORITHM_SCOPE_LEVELS = ["color", "role"];
 const TOKEN_NAME_SEGMENTS = ["color", "role", "variation"];
@@ -28,11 +29,13 @@ export interface ValidationIssue {
 export interface ValidationResult {
   errors: ValidationIssue[];
   fixed: string[];
+  warnings: ValidationIssue[];
 }
 
 interface RuleContext {
   errors: ValidationIssue[];
   fixed: string[];
+  warnings: ValidationIssue[];
 }
 
 type RuleScope = "always" | "scaleModeOnly" | "directModeOnly";
@@ -95,6 +98,21 @@ function checkVariationsArray(variations: unknown, pathPrefix: string, ctx: Rule
   });
   for (const dupe of findDuplicates(shorthands)) {
     ctx.errors.push({ path: pathPrefix, message: `duplicate shorthand "${dupe}"` });
+  }
+}
+
+// Non-blocking: flags a non-monotonic variation target ladder as a warning, not an
+// error. validateVariationContrasts() (clrEngine.ts) already implements this check
+// correctly but had zero call sites anywhere in the codebase — the only place it ever
+// surfaced was the live plugin's post-generation Health tab. Kept as a warning rather
+// than promoted to ctx.errors because at least one existing preset may already violate
+// it; see whether any do before considering a build-blocking version.
+function checkVariationsMonotonic(variations: unknown, pathPrefix: string, ctx: RuleContext): void {
+  if (!Array.isArray(variations)) return;
+  const targets = variations.map((v: Variation) => (typeof v?.target === "number" ? v.target : DEFAULT_VARIATION_TARGET));
+  const { valid, errors } = validateVariationContrasts(targets);
+  if (!valid) {
+    for (const message of errors) ctx.warnings.push({ path: pathPrefix, message });
   }
 }
 
@@ -268,6 +286,22 @@ const RULES: Rule[] = [
     },
   },
   {
+    id: "global-variations-monotonic",
+    scope: "always",
+    appliesTo: (c) => Array.isArray(c.variations),
+    check: (c, ctx) => checkVariationsMonotonic(c.variations, "variations", ctx),
+  },
+  {
+    id: "role-variations-monotonic",
+    scope: "always",
+    appliesTo: (c) => Array.isArray(c.roles) && c.roles.some((r: Role) => Array.isArray(r?.variations)),
+    check: (c, ctx) => {
+      c.roles.forEach((role: Role, i: number) => {
+        if (Array.isArray(role?.variations)) checkVariationsMonotonic(role.variations, `roles[${i}].variations`, ctx);
+      });
+    },
+  },
+  {
     id: "scale-step-required-fields",
     scope: "scaleModeOnly",
     appliesTo: (c) => Array.isArray(c.scaleSteps),
@@ -302,7 +336,7 @@ const RULES: Rule[] = [
 ];
 
 export function validateAndFixPreset(preset: Preset): ValidationResult {
-  const ctx: RuleContext = { errors: [], fixed: [] };
+  const ctx: RuleContext = { errors: [], fixed: [], warnings: [] };
 
   if (!isNonEmptyString(preset.id)) ctx.errors.push({ path: "id", message: "required non-empty string" });
   if (!isNonEmptyString(preset.name)) ctx.errors.push({ path: "name", message: "required non-empty string" });
