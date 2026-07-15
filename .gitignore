@@ -26,3 +26,4 @@ lib/*/
 typecheck.log
 .DS_Store
 Samples
+src/shared/presets/presets.json
