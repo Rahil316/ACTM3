@@ -498,6 +498,11 @@ interface projectStoreState {
   setRoleScope: (roleIdx: number, colorIds: string[] | null) => void;
   setRoleLocalBg: (roleIdx: number, localBg: import("../types/state").RoleLocalBg | null) => void;
   setRoleScopes: (roleIdx: number, scopes: VariableScope[] | null) => void;
+  // Same underlying data as setRoleScope (Role.scopedColorIds) — a second entry
+  // point that edits it from the color's side of the relationship instead of
+  // the role's, so there is exactly one source of truth (see RoleSettingsSheet's
+  // "Colors" tab for the other view onto the same field).
+  setColorRoleInclusion: (colorId: string, roleIdx: number, included: boolean) => void;
 
   // Shared variations — set / add / remove / move / reset
   setVariation: (idx: number, field: string, value: string) => void;
@@ -798,6 +803,19 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
     set((s) => {
       const roles = [...s.projectStore.roles];
       roles[roleIdx] = { ...roles[roleIdx], scopedColorIds: colorIds };
+      return { projectStore: { ...s.projectStore, roles } };
+    });
+  },
+
+  setColorRoleInclusion: (colorId, roleIdx, included) => {
+    set((s) => {
+      const roles = [...s.projectStore.roles];
+      const role = roles[roleIdx];
+      if (!role) return s;
+      const allColorIds = s.projectStore.colors.map((c) => c._id ?? "");
+      const current = role.scopedColorIds ?? allColorIds;
+      const next = included ? [...new Set([...current, colorId])] : current.filter((id) => id !== colorId);
+      roles[roleIdx] = { ...role, scopedColorIds: next.length === allColorIds.length ? null : next };
       return { projectStore: { ...s.projectStore, roles } };
     });
   },

@@ -1,13 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { useProjectStore } from "../../store/projectStore";
 import { useLocalField } from "../../hooks/useLocalField";
 import { Input } from "../Input";
 import { ColorInput } from "../ColorInput";
 import { Select } from "../Select";
 import { CardToolbar } from "../CardToolbar";
+import { Button } from "../Button";
+import { LucideSettings as Settings } from "../icons";
 import type { Color } from "../../types/state";
 import { SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS, SCALE_ALGORITHM_DESCRIPTIONS, SOLVER_MODE_DESCRIPTIONS } from "../../store/projectStore";
 import { ControlLabel } from "../typography";
+import { ColorSettingsSheet } from "./ColorSettingsSheet";
 
 interface ColorGroupCardProps {
   color: Color;
@@ -17,6 +20,8 @@ interface ColorGroupCardProps {
 }
 
 export const ColorGroupCard = React.memo(function ColorGroupCard({ color, idx, dragListeners, dragAttributes }: ColorGroupCardProps) {
+  const [showSettingsSheet, setShowSettingsSheet] = useState(false);
+
   const setColor = useProjectStore((s) => s.setColor);
   const removeColor = useProjectStore((s) => s.removeColor);
   const colorCount = useProjectStore((s) => s.projectStore.colors.length);
@@ -26,6 +31,11 @@ export const ColorGroupCard = React.memo(function ColorGroupCard({ color, idx, d
   const includeDescriptions = useProjectStore((s) => s.projectStore.includeDescriptions);
   const colorScaleAlgorithm = useProjectStore((s) => s.projectStore.colors[idx]?.scaleAlgorithm);
   const colorSolverMode = useProjectStore((s) => s.projectStore.colors[idx]?.solverMode);
+  const roles = useProjectStore((s) => s.projectStore.roles);
+
+  // True if any role excludes this color — i.e. this color has a non-default
+  // role scope, mirroring RoleGroupCard's "scopedIds !== null" indicator.
+  const hasRoleScope = roles.some((r) => r.scopedColorIds != null && !r.scopedColorIds.includes(color._id ?? ""));
 
   const showAlgoRow = pluginMode === "scale" && !useUniformAlgo && algoScope !== "role";
   const showSolverRow = pluginMode === "direct" && !useUniformAlgo && algoScope !== "role";
@@ -53,7 +63,18 @@ export const ColorGroupCard = React.memo(function ColorGroupCard({ color, idx, d
       {showSolverRow && <Select label="Color Solver" size="xl" options={solverOptions} value={colorSolverMode ?? "natural"} tooltip={SOLVER_MODE_DESCRIPTIONS[colorSolverMode ?? "natural"]} onChange={(e) => setColor(idx, "solverMode", e.target.value)} />}
       {includeDescriptions && <Input value={localDesc} placeholder="Optional…" onChange={onDescChange} onBlur={onDescBlur} label="Description" size="lg" />}
 
-      <CardToolbar onDelete={() => removeColor(idx)} deleteDisabled={colorCount <= 1} deleteTitle="Delete color" dragListeners={dragListeners} dragAttributes={dragAttributes} />
+      <CardToolbar onDelete={() => removeColor(idx)} deleteDisabled={colorCount <= 1} deleteTitle="Delete color" dragListeners={dragListeners} dragAttributes={dragAttributes}>
+        <Button
+          variant="icon"
+          size="sm"
+          className={hasRoleScope ? "text-b-tx-muted bg-b-fi-subtle hover:text-b-tx-secondary hover:bg-b-fi-default" : undefined}
+          onClick={() => setShowSettingsSheet(true)}
+          title="Color settings"
+          icon={<Settings size={11} strokeWidth={2} />}
+        />
+      </CardToolbar>
+
+      {showSettingsSheet && <ColorSettingsSheet colorIdx={idx} onClose={() => setShowSettingsSheet(false)} />}
     </div>
   );
 });
