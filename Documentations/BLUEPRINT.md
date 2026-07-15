@@ -723,7 +723,7 @@ VariableManager.sync(result, config, scope, projectStore, savedProjectStore, dec
     syncGlobalColors(config, decisions)
     // For each color:
     //   colorLabel/colorLabel = raw hex                    (e.g. "n/n")
-    //   colorLabel/Opacities/10 … colorLabel/Opacities/90 (one per alphaValues entry)
+    //   colorLabel/Alpha/10 … colorLabel/Alpha/90 (one per alphaValues entry)
     //     → value = { r, g, b, a: opacity/100 }  (RGBA Figma color)
     // All written to config.sourceCollectionName, single mode
 

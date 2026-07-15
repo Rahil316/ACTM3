@@ -3,6 +3,7 @@ import type { PluginConfig } from "./config";
 import type { Role } from "../shared/types";
 import type { ProjectStore } from "../ui/types/state";
 import type { RenameMap } from "./config";
+import { rgbToHex } from "../shared/engine/clrUtils";
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
 
@@ -26,6 +27,15 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const clean = hex.replace(/^#/, "").padEnd(6, "0").slice(0, 6);
   const n = parseInt(clean, 16);
   return { r: ((n >> 16) & 0xff) / 255, g: ((n >> 8) & 0xff) / 255, b: (n & 0xff) / 255 };
+}
+
+// Display-only hex for a COLOR value coming out of Figma (0-1 floats). Returns
+// null for non-color values (aliases, scalars) — callers should skip the diff in that case.
+function colorValueToHex(value: unknown): string | null {
+  if (typeof value !== "object" || value === null) return null;
+  const { r, g, b } = value as { r?: number; g?: number; b?: number };
+  if (r === undefined || g === undefined || b === undefined) return null;
+  return rgbToHex(Math.round(r * 255), Math.round(g * 255), Math.round(b * 255));
 }
 
 // Shared value equality — covers COLOR (hex string or RGBA object), VARIABLE_ALIAS, scalar.
@@ -58,45 +68,113 @@ export function valuesEqual(a: unknown, b: unknown, varType: string): boolean {
 
 // ── Entry classifier ──────────────────────────────────────────────────────────
 
-export type EntryClass = "create" | "update" | "rename" | "rename+update" | "noop";
-
 export interface ClassifyEntry {
   tokenRef: string;
   name: string;
   // hex string for scale/source, RGBA object or alias for tokens
   value: unknown;
   description?: string;
+  // Token variables only (roleObj.scopes) — undefined/empty means figmaVars.ts
+  // will apply the ["ALL_SCOPES"] fallback, so that's also the default this
+  // gets compared against (see scopesEqual).
+  scopes?: VariableScope[];
+}
+
+function scopesEqual(current: VariableScope[] | undefined, intended: VariableScope[] | undefined): boolean {
+  const desired = intended && intended.length > 0 ? intended : (["ALL_SCOPES"] as VariableScope[]);
+  const curr = current ?? [];
+  return curr.length === desired.length && desired.every((s) => curr.includes(s));
+}
+
+// Display-only value diff for a single field. "color" when both sides resolve
+// to a hex (scale/source, or a direct-mode token); "reference" when the
+// intended (and/or current) value is a VARIABLE_ALIAS — carries both the
+// resolved target name AND its hex so the row never shows a bare, uncolored id.
+export type ValueFieldDiff =
+  | { kind: "color"; old: string; new: string }
+  | { kind: "reference"; oldRef: string; oldHex: string; newRef: string; newHex: string };
+
+export type ChangedField = "name" | "value" | "description" | "scopes";
+
+export type ChangeItemKind = "create" | "modify" | "delete";
+
+// changedFields is derived directly from field-by-field comparison — never
+// inferred — so a field can only appear here if it genuinely differs, keeping
+// "modify" rows honest about exactly what will be written.
+export interface ClassifyResult {
+  kind: ChangeItemKind;
+  changedFields: ChangedField[];
+  nameDiff?: { old: string; new: string };
+  valueDiff?: ValueFieldDiff;
+  descriptionDiff?: { old: string; new: string };
+  scopesDiff?: { old: VariableScope[]; new: VariableScope[] };
+}
+
+// Resolves a Figma variable id to a display name, for reference-value diffs.
+function resolveVariableName(id: string, localVars: Variable[]): string {
+  return localVars.find((v) => v.id === id)?.name ?? id;
 }
 
 // Pure diff classifier for a single intended variable vs its current Figma state.
-// Used by both computeSyncPreview (dry count) and VariableManager.upsertVariables (live tally).
+// Used by computeSyncPreview to build the field-level change list shown in the
+// Changes tab. `localVars` is only needed to resolve alias target names for display.
 export function classifyEntry(
   entry: ClassifyEntry,
   existing: Variable | undefined,
   modeId: string,
-): EntryClass {
-  if (!existing) return "create";
+  localVars: Variable[],
+): ClassifyResult {
+  if (!existing) return { kind: "create", changedFields: [] };
 
-  const nameChanged = existing.name !== entry.name;
+  const changedFields: ChangedField[] = [];
+  const result: ClassifyResult = { kind: "modify", changedFields };
+
+  if (existing.name !== entry.name) {
+    changedFields.push("name");
+    result.nameDiff = { old: existing.name, new: entry.name };
+  }
 
   const currentVal = existing.valuesByMode[modeId];
-  // Normalise hex string to RGB for comparison (same as upsertVariables does before writing)
   let intendedVal = entry.value;
   if (typeof intendedVal === "string" && intendedVal.length >= 3) {
     intendedVal = hexToRgb(intendedVal);
   }
-  const valueChanged =
-    currentVal === undefined ||
-    currentVal === null ||
-    !valuesEqual(currentVal, intendedVal, "COLOR");
+  const valueChanged = currentVal === undefined || currentVal === null || !valuesEqual(currentVal, intendedVal, "COLOR");
+  if (valueChanged) {
+    changedFields.push("value");
 
-  const descChanged = !!(entry.description && existing.description !== entry.description);
-  const contentChanged = valueChanged || descChanged;
+    const intendedIsAlias = typeof intendedVal === "object" && intendedVal !== null && (intendedVal as { type?: string }).type === "VARIABLE_ALIAS";
+    const currentIsAlias = typeof currentVal === "object" && currentVal !== null && (currentVal as { type?: string }).type === "VARIABLE_ALIAS";
 
-  if (nameChanged && contentChanged) return "rename+update";
-  if (nameChanged) return "rename";
-  if (contentChanged) return "update";
-  return "noop";
+    if (intendedIsAlias || currentIsAlias) {
+      const newRefId = intendedIsAlias ? (intendedVal as { id: string }).id : null;
+      const oldRefId = currentIsAlias ? (currentVal as { id: string }).id : null;
+      const newRef = newRefId ? resolveVariableName(newRefId, localVars) : "(direct value)";
+      const oldRef = oldRefId ? resolveVariableName(oldRefId, localVars) : "(direct value)";
+      const newHex = newRefId ? (colorValueToHex(localVars.find((v) => v.id === newRefId)?.valuesByMode[modeId]) ?? "") : (colorValueToHex(intendedVal) ?? "");
+      const oldHex = oldRefId ? (colorValueToHex(localVars.find((v) => v.id === oldRefId)?.valuesByMode[modeId]) ?? "") : (colorValueToHex(currentVal) ?? "");
+      result.valueDiff = { kind: "reference", oldRef, oldHex, newRef, newHex };
+    } else {
+      const oldValue = colorValueToHex(currentVal);
+      const newValue = colorValueToHex(intendedVal);
+      if (oldValue !== null && newValue !== null) {
+        result.valueDiff = { kind: "color", old: oldValue, new: newValue };
+      }
+    }
+  }
+
+  if (entry.description !== undefined && existing.description !== entry.description) {
+    changedFields.push("description");
+    result.descriptionDiff = { old: existing.description, new: entry.description };
+  }
+
+  if (!scopesEqual(existing.scopes, entry.scopes)) {
+    changedFields.push("scopes");
+    result.scopesDiff = { old: existing.scopes ?? [], new: entry.scopes && entry.scopes.length > 0 ? entry.scopes : (["ALL_SCOPES"] as VariableScope[]) };
+  }
+
+  if (changedFields.length === 0) return { kind: "modify", changedFields: [] }; // noop — caller filters these out
+  return result;
 }
 
 // ── Figma variable lookup ─────────────────────────────────────────────────────
@@ -232,21 +310,162 @@ export function detectStructuralChanges(savedState: any, newState: any): Structu
 
 // ── Analysis functions ────────────────────────────────────────────────────────
 
-export interface SyncPreviewItem {
-  tokenRef: string;
-  name: string;
-  collection: "token" | "scale" | "source";
-  action: "create" | "update" | "rename" | "rename+update" | "delete";
-  fromName?: string;
-}
+export type SyncPreviewItem =
+  | { tokenRef: string; name: string; collection: "token" | "scale" | "source"; kind: "create" }
+  | { tokenRef: string; name: string; collection: "token" | "scale" | "source"; kind: "delete" }
+  | {
+      tokenRef: string;
+      name: string;
+      collection: "token" | "scale" | "source";
+      kind: "modify";
+      changedFields: ChangedField[];
+      nameDiff?: { old: string; new: string };
+      valueDiff?: ValueFieldDiff;
+      descriptionDiff?: { old: string; new: string };
+      scopesDiff?: { old: VariableScope[]; new: VariableScope[] };
+    };
 
 export interface SyncPreview {
   toCreate: number;
-  toUpdate: number;
-  toRename: number;
+  toModify: number;
   toDelete: number;
   total: number;
   items: SyncPreviewItem[];
+}
+
+// Optional Figma lookup context so buildIntendedEntries can resolve token→scale
+// VARIABLE_ALIAS the same way the real writer does (figmaVars.ts STAGE 2: token
+// values in scale mode are aliases to the scale variable, not raw hex). Omitted
+// entirely (e.g. no Figma data available yet) falls back to raw hex, matching
+// skipScales behavior — callers that DO have Figma access (computeSyncPreview,
+// computeValueDrift) must pass this or token entries will always show as "update".
+export interface ScaleAliasContext {
+  scaleCol: VariableCollection | null;
+  localVars: Variable[];
+}
+
+// Walks an EngineResult + PluginConfig the same way regardless of whether it's
+// the current config or a saved baseline, producing the tokenRef→{name,value}
+// entries that would be written to each collection. Shared by computeSyncPreview
+// (current vs Figma) and computeValueDrift (current vs baseline vs Figma).
+export function buildIntendedEntries(result: EngineResult, config: PluginConfig, scaleAliasCtx?: ScaleAliasContext): { token: ClassifyEntry[]; scale: ClassifyEntry[]; source: ClassifyEntry[] } {
+  const { colorLabel, roleLabel, stepLabel } = makeLabelHelpers(config);
+  const tokenNameOrder: string[] = config.tokenNameSegments || ["color", "role", "variation"];
+  const skipScales = config.pluginMode === "direct" || config.includeColorScalesCollection === false;
+
+  // Figma variable descriptions are NOT per-mode — figmaVars.ts's sync loop writes
+  // a description on every theme pass, so the actually-stored value ends up being
+  // whichever theme was processed LAST (Object.keys(result.tokens) order), suffixed
+  // with "| THEME" and an adjusted-note. Must replicate that exact construction here
+  // or classifyEntry's description comparison falsely reports every token as changed.
+  const include = config.includeDescriptions !== false;
+  const themeKeys = result?.tokens ? Object.keys(result.tokens) : [];
+  const lastTheme = themeKeys[themeKeys.length - 1];
+
+  // Built up during the scale loop below (Figma variable name per stepName),
+  // so the token loop after it can resolve VARIABLE_ALIAS targets exactly like
+  // figmaVars.ts's scaleVarNameMap does — same lookup order (scale before token).
+  const scaleVarNameMap: Record<string, string> = {};
+
+  const scale: ClassifyEntry[] = [];
+  if (!skipScales && result?.scales) {
+    const scaleMetadataMap = scaleAliasCtx?.scaleCol ? buildMetadataMap(scaleAliasCtx.scaleCol, scaleAliasCtx.localVars, "scale:") : null;
+    for (const [colorName, scaleEntries] of Object.entries(result.scales)) {
+      const colorObj = config.colors?.find((c) => c.name === colorName);
+      const colorId = colorObj?._id || colorName;
+      const cLabel = colorLabel(colorName);
+      for (const [step, entry] of Object.entries(scaleEntries)) {
+        const scaleEntry = entry as { value?: string; description?: string; stepName?: string; contrast?: { light?: { ratio?: number; rating?: string }; dark?: { ratio?: number; rating?: string } } };
+        const contrastNote = include ? `L:${scaleEntry.contrast?.light?.ratio ?? "?"}(${scaleEntry.contrast?.light?.rating ?? "?"}) D:${scaleEntry.contrast?.dark?.ratio ?? "?"}(${scaleEntry.contrast?.dark?.rating ?? "?"})` : "";
+        const groupDesc = include ? scaleEntry.description : "";
+        const description = groupDesc && contrastNote ? `${groupDesc} | ${contrastNote}` : groupDesc || contrastNote || "";
+        const tokenRef = `scale:${colorId}/${step}`;
+        const suggestedName = `${cLabel}/${stepLabel(step)}`;
+        scale.push({ tokenRef, name: suggestedName, value: scaleEntry.value || null, description });
+
+        // Mirrors figmaVars.ts STAGE 1: prefer the scale variable's EXISTING Figma
+        // name (what a token alias would actually resolve to post-sync) over the
+        // suggested name, when the variable already exists and isn't being renamed.
+        if (scaleAliasCtx?.scaleCol && scaleEntry.stepName) {
+          const existingVar = scaleMetadataMap?.get(tokenRef) ?? scaleAliasCtx.localVars.find((v) => v.variableCollectionId === scaleAliasCtx.scaleCol!.id && v.name === suggestedName);
+          scaleVarNameMap[scaleEntry.stepName] = existingVar ? existingVar.name : suggestedName;
+        }
+      }
+    }
+  }
+
+  const token: ClassifyEntry[] = [];
+  const firstTheme = themeKeys[0];
+  if (firstTheme) {
+    for (const [colorName, roles] of Object.entries(result.tokens[firstTheme] as Record<string, Record<number, Record<number, TokenEntry>>>)) {
+      const colorObj = config.colors?.find((c) => c.name === colorName);
+      const colorId = colorObj?._id || colorName;
+      const cLabel = colorLabel(colorName);
+      for (const [roleId, variations] of Object.entries(roles)) {
+        const roleObj: Partial<Role> = config.roles?.[parseInt(roleId, 10)] || {};
+        const roleIdStr = roleObj._id || roleId;
+        const rName = roleObj.name || roleId;
+        const rLabel = roleLabel(rName, parseInt(roleId, 10));
+        const variationDefs = roleObj.variations ?? config.variations ?? [];
+        for (let vi = 0; vi < variationDefs.length; vi++) {
+          const token_ = variations[vi];
+          if (!token_) continue;
+          const varDef = variationDefs[vi];
+          const varIdStr = varDef._id || String(vi);
+          const dispName = config.useShorthandVariations && varDef.shorthand ? varDef.shorthand : varDef.name || String(vi);
+          const segParts: Record<string, string> = { color: cLabel, role: rLabel, variation: dispName };
+          const name = tokenNameOrder.map((s) => segParts[s] || s).join("/");
+
+          // Re-derive the last-theme token to build the description exactly as
+          // figmaVars.ts's sync loop would leave it (value/name are theme-invariant,
+          // so we still use firstTheme's token for those — only description differs).
+          const lastThemeToken = lastTheme ? (result.tokens[lastTheme]?.[colorName]?.[parseInt(roleId, 10)]?.[vi] as TokenEntry | undefined) : undefined;
+          const note = include && lastThemeToken?.isAdjusted ? " | ⚠ Adjusted" : "";
+          const themeNote = include && lastTheme ? lastTheme.toUpperCase() : "";
+          const roleDesc = include ? (lastThemeToken?.roleDescription ?? token_.roleDescription) : "";
+          let description = "";
+          if (roleDesc && themeNote) description = `${roleDesc} | ${themeNote}${note}`;
+          else if (roleDesc) description = roleDesc;
+          else if (themeNote) description = `${themeNote}${note}`;
+
+          // Mirrors figmaVars.ts STAGE 2: in scale mode the token's actual written
+          // value is a VARIABLE_ALIAS to its scale step, not the raw hex — classifyEntry
+          // must compare against that same alias shape or every token in scale mode
+          // would be permanently misclassified as "update".
+          let value: unknown = token_.value;
+          if (!skipScales && scaleAliasCtx?.scaleCol) {
+            const scaleFigmaName = token_.tokenRef ? scaleVarNameMap[token_.tokenRef] : undefined;
+            const targetVar = scaleFigmaName ? scaleAliasCtx.localVars.find((v) => v.variableCollectionId === scaleAliasCtx.scaleCol!.id && v.name === scaleFigmaName) : null;
+            if (targetVar) value = { type: "VARIABLE_ALIAS", id: targetVar.id };
+          }
+
+          token.push({ tokenRef: `token:${colorId}/${roleIdStr}/${varIdStr}`, name, value, description, scopes: roleObj.scopes });
+        }
+      }
+    }
+  }
+
+  const source: ClassifyEntry[] = [];
+  if (config.includeSourceColors && config.colors) {
+    for (const color of config.colors) {
+      const colorId = color._id || color.name;
+      const cLabel = colorLabel(color.name);
+      const groupDesc = include ? color.description || "Brand constant — raw hex, no theme processing" : "";
+      source.push({ tokenRef: `source:${colorId}`, name: `${cLabel}/${cLabel}`, value: color.value, description: groupDesc });
+      if (config.alphaValues?.length) {
+        // Mirrors figmaVars.ts's syncGlobalColors: alpha variants are written as an
+        // {r,g,b,a} object (opacity baked into `a`), not the raw hex — classifyEntry
+        // must compare against that same shape or every alpha variant would be
+        // permanently misclassified as "update" (hex has no alpha channel to match).
+        const rgb = hexToRgb(color.value);
+        for (const opacity of config.alphaValues) {
+          source.push({ tokenRef: `source:${colorId}/${opacity}`, name: `${cLabel}/Alpha/${opacity}`, value: { ...rgb, a: opacity / 100 }, description: include ? `${opacity}% opacity variant` : "" });
+        }
+      }
+    }
+  }
+
+  return { token, scale, source };
 }
 
 export function computeSyncPreview(
@@ -267,13 +486,11 @@ export function computeSyncPreview(
   const sourceCol = collections.find((c) => c.name === sourceColName) || null;
 
   let toCreate = 0;
-  let toUpdate = 0;
-  let toRename = 0;
+  let toModify = 0;
   let toDelete = 0;
   const items: SyncPreviewItem[] = [];
 
-  const { colorLabel, roleLabel, stepLabel } = makeLabelHelpers(config);
-  const tokenNameOrder: string[] = config.tokenNameSegments || ["color", "role", "variation"];
+  const intended = buildIntendedEntries(result, config, { scaleCol, localVars });
 
   // Returns the set of tokenRefs that the engine intends to write into this collection.
   // Side-effects: increments counters and pushes SyncPreviewItems.
@@ -289,103 +506,170 @@ export function computeSyncPreview(
     if (!col) {
       toCreate += entries.length;
       for (const entry of entries) {
-        items.push({ tokenRef: entry.tokenRef, name: entry.name, collection, action: "create" });
+        items.push({ tokenRef: entry.tokenRef, name: entry.name, collection, kind: "create" });
       }
       return intendedRefs;
     }
     const map = buildMetadataMap(col, localVars, prefix);
     for (const entry of entries) {
       const existing = map.get(entry.tokenRef);
-      const cls = classifyEntry(entry, existing, modeId);
-      if (cls === "create")        toCreate++;
-      if (cls === "update")        toUpdate++;
-      if (cls === "rename")        toRename++;
-      if (cls === "rename+update") { toRename++; toUpdate++; }
-      if (cls !== "noop") {
+      const classified = classifyEntry(entry, existing, modeId, localVars);
+      if (classified.kind === "create") {
+        toCreate++;
+        items.push({ tokenRef: entry.tokenRef, name: entry.name, collection, kind: "create" });
+      } else if (classified.kind === "modify" && classified.changedFields.length > 0) {
+        toModify++;
         items.push({
           tokenRef: entry.tokenRef,
           name: entry.name,
           collection,
-          action: cls,
-          fromName: (cls === "rename" || cls === "rename+update") ? existing?.name : undefined,
+          kind: "modify",
+          changedFields: classified.changedFields,
+          nameDiff: classified.nameDiff,
+          valueDiff: classified.valueDiff,
+          descriptionDiff: classified.descriptionDiff,
+          scopesDiff: classified.scopesDiff,
         });
       }
+      // changedFields.length === 0 is a noop — not pushed, matches prior behavior.
     }
     // Variables in Figma with a valid tokenRef not in the intended set → will be purged.
     for (const [ref, variable] of map) {
       if (!intendedRefs.has(ref)) {
         toDelete++;
-        items.push({ tokenRef: ref, name: variable.name, collection, action: "delete", fromName: variable.name });
+        items.push({ tokenRef: ref, name: variable.name, collection, kind: "delete" });
       }
     }
     return intendedRefs;
   }
 
   // Token variables (first theme only — variable set is the same across themes, only values differ per mode)
-  if ((scope === "all" || scope === "roles") && result?.tokens) {
-    const firstTheme = Object.keys(result.tokens)[0];
+  if ((scope === "all" || scope === "roles") && intended.token.length > 0) {
     const modeId = tokenCol ? (tokenCol.modes[0]?.modeId ?? "") : "";
-    if (firstTheme) {
-      const entries: ClassifyEntry[] = [];
-      for (const [colorName, roles] of Object.entries(result.tokens[firstTheme] as Record<string, Record<number, Record<number, TokenEntry>>>)) {
-        const colorObj = config.colors?.find((c) => c.name === colorName);
-        const colorId = colorObj?._id || colorName;
-        const cLabel = colorLabel(colorName);
-        for (const [roleId, variations] of Object.entries(roles)) {
-          const roleObj: Partial<Role> = config.roles?.[parseInt(roleId, 10)] || {};
-          const roleIdStr = roleObj._id || roleId;
-          const rName = roleObj.name || roleId;
-          const rLabel = roleLabel(rName, parseInt(roleId, 10));
-          const variationDefs = roleObj.variations ?? config.variations ?? [];
-          for (let vi = 0; vi < variationDefs.length; vi++) {
-            const token = variations[vi];
-            if (!token) continue;
-            const varDef = variationDefs[vi];
-            const varIdStr = varDef._id || String(vi);
-            const dispName = config.useShorthandVariations && varDef.shorthand ? varDef.shorthand : varDef.name || String(vi);
-            const segParts: Record<string, string> = { color: cLabel, role: rLabel, variation: dispName };
-            const name = tokenNameOrder.map((s) => segParts[s] || s).join("/");
-            entries.push({ tokenRef: `token:${colorId}/${roleIdStr}/${varIdStr}`, name, value: token.value, description: token.roleDescription });
-          }
-        }
-      }
-      checkEntries(tokenCol, "token:", entries, modeId);
-    }
+    checkEntries(tokenCol, "token:", intended.token, modeId);
   }
 
   // Scale variables
-  if (!skipScales && (scope === "all" || scope === "scale") && result?.scales) {
+  if (!skipScales && (scope === "all" || scope === "scale") && intended.scale.length > 0) {
     const modeId = scaleCol ? (scaleCol.modes[0]?.modeId ?? "") : "";
-    const entries: ClassifyEntry[] = [];
-    for (const [colorName, scale] of Object.entries(result.scales)) {
-      const colorObj = config.colors?.find((c) => c.name === colorName);
-      const colorId = colorObj?._id || colorName;
-      const cLabel = colorLabel(colorName);
-      for (const [step, entry] of Object.entries(scale)) {
-        entries.push({ tokenRef: `scale:${colorId}/${step}`, name: `${cLabel}/${stepLabel(step)}`, value: (entry as { value?: string })?.value || null });
-      }
-    }
-    checkEntries(scaleCol, "scale:", entries, modeId);
+    checkEntries(scaleCol, "scale:", intended.scale, modeId);
   }
 
-  // Source constants — use colorLabel so shorthand setting is respected (bug fix: was using color.name raw)
-  if (config.includeSourceColors && config.colors) {
+  // Source constants
+  if (config.includeSourceColors && intended.source.length > 0) {
     const modeId = sourceCol ? (sourceCol.modes[0]?.modeId ?? "") : "";
-    const entries: ClassifyEntry[] = [];
-    for (const color of config.colors) {
-      const colorId = color._id || color.name;
-      const cLabel = colorLabel(color.name);
-      entries.push({ tokenRef: `source:${colorId}`, name: `${cLabel}/${cLabel}`, value: color.value });
-      if (config.alphaValues?.length) {
-        for (const opacity of config.alphaValues) {
-          entries.push({ tokenRef: `source:${colorId}/${opacity}`, name: `${cLabel}/Opacities/${opacity}`, value: color.value });
-        }
-      }
-    }
-    checkEntries(sourceCol, "source:", entries, modeId);
+    checkEntries(sourceCol, "source:", intended.source, modeId);
   }
 
-  return { toCreate, toUpdate, toRename, toDelete, total: toCreate + toUpdate + toRename + toDelete, items };
+  return { toCreate, toModify, toDelete, total: toCreate + toModify + toDelete, items };
+}
+
+// ── Value drift (incoming: Figma edited directly, plugin closed) ─────────────
+//
+// Distinct from computeSyncPreview's "modify" kind: that compares the CURRENT
+// config against Figma to decide what the plugin is about to WRITE. This instead
+// compares Figma's actual current value against the last-SYNCED baseline
+// (tw_state, re-run through the engine) to detect edits made directly in Figma's
+// own variables panel while the plugin was closed — something the plugin would
+// otherwise silently clobber on the next sync with no warning.
+//
+// "drift"    — Figma changed since baseline, current config did not (safe to
+//              adopt Figma's edit or overwrite with the unchanged plugin value).
+// "conflict" — Figma changed since baseline AND the config also changed the same
+//              token to a different value — both sides edited it independently.
+
+export type ValueDriftKind = "drift" | "conflict";
+
+export interface ValueDriftItem {
+  tokenRef: string;
+  name: string;
+  collection: "token" | "scale" | "source";
+  kind: ValueDriftKind;
+  baselineValue: string;
+  figmaValue: string;
+  configValue: string;
+}
+
+function collectHexByRef(entries: ClassifyEntry[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const entry of entries) {
+    if (typeof entry.value === "string") map.set(entry.tokenRef, entry.value);
+  }
+  return map;
+}
+
+export function computeValueDrift(
+  baselineResult: EngineResult | null,
+  baselineConfig: PluginConfig | null,
+  result: EngineResult,
+  config: PluginConfig,
+  localVars: Variable[],
+  collections: VariableCollection[],
+): ValueDriftItem[] {
+  if (!baselineResult || !baselineConfig) return [];
+
+  const tokenColName = config.tokenCollectionName || "color tokens";
+  const scaleColName = config.scaleCollectionName || "_scale";
+  const sourceColName = config.sourceCollectionName || "_constants";
+  const tokenCol = collections.find((c) => c.name === tokenColName) || null;
+  const scaleCol = collections.find((c) => c.name === scaleColName) || null;
+  const sourceCol = collections.find((c) => c.name === sourceColName) || null;
+
+  const intended = buildIntendedEntries(result, config, { scaleCol, localVars });
+  const baseline = buildIntendedEntries(baselineResult, baselineConfig, { scaleCol, localVars });
+
+  const items: ValueDriftItem[] = [];
+
+  function checkCollection(
+    col: VariableCollection | null,
+    prefix: "token:" | "scale:" | "source:",
+    entries: ClassifyEntry[],
+    baselineEntries: ClassifyEntry[],
+  ) {
+    if (!col) return;
+    const collection = prefix === "token:" ? "token" : prefix === "scale:" ? "scale" : "source";
+    const modeId = col.modes[0]?.modeId ?? "";
+    const map = buildMetadataMap(col, localVars, prefix);
+    const baselineByRef = collectHexByRef(baselineEntries);
+
+    for (const entry of entries) {
+      const baselineValue = baselineByRef.get(entry.tokenRef);
+      if (baselineValue === undefined) continue; // new token since baseline — nothing to drift-check
+
+      const existing = map.get(entry.tokenRef);
+      if (!existing) continue; // not yet created in Figma — nothing to drift-check
+
+      const figmaHex = colorValueToHex(existing.valuesByMode[modeId]);
+      if (figmaHex === null) continue;
+
+      const figmaMatchesBaseline = valuesEqual(hexToRgb(figmaHex), hexToRgb(baselineValue), "COLOR");
+      if (figmaMatchesBaseline) continue; // Figma untouched since last sync — no drift
+
+      const configValue = typeof entry.value === "string" ? entry.value : null;
+      if (configValue === null) continue;
+
+      const figmaMatchesConfig = valuesEqual(hexToRgb(figmaHex), hexToRgb(configValue), "COLOR");
+      if (figmaMatchesConfig) continue; // Figma already matches what the plugin would write — nothing to flag
+
+      const configMatchesBaseline = valuesEqual(hexToRgb(configValue), hexToRgb(baselineValue), "COLOR");
+
+      items.push({
+        tokenRef: entry.tokenRef,
+        name: entry.name,
+        collection,
+        kind: configMatchesBaseline ? "drift" : "conflict",
+        baselineValue,
+        figmaValue: figmaHex,
+        configValue,
+      });
+    }
+  }
+
+  checkCollection(tokenCol, "token:", intended.token, baseline.token);
+  checkCollection(scaleCol, "scale:", intended.scale, baseline.scale);
+  checkCollection(sourceCol, "source:", intended.source, baseline.source);
+
+  return items;
 }
 
 export interface NameConflict {
@@ -472,7 +756,7 @@ export function analyzeNameConflicts(
       if (config.alphaValues?.length) {
         for (const opacityInt of config.alphaValues) {
           const alphaRef = `source:${colorId}/${opacityInt}`;
-          const alphaSuggested = `${label}/Opacities/${opacityInt}`;
+          const alphaSuggested = `${label}/Alpha/${opacityInt}`;
           const alphaVar = sourceMetadataMap.get(alphaRef);
           if (alphaVar && alphaVar.name !== alphaSuggested) {
             conflicts.push({ tokenRef: alphaRef, figmaName: alphaVar.name, suggestedName: alphaSuggested, type: "source" });
@@ -494,17 +778,22 @@ export interface PrePublishReport {
   conflicts: NameConflict[];
   structuralChanges: StructuralChange[];
   items: SyncPreviewItem[];
+  valueDrift: ValueDriftItem[];
 }
 
 // Single entry point for all pre-publish analysis. Called from index.ts check-collections handler.
 // `renames` is pre-computed by the caller (index.ts) using buildVariableRenameMap from config.ts
 // to avoid a circular import (variableTracker ← config ← variableTracker).
+// `baselineResult`/`baselineConfig` are the engine re-run against tw_state (the last-synced
+// baseline) — null when there's no prior sync yet, in which case value drift can't be computed.
 export async function runPrePublishAnalysis(
   state: ProjectStore,
   savedState: ProjectStore | null,
   config: PluginConfig,
   result: EngineResult,
   renames: RenameMap,
+  baselineConfig: PluginConfig | null,
+  baselineResult: EngineResult | null,
 ): Promise<PrePublishReport> {
   const [localVars, collections] = await Promise.all([
     figma.variables.getLocalVariablesAsync(),
@@ -535,5 +824,7 @@ export async function runPrePublishAnalysis(
 
   const structuralChanges = detectStructuralChanges(savedState, state);
 
-  return { existing, renames, syncPreview, conflicts, structuralChanges, items: syncPreview.items };
+  const valueDrift = computeValueDrift(baselineResult, baselineConfig, result, config, localVars, collections);
+
+  return { existing, renames, syncPreview, conflicts, structuralChanges, items: syncPreview.items, valueDrift };
 }

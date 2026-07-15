@@ -28,13 +28,13 @@ Source: direct code audit of `src/ui/`, `src/figma/`, `src/shared/` at HEAD (bra
 ### Figma variable output
 
 - Scale collection (`_scale` by default) — full tonal ramp per color as Figma variables.
-- `includeColorScalesCollection` toggle — gates whether the scale collection is written, via a single `skipScales` flag in `src/figma/figmaVars.ts` that *also* controls whether tokens alias or use raw hex (these are not independent — turning off the scale collection in Scale mode makes tokens fall back to raw hex, same as Direct mode. An earlier version of this doc's sibling docs incorrectly described these as independent; corrected 2026-07-15).
+- `includeColorScalesCollection` toggle — gates whether the scale collection is written, via a single `skipScales` flag in `src/figma/figmaVars.ts` that _also_ controls whether tokens alias or use raw hex (these are not independent — turning off the scale collection in Scale mode makes tokens fall back to raw hex, same as Direct mode. An earlier version of this doc's sibling docs incorrectly described these as independent; corrected 2026-07-15).
 - Token collection — contextual role variables referencing scale steps (aliases) or embedded hex.
 - There is no `resolveTokensDirectly` field. Raw-hex-instead-of-alias behavior is driven entirely by `skipScales` (`pluginMode === "direct"`, or `includeColorScalesCollection === false`, or the scale collection doesn't exist yet and sync scope excludes it).
 - Source colors collection (`_constants` by default) — raw brand hex values, no theme processing; enabled by `includeSourceColors`.
-- Alpha tint variables under `ColorName/Opacities/{n}` — see alphaValues note above.
+- Alpha tint variables under `ColorName/Alpha/{n}` — see alphaValues note above.
 - Variable descriptions — contrast metadata written into Figma variable descriptions; enabled by `includeDescriptions`.
-- Stable `_id` rename detection — reorder/rename colors, roles, *and variations* (including per-role custom lists) without duplicate variable creation. **Correction:** an earlier version of this doc listed per-role variation rename tracking as a known gap — it is not; `src/figma/config.ts`'s `_getTokenRenames`/`getVarMap` tracks variation renames by `_id` for both the global list and per-role lists.
+- Stable `_id` rename detection — reorder/rename colors, roles, _and variations_ (including per-role custom lists) without duplicate variable creation. **Correction:** an earlier version of this doc listed per-role variation rename tracking as a known gap — it is not; `src/figma/config.ts`'s `_getTokenRenames`/`getVarMap` tracks variation renames by `_id` for both the global list and per-role lists.
 - Two persisted state slots, not one: `tw_ui_state` (auto-saved every store change, restored on next launch) and `tw_state` (written only after a successful sync, used as the rename/diff baseline).
 - Four-stage sync (`VariableManager.sync()`), not three: scale collection → token collection → source colors → **purge orphaned variables** (structural-change cleanup; this stage was previously undocumented).
 
@@ -88,8 +88,8 @@ Source: direct code audit of `src/ui/`, `src/figma/`, `src/shared/` at HEAD (bra
 
 ## ⚠️ UI state with no engine effect
 
-| Field                          | Notes                                                                                                  |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Field                              | Notes                                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `role.scaleAlgorithm` (Scale mode) | Fully wired in UI/persistence/export; silently ignored by `_generateScales`. See "needs verification" above. |
 
 No other dead fields confirmed as of 2026-07-15 — a fresh audit of `ProjectStore` found every other field wired to a UI control and consumed by the engine or sync pipeline somewhere.

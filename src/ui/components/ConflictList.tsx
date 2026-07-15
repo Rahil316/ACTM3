@@ -44,7 +44,7 @@ export function ConflictList({ conflicts, decisions, onChange, onKeepAll, onOver
         </div>
 
         {/* Bulk actions */}
-        <div className="shrink-0 flex flex-col gap-1.5 px-3 py-2 border-b border-n-br-default">
+        <div className="shrink-0 flex items-center justify-between gap-1.5 px-3 py-2 border-b border-n-br-default">
           <HelperText className="text-n-tx-dim">{bulkValue === null ? "Mixed — some items differ" : bulkValue === "keep" ? "All keeping Figma names" : "Change Figma names with System names"}</HelperText>
           <SegmentedControl
             segments={[

@@ -23,7 +23,7 @@ export type RunPhase =
   | "success"
   | "error";
 
-export type RunDialogTab = "summary" | "changes" | "health";
+export type RunDialogTab = "summary" | "changes" | "value-drift" | "health";
 
 export function useRunDialogState(
   projectStore: ProjectStore,
@@ -44,7 +44,7 @@ export function useRunDialogState(
   const [structuralChanges, setStructuralChanges] = useState<StructuralChange[]>([]);
   const [previewWasInterrupted, setPreviewWasInterrupted] = useState(false);
 
-  const { conflicts, decisions, loadConflicts, setDecision, runSync } = useSyncSession(projectStore, savedState);
+  const { conflicts, decisions, loadConflicts, setDecision, driftItems, driftDecisions, loadValueDrift, setDriftDecision, runSync } = useSyncSession(projectStore, savedState);
 
   // Tracks whether the last check-collections response still reflects the
   // current projectStore. Set true the moment projectStore changes after an
@@ -108,9 +108,10 @@ export function useRunDialogState(
       setPreviewItems(msg.items ?? []);
       setStructuralChanges(msg.structuralChanges ?? []);
       loadConflicts(msg.conflicts ?? []);
+      loadValueDrift(msg.valueDrift ?? []);
       setIsStale(false);
     },
-    [loadConflicts],
+    [loadConflicts, loadValueDrift],
   );
 
   // Re-check debounced: whenever projectStore changes while the dialog is
@@ -137,7 +138,13 @@ export function useRunDialogState(
     [runSync],
   );
 
+  // Every drift/conflict item must have an explicit keep-Figma/use-plugin
+  // decision before sync is allowed to proceed — there is no safe default,
+  // since either choice can silently discard someone's edit.
+  const allDriftDecided = driftItems.every((item) => !!driftDecisions[item.tokenRef]);
+
   const handleConfirmRun = useCallback(() => {
+    if (!allDriftDecided) return;
     const validationIssues = validate();
     if (validationIssues && validationIssues.length > 0) {
       setIssues(validationIssues);
@@ -145,7 +152,7 @@ export function useRunDialogState(
       return;
     }
     doSync(scope);
-  }, [validate, doSync, scope]);
+  }, [validate, doSync, scope, allDriftDecided]);
 
   const handleStartPreview = useCallback(() => {
     setPreviewWasInterrupted(false);
@@ -219,6 +226,11 @@ export function useRunDialogState(
     conflicts,
     decisions,
     setDecision,
+    // value-drift resolution (from useSyncSession)
+    driftItems,
+    driftDecisions,
+    setDriftDecision,
+    allDriftDecided,
     // actions
     onDialogOpen,
     onCollectionCheckResult,

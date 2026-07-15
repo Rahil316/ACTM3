@@ -1,29 +1,35 @@
-// Shared display metadata for sync-preview actions and structural-change kinds.
+// Shared display metadata for sync-preview items and structural-change kinds.
 // Centralized here (rather than duplicated per-tab) so that adding a new
-// SyncPreviewItem["action"] or StructuralChangeKind value is a compile error
-// until every map below is updated — `satisfies Record<Union, …>` makes each
-// map exhaustive over its union type.
+// SyncPreviewItem["kind"]/ChangedField or StructuralChangeKind value is a
+// compile error until every map below is updated — `satisfies Record<Union, …>`
+// makes each map exhaustive over its union type.
 
-import type { SyncPreviewItem } from "../../types/messages";
+import type { SyncPreviewItem, ChangedField } from "../../types/messages";
 import type { StructuralChangeKind } from "../../types/messages";
 
-type SyncAction = SyncPreviewItem["action"];
+type ItemKind = SyncPreviewItem["kind"];
 
-export const ACTION_VARIANT = {
+export const KIND_VARIANT = {
   create: "success",
-  update: "accent",
-  rename: "warning",
-  "rename+update": "warning",
+  modify: "accent",
   delete: "danger",
-} satisfies Record<SyncAction, "success" | "accent" | "warning" | "danger">;
+} satisfies Record<ItemKind, "success" | "accent" | "warning" | "danger">;
 
-export const ACTION_LABEL = {
+export const KIND_LABEL = {
   create: "New",
-  update: "Updated",
-  rename: "Renamed",
-  "rename+update": "Renamed",
+  modify: "Modified",
   delete: "Removed",
-} satisfies Record<SyncAction, string>;
+} satisfies Record<ItemKind, string>;
+
+// Short chip text per changed field, shown on a "modify" row so the user sees
+// exactly which parts of the variable will be written — never a bare "Updated"
+// with no indication of what actually changed.
+export const FIELD_LABEL = {
+  name: "Name",
+  value: "Value",
+  description: "Description",
+  scopes: "Scopes",
+} satisfies Record<ChangedField, string>;
 
 export const COLLECTION_LABEL: Record<string, string> = {
   token: "Token",

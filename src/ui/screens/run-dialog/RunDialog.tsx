@@ -11,16 +11,16 @@ import { OperationOverlay, SuccessOverlay, ErrorOverlay, ValidationWarningOverla
 import { banner } from "../../store/bannerStore";
 import { SummaryTab } from "./tabs/SummaryTab";
 import { ChangesTab } from "./tabs/ChangesTab";
+import { ValueDriftTab } from "./tabs/ValueDriftTab";
 import { HealthTab, type MetricKey } from "./tabs/health/HealthTab";
 import { ConflictList } from "../../components/ConflictList";
 import type { SyncPreview, SyncScope } from "../../types/messages";
 
 function getSyncLabel(p: SyncPreview): string {
-  const { toCreate, toUpdate, toRename, toDelete } = p;
-  if (toCreate > 0 && toUpdate === 0 && toRename === 0 && toDelete === 0) return "Create Variables";
-  if (toCreate === 0 && toUpdate > 0 && toRename === 0 && toDelete === 0) return "Update Variables";
-  if (toCreate === 0 && toUpdate === 0 && toRename > 0 && toDelete === 0) return "Apply Renames";
-  if (toCreate === 0 && toUpdate === 0 && toRename === 0 && toDelete > 0) return "Remove Variables";
+  const { toCreate, toModify, toDelete } = p;
+  if (toCreate > 0 && toModify === 0 && toDelete === 0) return "Create Variables";
+  if (toCreate === 0 && toModify > 0 && toDelete === 0) return "Update Variables";
+  if (toCreate === 0 && toModify === 0 && toDelete > 0) return "Remove Variables";
   return "Sync Variables";
 }
 
@@ -62,13 +62,13 @@ export function RunDialog() {
   };
   useFigmaBridge(callbacks);
 
-  const [changesFilter, setChangesFilter] = useState<"all" | "create" | "update" | "rename" | "delete">("all");
+  const [changesFilter, setChangesFilter] = useState<"all" | "create" | "modify" | "delete">("all");
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [healthMetric, setHealthMetric] = useState<MetricKey>("adjustments");
 
   if (!isOpen) return null;
 
-  const { syncPreview, previewItems, structuralChanges, conflicts, decisions, existingCollections, isStale } = dialog;
+  const { syncPreview, previewItems, structuralChanges, conflicts, decisions, existingCollections, isStale, driftItems, driftDecisions, setDriftDecision, allDriftDecided } = dialog;
 
   // isChecking: no result yet at all (initial load). isStale: we have a
   // result, but the project has changed since and a re-check is pending —
@@ -96,9 +96,22 @@ export function RunDialog() {
       "Health"
     );
 
+  const valueDriftLabel =
+    driftItems.length > 0 ? (
+      <span className="flex items-center gap-1">
+        Figma Edits{" "}
+        <Badge variant={allDriftDecided ? "warning" : "danger"} size="xs">
+          {driftItems.length}
+        </Badge>
+      </span>
+    ) : (
+      "Figma Edits"
+    );
+
   const tabs: { value: RunDialogTab; label: React.ReactNode }[] = [
     { value: "summary", label: "Summary" },
     { value: "changes", label: changesLabel },
+    { value: "value-drift", label: valueDriftLabel },
     { value: "health", label: healthLabel },
   ];
 
@@ -141,13 +154,23 @@ export function RunDialog() {
 
             {dialog.activeTab === "changes" && <ChangesTab previewItems={previewItems} conflicts={conflicts} decisions={decisions} setDecision={dialog.setDecision} total={syncPreview?.total ?? 0} isChecking={isCheckingOrStale} initialFilter={changesFilter} />}
 
+            {dialog.activeTab === "value-drift" && <ValueDriftTab items={driftItems} decisions={driftDecisions} setDecision={setDriftDecision} isChecking={isCheckingOrStale} />}
+
             {dialog.activeTab === "health" && <HealthTab initialMetric={healthMetric} />}
           </div>
 
           {/* Footer */}
           <div className="shrink-0 px-3 py-3 border-t border-n-br-default flex gap-2">
             <Button variant="secondary" size="xl" label={isPreviewSelected ? "Update Canvas Preview" : "Preview in Canvas"} onClick={dialog.handleStartPreview} className="flex-1" />
-            <Button variant="primary" size="xl" label={syncLabel} onClick={dialog.handleConfirmRun} disabled={isCheckingOrStale || nothingToSync} title={isCheckingOrStale ? "Checking Figma collections…" : nothingToSync ? "All variables are already up to date in Figma" : undefined} className="flex-1" />
+            <Button
+              variant="primary"
+              size="xl"
+              label={syncLabel}
+              onClick={dialog.handleConfirmRun}
+              disabled={isCheckingOrStale || nothingToSync || !allDriftDecided}
+              title={isCheckingOrStale ? "Checking Figma collections…" : nothingToSync ? "All variables are already up to date in Figma" : !allDriftDecided ? "Resolve all Figma edits in the \"Figma Edits\" tab before syncing" : undefined}
+              className="flex-1"
+            />
           </div>
 
           {/* Conflict resolution sheet — rendered at modal root so Sheet slides within the dialog */}

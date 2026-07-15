@@ -1,9 +1,9 @@
 import type { ProjectStore, UiPrefs } from "./state";
 import type { ExportFile } from "../../shared/exportEng/types";
-import type { NameConflict, SyncPreview, SyncPreviewItem } from "../../figma/variableTracker";
+import type { NameConflict, SyncPreview, SyncPreviewItem, ValueDriftItem } from "../../figma/variableTracker";
 import type { StructuralChange } from "../../figma/config";
 export type { ExportFile } from "../../shared/exportEng/types";
-export type { NameConflict, SyncPreview, SyncPreviewItem } from "../../figma/variableTracker";
+export type { NameConflict, SyncPreview, SyncPreviewItem, ValueDriftItem, ValueDriftKind, ChangedField, ValueFieldDiff } from "../../figma/variableTracker";
 export type { StructuralChangeKind, StructuralChange } from "../../figma/config";
 
 // ── Plugin → UI messages ─────────────────────────────────────────────────────
@@ -27,6 +27,7 @@ export interface CollectionCheckResultMessage {
   syncPreview?: SyncPreview;
   structuralChanges?: StructuralChange[];
   items?: SyncPreviewItem[];
+  valueDrift?: ValueDriftItem[];
 }
 
 export interface FinishMessage {
@@ -94,12 +95,17 @@ export type PluginToUiMessage =
 
 export type SyncDecision = "keep" | "revert" | "hold-delete";
 
+// Per-tokenRef choice for a value-drift item (Figma edited directly since last
+// sync): keep Figma's edit (skip the write) or overwrite with the plugin's value.
+export type DriftDecision = "keep-figma" | "use-plugin";
+
 export interface RunCreatorMessage {
   type: "run-creator";
   state: ProjectStore;
   scope: SyncScope;
   savedState?: ProjectStore | null;
   decisions?: Record<string, SyncDecision>;
+  driftDecisions?: Record<string, DriftDecision>;
 }
 
 export interface CheckCollectionsMessage {

@@ -28,7 +28,7 @@ interface SummaryTabProps {
   previewWasInterrupted: boolean;
   setPreviewWasInterrupted: (v: boolean) => void;
   setActiveTab: (tab: RunDialogTab) => void;
-  setChangesFilter: (filter: "all" | "create" | "update" | "rename" | "delete") => void;
+  setChangesFilter: (filter: "all" | "create" | "modify" | "delete") => void;
   setHealthMetric: (metric: MetricKey) => void;
   onOpenConflicts: () => void;
 }
@@ -53,7 +53,7 @@ export function SummaryTab({
   setChangesFilter,
   setHealthMetric,
 }: SummaryTabProps) {
-  function goToChanges(filter: "all" | "create" | "update" | "rename" | "delete") {
+  function goToChanges(filter: "all" | "create" | "modify" | "delete") {
     setChangesFilter(filter);
     setActiveTab("changes");
   }
@@ -79,10 +79,9 @@ export function SummaryTab({
             <EmptyState icon={<IconCheck className="w-5 h-5" />} title="Up to date" description="Figma variables already match the current configuration — nothing to sync." />
           ) : (
             <div className="flex flex-col gap-2 py-1">
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 <StatChip count={syncPreview.toCreate} label="Create" variant="success" onClick={() => goToChanges("create")} />
-                <StatChip count={syncPreview.toUpdate} label="Update" variant="accent" onClick={() => goToChanges("update")} />
-                <StatChip count={syncPreview.toRename} label="Rename" variant="warning" onClick={() => goToChanges("rename")} />
+                <StatChip count={syncPreview.toModify} label="Modify" variant="accent" onClick={() => goToChanges("modify")} />
                 <StatChip count={syncPreview.toDelete} label="Delete" variant="danger" onClick={() => goToChanges("delete")} />
               </div>
               <Caption className="text-n-tx-dim">
@@ -123,13 +122,13 @@ export function SummaryTab({
             label="Collections"
             control={
               existingCollections.length > 0 ? (
-                <div className="flex gap-1 flex-wrap justify-end">
+                <div className="flex gap-1 flex-wrap">
                   {existingCollections.map((c) => (
                     <Badge key={c.id} variant="outline" size="xs">{c.name}</Badge>
                   ))}
                 </div>
               ) : (
-                <HelperText className="text-n-tx-dim text-right">Will be created</HelperText>
+                <HelperText className="text-n-tx-dim">Will be created</HelperText>
               )
             }
           />
@@ -137,7 +136,7 @@ export function SummaryTab({
             <SmallRow
               label={`Theme${themes.length !== 1 ? "s" : ""}`}
               control={
-                <div className="flex gap-1 flex-wrap justify-end">
+                <div className="flex gap-1 flex-wrap">
                   {themes.map((t, i) => (
                     <Badge
                       key={t.name}

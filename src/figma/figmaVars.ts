@@ -70,7 +70,7 @@ export const VariableManager = {
     return renamed;
   },
 
-  async sync(result: AnyObj, config: AnyObj, scope: "all" | "scale" | "roles" = "all", projectStore: AnyObj | null = null, savedProjectStore: AnyObj | null = null, decisions: Record<string, "keep" | "revert"> = {}): Promise<void> {
+  async sync(result: AnyObj, config: AnyObj, scope: "all" | "scale" | "roles" = "all", projectStore: AnyObj | null = null, savedProjectStore: AnyObj | null = null, decisions: Record<string, "keep" | "revert"> = {}, driftDecisions: Record<string, "keep-figma" | "use-plugin"> = {}): Promise<void> {
     const startedAt = Date.now();
     this.tally = { created: 0, updated: 0, renamed: 0, removed: 0, failed: 0 };
     this.mutations = new Map<string, "created" | "renamed" | "updated">();
@@ -125,7 +125,7 @@ export const VariableManager = {
           this.scaleVarNameMap[entry.stepName] = actualName;
         }
       }
-      await this.upsertVariables(scaleCol, modeId, allScaleVars, scaleMetadataMap, decisions);
+      await this.upsertVariables(scaleCol, modeId, allScaleVars, scaleMetadataMap, decisions, driftDecisions);
     } else {
       // If scale collection is not active, build mapping directly
       for (const [colorName, scale] of Object.entries(result.scales as Record<string, AnyObj>)) {
@@ -202,7 +202,7 @@ export const VariableManager = {
               })
               .filter(Boolean) as [string, string, AnyObj, string, string, VariableScope[]?][];
 
-            await this.upsertVariables(tokenCol, modeId, vars, tokenMetadataMap, decisions);
+            await this.upsertVariables(tokenCol, modeId, vars, tokenMetadataMap, decisions, driftDecisions);
           }
         }
       }
@@ -216,7 +216,7 @@ export const VariableManager = {
 
     // STAGE 3: Source Colors collection
     if (config.includeSourceColors) {
-      await this.syncGlobalColors(config, decisions);
+      await this.syncGlobalColors(config, decisions, driftDecisions);
     }
 
     if (projectStore) savePluginConfig(projectStore);
@@ -284,7 +284,7 @@ export const VariableManager = {
     }
   },
 
-  async syncGlobalColors(config: AnyObj, decisions: Record<string, "keep" | "revert"> = {}): Promise<void> {
+  async syncGlobalColors(config: AnyObj, decisions: Record<string, "keep" | "revert"> = {}, driftDecisions: Record<string, "keep-figma" | "use-plugin"> = {}): Promise<void> {
     const colName = config.sourceCollectionName || "_constants";
     const col = await this.getOrCreateCollection(colName);
     const modeId = col.modes[0].modeId;
@@ -305,13 +305,13 @@ export const VariableManager = {
         const rgb = hexToFigmaRgb(hex);
         for (const opacityInt of config.alphaValues as number[]) {
           const alpha = opacityInt / 100;
-          const varName = `${label}/Opacities/${opacityInt}`;
+          const varName = `${label}/Alpha/${opacityInt}`;
           const alphaRef = `source:${colorId}/${opacityInt}`;
           vars.push([varName, "COLOR", { r: rgb.r, g: rgb.g, b: rgb.b, a: alpha }, `${opacityInt}% opacity variant`, alphaRef]);
         }
       }
     }
-    await this.upsertVariables(col, modeId, vars, sourceMetadataMap, decisions);
+    await this.upsertVariables(col, modeId, vars, sourceMetadataMap, decisions, driftDecisions);
   },
 
   // Removes variables and collections that became orphaned due to structural setting changes.
@@ -462,7 +462,7 @@ export const VariableManager = {
     return removed;
   },
 
-  async upsertVariables(collection: VariableCollection, modeId: string, vars: [string, string, AnyObj, string, string, VariableScope[]?][], metadataMap: Map<string, Variable>, decisions: Record<string, "keep" | "revert"> = {}): Promise<void> {
+  async upsertVariables(collection: VariableCollection, modeId: string, vars: [string, string, AnyObj, string, string, VariableScope[]?][], metadataMap: Map<string, Variable>, decisions: Record<string, "keep" | "revert"> = {}, driftDecisions: Record<string, "keep-figma" | "use-plugin"> = {}): Promise<void> {
     for (const [varName, varType, varValue, varDescription, tokenRef, targetScopes] of vars) {
       try {
         let variable = findVariable(collection, tokenRef, varName, metadataMap, this.cache.variables);
@@ -522,7 +522,10 @@ export const VariableManager = {
           isUpdated = true;
         }
 
-        if (varValue !== undefined && varValue !== null) {
+        // A "keep-figma" drift decision means the user chose to preserve a value
+        // edited directly in Figma — skip the value write entirely so sync
+        // doesn't clobber it (name/description/scopes above still apply normally).
+        if (varValue !== undefined && varValue !== null && driftDecisions[tokenRef] !== "keep-figma") {
           let targetVal = varValue;
           if (varType === "COLOR" && typeof varValue === "string") {
             targetVal = hexToFigmaRgb(varValue);

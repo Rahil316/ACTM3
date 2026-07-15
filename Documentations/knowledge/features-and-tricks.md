@@ -24,7 +24,7 @@ By default (`useUniformAlgorithm: true`), all colors use the single global algor
 
 ### Alpha Tints
 
-There is no separate `includeAlphaTints` flag — alpha tint variables are written whenever `alphaValues` is non-empty, as part of the source colors collection (so `includeSourceColors` must also be on). Percentages are configurable via `alphaValues` (e.g. `10, 25, 50, 75, 90`). Variable names follow the pattern `ColorName/Opacities/10`. Written as RGBA values with fractional alpha.
+There is no separate `includeAlphaTints` flag — alpha tint variables are written whenever `alphaValues` is non-empty, as part of the source colors collection (so `includeSourceColors` must also be on). Percentages are configurable via `alphaValues` (e.g. `10, 25, 50, 75, 90`). Variable names follow the pattern `ColorName/Alpha/10`. Written as RGBA values with fractional alpha.
 
 ### Source Colors Collection
 
@@ -60,7 +60,7 @@ Override the default numeric step names by adding step label entries (each has a
 
 ### Suppress Scale Collection
 
-`includeColorScalesCollection: false` suppresses the `_scale` ramp collection from being written to Figma. **Correction:** tokens do *not* still alias scale variables in this case — turning this off feeds into the same `skipScales` flag that also governs aliasing (`figmaVars.ts:85`, `figmaVars.ts:182`), so tokens fall back to raw hex values, the same as Direct mode. Controlled via the Scale Collection row in the Tokens settings tab's Collections card.
+`includeColorScalesCollection: false` suppresses the `_scale` ramp collection from being written to Figma. **Correction:** tokens do _not_ still alias scale variables in this case — turning this off feeds into the same `skipScales` flag that also governs aliasing (`figmaVars.ts:85`, `figmaVars.ts:182`), so tokens fall back to raw hex values, the same as Direct mode. Controlled via the Scale Collection row in the Tokens settings tab's Collections card.
 
 ---
 
@@ -88,7 +88,7 @@ Enable `includeSourceColors` and set `sourceCollectionName` to `brand`, `_consta
 
 ### 6. Alpha Tints for Overlay Colors
 
-Enable **Source Colors** then **Alpha Tints** and configure `alphaValues` (e.g. `10, 25, 50, 75, 90`). The plugin writes RGBA variables at `ColorName/Opacities/10`, `ColorName/Opacities/25`, etc. Use for overlays, scrim layers, focus rings, and hover states.
+Enable **Source Colors** then **Alpha Tints** and configure `alphaValues` (e.g. `10, 25, 50, 75, 90`). The plugin writes RGBA variables at `ColorName/Alpha/10`, `ColorName/Alpha/25`, etc. Use for overlays, scrim layers, focus rings, and hover states.
 
 ### 7. Per-Role Override for Status Colors
 
@@ -120,15 +120,15 @@ Colors and roles can be reordered by dragging. The `_id` tracking system ensures
 
 **Shipped presets** (`src/shared/presets/raw/*.ts`, included in release builds) — 7, not the 10 an earlier version of this doc listed. TW Regular/Pro/Funk, Blank Slate, and several others below are now dev-only, not shipped:
 
-| Preset            | Mode   | Algorithm            | Colors | Roles | Themes                            | Best for                                       |
-| ----------------- | ------ | --------------------- | ------ | ----- | ---------------------------------- | ----------------------------------------------- |
-| Apple HIG         | Direct | natural (solver)      | 5      | 9     | Light, Dark                        | iOS/macOS apps, semantic label/fill hierarchy   |
-| Atlassian Design System | Scale | Natural (25-step) | 7      | 30    | Light, Dark                        | Large enterprise systems, deep role hierarchy   |
-| IBM Carbon        | Scale  | Uniform (10-step)     | 5      | 13    | White, Gray-10, Gray-90, Gray-100  | Enterprise, data-heavy, Carbon compliance       |
-| Material Design 3 | Scale  | Material (25-step)    | 6      | 13    | Light, Dark                        | Android, Material You, HCT tonal palette        |
-| Shopify Polaris   | Direct | natural (solver)      | 5      | 26    | Light, Dark, Inverse               | Shopify admin, Polaris token names              |
-| Radix UI          | Scale  | Natural (12-step)     | 4      | 6     | Light, Dark                        | React component libraries, Radix 12-step scale  |
-| Tailwind CSS      | Scale  | Natural (11-step)     | 4      | 8     | Light, Dark                        | Utility CSS, Tailwind-matched 11-stop scale     |
+| Preset                  | Mode   | Algorithm          | Colors | Roles | Themes                            | Best for                                       |
+| ----------------------- | ------ | ------------------ | ------ | ----- | --------------------------------- | ---------------------------------------------- |
+| Apple HIG               | Direct | natural (solver)   | 5      | 9     | Light, Dark                       | iOS/macOS apps, semantic label/fill hierarchy  |
+| Atlassian Design System | Scale  | Natural (25-step)  | 7      | 30    | Light, Dark                       | Large enterprise systems, deep role hierarchy  |
+| IBM Carbon              | Scale  | Uniform (10-step)  | 5      | 13    | White, Gray-10, Gray-90, Gray-100 | Enterprise, data-heavy, Carbon compliance      |
+| Material Design 3       | Scale  | Material (25-step) | 6      | 13    | Light, Dark                       | Android, Material You, HCT tonal palette       |
+| Shopify Polaris         | Direct | natural (solver)   | 5      | 26    | Light, Dark, Inverse              | Shopify admin, Polaris token names             |
+| Radix UI                | Scale  | Natural (12-step)  | 4      | 6     | Light, Dark                       | React component libraries, Radix 12-step scale |
+| Tailwind CSS            | Scale  | Natural (11-step)  | 4      | 8     | Light, Dark                       | Utility CSS, Tailwind-matched 11-stop scale    |
 
 **Dev-only presets** (`src/shared/presets/raw/dev/*.ts`, excluded from `--release` builds — visible in `npm run build`/`npm run watch` but not shipped to end users): Blank Slate, Regular Wand, TW Pro, TW Funk, nClarity, nMobile, TW Scale Full, TW Direct Full, Token Wand UI, and a combined `showcase` file bundling the two "full" presets. These exist for internal testing/showcasing feature coverage (per-role solver overrides, `localBg`, color scoping, multi-theme, alpha tints) rather than as end-user starting points.
 

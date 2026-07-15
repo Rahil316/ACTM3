@@ -119,7 +119,7 @@ figma.ui.onmessage = async (msg: any) => {
         try {
           const config = translateConfig(msg.state);
           const result = runEngine(config);
-          await VariableManager.sync(result, config, msg.scope || "all", msg.state, msg.savedState || null, msg.decisions || {});
+          await VariableManager.sync(result, config, msg.scope || "all", msg.state, msg.savedState || null, msg.decisions || {}, msg.driftDecisions || {});
         } finally {
           syncOrPreviewInFlight = false;
         }
@@ -149,7 +149,10 @@ figma.ui.onmessage = async (msg: any) => {
         const config = translateConfig(msg.state);
         const result = runEngine(config);
         const renames = buildVariableRenameMap(msg.savedState ?? null, msg.state);
-        const report = await runPrePublishAnalysis(msg.state, msg.savedState ?? null, config, result, renames);
+        const savedState = msg.savedState ?? null;
+        const baselineConfig = savedState ? translateConfig(savedState) : null;
+        const baselineResult = baselineConfig ? runEngine(baselineConfig) : null;
+        const report = await runPrePublishAnalysis(msg.state, savedState, config, result, renames, baselineConfig, baselineResult);
         figma.ui.postMessage({ type: "collection-check-result", ...report });
         break;
       }

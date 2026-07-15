@@ -102,10 +102,12 @@ Open **Settings** via the gear icon in the top-right toolbar. Settings is a full
 ### Tokens Tab
 
 **Token Creation Mode**
+
 - `Scale` — generates a tonal ramp per color; roles map to scale steps.
 - `Direct` — solves each token color directly to a WCAG contrast target; no ramp.
 
 **Uniform Algorithm** toggle
+
 - On (default): all colors use the single global algorithm selector.
 - Off: each color card shows its own algorithm or solver mode selector.
 
@@ -118,11 +120,13 @@ Open **Settings** via the gear icon in the top-right toolbar. Settings is a full
 **Palette** — Scale Length input (number of steps, Scale mode only).
 
 **Token Naming**
+
 - Shorthand toggles: Colors, Roles, Variations, Scale Steps.
 - Token Name Format: drag pills to reorder the [color, role, variation] path segments; live preview updates.
 - Variable Descriptions: write WCAG contrast metadata into Figma variable description fields.
 
 **Collections** — each collection row is checkbox + label + name input in one row (click the checkbox to enable/disable; the name input disables when the row is off).
+
 - Token Collection — always on, can't be disabled (`color tokens` default name).
 - Scale Collection toggle + name (`_scale` default) — Scale mode only.
 - Source Collection toggle + name (`_constants` default) — raw brand hex, no theme processing. Alpha Tint Values (comma-separated %) shown only when this is on.
@@ -214,4 +218,4 @@ Variation renames — including per-role custom variation lists — are tracked 
 
 **Per-role variation override** — use when a role needs a fundamentally different structure than the global one. Status colors are the common case: `BG/Subtle`, `BG/Default`, `FG/Default`, `Border` are four purpose-specific slots.
 
-**Alpha Tints** — enable Source Collection in the Tokens tab, then set Alpha Tint Values (comma-separated percentages). Configures RGBA variables at `ColorName/Opacities/10`, `ColorName/Opacities/25`, etc.
+**Alpha Tints** — enable Source Collection in the Tokens tab, then set Alpha Tint Values (comma-separated percentages). Configures RGBA variables at `ColorName/Alpha/10`, `ColorName/Alpha/25`, etc.

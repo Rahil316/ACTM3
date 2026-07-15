@@ -74,14 +74,14 @@ This function binary-searches OKLCH lightness (L, 0–1) while shaping chroma (C
 
 There are **six** solver modes — `gamut-cusp` and `apca-natural` were added later; `hue-locked` was removed entirely as of 2026-07-15 (it was a no-op alias for `natural`, see the caveat this section used to carry, now in `color-algorithm-roadmap.md`'s history):
 
-| Mode               | Chroma behavior                                                                         |
-| ------------------ | --------------------------------------------------------------------------------------- |
-| `natural`          | C tapers as L moves away from mid — most natural-looking results                        |
-| `constant-chroma`  | C held fixed at seed value — maximum color retention throughout the scale               |
-| `symmetric`        | C follows a bell curve peaking at mid-L, collapsing toward zero at white and black      |
-| `max-chroma`       | L solved for contrast, then C pushed to maximum in-gamut value at that L                |
-| `gamut-cusp`       | C held as a constant *fraction* of the seed's own gamut envelope (`_gamutRelativeChroma`, `solverEngine.ts:102`), scaled per candidate L; searches for the WCAG target |
-| `apca-natural`     | Same gamut-relative chroma as `gamut-cusp`, but the bisection (`_searchLApca`, `solverEngine.ts:160`) targets an APCA Lc value converted from the WCAG-ratio target via a hand-fit anchor table (`WCAG_TO_LC_ANCHORS`, `solverEngine.ts:47`), not a real APCA font-size/weight lookup |
+| Mode              | Chroma behavior                                                                                                                                                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `natural`         | C tapers as L moves away from mid — most natural-looking results                                                                                                                                                                                                                      |
+| `constant-chroma` | C held fixed at seed value — maximum color retention throughout the scale                                                                                                                                                                                                             |
+| `symmetric`       | C follows a bell curve peaking at mid-L, collapsing toward zero at white and black                                                                                                                                                                                                    |
+| `max-chroma`      | L solved for contrast, then C pushed to maximum in-gamut value at that L                                                                                                                                                                                                              |
+| `gamut-cusp`      | C held as a constant _fraction_ of the seed's own gamut envelope (`_gamutRelativeChroma`, `solverEngine.ts:102`), scaled per candidate L; searches for the WCAG target                                                                                                                |
+| `apca-natural`    | Same gamut-relative chroma as `gamut-cusp`, but the bisection (`_searchLApca`, `solverEngine.ts:160`) targets an APCA Lc value converted from the WCAG-ratio target via a hand-fit anchor table (`WCAG_TO_LC_ANCHORS`, `solverEngine.ts:47`), not a real APCA font-size/weight lookup |
 
 ---
 
@@ -89,7 +89,7 @@ There are **six** solver modes — `gamut-cusp` and `apca-natural` were added la
 
 By default (`useSharedRoleVariants: true`), every role uses the global `variations` list — a role's own `variations` field is `null`, which `clrEngine` reads as "defer to global" (`role.variations ?? globalVariations`).
 
-When `useSharedRoleVariants` is `false`, each role owns its own populated `variations` array instead, substituted in place of the global list for that role only. There is no separate `customVariationList`/`customVariations` field pair — `useSharedRoleVariants` is the single toggle, and its polarity is the opposite of what a `customVariationList: true` name would suggest (the flag is *true* when roles share the global list, not when they have custom ones).
+When `useSharedRoleVariants` is `false`, each role owns its own populated `variations` array instead, substituted in place of the global list for that role only. There is no separate `customVariationList`/`customVariations` field pair — `useSharedRoleVariants` is the single toggle, and its polarity is the opposite of what a `customVariationList: true` name would suggest (the flag is _true_ when roles share the global list, not when they have custom ones).
 
 This path is taken in both `_processScaleMode` and `_solveDirectMode` via the identical `role.variations ?? globalVariations` fallback (`engine/clrEngine.ts:402`, `engine/clrEngine.ts:361`) — not a guard in `projectStore.ts`. The UI-side backfill logic that keeps saved state consistent with this toggle (`ensureVariations()`) does live in `src/ui/store/projectStore.ts`.
 
@@ -174,7 +174,7 @@ Hex values are written directly into token variables, and the `_scale` collectio
 
 2. **Token collection** (`color tokens` by default, name from `tokenCollectionName`, `figmaVars.ts:138`) — writes one `COLOR` variable per color × role × variation × theme-mode. Values are Figma variable aliases pointing into stage 1 when `skipScales` is false; raw hex when `skipScales` is true.
 
-3. **Source colors collection** (name from `sourceCollectionName`, default `"_constants"`, `figmaVars.ts:216` via `syncGlobalColors()`) — writes raw brand hex values as a separate single-mode collection. Enabled by `includeSourceColors: true`. Alpha tint variables (e.g. `Red/Opacities/10`, `Red/Opacities/25`) are also written here when `alphaValues` is non-empty.
+3. **Source colors collection** (name from `sourceCollectionName`, default `"_constants"`, `figmaVars.ts:216` via `syncGlobalColors()`) — writes raw brand hex values as a separate single-mode collection. Enabled by `includeSourceColors: true`. Alpha tint variables (e.g. `Red/Alpha/10`, `Red/Alpha/25`) are also written here when `alphaValues` is non-empty.
 
 4. **Purge orphaned variables** (`figmaVars.ts:229-235`, via `purgeOrphanedVars()`) — deletes variables left behind by a structural change (mode switch, scale shrink, collection rename/removal, alpha value removed, etc. — see `StructuralChangeKind` in `BLUEPRINT.md`). Only runs when `structuralChanges.length > 0`; contributes to `tally.removed`.
 
