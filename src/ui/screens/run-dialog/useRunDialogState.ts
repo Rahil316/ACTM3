@@ -57,6 +57,12 @@ export function useRunDialogState(
   const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // check-collections requests aren't guaranteed to resolve in send order — a
+  // rapid edit can fire a second request before the first's round trip
+  // finishes, and the sandbox doesn't queue them. Track the latest sent id so
+  // a slower, stale response can't overwrite newer diff results in the UI.
+  const latestCheckRequestId = useRef(0);
+
   useEffect(() => {
     return () => {
       if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
@@ -67,12 +73,13 @@ export function useRunDialogState(
   const sendCheck = useCallback(
     (store: ProjectStore) => {
       if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+      const requestId = ++latestCheckRequestId.current;
       checkTimeoutRef.current = setTimeout(() => {
         checkTimeoutRef.current = null;
         setErrorMsg("Figma didn't respond to the collection check in time. Close this dialog and try again.");
         setPhase("error");
       }, SANDBOX_TIMEOUT_MS);
-      sendToPlugin({ type: "check-collections", state: store, savedState: savedState ?? null });
+      sendToPlugin({ type: "check-collections", requestId, state: store, savedState: savedState ?? null });
     },
     [savedState],
   );
@@ -99,6 +106,14 @@ export function useRunDialogState(
 
   const onCollectionCheckResult = useCallback(
     (msg: CollectionCheckResultMessage) => {
+      // Discard responses to superseded requests — a rapid edit can fire a
+      // newer check-collections before an older one's round trip finishes, and
+      // nothing guarantees they resolve in order. Applying a stale response
+      // would flash the UI back to outdated diff results. The outstanding
+      // timeout is left untouched here since it belongs to the latest request,
+      // which is still genuinely pending.
+      if (msg.requestId !== latestCheckRequestId.current) return;
+
       if (checkTimeoutRef.current) {
         clearTimeout(checkTimeoutRef.current);
         checkTimeoutRef.current = null;

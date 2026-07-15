@@ -298,15 +298,12 @@ export const VariableManager = {
       const include = config.includeDescriptions !== false;
       const groupDesc = include ? color.description || "Brand constant — raw hex, no theme processing" : "";
 
-      // label/label groups the color under a folder named after itself in Figma
-      // (e.g. shorthand "pr" -> "pr/pr" = folder "pr" containing swatch "pr").
-      // But if label already contains "/" (shorthands like "sp/4" deliberately
-      // mirror a grouped name such as "Spare/4"), doubling it would nest an
-      // extra, unintended folder level ("sp/4/sp/4" reads as sp -> 4 -> "sp/4").
-      // Using the label as-is in that case keeps exactly one folder level.
+      // No self-nesting: the base swatch is just the label ("pr", not "pr/pr").
+      // Figma still visually groups it with its alpha variants ("pr/Alpha/50")
+      // since they share the "pr" prefix before the first "/" — the doubled
+      // name added a folder containing only the swatch itself, which is noise.
       const baseRef = `source:${colorId}`;
-      const baseName = label.includes("/") ? label : `${label}/${label}`;
-      vars.push([baseName, "COLOR", hex, groupDesc, baseRef]);
+      vars.push([label, "COLOR", hex, groupDesc, baseRef]);
 
       if (config.alphaValues.length > 0) {
         const rgb = hexToFigmaRgb(hex);

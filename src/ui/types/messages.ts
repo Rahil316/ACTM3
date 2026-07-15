@@ -21,6 +21,11 @@ export interface LoadUiPrefsMetaMessage {
 
 export interface CollectionCheckResultMessage {
   type: "collection-check-result";
+  // Echoes the CheckCollectionsMessage's requestId — check-collections calls
+  // aren't guaranteed to resolve in the order they were sent (a rapid edit can
+  // fire a second request before the first's sandbox round trip finishes), so
+  // the UI must ignore any response that isn't for its most recently sent request.
+  requestId: number;
   existing: ExistingCollection[];
   renames: RenameData;
   conflicts?: NameConflict[];
@@ -110,6 +115,7 @@ export interface RunCreatorMessage {
 
 export interface CheckCollectionsMessage {
   type: "check-collections";
+  requestId: number;
   state: ProjectStore;
   savedState?: ProjectStore | null;
 }

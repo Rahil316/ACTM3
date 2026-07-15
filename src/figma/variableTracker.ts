@@ -364,6 +364,9 @@ export interface SyncPreview {
 export interface ScaleAliasContext {
   scaleCol: VariableCollection | null;
   localVars: Variable[];
+  // Pre-built by the caller (see buildCollectionMetadataMaps) to avoid rebuilding
+  // it here — falls back to building it locally when omitted.
+  scaleMetadataMap?: Map<string, Variable> | null;
 }
 
 // Walks an EngineResult + PluginConfig the same way regardless of whether it's
@@ -391,7 +394,7 @@ export function buildIntendedEntries(result: EngineResult, config: PluginConfig,
 
   const scale: ClassifyEntry[] = [];
   if (!skipScales && result?.scales) {
-    const scaleMetadataMap = scaleAliasCtx?.scaleCol ? buildMetadataMap(scaleAliasCtx.scaleCol, scaleAliasCtx.localVars, "scale:") : null;
+    const scaleMetadataMap = scaleAliasCtx?.scaleMetadataMap !== undefined ? scaleAliasCtx.scaleMetadataMap : scaleAliasCtx?.scaleCol ? buildMetadataMap(scaleAliasCtx.scaleCol, scaleAliasCtx.localVars, "scale:") : null;
     for (const [colorName, scaleEntries] of Object.entries(result.scales)) {
       const colorObj = config.colors?.find((c) => c.name === colorName);
       const colorId = colorObj?._id || colorName;
@@ -473,11 +476,8 @@ export function buildIntendedEntries(result: EngineResult, config: PluginConfig,
       const colorId = color._id || color.name;
       const cLabel = colorLabel(color.name);
       const groupDesc = include ? color.description || "Brand constant — raw hex, no theme processing" : "";
-      // Mirrors figmaVars.ts's syncGlobalColors: doubling the label only when it
-      // has no "/" of its own — see the comment there for why (a label that
-      // already contains "/" would otherwise gain a spurious extra folder level).
-      const baseName = cLabel.includes("/") ? cLabel : `${cLabel}/${cLabel}`;
-      source.push({ tokenRef: `source:${colorId}`, name: baseName, value: color.value, description: groupDesc });
+      // Mirrors figmaVars.ts's syncGlobalColors: no self-nesting, just the label.
+      source.push({ tokenRef: `source:${colorId}`, name: cLabel, value: color.value, description: groupDesc });
       if (config.alphaValues?.length) {
         // Mirrors figmaVars.ts's syncGlobalColors: alpha variants are written as an
         // {r,g,b,a} object (opacity baked into `a`), not the raw hex — classifyEntry
@@ -494,11 +494,37 @@ export function buildIntendedEntries(result: EngineResult, config: PluginConfig,
   return { token, scale, source };
 }
 
+// One buildMetadataMap per collection, built once in runPrePublishAnalysis and
+// threaded through computeSyncPreview/computeValueDrift/analyzeNameConflicts —
+// buildMetadataMap calls variable.getPluginData() (a cross-boundary Figma API
+// call) once per variable in the collection, so rebuilding it independently in
+// each of those three functions (up to 9x total per check-collections call)
+// was pure redundant cost for identical output.
+export interface CollectionMetadataMaps {
+  token: Map<string, Variable> | null;
+  scale: Map<string, Variable> | null;
+  source: Map<string, Variable> | null;
+}
+
+export function buildCollectionMetadataMaps(
+  localVars: Variable[],
+  tokenCol: VariableCollection | null,
+  scaleCol: VariableCollection | null,
+  sourceCol: VariableCollection | null,
+): CollectionMetadataMaps {
+  return {
+    token: tokenCol ? buildMetadataMap(tokenCol, localVars, "token:") : null,
+    scale: scaleCol ? buildMetadataMap(scaleCol, localVars, "scale:") : null,
+    source: sourceCol ? buildMetadataMap(sourceCol, localVars, "source:") : null,
+  };
+}
+
 export function computeSyncPreview(
   result: EngineResult,
   config: PluginConfig,
   localVars: Variable[],
   collections: VariableCollection[],
+  metadataMaps: CollectionMetadataMaps,
   scope: "all" | "scale" | "roles" = "all",
 ): SyncPreview {
   const tokenColName = config.tokenCollectionName || "color tokens";
@@ -516,7 +542,7 @@ export function computeSyncPreview(
   let toDelete = 0;
   const items: SyncPreviewItem[] = [];
 
-  const intended = buildIntendedEntries(result, config, { scaleCol, localVars });
+  const intended = buildIntendedEntries(result, config, { scaleCol, localVars, scaleMetadataMap: metadataMaps.scale });
 
   // Returns the set of tokenRefs that the engine intends to write into this collection.
   // Side-effects: increments counters and pushes SyncPreviewItems.
@@ -526,17 +552,17 @@ export function computeSyncPreview(
     prefix: "token:" | "scale:" | "source:",
     entries: ClassifyEntry[],
     modeId: string,
+    map: Map<string, Variable> | null,
   ): Set<string> {
     const collection = prefix === "token:" ? "token" : prefix === "scale:" ? "scale" : "source";
     const intendedRefs = new Set(entries.map((e) => e.tokenRef));
-    if (!col) {
+    if (!col || !map) {
       toCreate += entries.length;
       for (const entry of entries) {
         items.push({ tokenRef: entry.tokenRef, name: entry.name, collection, kind: "create" });
       }
       return intendedRefs;
     }
-    const map = buildMetadataMap(col, localVars, prefix);
     for (const entry of entries) {
       const existing = findVariableReadOnly(col, entry.tokenRef, entry.name, map, localVars) ?? undefined;
       const classified = classifyEntry(entry, existing, modeId, localVars);
@@ -571,19 +597,19 @@ export function computeSyncPreview(
   // Token variables (first theme only — variable set is the same across themes, only values differ per mode)
   if ((scope === "all" || scope === "roles") && intended.token.length > 0) {
     const modeId = tokenCol ? (tokenCol.modes[0]?.modeId ?? "") : "";
-    checkEntries(tokenCol, "token:", intended.token, modeId);
+    checkEntries(tokenCol, "token:", intended.token, modeId, metadataMaps.token);
   }
 
   // Scale variables
   if (!skipScales && (scope === "all" || scope === "scale") && intended.scale.length > 0) {
     const modeId = scaleCol ? (scaleCol.modes[0]?.modeId ?? "") : "";
-    checkEntries(scaleCol, "scale:", intended.scale, modeId);
+    checkEntries(scaleCol, "scale:", intended.scale, modeId, metadataMaps.scale);
   }
 
   // Source constants
   if (config.includeSourceColors && intended.source.length > 0) {
     const modeId = sourceCol ? (sourceCol.modes[0]?.modeId ?? "") : "";
-    checkEntries(sourceCol, "source:", intended.source, modeId);
+    checkEntries(sourceCol, "source:", intended.source, modeId, metadataMaps.source);
   }
 
   return { toCreate, toModify, toDelete, total: toCreate + toModify + toDelete, items };
@@ -630,6 +656,7 @@ export function computeValueDrift(
   config: PluginConfig,
   localVars: Variable[],
   collections: VariableCollection[],
+  metadataMaps: CollectionMetadataMaps,
 ): ValueDriftItem[] {
   if (!baselineResult || !baselineConfig) return [];
 
@@ -640,8 +667,8 @@ export function computeValueDrift(
   const scaleCol = collections.find((c) => c.name === scaleColName) || null;
   const sourceCol = collections.find((c) => c.name === sourceColName) || null;
 
-  const intended = buildIntendedEntries(result, config, { scaleCol, localVars });
-  const baseline = buildIntendedEntries(baselineResult, baselineConfig, { scaleCol, localVars });
+  const intended = buildIntendedEntries(result, config, { scaleCol, localVars, scaleMetadataMap: metadataMaps.scale });
+  const baseline = buildIntendedEntries(baselineResult, baselineConfig, { scaleCol, localVars, scaleMetadataMap: metadataMaps.scale });
 
   const items: ValueDriftItem[] = [];
 
@@ -650,11 +677,11 @@ export function computeValueDrift(
     prefix: "token:" | "scale:" | "source:",
     entries: ClassifyEntry[],
     baselineEntries: ClassifyEntry[],
+    map: Map<string, Variable> | null,
   ) {
-    if (!col) return;
+    if (!col || !map) return;
     const collection = prefix === "token:" ? "token" : prefix === "scale:" ? "scale" : "source";
     const modeId = col.modes[0]?.modeId ?? "";
-    const map = buildMetadataMap(col, localVars, prefix);
     const baselineByRef = collectHexByRef(baselineEntries);
 
     for (const entry of entries) {
@@ -690,9 +717,9 @@ export function computeValueDrift(
     }
   }
 
-  checkCollection(tokenCol, "token:", intended.token, baseline.token);
-  checkCollection(scaleCol, "scale:", intended.scale, baseline.scale);
-  checkCollection(sourceCol, "source:", intended.source, baseline.source);
+  checkCollection(tokenCol, "token:", intended.token, baseline.token, metadataMaps.token);
+  checkCollection(scaleCol, "scale:", intended.scale, baseline.scale, metadataMaps.scale);
+  checkCollection(sourceCol, "source:", intended.source, baseline.source, metadataMaps.source);
 
   return items;
 }
@@ -707,16 +734,16 @@ export interface NameConflict {
 export function analyzeNameConflicts(
   result: EngineResult,
   config: PluginConfig,
-  localVars: Variable[],
   tokenCol: VariableCollection | null,
   scaleCol: VariableCollection | null,
   sourceCol: VariableCollection | null,
+  metadataMaps: CollectionMetadataMaps,
 ): NameConflict[] {
   const conflicts: NameConflict[] = [];
   const { colorLabel, roleLabel, stepLabel } = makeLabelHelpers(config);
 
-  if (scaleCol && result?.scales) {
-    const scaleMetadataMap = buildMetadataMap(scaleCol, localVars, "scale:");
+  if (scaleCol && result?.scales && metadataMaps.scale) {
+    const scaleMetadataMap = metadataMaps.scale;
     for (const [colorName, scale] of Object.entries(result.scales)) {
       const colorObj = config.colors?.find((c) => c.name === colorName);
       const colorId = colorObj?._id || colorName;
@@ -732,8 +759,8 @@ export function analyzeNameConflicts(
     }
   }
 
-  if (tokenCol && result?.tokens) {
-    const tokenMetadataMap = buildMetadataMap(tokenCol, localVars, "token:");
+  if (tokenCol && result?.tokens && metadataMaps.token) {
+    const tokenMetadataMap = metadataMaps.token;
     const tokenNameOrder: string[] = config.tokenNameSegments || ["color", "role", "variation"];
     const firstTheme = Object.keys(result.tokens)[0];
     if (firstTheme) {
@@ -767,15 +794,14 @@ export function analyzeNameConflicts(
     }
   }
 
-  if (sourceCol && config.includeSourceColors && config.colors) {
-    const sourceMetadataMap = buildMetadataMap(sourceCol, localVars, "source:");
+  if (sourceCol && config.includeSourceColors && config.colors && metadataMaps.source) {
+    const sourceMetadataMap = metadataMaps.source;
     for (const color of config.colors) {
       const colorId = color._id || color.name;
       const label = config.useShorthandColors && color.shorthand ? color.shorthand : color.name;
       const baseRef = `source:${colorId}`;
-      // Mirrors figmaVars.ts's syncGlobalColors — see its comment for why a
-      // label already containing "/" is used as-is instead of doubled.
-      const baseSuggested = label.includes("/") ? label : `${label}/${label}`;
+      // Mirrors figmaVars.ts's syncGlobalColors — no self-nesting.
+      const baseSuggested = label;
       const baseVar = sourceMetadataMap.get(baseRef);
       if (baseVar && baseVar.name !== baseSuggested) {
         conflicts.push({ tokenRef: baseRef, figmaName: baseVar.name, suggestedName: baseSuggested, type: "source" });
@@ -838,11 +864,17 @@ export async function runPrePublishAnalysis(
   const names = [scaleColName, tokenColName, sourceColName].filter(Boolean);
   const existing = collections.filter((c) => names.includes(c.name)).map((c) => ({ name: c.name, id: c.id }));
 
-  const conflicts = analyzeNameConflicts(result, config, localVars, tokenCol, scaleCol, sourceCol);
+  // Built once and shared across analyzeNameConflicts/computeSyncPreview/computeValueDrift —
+  // each previously rebuilt its own copy of the same 3 maps (up to 9 rebuilds total per
+  // call), and buildMetadataMap calls Figma's getPluginData() once per variable, so this
+  // was redundant cross-boundary API cost repeated for identical output.
+  const metadataMaps = buildCollectionMetadataMaps(localVars, tokenCol, scaleCol, sourceCol);
+
+  const conflicts = analyzeNameConflicts(result, config, tokenCol, scaleCol, sourceCol, metadataMaps);
 
   // scope is unknown at analysis time (user picks it in the UI after check-collections returns),
   // so we always compute the full "all" preview — scope filtering is cosmetic in the UI only.
-  const syncPreview = computeSyncPreview(result, config, localVars, collections, "all");
+  const syncPreview = computeSyncPreview(result, config, localVars, collections, metadataMaps, "all");
   // NOTE: we do NOT add renames.summary counts here. classifyEntry already counts renames
   // caused by label changes (shorthand, name edits) because it compares existing.name against
   // the intended name built with makeLabelHelpers. Adding the rename-map summary would
@@ -851,7 +883,7 @@ export async function runPrePublishAnalysis(
 
   const structuralChanges = detectStructuralChanges(savedState, state);
 
-  const valueDrift = computeValueDrift(baselineResult, baselineConfig, result, config, localVars, collections);
+  const valueDrift = computeValueDrift(baselineResult, baselineConfig, result, config, localVars, collections, metadataMaps);
 
   return { existing, renames, syncPreview, conflicts, structuralChanges, items: syncPreview.items, valueDrift };
 }

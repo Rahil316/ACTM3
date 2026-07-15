@@ -35,6 +35,35 @@ function runEngine(config: PluginConfig): EngineResult {
   return result;
 }
 
+// savedState (the last-synced baseline) only changes when a sync completes —
+// not on every keystroke — but check-collections fires on every debounced edit
+// to the LIVE config while the Run dialog is open. Recomputing the baseline's
+// full engine run (variableMaker over every color x role x variation x theme)
+// on each of those calls was pure waste. postMessage structurally clones its
+// payload, so savedState is a fresh object on every call — reference equality
+// can't detect "unchanged", so we fingerprint via JSON instead. Still far
+// cheaper than re-running the engine, and only runs once per check-collections
+// call rather than once per token.
+let cachedBaselineFingerprint: string | null = null;
+let cachedBaselineConfig: PluginConfig | null = null;
+let cachedBaselineResult: EngineResult | null = null;
+
+function getBaselineEngineResult(savedState: Parameters<typeof translateConfig>[0] | null): { config: PluginConfig | null; result: EngineResult | null } {
+  if (!savedState) {
+    cachedBaselineFingerprint = null;
+    cachedBaselineConfig = null;
+    cachedBaselineResult = null;
+    return { config: null, result: null };
+  }
+  const fingerprint = JSON.stringify(savedState);
+  if (fingerprint !== cachedBaselineFingerprint) {
+    cachedBaselineFingerprint = fingerprint;
+    cachedBaselineConfig = translateConfig(savedState);
+    cachedBaselineResult = runEngine(cachedBaselineConfig);
+  }
+  return { config: cachedBaselineConfig, result: cachedBaselineResult };
+}
+
 // ── 1. UI INITIALIZATION ─────────────────────────────────────────────────────
 
 const UI = { WIDTH: 560, HEIGHT: 720, MIN_WIDTH: 560, MIN_HEIGHT: 520 };
@@ -150,10 +179,9 @@ figma.ui.onmessage = async (msg: any) => {
         const result = runEngine(config);
         const renames = buildVariableRenameMap(msg.savedState ?? null, msg.state);
         const savedState = msg.savedState ?? null;
-        const baselineConfig = savedState ? translateConfig(savedState) : null;
-        const baselineResult = baselineConfig ? runEngine(baselineConfig) : null;
+        const { config: baselineConfig, result: baselineResult } = getBaselineEngineResult(savedState);
         const report = await runPrePublishAnalysis(msg.state, savedState, config, result, renames, baselineConfig, baselineResult);
-        figma.ui.postMessage({ type: "collection-check-result", ...report });
+        figma.ui.postMessage({ type: "collection-check-result", requestId: msg.requestId, ...report });
         break;
       }
 
