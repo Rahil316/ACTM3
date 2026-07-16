@@ -1,14 +1,15 @@
 import { useState, useCallback } from "react";
 import { sendToPlugin, type SyncScope, type SyncDecision, type NameConflict, type DriftDecision, type ValueDriftItem } from "../types/messages";
 import type { ProjectStore } from "../types/state";
+import { defaultNameConflictDecision } from "../utils/nameConflicts";
 
 export function useSyncSession(projectStore: ProjectStore, savedState: ProjectStore | null) {
   const [conflicts, setConflicts] = useState<NameConflict[]>([]);
   const [decisions, setDecisions] = useState<Record<string, SyncDecision>>({});
 
-  // Value-drift decisions start UNDECIDED (no default) — unlike name conflicts,
-  // which default to "keep". Sync must be blocked until every drift/conflict
-  // item has an explicit choice, so there is no safe default to fall back on.
+  // Value-drift decisions start UNDECIDED (no default). Sync must be blocked
+  // until every drift/conflict item has an explicit choice, so there is no
+  // safe default to fall back on.
   const [driftItems, setDriftItems] = useState<ValueDriftItem[]>([]);
   const [driftDecisions, setDriftDecisions] = useState<Record<string, DriftDecision>>({});
 
@@ -16,7 +17,8 @@ export function useSyncSession(projectStore: ProjectStore, savedState: ProjectSt
     setConflicts(list || []);
     const initialDecisions: Record<string, SyncDecision> = {};
     (list || []).forEach((c) => {
-      initialDecisions[c.tokenRef] = "keep";
+      const def = defaultNameConflictDecision(c.kind);
+      if (def) initialDecisions[c.tokenRef] = def;
     });
     setDecisions(initialDecisions);
   }, []);

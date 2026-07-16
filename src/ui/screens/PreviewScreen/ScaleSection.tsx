@@ -13,15 +13,16 @@ interface ScaleTableViewProps {
 function ScaleTableView({ result, projectStore }: ScaleTableViewProps) {
   const COL = "80px 1fr 64px 56px 48px";
   const themes = projectStore.themes;
+  const scales = result.scales ?? {};
 
-  if (Object.keys(result.scales).length === 0) {
+  if (Object.keys(scales).length === 0) {
     return <p className="text-[12px] text-n-tx-muted p-4 text-center">No scale in Direct mode.</p>;
   }
 
   return (
     <div className="flex flex-col gap-4 p-3 pb-6">
       {projectStore.colors.map((color) => {
-        const scale = result.scales[color.name];
+        const scale = scales[color.name];
         if (!scale) return null;
         const srcHex = normalizeHex(color.value);
         const hdrInk = getInkMode(srcHex);
@@ -97,8 +98,9 @@ export function ScaleSection({ result, projectStore, groupByStep = false, viewMo
   const colors = projectStore.colors;
   const themes = projectStore.themes;
   const themeKeys = themes.map((t) => t.name.toLowerCase());
+  const scales = result.scales ?? {};
 
-  if (Object.keys(result.scales).length === 0) {
+  if (Object.keys(scales).length === 0) {
     return (
       <div className="p-4 text-center">
         <p className="text-[12px] text-n-tx-muted">No scale in Direct mode — colors are solved directly per variation target.</p>
@@ -107,7 +109,7 @@ export function ScaleSection({ result, projectStore, groupByStep = false, viewMo
   }
 
   if (groupByStep) {
-    const firstScale = result.scales[colors[0]?.name];
+    const firstScale = scales[colors[0]?.name];
     const stepNames = firstScale ? Object.keys(firstScale) : [];
 
     return (
@@ -122,7 +124,7 @@ export function ScaleSection({ result, projectStore, groupByStep = false, viewMo
               // Table: one row per color at this step
               <div className="rounded-[10px] overflow-hidden border border-n-br-default">
                 {colors.map((color) => {
-                  const stepData = result.scales[color.name]?.[stepName];
+                  const stepData = scales[color.name]?.[stepName];
                   if (!stepData) return null;
                   const srcHex = normalizeHex(color.value);
                   const contrast = themeKeys.length > 0 ? stepData.contrast?.[themeKeys[0]] : null;
@@ -156,7 +158,7 @@ export function ScaleSection({ result, projectStore, groupByStep = false, viewMo
               // Strip: all colors at this step as a horizontal spectrum
               <div className="flex w-full h-24 rounded-[10px] overflow-hidden cursor-crosshair" style={{ boxShadow: "0 10px 30px rgba(0,0,0,0.12)", border: "1px solid rgba(136,136,136,0.10)" }}>
                 {colors.map((color) => {
-                  const stepData = result.scales[color.name]?.[stepName];
+                  const stepData = scales[color.name]?.[stepName];
                   if (!stepData) return null;
                   return <ScaleStepSlice key={color._id} stepName={color.name} stepData={stepData} themeKeys={themeKeys} colorName={color.name} />;
                 })}
@@ -175,7 +177,7 @@ export function ScaleSection({ result, projectStore, groupByStep = false, viewMo
   return (
     <div className="flex flex-col gap-5 p-3 pb-6">
       {colors.map((color) => {
-        const scale = result.scales[color.name];
+        const scale = scales[color.name];
         if (!scale) return null;
         const steps = Object.entries(scale);
         const srcHex = normalizeHex(color.value);

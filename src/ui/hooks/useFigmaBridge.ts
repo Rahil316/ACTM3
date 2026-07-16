@@ -25,6 +25,7 @@ function standaloneHandleOutgoing(msg: { pluginMessage: { type: string; [key: st
           pluginMessage: {
             type: "collection-check-result",
             requestId: pm.requestId,
+            valueDriftChecked: !!pm.checkValueDrift,
             existing: [],
             renames: { scale: {}, tokens: {}, summary: { scaleCount: 0, tokenCount: 0, changes: [] } },
             conflicts: [

@@ -2,8 +2,9 @@ import { EmptyState } from "../../../components/EmptyState";
 import { Callout } from "../../../components/Callout";
 import { SegmentedControl } from "../../../components/SegmentedControl";
 import { Badge } from "../../../components/Badge";
+import { Button } from "../../../components/Button";
 import { Mono, MicroText, Caption } from "../../../components/typography";
-import { LucideCheck } from "../../../components/icons";
+import { LucideCheck, IconLayers } from "../../../components/icons";
 import type { ValueDriftItem, DriftDecision } from "../../../types/messages";
 import { COLLECTION_LABEL } from "../changeDisplay";
 
@@ -12,10 +13,18 @@ interface ValueDriftTabProps {
   decisions: Record<string, DriftDecision>;
   setDecision: (ref: string, val: DriftDecision) => void;
   isChecking: boolean;
+  // Value-drift detection is on-demand — see useRunDialogState's sendCheck —
+  // since it re-runs the engine against the baseline and walks the full tree
+  // twice, real cost that shouldn't run on every debounced edit. checked is
+  // false until the user clicks "Check for Figma Edits" or hits Sync (which
+  // forces the check first), distinct from "checked, found nothing".
+  checked: boolean;
+  isCheckingDrift: boolean;
+  onCheck: () => void;
 }
 
-export function ValueDriftTab({ items, decisions, setDecision, isChecking }: ValueDriftTabProps) {
-  if (isChecking) {
+export function ValueDriftTab({ items, decisions, setDecision, isChecking, checked, isCheckingDrift, onCheck }: ValueDriftTabProps) {
+  if (isChecking || isCheckingDrift) {
     return (
       <div className="flex flex-col gap-0 animate-pulse">
         {[80, 60, 72, 55].map((w, i) => (
@@ -29,6 +38,17 @@ export function ValueDriftTab({ items, decisions, setDecision, isChecking }: Val
           </div>
         ))}
       </div>
+    );
+  }
+
+  if (!checked) {
+    return (
+      <EmptyState
+        icon={<IconLayers className="w-5 h-5" />}
+        title="Not checked yet"
+        description="See whether any variable was edited directly in Figma's panel since the last sync."
+        action={<Button variant="secondary" size="sm" label="Check for Figma Edits" onClick={onCheck} />}
+      />
     );
   }
 

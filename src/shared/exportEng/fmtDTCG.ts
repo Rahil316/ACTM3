@@ -4,11 +4,12 @@ import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, 
 export const fmtDTCG = {
   scale(result: EngineResult, config: ExportConfig): string {
     const out: Record<string, Record<string, Record<string, string>>> = {};
-    const scaleNames = Object.keys(result.scales || {});
+    const scales = result.scales ?? {};
+    const scaleNames = Object.keys(scales);
     for (let ci = 0; ci < scaleNames.length; ci++) {
       const colorName = scaleNames[ci];
       const cLabel = _slug(_colorLabel(colorName, config));
-      const scale = result.scales[colorName];
+      const scale = scales[colorName];
       out[cLabel] = {};
       const steps = Object.keys(scale);
       for (let si = 0; si < steps.length; si++) {

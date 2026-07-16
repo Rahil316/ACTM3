@@ -3,8 +3,10 @@ import { Sheet } from "./Sheet";
 import { Backdrop } from "./Backdrop";
 import { Button } from "./Button";
 import { SegmentedControl } from "./SegmentedControl";
+import { Badge } from "./Badge";
 import { Mono, Caption, HelperText, SectionLabel } from "./typography";
 import { LucideClose as X } from "./icons";
+import { defaultNameConflictDecision } from "../utils/nameConflicts";
 
 interface ConflictListProps {
   conflicts: NameConflict[];
@@ -19,8 +21,10 @@ interface ConflictListProps {
 export function ConflictList({ conflicts, decisions, onChange, onKeepAll, onOverrideAll, open, onClose }: ConflictListProps) {
   if (!conflicts || conflicts.length === 0) return null;
 
-  const allKeep = conflicts.every((c) => (decisions[c.tokenRef] || "keep") === "keep");
-  const allRevert = conflicts.every((c) => decisions[c.tokenRef] === "revert");
+  const decisionFor = (c: NameConflict): "keep" | "revert" | null => (decisions[c.tokenRef] as "keep" | "revert" | undefined) ?? defaultNameConflictDecision(c.kind);
+  const undecidedCount = conflicts.filter((c) => decisionFor(c) === null).length;
+  const allKeep = conflicts.every((c) => decisionFor(c) === "keep");
+  const allRevert = conflicts.every((c) => decisionFor(c) === "revert");
   const bulkValue = allKeep ? "keep" : allRevert ? "revert" : null;
 
   return (
@@ -36,6 +40,7 @@ export function ConflictList({ conflicts, decisions, onChange, onKeepAll, onOver
             <SectionLabel className="text-n-tx-secondary">Name Conflicts</SectionLabel>
             <Caption className="text-n-tx-dim">
               {conflicts.length} variable{conflicts.length !== 1 ? "s" : ""} renamed in Figma
+              {undecidedCount > 0 && ` · ${undecidedCount} need${undecidedCount === 1 ? "s" : ""} a decision`}
             </Caption>
           </div>
           <div className="flex justify-end">
@@ -59,8 +64,9 @@ export function ConflictList({ conflicts, decisions, onChange, onKeepAll, onOver
         {/* Conflict rows */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           {conflicts.map((conflict, idx) => {
-            const decision = (decisions[conflict.tokenRef] || "keep") as "keep" | "revert";
+            const decision = decisionFor(conflict);
             const keeping = decision === "keep";
+            const reverting = decision === "revert";
             const isLast = idx === conflicts.length - 1;
             return (
               <div key={conflict.tokenRef} className={`flex items-center gap-2 px-3 py-2.5 ${!isLast ? "border-b border-n-br-hairline" : ""}`}>
@@ -72,8 +78,13 @@ export function ConflictList({ conflicts, decisions, onChange, onKeepAll, onOver
                   </div>
                   <div className="flex items-center gap-1.5 overflow-hidden">
                     <Caption className="text-n-tx-dim shrink-0 w-9">System</Caption>
-                    <Mono className={`truncate transition-all px-1 rounded min-w-0 ${!keeping ? "bg-b-fi-subtle text-b-tx-muted" : "text-n-tx-dim"}`}>{conflict.suggestedName}</Mono>
+                    <Mono className={`truncate transition-all px-1 rounded min-w-0 ${reverting ? "bg-b-fi-subtle text-b-tx-muted" : "text-n-tx-dim"}`}>{conflict.suggestedName}</Mono>
                   </div>
+                  {decision === null && (
+                    <Badge variant="danger" size="xs" className="w-fit mt-0.5">
+                      Both changed — needs a decision
+                    </Badge>
+                  )}
                 </div>
 
                 <SegmentedControl

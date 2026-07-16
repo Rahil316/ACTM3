@@ -13,6 +13,46 @@ export function isColorDark(hex: string): boolean {
 export function bindFill(node: MinimalFillsMixin, variable: Variable): void {
   node.fills = [figma.variables.setBoundVariableForPaint({ type: "SOLID", color: { r: 0, g: 0, b: 0 } }, "color", variable)];
 }
+
+// Every instance of a component is a structural clone of its master (same
+// child order at every level), so a named node's position can be resolved
+// ONCE against the master and then reused via plain child-index lookups —
+// instead of calling instance.findOne(...) (a tree search) on every single
+// instance. Built for canvas-preview sections with hundreds of instances per
+// master, where per-instance findOne calls were the dominant render cost.
+export type NodePath = number[];
+
+function findNodePath(root: SceneNode, predicate: (n: SceneNode) => boolean, path: NodePath = []): NodePath | null {
+  if (predicate(root)) return path;
+  if ("children" in root) {
+    for (let i = 0; i < root.children.length; i++) {
+      const found = findNodePath(root.children[i], predicate, [...path, i]);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// Resolves each name's path against the master ONCE. Call this right after
+// building/reusing a master, then use getByPath on every instance — never
+// findOne per-instance.
+export function resolveNodePaths(master: SceneNode, names: string[]): Record<string, NodePath | null> {
+  const paths: Record<string, NodePath | null> = {};
+  for (const name of names) {
+    paths[name] = findNodePath(master, (n) => n.name === name);
+  }
+  return paths;
+}
+
+export function getByPath(instance: SceneNode, path: NodePath | null | undefined): SceneNode | null {
+  if (!path) return null;
+  let node: SceneNode = instance;
+  for (const idx of path) {
+    if (!("children" in node) || !node.children[idx]) return null;
+    node = node.children[idx];
+  }
+  return node;
+}
 interface BadgeProps {
   parent: FrameNode;
   textContent: string;

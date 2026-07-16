@@ -31,7 +31,10 @@ export function CanvasPreviewDevOverlay() {
   const { mode, selectedItem, setSelectedItem, selectedRef, handleModeChange } = useDevOverlayState(projectStore, result);
 
   const includeSource = projectStore.includeSourceColors === true;
-  const includeScales = projectStore.includeColorScalesCollection !== false;
+  // Mirrors canvasPreview.ts's skipScales: Direct mode has no scale collection
+  // at all (result.scales is now undefined, not just empty), so this section
+  // would otherwise render placeholder gray swatches with no real data behind them.
+  const includeScales = projectStore.pluginMode !== "direct" && projectStore.includeColorScalesCollection !== false;
 
   const warningCount = result?.errors.warnings.length ?? 0;
   const criticalCount = result?.errors.critical.length ?? 0;

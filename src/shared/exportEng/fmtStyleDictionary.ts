@@ -4,12 +4,13 @@ import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, 
 export const fmtStyleDictionary = {
   global(result: EngineResult, config: ExportConfig): string {
     const out: Record<string, Record<string, Record<string, Record<string, unknown>>>> = { color: {} };
-    const scaleNames = Object.keys(result.scales || {});
+    const scales = result.scales ?? {};
+    const scaleNames = Object.keys(scales);
     for (let ci = 0; ci < scaleNames.length; ci++) {
       const colorName = scaleNames[ci];
       const cLabel = _slug(_colorLabel(colorName, config));
       out.color[cLabel] = {};
-      const scale = result.scales[colorName];
+      const scale = scales[colorName];
       const steps = Object.keys(scale);
       for (let si = 0; si < steps.length; si++) {
         const step = steps[si];

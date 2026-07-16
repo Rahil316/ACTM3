@@ -32,7 +32,11 @@ export interface CollectionCheckResultMessage {
   syncPreview?: SyncPreview;
   structuralChanges?: StructuralChange[];
   items?: SyncPreviewItem[];
+  // Present only when the request had checkValueDrift: true — its absence
+  // means "not checked this pass" (distinct from an empty array, which means
+  // "checked, found nothing"), so the UI can show an accurate not-yet-checked state.
   valueDrift?: ValueDriftItem[];
+  valueDriftChecked?: boolean;
 }
 
 export interface FinishMessage {
@@ -118,6 +122,13 @@ export interface CheckCollectionsMessage {
   requestId: number;
   state: ProjectStore;
   savedState?: ProjectStore | null;
+  // Value-drift detection re-runs the engine against the last-synced baseline
+  // and walks the full color/role/variation/theme tree twice — real cost that
+  // check-collections otherwise pays on every debounced edit while the dialog
+  // is open, for a condition (a Figma-side edit) that can't happen from typing
+  // in the plugin. Kept opt-in: only true for an explicit "Check for Figma
+  // Edits" click, never for the automatic re-check.
+  checkValueDrift?: boolean;
 }
 
 export interface ResizeMessage {

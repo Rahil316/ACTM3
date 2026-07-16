@@ -10,11 +10,12 @@ export const fmtTailwind = {
     lines.push("  theme: {");
     lines.push("    extend: {");
     lines.push("      colors: {");
-    const scaleNames = Object.keys(result.scales || {});
+    const scales = result.scales ?? {};
+    const scaleNames = Object.keys(scales);
     for (let ci = 0; ci < scaleNames.length; ci++) {
       const colorName = scaleNames[ci];
       const cLabel = _colorLabel(colorName, config);
-      const scale = result.scales[colorName];
+      const scale = scales[colorName];
       const steps = Object.keys(scale);
       lines.push("        " + JSON.stringify(_slug(cLabel)) + ": {");
       for (let si = 0; si < steps.length; si++) {

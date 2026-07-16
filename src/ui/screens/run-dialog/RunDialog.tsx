@@ -68,7 +68,7 @@ export function RunDialog() {
 
   if (!isOpen) return null;
 
-  const { syncPreview, previewItems, structuralChanges, conflicts, decisions, existingCollections, isStale, driftItems, driftDecisions, setDriftDecision, allDriftDecided } = dialog;
+  const { syncPreview, previewItems, structuralChanges, conflicts, decisions, existingCollections, isStale, driftItems, driftDecisions, setDriftDecision, allDriftDecided, allNameConflictsDecided, valueDriftChecked, isCheckingValueDrift, checkValueDrift } = dialog;
 
   // isChecking: no result yet at all (initial load). isStale: we have a
   // result, but the project has changed since and a re-check is pending —
@@ -80,15 +80,22 @@ export function RunDialog() {
   // A "modify" item whose ONLY changed field is name, decided "keep" (i.e. the
   // user is keeping Figma's existing name), writes nothing — figmaVars.ts's
   // upsertVariables skips the rename when decision === "keep". Same logic for
-  // the separate NameConflict list: "keep" (its default) is also a no-op write.
-  // Both must be excluded here or the button stays enabled/labeled "Update"
-  // for a sync that would touch zero variables.
+  // the separate NameConflict list: "keep" is a no-op write, but ONLY when it
+  // was actually chosen (explicitly, or via the "drift" kind's safe default) —
+  // an undecided "conflict"-kind item must NOT be treated as a no-op here, or
+  // "Up to Date" would misreport a sync that's actually blocked pending a
+  // decision (allNameConflictsDecided handles the real block; this only affects
+  // the label/nothingToSync messaging).
   const isNameOnlyKept = (item: { kind: string; changedFields?: string[]; tokenRef: string }) =>
     item.kind === "modify" && item.changedFields?.length === 1 && item.changedFields[0] === "name" && (decisions[item.tokenRef] ?? "keep") === "keep";
-  const pendingConflicts = conflicts.filter((c) => decisions[c.tokenRef] === "revert");
-  const nothingToSync = !isCheckingOrStale && syncPreview!.items.every(isNameOnlyKept) && pendingConflicts.length === 0;
+  // "drift" conflicts are pre-filled "keep" by loadConflicts; "conflict" ones are
+  // guaranteed decided by this point (allNameConflictsDecided gates the button
+  // before nothingToSync's value even matters), so decisions[tokenRef] is always
+  // populated here — a real pending write is anything other than "keep".
+  const pendingConflicts = conflicts.filter((c) => decisions[c.tokenRef] !== "keep");
+  const nothingToSync = !isCheckingOrStale && allNameConflictsDecided && syncPreview!.items.every(isNameOnlyKept) && pendingConflicts.length === 0;
 
-  const syncLabel = isCheckingOrStale ? "Checking…" : nothingToSync ? "Up to Date" : getSyncLabel(syncPreview!);
+  const syncLabel = isCheckingOrStale ? "Checking…" : isCheckingValueDrift ? "Checking Figma Edits…" : !valueDriftChecked ? "Check for Figma Edits" : nothingToSync ? "Up to Date" : getSyncLabel(syncPreview!);
 
   const configSummary = `${projectStore.colors.length} color${projectStore.colors.length !== 1 ? "s" : ""} · ${projectStore.roles.length} role${projectStore.roles.length !== 1 ? "s" : ""} · ${projectStore.themes.length} theme${projectStore.themes.length !== 1 ? "s" : ""} · ${projectStore.pluginMode} mode`;
 
@@ -107,11 +114,18 @@ export function RunDialog() {
     );
 
   const valueDriftLabel =
-    driftItems.length > 0 ? (
+    valueDriftChecked && driftItems.length > 0 ? (
       <span className="flex items-center gap-1">
         Figma Edits{" "}
         <Badge variant={allDriftDecided ? "warning" : "danger"} size="xs">
           {driftItems.length}
+        </Badge>
+      </span>
+    ) : !valueDriftChecked ? (
+      <span className="flex items-center gap-1">
+        Figma Edits{" "}
+        <Badge variant="muted" size="xs">
+          ?
         </Badge>
       </span>
     ) : (
@@ -164,7 +178,9 @@ export function RunDialog() {
 
             {dialog.activeTab === "changes" && <ChangesTab previewItems={previewItems} conflicts={conflicts} decisions={decisions} setDecision={dialog.setDecision} total={syncPreview?.total ?? 0} isChecking={isCheckingOrStale} initialFilter={changesFilter} onOpenConflicts={() => setConflictsOpen(true)} />}
 
-            {dialog.activeTab === "value-drift" && <ValueDriftTab items={driftItems} decisions={driftDecisions} setDecision={setDriftDecision} isChecking={isCheckingOrStale} />}
+            {dialog.activeTab === "value-drift" && (
+              <ValueDriftTab items={driftItems} decisions={driftDecisions} setDecision={setDriftDecision} isChecking={isCheckingOrStale} checked={valueDriftChecked} isCheckingDrift={isCheckingValueDrift} onCheck={checkValueDrift} />
+            )}
 
             {dialog.activeTab === "health" && <HealthTab initialMetric={healthMetric} />}
           </div>
@@ -177,8 +193,22 @@ export function RunDialog() {
               size="xl"
               label={syncLabel}
               onClick={dialog.handleConfirmRun}
-              disabled={isCheckingOrStale || nothingToSync || !allDriftDecided}
-              title={isCheckingOrStale ? "Checking Figma collections…" : nothingToSync ? "All variables are already up to date in Figma" : !allDriftDecided ? "Resolve all Figma edits in the \"Figma Edits\" tab before syncing" : undefined}
+              disabled={isCheckingOrStale || isCheckingValueDrift || (valueDriftChecked && (nothingToSync || !allDriftDecided || !allNameConflictsDecided))}
+              title={
+                isCheckingOrStale
+                  ? "Checking Figma collections…"
+                  : isCheckingValueDrift
+                    ? "Checking for edits made directly in Figma…"
+                    : !valueDriftChecked
+                      ? "Checks whether any variable was edited directly in Figma since the last sync, then lets you sync"
+                      : nothingToSync
+                        ? "All variables are already up to date in Figma"
+                        : !allDriftDecided
+                          ? "Resolve all Figma edits in the \"Figma Edits\" tab before syncing"
+                          : !allNameConflictsDecided
+                            ? "Resolve all naming conflicts before syncing"
+                            : undefined
+              }
               className="flex-1"
             />
           </div>

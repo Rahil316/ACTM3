@@ -62,7 +62,14 @@ export interface EngineErrors {
 }
 
 export interface EngineResult {
-  scales: ScaleCollection;
+  // Absent (not merely empty) in Direct mode — there is no tonal scale to
+  // compute at all, so the engine doesn't manufacture a value for a config
+  // where scales are structurally meaningless. Present and populated in Scale
+  // mode unconditionally, even when includeColorScalesCollection is off — that
+  // toggle only controls whether the scale gets PUBLISHED as its own Figma
+  // collection; every Scale-mode token is still derived by walking the scale,
+  // so the engine always needs to compute it regardless of the publish toggle.
+  scales?: ScaleCollection;
   tokens: Record<string, Record<string, Record<number, Record<number, TokenEntry>>>>;
   errors: EngineErrors;
 }
@@ -314,7 +321,8 @@ export function variableMaker(config: EngineInput): EngineResult {
       }
     }
   }
-  return { scales, tokens, errors };
+  // Omit entirely in Direct mode — see EngineResult.scales's doc comment.
+  return config.pluginMode === "direct" ? { tokens, errors } : { scales, tokens, errors };
 }
 
 function _generateScales(colors: Color[], scaleLength: number, scaleAlgo: ScaleAlgorithm, stepNames: string[] | null | undefined, themes: Theme[], useUniformAlgorithm: boolean, errors: EngineErrors): ScaleCollection {

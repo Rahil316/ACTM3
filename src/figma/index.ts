@@ -24,6 +24,7 @@ function toExportConfig(config: PluginConfig): ExportConfig {
   return {
     ...config,
     roles: rolesRecord,
+    variations: config.variations ?? undefined,
   };
 }
 
@@ -179,9 +180,13 @@ figma.ui.onmessage = async (msg: any) => {
         const result = runEngine(config);
         const renames = buildVariableRenameMap(msg.savedState ?? null, msg.state);
         const savedState = msg.savedState ?? null;
-        const { config: baselineConfig, result: baselineResult } = getBaselineEngineResult(savedState);
+        // Value-drift detection re-runs the engine against the baseline and walks
+        // the full tree twice — real cost, only worth paying when explicitly
+        // requested (manual "Check for Figma Edits", or the mandatory pre-sync
+        // check), not on every debounced re-check while the user is still editing.
+        const { config: baselineConfig, result: baselineResult } = msg.checkValueDrift ? getBaselineEngineResult(savedState) : { config: null, result: null };
         const report = await runPrePublishAnalysis(msg.state, savedState, config, result, renames, baselineConfig, baselineResult);
-        figma.ui.postMessage({ type: "collection-check-result", requestId: msg.requestId, ...report });
+        figma.ui.postMessage({ type: "collection-check-result", requestId: msg.requestId, valueDriftChecked: !!msg.checkValueDrift, ...report });
         break;
       }
 

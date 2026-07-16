@@ -19,13 +19,14 @@ export const fmtAndroid = {
     }
     lines.push("<resources>");
     lines.push("");
-    const scaleNames = Object.keys(result.scales || {});
+    const scales = result.scales ?? {};
+    const scaleNames = Object.keys(scales);
     if (scaleNames.length > 0) {
       lines.push("    <!-- Color Scales -->");
       for (let ci = 0; ci < scaleNames.length; ci++) {
         const colorName = scaleNames[ci];
         const cLabel = _colorLabel(colorName, config);
-        const scale = result.scales[colorName];
+        const scale = scales[colorName];
         const steps = Object.keys(scale);
         lines.push("    <!-- " + colorName + " -->");
         for (let si = 0; si < steps.length; si++) {

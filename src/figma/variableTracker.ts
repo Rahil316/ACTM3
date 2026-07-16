@@ -729,8 +729,30 @@ export interface NameConflict {
   figmaName: string;
   suggestedName: string;
   type: "token" | "scale" | "source";
+  // "drift" — only Figma's name changed since baseline, safe to default to "keep".
+  // "conflict" — the plugin's suggested name also changed since baseline (or
+  // there is no baseline yet) — an explicit decision is required, no silent default.
+  kind: "drift" | "conflict";
 }
 
+function nameByRef(entries: ClassifyEntry[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const entry of entries) map.set(entry.tokenRef, entry.name);
+  return map;
+}
+
+// A Figma name that differs from the suggested name is ambiguous on its own:
+// it could be someone hand-editing the variable directly in Figma (safe to
+// default to "keep"), or it could be that the CONFIG changed the suggested
+// name since last sync (a genuine plugin-side rename, e.g. renaming a color/
+// role in the Token Wand UI) — silently keeping Figma's stale name would
+// discard that intended edit with no warning. Disambiguating requires the same
+// baseline (tw_state, last-synced) comparison computeValueDrift already uses
+// for values: if the baseline's suggested name still matches Figma's current
+// name, only Figma drifted — "drift", default "keep" is safe. If the baseline
+// name differs from BOTH Figma's name and the config's new suggested name,
+// both sides changed it independently since last sync — "conflict", requires
+// an explicit decision instead of silently discarding either side.
 export function analyzeNameConflicts(
   result: EngineResult,
   config: PluginConfig,
@@ -738,86 +760,35 @@ export function analyzeNameConflicts(
   scaleCol: VariableCollection | null,
   sourceCol: VariableCollection | null,
   metadataMaps: CollectionMetadataMaps,
+  scaleAliasCtx: ScaleAliasContext,
+  baselineResult: EngineResult | null,
+  baselineConfig: PluginConfig | null,
 ): NameConflict[] {
   const conflicts: NameConflict[] = [];
-  const { colorLabel, roleLabel, stepLabel } = makeLabelHelpers(config);
+  const intended = buildIntendedEntries(result, config, scaleAliasCtx);
+  const baselineNames = baselineResult && baselineConfig ? buildIntendedEntries(baselineResult, baselineConfig, scaleAliasCtx) : null;
 
-  if (scaleCol && result?.scales && metadataMaps.scale) {
-    const scaleMetadataMap = metadataMaps.scale;
-    for (const [colorName, scale] of Object.entries(result.scales)) {
-      const colorObj = config.colors?.find((c) => c.name === colorName);
-      const colorId = colorObj?._id || colorName;
-      const cLabel = colorLabel(colorName);
-      for (const step of Object.keys(scale as Record<string, unknown>)) {
-        const tokenRef = `scale:${colorId}/${step}`;
-        const suggestedName = `${cLabel}/${stepLabel(step)}`;
-        const variableInFigma = scaleMetadataMap.get(tokenRef);
-        if (variableInFigma && variableInFigma.name !== suggestedName) {
-          conflicts.push({ tokenRef, figmaName: variableInFigma.name, suggestedName, type: "scale" });
-        }
-      }
+  function checkCollection(col: VariableCollection | null, map: Map<string, Variable> | null, entries: ClassifyEntry[], baselineByRef: Map<string, string> | null, type: NameConflict["type"]) {
+    if (!col || !map) return;
+    for (const entry of entries) {
+      const variableInFigma = map.get(entry.tokenRef);
+      if (!variableInFigma || variableInFigma.name === entry.name) continue;
+
+      // Pure drift: the config's suggested name hasn't changed since baseline,
+      // so only Figma's name diverged — safe to default to "keep". Otherwise
+      // (no baseline yet, or the config's suggested name ALSO changed since
+      // baseline) both sides may have changed it independently — a real
+      // conflict that needs an explicit decision, not a silent default.
+      const baselineName = baselineByRef?.get(entry.tokenRef);
+      const kind: NameConflict["kind"] = baselineName === entry.name ? "drift" : "conflict";
+
+      conflicts.push({ tokenRef: entry.tokenRef, figmaName: variableInFigma.name, suggestedName: entry.name, type, kind });
     }
   }
 
-  if (tokenCol && result?.tokens && metadataMaps.token) {
-    const tokenMetadataMap = metadataMaps.token;
-    const tokenNameOrder: string[] = config.tokenNameSegments || ["color", "role", "variation"];
-    const firstTheme = Object.keys(result.tokens)[0];
-    if (firstTheme) {
-      const colors = result.tokens[firstTheme];
-      for (const [colorName, roles] of Object.entries(colors)) {
-        const colorObj = config.colors?.find((c) => c.name === colorName);
-        const colorId = colorObj?._id || colorName;
-        const cLabel = colorLabel(colorName);
-        for (const [roleId, variations] of Object.entries(roles)) {
-          const roleObj: Partial<Role> = config.roles?.[parseInt(roleId, 10)] || {};
-          const roleIdStr = roleObj._id || roleId;
-          const rName = roleObj.name || roleId;
-          const rLabel = roleLabel(rName, parseInt(roleId, 10));
-          const variationDefs = roleObj.variations ?? config.variations ?? [];
-          for (let vi = 0; vi < variationDefs.length; vi++) {
-            const token = variations[vi];
-            if (!token) continue;
-            const varDef = variationDefs[vi];
-            const varIdStr = varDef._id || String(vi);
-            const dispName = config.useShorthandVariations && varDef.shorthand ? varDef.shorthand : varDef.name || String(vi);
-            const tokenRef = `token:${colorId}/${roleIdStr}/${varIdStr}`;
-            const segParts: Record<string, string> = { color: cLabel, role: rLabel, variation: dispName };
-            const suggestedName = tokenNameOrder.map((s) => segParts[s] || s).join("/");
-            const variableInFigma = tokenMetadataMap.get(tokenRef);
-            if (variableInFigma && variableInFigma.name !== suggestedName) {
-              conflicts.push({ tokenRef, figmaName: variableInFigma.name, suggestedName, type: "token" });
-            }
-          }
-        }
-      }
-    }
-  }
-
-  if (sourceCol && config.includeSourceColors && config.colors && metadataMaps.source) {
-    const sourceMetadataMap = metadataMaps.source;
-    for (const color of config.colors) {
-      const colorId = color._id || color.name;
-      const label = config.useShorthandColors && color.shorthand ? color.shorthand : color.name;
-      const baseRef = `source:${colorId}`;
-      // Mirrors figmaVars.ts's syncGlobalColors — no self-nesting.
-      const baseSuggested = label;
-      const baseVar = sourceMetadataMap.get(baseRef);
-      if (baseVar && baseVar.name !== baseSuggested) {
-        conflicts.push({ tokenRef: baseRef, figmaName: baseVar.name, suggestedName: baseSuggested, type: "source" });
-      }
-      if (config.alphaValues?.length) {
-        for (const opacityInt of config.alphaValues) {
-          const alphaRef = `source:${colorId}/${opacityInt}`;
-          const alphaSuggested = `${label}/Alpha/${opacityInt}`;
-          const alphaVar = sourceMetadataMap.get(alphaRef);
-          if (alphaVar && alphaVar.name !== alphaSuggested) {
-            conflicts.push({ tokenRef: alphaRef, figmaName: alphaVar.name, suggestedName: alphaSuggested, type: "source" });
-          }
-        }
-      }
-    }
-  }
+  checkCollection(scaleCol, metadataMaps.scale, intended.scale, baselineNames ? nameByRef(baselineNames.scale) : null, "scale");
+  checkCollection(tokenCol, metadataMaps.token, intended.token, baselineNames ? nameByRef(baselineNames.token) : null, "token");
+  checkCollection(sourceCol, metadataMaps.source, intended.source, baselineNames ? nameByRef(baselineNames.source) : null, "source");
 
   return conflicts;
 }
@@ -870,7 +841,7 @@ export async function runPrePublishAnalysis(
   // was redundant cross-boundary API cost repeated for identical output.
   const metadataMaps = buildCollectionMetadataMaps(localVars, tokenCol, scaleCol, sourceCol);
 
-  const conflicts = analyzeNameConflicts(result, config, tokenCol, scaleCol, sourceCol, metadataMaps);
+  const conflicts = analyzeNameConflicts(result, config, tokenCol, scaleCol, sourceCol, metadataMaps, { scaleCol, localVars, scaleMetadataMap: metadataMaps.scale }, baselineResult, baselineConfig);
 
   // scope is unknown at analysis time (user picks it in the UI after check-collections returns),
   // so we always compute the full "all" preview — scope filtering is cosmetic in the UI only.

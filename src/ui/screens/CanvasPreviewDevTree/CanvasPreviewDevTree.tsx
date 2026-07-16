@@ -41,7 +41,7 @@ export function CanvasPreviewDevTree({ projectStore, config, result }: { project
   } = useDevTreeFilters(projectStore, result);
 
   const themeEntries = Object.entries(result.tokens);
-  const scaleEntries = Object.entries(result.scales);
+  const scaleEntries = Object.entries(result.scales ?? {});
   const includeScales = projectStore.includeColorScalesCollection !== false;
 
   // Filter scale colors

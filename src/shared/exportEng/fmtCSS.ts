@@ -4,11 +4,12 @@ import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variat
 export const fmtCSS = {
   scale(result: EngineResult, config: ExportConfig): string {
     const lines = ["/* " + (config.name || "tokens") + " — color scales */", ":root {"];
-    const scaleNames = Object.keys(result.scales || {});
+    const scales = result.scales ?? {};
+    const scaleNames = Object.keys(scales);
     for (let ci = 0; ci < scaleNames.length; ci++) {
       const colorName = scaleNames[ci];
       const cLabel = _colorLabel(colorName, config);
-      const scale = result.scales[colorName];
+      const scale = scales[colorName];
       lines.push("\n  /* " + colorName + " */");
       const steps = Object.keys(scale);
       for (let si = 0; si < steps.length; si++) {

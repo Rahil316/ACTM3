@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyObj = any;
 
-import { hexToFigmaRgb, isColorDark, bindFill } from "./figmaComponents/helpers";
+import { hexToFigmaRgb, isColorDark, bindFill, resolveNodePaths, getByPath } from "./figmaComponents/helpers";
 import { contrastRatio, contrastRating } from "../shared/engine/clrUtils";
 import { buildScaleStepMaster } from "./figmaComponents/ScaleStepTile";
 import { buildSourceAlphaMaster } from "./figmaComponents/SourceAlphaTile";
@@ -146,6 +146,8 @@ export async function generateCanvasPreview(projectStore: AnyObj, result?: AnyOb
 }
 
 async function generateCanvasPreviewBody(projectStore: AnyObj, result: AnyObj): Promise<void> {
+  const cfg = translateConfig(projectStore);
+
   // ── 1. Page ───────────────────────────────────────────────────────────────
   let previewPage = figma.root.children.find((p) => p.getPluginData("previewPage") === "1") as PageNode | undefined;
 
@@ -169,7 +171,11 @@ async function generateCanvasPreviewBody(projectStore: AnyObj, result: AnyObj): 
   const allVars = await figma.variables.getLocalVariablesAsync();
   const findVarByRef = (ref: string) => allVars.find((v) => v.getPluginData("tokenRef") === ref);
 
-  const includeScales = projectStore.includeColorScalesCollection !== false;
+  // Matches skipScales in variableTracker.ts/figmaVars.ts: Direct mode has no
+  // scale collection at all (clrEngine.ts now omits result.scales entirely for
+  // it), so previewing "scale steps" here would render meaningless placeholder
+  // swatches with no real variable behind them, not just wasted render time.
+  const includeScales = projectStore.pluginMode !== "direct" && projectStore.includeColorScalesCollection !== false;
   const includeSource = projectStore.includeSourceColors === true;
   const themes: AnyObj[] = projectStore.themes || [];
 
@@ -209,6 +215,11 @@ async function generateCanvasPreviewBody(projectStore: AnyObj, result: AnyObj): 
   const sourceAlphaMaster = getOrBuildMaster("master:source", masterSourceFp, () => buildSourceAlphaMaster(alphaValues.length, themes), 360);
   // Master uses transparent fill — each instance overrides it with the theme bg
   const roleTokenMaster = getOrBuildMaster("master:role", masterRoleFp, () => buildRoleTokenMaster("ffffff"), 1020);
+
+  // Resolved ONCE per render pass (not per instance — see resolveNodePaths):
+  // every instance of roleTokenMaster is a structural clone, so these paths
+  // are valid for all ~(colors x roles x variations x themes) instances below.
+  const roleTokenNodePaths = resolveNodePaths(roleTokenMaster, ["@ColorSwatch", "@HexValue", "@ContrastInfo", "@TextSample_lg", "@TextSample_md", "@TextSample_sm", "@TokenFullName", "@ScaleRef"]);
 
   // ── 5. Output frame ───────────────────────────────────────────────────────
   // Find by pluginData first (rename-safe), fall back to name for legacy frames.
@@ -568,7 +579,7 @@ async function generateCanvasPreviewBody(projectStore: AnyObj, result: AnyObj): 
             const solidColor: SolidPaint = { type: "SOLID", color: hexToFigmaRgb(token.value) };
 
             // @ColorSwatch fill = token colour
-            const swatchFrame = tileInst.findOne((n) => n.name === "@ColorSwatch" && n.type === "FRAME") as FrameNode | null;
+            const swatchFrame = getByPath(tileInst, roleTokenNodePaths["@ColorSwatch"]) as FrameNode | null;
             if (swatchFrame) {
               if (variable) bindFill(swatchFrame, variable);
               else swatchFrame.fills = [solidColor];
@@ -576,14 +587,14 @@ async function generateCanvasPreviewBody(projectStore: AnyObj, result: AnyObj): 
 
             // @TextSample_lg/md/sm fill = token colour
             for (const sampleName of ["@TextSample_lg", "@TextSample_md", "@TextSample_sm"]) {
-              const t = tileInst.findOne((n) => n.name === sampleName) as TextNode | null;
+              const t = getByPath(tileInst, roleTokenNodePaths[sampleName]) as TextNode | null;
               if (!t) continue;
               if (variable) bindFill(t, variable);
               else t.fills = [solidColor];
             }
 
             // @ContrastInfo — contrast ratio vs theme bg
-            const contrastNode = tileInst.findOne((n) => n.name === "@ContrastInfo") as TextNode | null;
+            const contrastNode = getByPath(tileInst, roleTokenNodePaths["@ContrastInfo"]) as TextNode | null;
             if (contrastNode) {
               const ratio = token.contrast?.ratio;
               const rating = token.contrast?.rating ?? "";
@@ -591,21 +602,21 @@ async function generateCanvasPreviewBody(projectStore: AnyObj, result: AnyObj): 
             }
 
             // @HexValue — hex badge on the swatch
-            const hexNode = tileInst.findOne((n) => n.name === "@HexValue") as TextNode | null;
+            const hexNode = getByPath(tileInst, roleTokenNodePaths["@HexValue"]) as TextNode | null;
             if (hexNode) hexNode.characters = `#${token.value.replace("#", "").toUpperCase()}`;
 
             // @TokenFullName / @ScaleRef — ink colour = black or white, whichever contrasts more with theme bg
             const inkColor = isColorDark(theme.bg) ? { r: 1, g: 1, b: 1 } : { r: 0, g: 0, b: 0 };
             const inkFill: SolidPaint = { type: "SOLID", color: inkColor };
 
-            const tokenFullName = tileInst.findOne((n) => n.name === "@TokenFullName") as TextNode | null;
+            const tokenFullName = getByPath(tileInst, roleTokenNodePaths["@TokenFullName"]) as TextNode | null;
             if (tokenFullName) {
               tokenFullName.characters = `${roleObj.name} / ${varDef.name || varIdx}`;
               tokenFullName.fills = [inkFill];
             }
 
             // @ScaleRef — scale step reference, hidden when not connected
-            const scaleRef = tileInst.findOne((n) => n.name === "@ScaleRef") as TextNode | null;
+            const scaleRef = getByPath(tileInst, roleTokenNodePaths["@ScaleRef"]) as TextNode | null;
             if (scaleRef) {
               const scaleStep = varDef.scaleStep as string | undefined;
               if (scaleStep) {
