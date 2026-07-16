@@ -15,7 +15,8 @@ export default tseslint.config(
       "vite.config.ts",
       "test-data/",
       "preset-data/",
-      "export-test/"
+      "export-test/",
+      "cli/"
     ],
   },
 

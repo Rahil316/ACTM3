@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "rootDir": "..",
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["src/ui/*"]
+    },
+    "types": ["node", "@figma/plugin-typings"]
+  },
+  // rootDir is the repo root (not cli/) because this package compiles its own
+  // src/ together with the plugin's src/shared + src/figma/config.ts, which it
+  // imports by relative path (no published @token-wand/core package — see
+  // Documentations/knowledge or the CLI plan for why). tsc mirrors that shared
+  // root under dist/, so the compiled entry point ends up at dist/cli/src/cli.js
+  // — bin/token-wand.js points there.
+  "include": ["src", "../src/shared", "../src/figma/config.ts", "../src/figma/variableTracker.ts", "../src/ui/types/state.ts"]
+}

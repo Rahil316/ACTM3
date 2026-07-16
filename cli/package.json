@@ -1,0 +1,35 @@
+{
+  "name": "@rahil316/token-wand",
+  "version": "0.1.0-canary.0",
+  "description": "Generate design token files (CSS, SCSS, Android, React Native, and more) from a Token Wand .wand file, without opening Figma.",
+  "type": "commonjs",
+  "bin": {
+    "token-wand": "./bin/token-wand.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "tag": "canary"
+  },
+  "scripts": {
+    "build": "tsc && node scripts/prune-dist.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "culori": "^4.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@figma/plugin-typings": "^1.124.0"
+  },
+  "author": "",
+  "license": "MIT"
+}

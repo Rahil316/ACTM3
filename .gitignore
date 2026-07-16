@@ -27,6 +27,10 @@ export-test/results/
 # Export output folders
 lib/*/
 
+# CLI package — its own node_modules and compiled output (see cli/README.md)
+cli/node_modules/
+cli/dist/
+
 # Logs and system files
 typecheck.log
 .DS_Store
