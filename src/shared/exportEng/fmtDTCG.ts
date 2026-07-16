@@ -1,7 +1,20 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, _splitTokenRef } from './helpers';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, _splitTokenRef, _eachSourceColor } from './helpers';
 
 export const fmtDTCG = {
+  source(config: ExportConfig): string {
+    const out: Record<string, Record<string, string>> = {};
+    for (const entry of _eachSourceColor(config)) {
+      const cLabel = _slug(entry.cLabel);
+      out[cLabel] = { "$value": entry.hex, "$type": "color" };
+      for (const alpha of entry.alphaVariants) {
+        const { r, g, b, a } = alpha.rgba;
+        out[cLabel + "-alpha-" + alpha.opacity] = { "$value": `rgba(${r}, ${g}, ${b}, ${a})`, "$type": "color" };
+      }
+    }
+    return JSON.stringify(out, null, 2);
+  },
+
   scale(result: EngineResult, config: ExportConfig): string {
     const out: Record<string, Record<string, Record<string, string>>> = {};
     const scales = result.scales ?? {};

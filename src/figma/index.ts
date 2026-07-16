@@ -13,6 +13,23 @@ import { runPrePublishAnalysis } from "./variableTracker";
 import { generateCanvasPreview, wasPreviewInterrupted, markPreviewInterrupted } from "./canvasPreview";
 import type { ExportConfig } from "../shared/exportEng/types";
 import type { Role } from "../shared/types";
+import type { ProjectStore } from "../ui/types/state";
+import { _eachSourceColor } from "../shared/exportEng/helpers";
+
+function jsonExportPayload(result: EngineResult, exportConfig: ExportConfig): string {
+  const scales = exportConfig.includeColorScalesCollection !== false ? result.scales : undefined;
+  const sourceColors = _eachSourceColor(exportConfig);
+  return JSON.stringify(
+    {
+      ...(scales ? { scales } : {}),
+      ...(sourceColors.length > 0 ? { source: sourceColors } : {}),
+      tokens: result.tokens,
+      errors: result.errors,
+    },
+    null,
+    2,
+  );
+}
 
 function toExportConfig(config: PluginConfig): ExportConfig {
   const rolesRecord: Record<string, Role> = {};
@@ -25,6 +42,31 @@ function toExportConfig(config: PluginConfig): ExportConfig {
     ...config,
     roles: rolesRecord,
     variations: config.variations ?? undefined,
+  };
+}
+
+// Export Settings tab (SettingsOverlay.tsx) lets a project define naming/
+// shorthand/section overrides that apply ONLY to file exports, never to Figma
+// sync or canvas preview — those two always use `config` as translateConfig
+// built it. When exportSettings.matchFigma is true (default, and true for any
+// project saved before this feature existed), this is a no-op passthrough.
+function applyExportOverrides(config: PluginConfig, projectStore: ProjectStore): PluginConfig {
+  const exportSettings = projectStore.exportSettings;
+  if (!exportSettings || exportSettings.matchFigma) return config;
+  const c = exportSettings.custom;
+  return {
+    ...config,
+    tokenNameSegments: c.tokenNameSegments,
+    useShorthandColors: c.useShorthandColors,
+    useShorthandRoles: c.useShorthandRoles,
+    useShorthandVariations: c.useShorthandVariations,
+    useShorthandSteps: c.useShorthandSteps,
+    includeSourceColors: c.includeSourceColors,
+    alphaValues: c.alphaValues,
+    // Direct mode never has scale data regardless of this override — only
+    // meaningful (and only shown in the Export Settings tab) in Scale mode.
+    includeColorScalesCollection: config.pluginMode === "direct" ? config.includeColorScalesCollection : c.includeColorScalesCollection,
+    includeDescriptions: c.includeDescriptions,
   };
 }
 
@@ -205,16 +247,17 @@ figma.ui.onmessage = async (msg: any) => {
       case "request-processed-data": {
         const config = translateConfig(msg.state);
         const result = runEngine(config);
+        const exportConfig = applyExportOverrides(config, msg.state);
         const et: string = msg.exportType;
 
         // Build files[] via bundler, then fill in docGen formats
-        const files = buildExportBundle(result, toExportConfig(config), [et], msg.state, msg.timestamp);
+        const files = buildExportBundle(result, toExportConfig(exportConfig), [et], msg.state, msg.timestamp);
 
         // Fill content for docGen-owned formats (bundler leaves content empty)
         if (et === "csv") {
-          files[0].content = ExportFormatter.toCSV(result, toExportConfig(config));
+          files[0].content = ExportFormatter.toCSV(result, toExportConfig(exportConfig));
         } else if (et === "json") {
-          files[0].content = JSON.stringify({ scales: result.scales, tokens: result.tokens, errors: result.errors }, null, 2);
+          files[0].content = jsonExportPayload(result, toExportConfig(exportConfig));
         }
 
         figma.ui.postMessage({ type: "export-bundle-response", files });
@@ -224,12 +267,13 @@ figma.ui.onmessage = async (msg: any) => {
       case "request-export-bundle": {
         const bConfig = translateConfig(msg.state);
         const bResult = runEngine(bConfig);
-        const bFiles = buildExportBundle(bResult, toExportConfig(bConfig), msg.formats || [], msg.state, msg.timestamp);
+        const bExportConfig = applyExportOverrides(bConfig, msg.state);
+        const bFiles = buildExportBundle(bResult, toExportConfig(bExportConfig), msg.formats || [], msg.state, msg.timestamp);
         for (const f of bFiles) {
           if (f.content === "" && f.path.endsWith(".csv")) {
-            f.content = ExportFormatter.toCSV(bResult, toExportConfig(bConfig));
+            f.content = ExportFormatter.toCSV(bResult, toExportConfig(bExportConfig));
           } else if (f.content === "" && f.path.endsWith(".json") && !f.path.includes("/")) {
-            f.content = JSON.stringify({ scales: bResult.scales, tokens: bResult.tokens, errors: bResult.errors }, null, 2);
+            f.content = jsonExportPayload(bResult, toExportConfig(bExportConfig));
           }
         }
         figma.ui.postMessage({ type: "export-bundle-response", files: bFiles });

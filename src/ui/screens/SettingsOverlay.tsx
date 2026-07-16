@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS, SOLVER_MODE_DESCRIPTIONS } from "../store/projectStore";
+import { useProjectStore, SCALE_ALGORITHM_OPTIONS, SOLVER_MODE_OPTIONS, SOLVER_MODE_DESCRIPTIONS, makeDefaultExportSettings } from "../store/projectStore";
 import { useUiStore, VALID_SCALES, VALID_THEMES, VALID_LANGUAGES } from "../store/uiStore";
 import { takeSnapshot, restoreSnapshot, clearSnapshot } from "../store/snapshots";
 import { save } from "../hooks/useAutoSave";
@@ -413,11 +413,107 @@ function PluginTab() {
   );
 }
 
+// ── Export Settings tab ──────────────────────────────────────────────────────
+// These settings ONLY affect file exports (CSV/CSS/SCSS/Tailwind/DTCG/Style
+// Dictionary/Swift/Android/React Native) — never Figma sync or canvas preview,
+// which always use the main Tokens/Roles settings regardless of this tab.
+
+function ExportSettingsTab() {
+  const projectStore = useProjectStore((s) => s.projectStore);
+  const setExportMatchFigma = useProjectStore((s) => s.setExportMatchFigma);
+  const setExportCustomField = useProjectStore((s) => s.setExportCustomField);
+
+  const exportSettings = projectStore.exportSettings ?? makeDefaultExportSettings();
+  const { matchFigma, custom } = exportSettings;
+  const isScaleMode = projectStore.pluginMode === "scale";
+
+  const tokenNameSegments = custom.tokenNameSegments ?? ["color", "role", "variation"];
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  function handleSegmentDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = tokenNameSegments.indexOf(active.id as TokenNameSegment);
+    const newIdx = tokenNameSegments.indexOf(over.id as TokenNameSegment);
+    if (oldIdx === -1 || newIdx === -1) return;
+    setExportCustomField("tokenNameSegments", arrayMove([...tokenNameSegments], oldIdx, newIdx));
+  }
+
+  const exampleColor = projectStore.colors[0]?.name || "Color";
+  const exampleRole = projectStore.roles[0]?.name || "Role";
+  const exampleVariation = projectStore.variations?.[0]?.name || "Subtle";
+  const segmentValues: Record<TokenNameSegment, string> = { color: exampleColor, role: exampleRole, variation: exampleVariation };
+  const namePreview = tokenNameSegments.map((s) => segmentValues[s]).join(" / ");
+
+  return (
+    <div className="flex flex-col gap-3">
+      <SettingsCard>
+        <SectionLabel>Export Settings</SectionLabel>
+        <PanelRow
+          label="Match Figma"
+          description="Use the same naming, shorthand, and collection settings as the Figma sync. Turn off to define export-only overrides."
+          control={<Toggle on={matchFigma} onChange={() => setExportMatchFigma(!matchFigma)} />}
+        />
+      </SettingsCard>
+
+      {!matchFigma && (
+        <>
+          <SettingsCard>
+            <SectionLabel>Token Naming & Description</SectionLabel>
+            <div className="flex flex-col gap-2 pt-1">
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col items-start w-full">
+                  <SectionLabel>Naming Structure</SectionLabel>
+                  <HelperText className="font-medium">Drag to reorder the token name</HelperText>
+                </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSegmentDragEnd}>
+                  <SortableContext items={tokenNameSegments} strategy={horizontalListSortingStrategy}>
+                    <div className="flex items-center gap-2">
+                      {tokenNameSegments.map((seg, i) => (
+                        <div key={seg} className="flex items-center gap-1">
+                          <SortableSegmentPill id={seg} />
+                          {i < tokenNameSegments.length - 1 && <span className="text-[11px] text-n-tx-dim">/</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </div>
+              <HelperText className="font-mono bg-n-sf-input rounded-[4px] p-2">{namePreview}</HelperText>
+            </div>
+            <PanelRow label="Use Shorthand for Colors" control={<Toggle on={custom.useShorthandColors} onChange={() => setExportCustomField("useShorthandColors", !custom.useShorthandColors)} />} />
+            <PanelRow label="Use Shorthand for Roles" control={<Toggle on={custom.useShorthandRoles} onChange={() => setExportCustomField("useShorthandRoles", !custom.useShorthandRoles)} />} />
+            <PanelRow label="Use Shorthand for Variations" control={<Toggle on={custom.useShorthandVariations} onChange={() => setExportCustomField("useShorthandVariations", !custom.useShorthandVariations)} />} />
+            <PanelRow label="Use Shorthand for Steps" control={<Toggle on={custom.useShorthandSteps} onChange={() => setExportCustomField("useShorthandSteps", !custom.useShorthandSteps)} />} />
+            <PanelRow label="Include Descriptions" control={<Toggle on={custom.includeDescriptions} onChange={() => setExportCustomField("includeDescriptions", !custom.includeDescriptions)} />} />
+          </SettingsCard>
+
+          <SettingsCard>
+            <SectionLabel>Sections</SectionLabel>
+            {isScaleMode && (
+              <PanelRow
+                label="Include Color Scales"
+                description="Scale steps aren't produced in Direct mode regardless of this setting."
+                control={<Toggle on={custom.includeColorScalesCollection} onChange={() => setExportCustomField("includeColorScalesCollection", !custom.includeColorScalesCollection)} />}
+              />
+            )}
+            <PanelRow label="Include Source Colors" control={<Toggle on={custom.includeSourceColors} onChange={() => setExportCustomField("includeSourceColors", !custom.includeSourceColors)} />} />
+            {custom.includeSourceColors && (
+              <SmallRow label="Alpha Tint Values (%)" control={<TagInput values={custom.alphaValues || []} placeholder="Type a number and press Enter (e.g. 10, 25, 50)" onChange={(newValues) => setExportCustomField("alphaValues", newValues)} />} />
+            )}
+          </SettingsCard>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Main overlay ─────────────────────────────────────────────────────────────
 
 const SETTINGS_TABS: { value: SettingsTab; label: string }[] = [
   { value: "tokens", label: "Tokens" },
   { value: "roles", label: "Labels" },
+  { value: "export", label: "Export" },
   { value: "plugin", label: "Plugin" },
 ];
 
@@ -467,6 +563,7 @@ export function SettingsOverlay() {
       <div className="flex-1 overflow-y-auto p-3">
         {settingsTab === "tokens" && <TokensTab />}
         {settingsTab === "roles" && <RolesTab />}
+        {settingsTab === "export" && <ExportSettingsTab />}
         {settingsTab === "plugin" && <PluginTab />}
       </div>
     </Modal>

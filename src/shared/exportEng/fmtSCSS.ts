@@ -1,7 +1,19 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _splitTokenRef } from './helpers';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _splitTokenRef, _eachSourceColor } from './helpers';
 
 export const fmtSCSS = {
+  source(config: ExportConfig): string {
+    const lines = ["// " + (config.name || "tokens") + " — source colors", "// Do not edit manually.\n"];
+    for (const entry of _eachSourceColor(config)) {
+      lines.push("$" + _slug(entry.cLabel) + ": " + entry.hex + ";");
+      for (const alpha of entry.alphaVariants) {
+        const { r, g, b, a } = alpha.rgba;
+        lines.push("$" + _slug(entry.cLabel) + "-alpha-" + alpha.opacity + ": rgba(" + r + ", " + g + ", " + b + ", " + a + ");");
+      }
+    }
+    return lines.join("\n");
+  },
+
   scale(result: EngineResult, config: ExportConfig): string {
     const lines = ["// " + (config.name || "tokens") + " — color scale variables", "// Do not edit manually.\n"];
     const scales = result.scales ?? {};

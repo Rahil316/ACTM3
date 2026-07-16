@@ -1,10 +1,11 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _snake, _hexComponents } from './helpers';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _snake, _hexComponents, _eachSourceColor } from './helpers';
 
-function _toARGB(hex: string): string {
+function _toHex2(n: number): string { const s = n.toString(16).toUpperCase(); return s.length === 1 ? "0" + s : s; }
+
+function _toARGB(hex: string, alpha01 = 1): string {
   const rgb = _hexComponents(hex);
-  const toHex2 = function(n: number): string { const s = n.toString(16).toUpperCase(); return s.length === 1 ? "0" + s : s; };
-  return "#FF" + toHex2(rgb.r) + toHex2(rgb.g) + toHex2(rgb.b);
+  return "#" + _toHex2(Math.round(alpha01 * 255)) + _toHex2(rgb.r) + _toHex2(rgb.g) + _toHex2(rgb.b);
 }
 
 export const fmtAndroid = {
@@ -19,7 +20,18 @@ export const fmtAndroid = {
     }
     lines.push("<resources>");
     lines.push("");
-    const scales = result.scales ?? {};
+    const sourceColors = _eachSourceColor(config);
+    if (sourceColors.length > 0) {
+      lines.push("    <!-- Source Colors (raw, no theme processing) -->");
+      for (const entry of sourceColors) {
+        lines.push("    <color name=\"" + _snake([entry.cLabel, "source"]) + "\">" + _toARGB(entry.hex) + "</color>");
+        for (const alpha of entry.alphaVariants) {
+          lines.push("    <color name=\"" + _snake([entry.cLabel, "source", "alpha", String(alpha.opacity)]) + "\">" + _toARGB(entry.hex, alpha.rgba.a) + "</color>");
+        }
+      }
+      lines.push("");
+    }
+    const scales = config.includeColorScalesCollection !== false ? (result.scales ?? {}) : {};
     const scaleNames = Object.keys(scales);
     if (scaleNames.length > 0) {
       lines.push("    <!-- Color Scales -->");

@@ -1,5 +1,5 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug } from './helpers';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _eachSourceColor } from './helpers';
 
 export const fmtTailwind = {
   config(result: EngineResult, config: ExportConfig): string {
@@ -10,7 +10,7 @@ export const fmtTailwind = {
     lines.push("  theme: {");
     lines.push("    extend: {");
     lines.push("      colors: {");
-    const scales = result.scales ?? {};
+    const scales = config.includeColorScalesCollection !== false ? (result.scales ?? {}) : {};
     const scaleNames = Object.keys(scales);
     for (let ci = 0; ci < scaleNames.length; ci++) {
       const colorName = scaleNames[ci];
@@ -25,6 +25,18 @@ export const fmtTailwind = {
         lines.push("          " + JSON.stringify(stepSlug) + ": \"var(" + varName + ")\",");
       }
       lines.push("        },");
+    }
+    const sourceColors = _eachSourceColor(config);
+    if (sourceColors.length > 0) {
+      lines.push("        // Source colors (CSS var references)");
+      for (const entry of sourceColors) {
+        const key = _slug(entry.cLabel);
+        lines.push("        " + JSON.stringify(key) + ": \"var(--" + key + ")\",");
+        for (const alpha of entry.alphaVariants) {
+          const alphaKey = key + "-alpha-" + alpha.opacity;
+          lines.push("        " + JSON.stringify(alphaKey) + ": \"var(--" + alphaKey + ")\",");
+        }
+      }
     }
     const themeKeys = Object.keys(result.tokens || {});
     if (themeKeys.length > 0) {

@@ -313,14 +313,41 @@ export function makeBootstrapState(): ProjectStore {
       { _id: generateId(), name: "Light", bg: "#FFFFFF" },
       { _id: generateId(), name: "Dark", bg: "#0F0F0F" },
     ],
+    exportSettings: makeDefaultExportSettings(),
   };
 
   return state;
 }
 
+// Export-only overrides default to matching Figma exactly — zero behavior
+// change until the user explicitly turns matchFigma off. `custom`'s starting
+// values mirror the bootstrap project's own settings so switching matchFigma
+// off doesn't jump to surprising values before the user edits anything.
+export function makeDefaultExportSettings(): import("../types/state").ExportSettings {
+  return {
+    matchFigma: true,
+    custom: {
+      tokenNameSegments: ["color", "role", "variation"],
+      useShorthandColors: false,
+      useShorthandRoles: false,
+      useShorthandVariations: false,
+      useShorthandSteps: false,
+      includeSourceColors: false,
+      alphaValues: [],
+      includeColorScalesCollection: true,
+      includeDescriptions: false,
+    },
+  };
+}
+
 // ── ensureVariations ─────────────────────────────────────────────────────────
 
 export function ensureVariations(state: ProjectStore): void {
+  // ── Ensure exportSettings exists (older presets/.wand files predate it) ──
+  if (!state.exportSettings) {
+    state.exportSettings = makeDefaultExportSettings();
+  }
+
   // ── Normalize alphaValues ──
   if (typeof state.alphaValues === "string") {
     state.alphaValues = (state.alphaValues as string)
@@ -475,6 +502,10 @@ interface projectStoreState {
   // Global app field setter (used by settings overlay)
   setProjectField: <K extends keyof ProjectStore>(key: K, value: ProjectStore[K]) => void;
 
+  // Export Settings tab — never affects Figma sync/canvas preview, only file exports
+  setExportMatchFigma: (matchFigma: boolean) => void;
+  setExportCustomField: <K extends keyof import("../types/state").ExportSettings["custom"]>(key: K, value: import("../types/state").ExportSettings["custom"][K]) => void;
+
   // Project
   updateProjectName: (value: string) => void;
   updateProjectDescription: (value: string) => void;
@@ -603,6 +634,29 @@ export const useProjectStore = create<projectStoreState>((set, get) => ({
         }));
       }
       return { projectStore: next };
+    });
+  },
+
+  // ── Export Settings ──
+
+  setExportMatchFigma: (matchFigma) => {
+    set((s) => ({
+      projectStore: {
+        ...s.projectStore,
+        exportSettings: { ...(s.projectStore.exportSettings ?? makeDefaultExportSettings()), matchFigma },
+      },
+    }));
+  },
+
+  setExportCustomField: (key, value) => {
+    set((s) => {
+      const current = s.projectStore.exportSettings ?? makeDefaultExportSettings();
+      return {
+        projectStore: {
+          ...s.projectStore,
+          exportSettings: { ...current, custom: { ...current.custom, [key]: value } },
+        },
+      };
     });
   },
 

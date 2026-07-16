@@ -9,6 +9,29 @@ export { PRESETS } from "../../shared/presets/themeShop";
 
 import type { PluginMode, ScaleAlgorithm, SolverMode, AlgorithmScopeLevel, TokenNameSegment, ScaleStep, Variation, Color, Role, Theme } from "../../shared/types";
 
+// Export-only overrides — used exclusively when building file exports
+// (CSV/CSS/SCSS/Tailwind/DTCG/Style Dictionary/Swift/Android/React Native),
+// never for Figma sync or canvas preview, which always use the main
+// Engine/Naming/Extra settings above regardless of this field.
+export interface ExportSettings {
+  // When true (default), exports derive every setting below from the main
+  // project settings — this field's `custom` values are ignored entirely.
+  matchFigma: boolean;
+  custom: {
+    tokenNameSegments: TokenNameSegment[];
+    useShorthandColors: boolean;
+    useShorthandRoles: boolean;
+    useShorthandVariations: boolean;
+    useShorthandSteps: boolean;
+    includeSourceColors: boolean;
+    alphaValues: number[];
+    // Only meaningful in Scale mode — Direct mode has no scale data to
+    // include regardless of this override (see clrEngine.ts's variableMaker).
+    includeColorScalesCollection: boolean;
+    includeDescriptions: boolean;
+  };
+}
+
 export type ProjectStoreSnapshot = Omit<ProjectStore, "versions">;
 
 export interface Version {
@@ -57,6 +80,9 @@ export interface ProjectStore {
   roles: Role[];
   themes: Theme[];
 
+  // Optional: absent on presets/.wand files saved before this feature existed —
+  // treated as { matchFigma: true } (today's behavior) when missing.
+  exportSettings?: ExportSettings;
 }
 
 // ── UI preferences ───────────────────────────────────────────────────────────
@@ -74,7 +100,7 @@ export interface UiPrefs {
 
 export type SidebarTab = "color-groups" | "roles" | "project" | "versions";
 export type ActiveOverlay = null | "settings" | "preview" | "run-dialog" | "save-version" | "quick-start" | "design-lab" | "export-sheet" | "theme-shop" | "canvas-preview-dev";
-export type SettingsTab = "tokens" | "roles" | "plugin";
+export type SettingsTab = "tokens" | "roles" | "plugin" | "export";
 
 // ── Validation ───────────────────────────────────────────────────────────────
 

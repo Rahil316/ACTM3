@@ -1,5 +1,5 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _stepLabel, _camel, _hexComponents, _eachToken } from './helpers';
+import { _colorLabel, _stepLabel, _camel, _hexComponents, _eachToken, _eachSourceColor } from './helpers';
 
 // Each theme gets its own namespace enum so static members never collide when
 // multiple theme files are added to the same Xcode target.
@@ -16,7 +16,7 @@ export const fmtSwift = {
     lines.push("import UIKit");
     lines.push("import SwiftUI");
     lines.push("");
-    const scales = result.scales ?? {};
+    const scales = config.includeColorScalesCollection !== false ? (result.scales ?? {}) : {};
     const scaleNames = Object.keys(scales);
     const hasScales = scaleNames.length > 0;
 
@@ -62,6 +62,19 @@ export const fmtSwift = {
         const rgb = _hexComponents(token.value);
         lines.push("  static let " + varName + " = Color(red: " + (rgb.r / 255).toFixed(4) + ", green: " + (rgb.g / 255).toFixed(4) + ", blue: " + (rgb.b / 255).toFixed(4) + ")");
       });
+      lines.push("}");
+    }
+    const sourceColors = _eachSourceColor(config);
+    if (sourceColors.length > 0) {
+      lines.push("\n// MARK: - Source Colors (raw, no theme processing)");
+      lines.push("extension UIColor." + themeEnum + " {");
+      for (const entry of sourceColors) {
+        const rgb = _hexComponents(entry.hex);
+        lines.push("  static let " + _camel([entry.cLabel, "source"]) + " = UIColor(red: " + (rgb.r / 255).toFixed(4) + ", green: " + (rgb.g / 255).toFixed(4) + ", blue: " + (rgb.b / 255).toFixed(4) + ", alpha: 1)");
+        for (const alpha of entry.alphaVariants) {
+          lines.push("  static let " + _camel([entry.cLabel, "source", "alpha", String(alpha.opacity)]) + " = UIColor(red: " + (rgb.r / 255).toFixed(4) + ", green: " + (rgb.g / 255).toFixed(4) + ", blue: " + (rgb.b / 255).toFixed(4) + ", alpha: " + alpha.rgba.a.toFixed(4) + ")");
+        }
+      }
       lines.push("}");
     }
     return lines.join("\n");

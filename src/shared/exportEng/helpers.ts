@@ -109,6 +109,34 @@ export function _splitTokenRef(ref: string): { color: string; step: string } {
   return { color: ref.substring(0, last), step: ref.substring(last + 1) };
 }
 
+export interface SourceColorEntry {
+  colorName: string;
+  cLabel: string;
+  hex: string;
+  alphaVariants: { opacity: number; rgba: { r: number; g: number; b: number; a: number } }[];
+}
+
+// Mirrors figmaVars.ts's syncGlobalColors naming/value convention exactly:
+// base swatch = plain color label (no self-nested folder), alpha variants =
+// "{label}/Alpha/{opacity}" with opacity baked into the alpha channel — same
+// shapes and names a Figma sync would produce, so exports stay consistent
+// with what's actually published (when includeColorScalesCollection-style
+// export settings match Figma; see index.ts's applyExportOverrides).
+export function _eachSourceColor(config: ExportConfig): SourceColorEntry[] {
+  if (!config.includeSourceColors || !config.colors) return [];
+  const alphaValues = config.alphaValues ?? [];
+  return config.colors.map((color) => {
+    const cLabel = config.useShorthandColors && color.shorthand ? color.shorthand : color.name;
+    const hex = "#" + color.value.replace(/^#/, "").toUpperCase().padEnd(6, "0");
+    const rgb = _hexComponents(hex);
+    const alphaVariants = alphaValues.map((opacity) => ({
+      opacity,
+      rgba: { r: rgb.r, g: rgb.g, b: rgb.b, a: opacity / 100 },
+    }));
+    return { colorName: color.name, cLabel, hex, alphaVariants };
+  });
+}
+
 export function _eachToken(result: EngineResult, config: ExportConfig, cb: EachTokenCallback): void {
   const themeKeys = Object.keys(result.tokens || {});
   for (let ti = 0; ti < themeKeys.length; ti++) {

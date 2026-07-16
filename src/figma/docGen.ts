@@ -1,4 +1,5 @@
 import type { EngineResult, ExportConfig, Role, TokenEntry } from "../shared/exportEng/types";
+import { _eachSourceColor } from "../shared/exportEng/helpers";
 
 type TokenVariations = Record<string, Record<string, TokenEntry>>;
 
@@ -11,14 +12,29 @@ export const ExportFormatter = {
   toCSV(result: EngineResult, config: ExportConfig): string {
     const lines: string[] = [];
 
-    const scaleEntries = Object.values(result.scales || {});
+    const sourceColors = _eachSourceColor(config);
+    if (sourceColors.length > 0) {
+      lines.push("SOURCE COLORS");
+      lines.push("Color,Hex,Alpha %,Alpha Hex");
+      for (const entry of sourceColors) {
+        lines.push([csvField(entry.cLabel), csvField(entry.hex), "", ""].join(","));
+        for (const alpha of entry.alphaVariants) {
+          const { r, g, b, a } = alpha.rgba;
+          lines.push([csvField(entry.cLabel), csvField(entry.hex), csvField(alpha.opacity), csvField(`rgba(${r}, ${g}, ${b}, ${a})`)].join(","));
+        }
+      }
+      lines.push("");
+    }
+
+    const scales = config.includeColorScalesCollection !== false ? (result.scales ?? {}) : {};
+    const scaleEntries = Object.values(scales);
     if (scaleEntries.length > 0) {
       const firstStep = Object.values(scaleEntries[0])[0];
       const contrastKeys = firstStep ? Object.keys(firstStep.contrast || {}) : [];
       const scaleHeader = ["Group", "Step", "Hex", ...contrastKeys.flatMap((k) => [k + " Contrast", k + " Rating"])].join(",");
       lines.push("COLOR SCALES");
       lines.push(scaleHeader);
-      for (const [colorName, scale] of Object.entries(result.scales || {})) {
+      for (const [colorName, scale] of Object.entries(scales)) {
         for (const [step, entry] of Object.entries(scale)) {
           const contrast = entry.contrast;
           const contrastCols = contrastKeys.flatMap((k) => [csvField(contrast && contrast[k] ? contrast[k].ratio : ""), csvField(contrast && contrast[k] ? contrast[k].rating : "")]);

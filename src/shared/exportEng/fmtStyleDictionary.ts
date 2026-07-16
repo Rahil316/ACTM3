@@ -1,9 +1,25 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, _splitTokenRef } from './helpers';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, _splitTokenRef, _eachSourceColor } from './helpers';
 
 export const fmtStyleDictionary = {
   global(result: EngineResult, config: ExportConfig): string {
-    const out: Record<string, Record<string, Record<string, Record<string, unknown>>>> = { color: {} };
+    // "source" is a sibling namespace to "color" (scale), not merged into it —
+    // scale and source entries commonly share the same color name (e.g. both
+    // have "Primary"), so writing both into out.color[cLabel] would silently
+    // clobber one with the other.
+    const out: Record<string, Record<string, Record<string, Record<string, unknown>>>> & { source?: Record<string, Record<string, unknown>> } = { color: {} };
+    const sourceEntries = _eachSourceColor(config);
+    if (sourceEntries.length > 0) {
+      out.source = {};
+      for (const entry of sourceEntries) {
+        const cLabel = _slug(entry.cLabel);
+        out.source[cLabel] = { base: { value: entry.hex, type: "color", attributes: { category: "color", source: cLabel } } };
+        for (const alpha of entry.alphaVariants) {
+          const { r, g, b, a } = alpha.rgba;
+          (out.source[cLabel] as Record<string, unknown>)["alpha-" + alpha.opacity] = { value: `rgba(${r}, ${g}, ${b}, ${a})`, type: "color", attributes: { category: "color", source: cLabel, opacity: alpha.opacity } };
+        }
+      }
+    }
     const scales = result.scales ?? {};
     const scaleNames = Object.keys(scales);
     for (let ci = 0; ci < scaleNames.length; ci++) {

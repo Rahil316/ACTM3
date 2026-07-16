@@ -46,10 +46,17 @@ export function buildExportBundle(
   // Multi-file formats within a zip use {tech}/ subfolders (no project prefix inside).
   const multi = formats.length > 1;
   const pre = (tech: string) => multi ? `${tech}/` : `${projectSlug}_${tech}_${ts}/`;
-  const hasScales = Object.keys(result.scales || {}).length > 0;
+  // includeColorScalesCollection was previously NOT checked here — hasScales
+  // only ever looked at whether the engine happened to compute scale data
+  // (always true in Scale mode, unconditionally, regardless of this setting —
+  // see clrEngine.ts). That meant turning the setting off in Scale mode had no
+  // effect on exports even though it suppresses the collection in Figma sync.
+  const hasScales = config.includeColorScalesCollection !== false && Object.keys(result.scales || {}).length > 0;
+  const hasSource = config.includeSourceColors === true && (config.colors?.length ?? 0) > 0;
 
   for (const fmt of formats) {
     if (fmt === "css") {
+      if (hasSource) files.push({ path: `${pre("css")}source.css`, content: fmtCSS.source(config) });
       if (hasScales) files.push({ path: `${pre("css")}scale.css`, content: fmtCSS.scale(result, config) });
       for (let ti = 0; ti < themeKeys.length; ti++) {
         files.push({ path: `${pre("css")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, config, themeKeys[ti], ti === 0) });
@@ -57,6 +64,7 @@ export function buildExportBundle(
     }
 
     if (fmt === "scss") {
+      if (hasSource) files.push({ path: `${pre("scss")}_source.scss`, content: fmtSCSS.source(config) });
       if (hasScales) files.push({ path: `${pre("scss")}_scale.scss`, content: fmtSCSS.scale(result, config) });
       files.push({ path: `${pre("scss")}_tokens.scss`, content: fmtSCSS.tokens(result, config) });
       files.push({ path: `${pre("scss")}index.scss`, content: fmtSCSS.index(result, config) });
@@ -64,7 +72,8 @@ export function buildExportBundle(
 
     if (fmt === "tailwind") {
       files.push({ path: `${pre("tailwind")}tailwind.config.js`, content: fmtTailwind.config(result, config) });
-      // tokens.css is the scale companion — only include when there are scales
+      // tokens.css is the scale/source companion — only include what applies
+      if (hasSource) files.push({ path: `${pre("tailwind")}source.css`, content: fmtCSS.source(config) });
       if (hasScales) files.push({ path: `${pre("tailwind")}tokens.css`, content: fmtCSS.scale(result, config) });
       for (let ti = 0; ti < themeKeys.length; ti++) {
         files.push({ path: `${pre("tailwind")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, config, themeKeys[ti], ti === 0) });
@@ -72,6 +81,7 @@ export function buildExportBundle(
     }
 
     if (fmt === "dtcg") {
+      if (hasSource) files.push({ path: `${pre("dtcg")}source.json`, content: fmtDTCG.source(config) });
       if (hasScales) files.push({ path: `${pre("dtcg")}scale.json`, content: fmtDTCG.scale(result, config) });
       for (const theme of themeKeys) {
         files.push({ path: `${pre("dtcg")}${_slug(theme)}.json`, content: fmtDTCG.theme(result, config, theme) });
@@ -79,8 +89,8 @@ export function buildExportBundle(
     }
 
     if (fmt === "style-dictionary") {
-      // global.json only contains scales; skip when empty
-      if (hasScales) files.push({ path: `${pre("style-dictionary")}global.json`, content: fmtStyleDictionary.global(result, config) });
+      // global.json holds scale + source; skip only when both are empty
+      if (hasScales || hasSource) files.push({ path: `${pre("style-dictionary")}global.json`, content: fmtStyleDictionary.global(result, config) });
       for (const theme of themeKeys) {
         files.push({ path: `${pre("style-dictionary")}${_slug(theme)}.json`, content: fmtStyleDictionary.theme(result, config, theme) });
       }
