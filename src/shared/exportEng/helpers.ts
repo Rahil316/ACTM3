@@ -113,27 +113,33 @@ export interface SourceColorEntry {
   colorName: string;
   cLabel: string;
   hex: string;
-  alphaVariants: { opacity: number; rgba: { r: number; g: number; b: number; a: number } }[];
+  description: string; // "" when includeDescriptions is off — callers should treat falsy as "omit"
+  alphaVariants: { opacity: number; description: string; rgba: { r: number; g: number; b: number; a: number } }[];
 }
 
-// Mirrors figmaVars.ts's syncGlobalColors naming/value convention exactly:
-// base swatch = plain color label (no self-nested folder), alpha variants =
-// "{label}/Alpha/{opacity}" with opacity baked into the alpha channel — same
-// shapes and names a Figma sync would produce, so exports stay consistent
-// with what's actually published (when includeColorScalesCollection-style
-// export settings match Figma; see index.ts's applyExportOverrides).
+// Mirrors figmaVars.ts's syncGlobalColors naming/value/description convention
+// exactly: base swatch = plain color label (no self-nested folder), alpha
+// variants = "{label}/Alpha/{opacity}" with opacity baked into the alpha
+// channel, base description = color.description or the same fallback text
+// syncGlobalColors uses, alpha description = "{opacity}% opacity variant" —
+// same shapes/names/text a Figma sync would produce, so exports stay
+// consistent with what's actually published (when the Export Settings tab is
+// matching Figma; see index.ts's applyExportOverrides).
 export function _eachSourceColor(config: ExportConfig): SourceColorEntry[] {
   if (!config.includeSourceColors || !config.colors) return [];
   const alphaValues = config.alphaValues ?? [];
+  const includeDesc = config.includeDescriptions !== false;
   return config.colors.map((color) => {
     const cLabel = config.useShorthandColors && color.shorthand ? color.shorthand : color.name;
     const hex = "#" + color.value.replace(/^#/, "").toUpperCase().padEnd(6, "0");
     const rgb = _hexComponents(hex);
+    const description = includeDesc ? color.description || "Brand constant — raw hex, no theme processing" : "";
     const alphaVariants = alphaValues.map((opacity) => ({
       opacity,
+      description: includeDesc ? `${opacity}% opacity variant` : "",
       rgba: { r: rgb.r, g: rgb.g, b: rgb.b, a: opacity / 100 },
     }));
-    return { colorName: color.name, cLabel, hex, alphaVariants };
+    return { colorName: color.name, cLabel, hex, description, alphaVariants };
   });
 }
 

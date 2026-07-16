@@ -14,7 +14,8 @@ export default tseslint.config(
       "**/tailwind.config.js",
       "vite.config.ts",
       "test-data/",
-      "preset-data/"
+      "preset-data/",
+      "export-test/"
     ],
   },
 

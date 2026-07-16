@@ -7,9 +7,12 @@ export const fmtDTCG = {
     for (const entry of _eachSourceColor(config)) {
       const cLabel = _slug(entry.cLabel);
       out[cLabel] = { "$value": entry.hex, "$type": "color" };
+      if (entry.description) out[cLabel]["$description"] = entry.description;
       for (const alpha of entry.alphaVariants) {
         const { r, g, b, a } = alpha.rgba;
-        out[cLabel + "-alpha-" + alpha.opacity] = { "$value": `rgba(${r}, ${g}, ${b}, ${a})`, "$type": "color" };
+        const key = cLabel + "-alpha-" + alpha.opacity;
+        out[key] = { "$value": `rgba(${r}, ${g}, ${b}, ${a})`, "$type": "color" };
+        if (alpha.description) out[key]["$description"] = alpha.description;
       }
     }
     return JSON.stringify(out, null, 2);

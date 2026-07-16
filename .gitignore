@@ -19,6 +19,11 @@ test-data/results/
 # real presets rather than a synthetic seed grid, but still regenerated data).
 preset-data/results/
 
+# Export-format test harness output — regenerated via `npx tsx export-test/run.ts`.
+# Keep the harness code (export-test/scripts/, export-test/run.ts) tracked;
+# never the generated export files/summary.
+export-test/results/
+
 # Export output folders
 lib/*/
 
