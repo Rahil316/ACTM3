@@ -27,6 +27,26 @@ export interface PluginConfig extends EngineInput {
   includeColorScalesCollection: boolean;
 }
 
+// Some .wand files in the wild (from older plugin versions, or hand-edited)
+// store alphaValues as a comma-separated string rather than number[] — the
+// main plugin's own import path (projectStore.ts's ensureVariations) already
+// normalizes this before anything reads it, but the CLI's loadWandFile()
+// deserializes a .wand file directly with no equivalent normalization step,
+// so a raw string reached here unguarded and crashed downstream .map() calls
+// with "alphaValues.map is not a function". translateConfig is the one
+// function every caller (plugin, canvas preview, CLI) funnels through before
+// touching alphaValues, so the guard belongs here rather than duplicated at
+// each call site — same parsing rules as ensureVariations, kept in sync by hand.
+export function normalizeAlphaValues(raw: unknown): number[] {
+  if (typeof raw === "string") {
+    return raw
+      .split(",")
+      .map((v) => parseInt(v.trim(), 10))
+      .filter((v) => !isNaN(v) && v >= 0 && v <= 100);
+  }
+  return Array.isArray(raw) ? raw : [];
+}
+
 export function translateConfig(projectStore: ProjectStore): PluginConfig {
   const scaleLength = projectStore.scaleLength || 23;
   const stepNames = _parseStepNames(projectStore, scaleLength);
@@ -65,7 +85,7 @@ export function translateConfig(projectStore: ProjectStore): PluginConfig {
     sourceCollectionName: projectStore.sourceCollectionName || "_constants",
     scaleCollectionName: projectStore.scaleCollectionName || "_scale",
     tokenCollectionName: projectStore.tokenCollectionName || "color tokens",
-    alphaValues: projectStore.alphaValues || [],
+    alphaValues: normalizeAlphaValues(projectStore.alphaValues),
     includeDescriptions: projectStore.includeDescriptions !== false,
     includeColorScalesCollection: projectStore.includeColorScalesCollection !== false,
     useUniformAlgorithm: projectStore.useUniformAlgorithm !== false,

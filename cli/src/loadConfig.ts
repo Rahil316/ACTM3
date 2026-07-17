@@ -16,6 +16,16 @@ export type SupportedFormat = (typeof SUPPORTED_FORMATS)[number];
 export interface ExportTarget {
   format: SupportedFormat;
   outDir: string;
+  // Optional per-file rename map, keyed by that file's ROLE within the
+  // format (not the default filename) — "scale", "source", "tokens",
+  // "index", or a theme name (lowercased). See src/shared/exportEng/types.ts's
+  // ExportFile.role for exactly which roles each format produces, and the
+  // README's table for a per-format list. A role with no entry here keeps
+  // its default generated name. Values are filenames only (e.g.
+  // "brand-light.css"), not full paths — outDir still controls the
+  // directory (except Android, whose res/{qualifier}/colors.xml structure
+  // is fixed by platform convention and can't be renamed here).
+  fileNames?: Record<string, string>;
 }
 
 export interface TokenWandConfig {
@@ -24,6 +34,36 @@ export interface TokenWandConfig {
 }
 
 export class ConfigFileError extends Error {}
+
+// Backfills each target's fileNames map with default-name entries for every
+// role this run actually produced, WITHOUT overwriting anything the user
+// already set: a target that already has a fileNames key (even {}) is
+// treated as "user is managing this themselves" and only gains entries for
+// roles genuinely missing from it; a target with no fileNames key at all
+// gets one created from scratch. Mutates `config` in place (targets/fileNames
+// objects only — wandFile and target order are untouched) and returns which
+// target/role pairs were newly added, so the caller can print a notice and
+// decide whether to persist the change (e.g. skipped entirely under --dry-run).
+export interface FileNamesBackfillEntry {
+  targetIndex: number;
+  role: string;
+  defaultFileName: string;
+}
+
+export function backfillFileNames(config: TokenWandConfig, rolesByTargetIndex: Array<{ role: string; defaultFileName: string }[]>): FileNamesBackfillEntry[] {
+  const added: FileNamesBackfillEntry[] = [];
+  config.targets.forEach((target, targetIndex) => {
+    const roles = rolesByTargetIndex[targetIndex] ?? [];
+    if (roles.length === 0) return;
+    if (!target.fileNames) target.fileNames = {};
+    for (const { role, defaultFileName } of roles) {
+      if (target.fileNames[role] !== undefined) continue; // never overwrite an existing entry
+      target.fileNames[role] = defaultFileName;
+      added.push({ targetIndex, role, defaultFileName });
+    }
+  });
+  return added;
+}
 
 export function loadConfigFile(path: string): TokenWandConfig {
   let raw: string;
@@ -66,6 +106,19 @@ export function loadConfigFile(path: string): TokenWandConfig {
     }
     if (typeof t.outDir !== "string" || t.outDir.length === 0) {
       throw new ConfigFileError(`targets[${i}].outDir in ${path} must be a non-empty string.`);
+    }
+    if (t.fileNames !== undefined) {
+      if (typeof t.fileNames !== "object" || t.fileNames === null || Array.isArray(t.fileNames)) {
+        throw new ConfigFileError(`targets[${i}].fileNames in ${path} must be an object mapping role -> filename.`);
+      }
+      for (const [role, name] of Object.entries(t.fileNames)) {
+        if (typeof name !== "string" || name.length === 0) {
+          throw new ConfigFileError(`targets[${i}].fileNames["${role}"] in ${path} must be a non-empty string.`);
+        }
+        if (name.includes("/") || name.includes("\\")) {
+          throw new ConfigFileError(`targets[${i}].fileNames["${role}"] in ${path} must be a filename, not a path (got ${JSON.stringify(name)}) — outDir already controls the directory.`);
+        }
+      }
     }
   });
 

@@ -159,5 +159,41 @@ export function buildFixtures(): Fixture[] {
         ],
       }),
     },
+    {
+      id: "with-version-history",
+      description: "Has 3 saved versions — the .wand format must exclude them entirely (current state only); wand-backup must include all 3 plus the current state.",
+      projectStore: baseStore({
+        versions: [
+          { _id: "ver-3", name: "Published — v3", description: "12 updated", createdAt: 3000, state: baseStore({ name: "Export Test (v3 snapshot)" }) },
+          { _id: "ver-2", name: "Published — v2", description: "8 updated", createdAt: 2000, state: baseStore({ name: "Export Test (v2 snapshot)" }) },
+          { _id: "ver-1", name: "Published — v1", description: "created", createdAt: 1000, state: baseStore({ name: "Export Test (v1 snapshot)" }) },
+        ],
+      }),
+    },
+    {
+      id: "legacy-alpha-values-string",
+      description: "alphaValues stored as a comma-separated string (legacy .wand shape some hand-edited/older files carry) instead of number[] — must not crash translateConfig's downstream .map() calls. Reproduces the CLI's real \"alphaValues.map is not a function\" bug.",
+      projectStore: baseStore({ includeSourceColors: true, alphaValues: "10, 25,50 ,75" as unknown as number[] }),
+    },
+    {
+      id: "legacy-alpha-values-string-export-override",
+      description: "Same legacy string shape, but on exportSettings.custom.alphaValues (the Export Settings tab's override) rather than the top-level field — a second, independent code path (applyExportOverrides) that needs the same guard.",
+      projectStore: baseStore({
+        exportSettings: {
+          matchFigma: false,
+          custom: {
+            tokenNameSegments: ["color", "role", "variation"],
+            useShorthandColors: false,
+            useShorthandRoles: false,
+            useShorthandVariations: false,
+            useShorthandSteps: false,
+            includeSourceColors: true,
+            alphaValues: "5,15,30" as unknown as number[],
+            includeColorScalesCollection: true,
+            includeDescriptions: false,
+          },
+        },
+      }),
+    },
   ];
 }

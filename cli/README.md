@@ -39,7 +39,58 @@ changes (e.g. after a re-export).
 
    This writes every configured format to its `outDir`, creating folders as
    needed. Existing files with the same name are overwritten; nothing else
-   in `outDir` is touched or deleted.
+   in `outDir` is touched or deleted. Output is reported per file as
+   `created` (path didn't exist), `updated` (existed with different
+   content), or `unchanged` (existed, identical content — not rewritten).
+
+   The first real (non-`--dry-run`) build also adds a `fileNames` entry to
+   `token-wand.config.json` for every file it generated, using today's
+   default names — see "Renaming output files" below. This is the only way
+   the CLI writes to its own config file; it never happens under `--dry-run`.
+
+## Renaming output files
+
+Every format produces more than one file (one per theme, plus scale/source
+companions), so there's no single "output filename" to set — instead, each
+target can carry a `fileNames` map keyed by that file's **role**:
+
+```json
+{
+  "format": "css",
+  "outDir": "./src/styles/tokens",
+  "fileNames": {
+    "scale": "_scale-vars.css",
+    "light": "theme-light.css",
+    "dark": "theme-dark.css"
+  }
+}
+```
+
+You don't need to write this by hand: the first build auto-populates it with
+the default names (`scale.css`, `light.css`, `dark.css`, ...) so you can see
+exactly which roles exist and rename whichever ones you want — edit the
+values, leave the keys alone. If a later build introduces a new role (e.g. a
+new theme was added upstream), the CLI appends just that one entry with a
+default name and prints a `+ added fileNames[...]` notice; it never
+overwrites an entry you've already set.
+
+Values are filenames only (e.g. `"theme-light.css"`), not paths — `outDir`
+still controls the directory. The one exception is Android: its
+`res/{qualifier}/colors.xml` structure is fixed by platform convention, so
+`fileNames` there renames the qualifier directory (the role), not
+`colors.xml` itself.
+
+Common roles by format:
+
+| Format | Roles |
+|---|---|
+| `css`, `tailwind`, `dtcg`, `style-dictionary` | `scale`, `source` (if enabled), plus one per theme name |
+| `scss` | `scale`, `source` (if enabled), `tokens`, `index` |
+| `ios-swift`, `android` | one per theme name |
+| `rn-ts` | `index`, plus one per theme name |
+
+(`tailwind` also has a `config` role for `tailwind.config.js`, which has no
+sensible per-theme alternative and is rarely worth renaming.)
 
 ## Commands
 
@@ -52,6 +103,7 @@ Reads `token-wand.config.json` (or the path given by `--config`), reads the
 |---|---|---|
 | `--config <path>` | `token-wand.config.json` | Use a different config file. |
 | `--dry-run` | off | Print what would be written without touching disk. Use this the first time you point the CLI at a new repo, to confirm `outDir` is correct before anything is overwritten. |
+| `-h`, `--help` | off | Print usage and exit. |
 
 ## How this works
 

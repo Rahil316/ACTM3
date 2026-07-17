@@ -30,4 +30,10 @@ export interface ExportConfig {
 export interface ExportFile {
   path: string;
   content: string;
+  // Stable identity for this file within its format — "scale", "source",
+  // "tokens", "index", or a theme name (lowercased). Lets a caller (the CLI's
+  // config-driven filename overrides, see cli/src/build.ts) rename a specific
+  // generated file without needing to know the format's exact default naming
+  // scheme. Not read anywhere in the plugin's own export UI — additive only.
+  role?: string;
 }

@@ -56,69 +56,72 @@ export function buildExportBundle(
 
   for (const fmt of formats) {
     if (fmt === "css") {
-      if (hasSource) files.push({ path: `${pre("css")}source.css`, content: fmtCSS.source(config) });
-      if (hasScales) files.push({ path: `${pre("css")}scale.css`, content: fmtCSS.scale(result, config) });
+      if (hasSource) files.push({ path: `${pre("css")}source.css`, content: fmtCSS.source(config), role: "source" });
+      if (hasScales) files.push({ path: `${pre("css")}scale.css`, content: fmtCSS.scale(result, config), role: "scale" });
       for (let ti = 0; ti < themeKeys.length; ti++) {
-        files.push({ path: `${pre("css")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, config, themeKeys[ti], ti === 0) });
+        files.push({ path: `${pre("css")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, config, themeKeys[ti], ti === 0), role: themeKeys[ti] });
       }
     }
 
     if (fmt === "scss") {
-      if (hasSource) files.push({ path: `${pre("scss")}_source.scss`, content: fmtSCSS.source(config) });
-      if (hasScales) files.push({ path: `${pre("scss")}_scale.scss`, content: fmtSCSS.scale(result, config) });
-      files.push({ path: `${pre("scss")}_tokens.scss`, content: fmtSCSS.tokens(result, config) });
-      files.push({ path: `${pre("scss")}index.scss`, content: fmtSCSS.index(result, config) });
+      if (hasSource) files.push({ path: `${pre("scss")}_source.scss`, content: fmtSCSS.source(config), role: "source" });
+      if (hasScales) files.push({ path: `${pre("scss")}_scale.scss`, content: fmtSCSS.scale(result, config), role: "scale" });
+      files.push({ path: `${pre("scss")}_tokens.scss`, content: fmtSCSS.tokens(result, config), role: "tokens" });
+      files.push({ path: `${pre("scss")}index.scss`, content: fmtSCSS.index(result, config), role: "index" });
     }
 
     if (fmt === "tailwind") {
-      files.push({ path: `${pre("tailwind")}tailwind.config.js`, content: fmtTailwind.config(result, config) });
+      files.push({ path: `${pre("tailwind")}tailwind.config.js`, content: fmtTailwind.config(result, config), role: "config" });
       // tokens.css is the scale/source companion — only include what applies
-      if (hasSource) files.push({ path: `${pre("tailwind")}source.css`, content: fmtCSS.source(config) });
-      if (hasScales) files.push({ path: `${pre("tailwind")}tokens.css`, content: fmtCSS.scale(result, config) });
+      if (hasSource) files.push({ path: `${pre("tailwind")}source.css`, content: fmtCSS.source(config), role: "source" });
+      if (hasScales) files.push({ path: `${pre("tailwind")}tokens.css`, content: fmtCSS.scale(result, config), role: "scale" });
       for (let ti = 0; ti < themeKeys.length; ti++) {
-        files.push({ path: `${pre("tailwind")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, config, themeKeys[ti], ti === 0) });
+        files.push({ path: `${pre("tailwind")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, config, themeKeys[ti], ti === 0), role: themeKeys[ti] });
       }
     }
 
     if (fmt === "dtcg") {
-      if (hasSource) files.push({ path: `${pre("dtcg")}source.json`, content: fmtDTCG.source(config) });
-      if (hasScales) files.push({ path: `${pre("dtcg")}scale.json`, content: fmtDTCG.scale(result, config) });
+      if (hasSource) files.push({ path: `${pre("dtcg")}source.json`, content: fmtDTCG.source(config), role: "source" });
+      if (hasScales) files.push({ path: `${pre("dtcg")}scale.json`, content: fmtDTCG.scale(result, config), role: "scale" });
       for (const theme of themeKeys) {
-        files.push({ path: `${pre("dtcg")}${_slug(theme)}.json`, content: fmtDTCG.theme(result, config, theme) });
+        files.push({ path: `${pre("dtcg")}${_slug(theme)}.json`, content: fmtDTCG.theme(result, config, theme), role: theme });
       }
     }
 
     if (fmt === "style-dictionary") {
       // global.json holds scale + source; skip only when both are empty
-      if (hasScales || hasSource) files.push({ path: `${pre("style-dictionary")}global.json`, content: fmtStyleDictionary.global(result, config) });
+      if (hasScales || hasSource) files.push({ path: `${pre("style-dictionary")}global.json`, content: fmtStyleDictionary.global(result, config), role: "global" });
       for (const theme of themeKeys) {
-        files.push({ path: `${pre("style-dictionary")}${_slug(theme)}.json`, content: fmtStyleDictionary.theme(result, config, theme) });
+        files.push({ path: `${pre("style-dictionary")}${_slug(theme)}.json`, content: fmtStyleDictionary.theme(result, config, theme), role: theme });
       }
     }
 
     if (fmt === "ios-swift") {
       for (const theme of themeKeys) {
         const name = theme.charAt(0).toUpperCase() + theme.slice(1) + "Colors.swift";
-        files.push({ path: `${pre("ios-swift")}${name}`, content: fmtSwift.file(result, config, theme) });
+        files.push({ path: `${pre("ios-swift")}${name}`, content: fmtSwift.file(result, config, theme), role: theme });
       }
     }
 
     if (fmt === "android") {
       // Android only understands values/ (default/light) and values-night/ (dark).
       // Any other theme is exported with a comment qualifier — handled in the formatter.
+      // role = theme name: the qualifier DIRECTORY is what a caller would want
+      // to remap (colors.xml itself is a fixed Android convention, not
+      // something to rename).
       const qualifiers = _androidQualifiers(themeKeys);
       for (let ti = 0; ti < themeKeys.length; ti++) {
         const themeName = themeKeys[ti];
         const qualifier = qualifiers[ti];
         const isNonStandard = qualifier !== "values" && qualifier !== "values-night";
-        files.push({ path: `${pre("android")}res/${qualifier}/colors.xml`, content: fmtAndroid.file(result, config, themeName, isNonStandard) });
+        files.push({ path: `${pre("android")}res/${qualifier}/colors.xml`, content: fmtAndroid.file(result, config, themeName, isNonStandard), role: themeName });
       }
     }
 
     if (fmt === "rn-ts") {
-      files.push({ path: `${pre("rn-ts")}tokens/index.ts`, content: fmtReactNative.index(result, config) });
+      files.push({ path: `${pre("rn-ts")}tokens/index.ts`, content: fmtReactNative.index(result, config), role: "index" });
       for (const theme of themeKeys) {
-        files.push({ path: `${pre("rn-ts")}tokens/${_slug(theme)}.ts`, content: fmtReactNative.theme(result, config, theme) });
+        files.push({ path: `${pre("rn-ts")}tokens/${_slug(theme)}.ts`, content: fmtReactNative.theme(result, config, theme), role: theme });
       }
     }
 
@@ -131,7 +134,22 @@ export function buildExportBundle(
     }
 
     if (fmt === "wand") {
-      files.push({ path: `${projectSlug}_wand_${ts}.wand`, content: JSON.stringify(projectStore || {}, null, 2) });
+      // Current config only — NOT the full publish history. `versions` is an
+      // unbounded, ever-growing log (one full state snapshot appended per
+      // publish, no cap anywhere in the codebase); including it here meant a
+      // project published 100 times produced a .wand file with 100 nearly-
+      // identical copies of its own config. Full history export lives at
+      // "wand-backup" below, under its own explicit label.
+      const { versions: _versions, ...currentStateOnly } = (projectStore || {}) as Record<string, unknown> & { versions?: unknown };
+      files.push({ path: `${projectSlug}_wand_${ts}.wand`, content: JSON.stringify(currentStateOnly, null, 2) });
+    }
+
+    if (fmt === "wand-backup") {
+      // Full plugin backup — current config AND every saved version, exactly
+      // what projectStore holds. Distinct, explicitly-labeled format so a
+      // plain .wand export (above) never surprises the user with the entire
+      // publish history bundled in.
+      files.push({ path: `${projectSlug}_backup_${ts}.wand`, content: JSON.stringify(projectStore || {}, null, 2) });
     }
   }
 

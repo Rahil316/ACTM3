@@ -9,9 +9,9 @@
 // there, so they're duplicated here too — keep in sync by hand if that
 // pipeline's shape ever changes.
 
-import { mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
-import { translateConfig, type PluginConfig } from "../../src/figma/config";
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from "fs";
+import { join, dirname } from "path";
+import { translateConfig, normalizeAlphaValues, type PluginConfig } from "../../src/figma/config";
 import { variableMaker, type EngineResult } from "../../src/shared/engine/clrEngine";
 import { resolveTokenRefBgs } from "../../src/shared/engine/clrUtils";
 import { buildExportBundle } from "../../src/shared/exportEng/bundler";
@@ -44,7 +44,10 @@ function applyExportOverrides(config: PluginConfig, projectStore: ProjectStore):
     useShorthandVariations: c.useShorthandVariations,
     useShorthandSteps: c.useShorthandSteps,
     includeSourceColors: c.includeSourceColors,
-    alphaValues: c.alphaValues,
+    // Guards the exact crash this CLI hit in the wild: a .wand file with
+    // alphaValues stored as a comma-separated string instead of number[]
+    // (see normalizeAlphaValues in src/figma/config.ts for the full story).
+    alphaValues: normalizeAlphaValues(c.alphaValues),
     includeColorScalesCollection: config.pluginMode === "direct" ? config.includeColorScalesCollection : c.includeColorScalesCollection,
     includeDescriptions: c.includeDescriptions,
   };
@@ -56,10 +59,23 @@ function runEngine(config: PluginConfig): EngineResult {
   return pass1;
 }
 
+export type FileWriteStatus = "created" | "updated" | "unchanged";
+
 export interface BuildResult {
   // One entry per config target — the file it would write/wrote, and which
   // outDir it belongs to. Used for both the real write and --dry-run's preview.
-  written: Array<{ format: string; outDir: string; path: string }>;
+  // status is computed by comparing against what's already on disk (even in
+  // --dry-run, so the preview is accurate) — "created" = path didn't exist,
+  // "updated" = existed with different content, "unchanged" = existed with
+  // identical content (still counted so a re-run isn't silently invisible,
+  // but never written to disk).
+  written: Array<{ format: string; outDir: string; path: string; status: FileWriteStatus }>;
+  // Every {role, defaultFileName} this run actually produced, per target
+  // index in config.targets — lets the caller (cli.ts) backfill a target's
+  // missing fileNames map with today's default names, without build.ts
+  // itself touching token-wand.config.json (that's cli.ts's job; build.ts
+  // stays scoped to "generate files").
+  rolesByTargetIndex: Array<{ role: string; defaultFileName: string }[]>;
 }
 
 export function runBuild(projectStore: ProjectStore, config: TokenWandConfig, options: { dryRun: boolean }): BuildResult {
@@ -84,19 +100,51 @@ export function runBuild(projectStore: ProjectStore, config: TokenWandConfig, op
     filesByFormat[format] = files.map((f) => ({ ...f, path: stripLeadingSegment(f.path) }));
   }
 
-  for (const target of config.targets) {
+  const rolesByTargetIndex: BuildResult["rolesByTargetIndex"] = config.targets.map(() => []);
+
+  config.targets.forEach((target, targetIndex) => {
     const formatFiles = filesByFormat[target.format] ?? [];
     for (const file of formatFiles) {
-      const fullPath = join(target.outDir, file.path);
-      if (!options.dryRun) {
-        mkdirSync(join(fullPath, ".."), { recursive: true });
+      if (file.role) {
+        rolesByTargetIndex[targetIndex].push({ role: file.role, defaultFileName: basenameOf(file.path) });
+      }
+
+      const renamedPath = applyFileNameOverride(file.path, file.role, target.fileNames);
+      const fullPath = join(target.outDir, renamedPath);
+
+      let status: FileWriteStatus;
+      if (!existsSync(fullPath)) {
+        status = "created";
+      } else {
+        const existing = readFileSync(fullPath, "utf-8");
+        status = existing === file.content ? "unchanged" : "updated";
+      }
+
+      if (!options.dryRun && status !== "unchanged") {
+        mkdirSync(dirname(fullPath), { recursive: true });
         writeFileSync(fullPath, file.content, "utf-8");
       }
-      written.push({ format: target.format, outDir: target.outDir, path: file.path });
+      written.push({ format: target.format, outDir: target.outDir, path: renamedPath, status });
     }
-  }
+  });
 
-  return { written };
+  return { written, rolesByTargetIndex };
+}
+
+function basenameOf(path: string): string {
+  const slashIndex = path.lastIndexOf("/");
+  return slashIndex === -1 ? path : path.slice(slashIndex + 1);
+}
+
+// Renames a generated file's basename to target.fileNames[role], if that role
+// has an override configured — keeps the file's directory (e.g. Android's
+// "res/{qualifier}/" prefix) untouched, since fileNames controls names only,
+// not paths (outDir is the one place that controls directories).
+function applyFileNameOverride(path: string, role: string | undefined, fileNames: Record<string, string> | undefined): string {
+  if (!role || !fileNames || !fileNames[role]) return path;
+  const dir = dirname(path);
+  const newName = fileNames[role];
+  return dir === "." ? newName : join(dir, newName);
 }
 
 function stripLeadingSegment(path: string): string {

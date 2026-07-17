@@ -12,7 +12,7 @@
 
 import { writeFileSync, mkdirSync, rmSync } from "fs";
 import { join } from "path";
-import { translateConfig, type PluginConfig } from "../../src/figma/config";
+import { translateConfig, normalizeAlphaValues, type PluginConfig } from "../../src/figma/config";
 import { variableMaker, type EngineResult } from "../../src/shared/engine/clrEngine";
 import { resolveTokenRefBgs } from "../../src/shared/engine/clrUtils";
 import { buildExportBundle } from "../../src/shared/exportEng/bundler";
@@ -21,7 +21,7 @@ import type { ExportConfig } from "../../src/shared/exportEng/types";
 import type { Role } from "../../src/shared/types";
 import { buildFixtures, type Fixture } from "./fixtures";
 
-const ALL_FORMATS = ["css", "scss", "tailwind", "dtcg", "style-dictionary", "ios-swift", "android", "rn-ts", "csv", "json", "wand"];
+const ALL_FORMATS = ["css", "scss", "tailwind", "dtcg", "style-dictionary", "ios-swift", "android", "rn-ts", "csv", "json", "wand", "wand-backup"];
 const RESULTS_DIR = join(__dirname, "..", "results");
 
 // ── Reimplements src/figma/index.ts's toExportConfig + applyExportOverrides ──
@@ -68,7 +68,10 @@ function applyExportOverrides(config: PluginConfig, projectStore: Record<string,
     useShorthandVariations: c.useShorthandVariations,
     useShorthandSteps: c.useShorthandSteps,
     includeSourceColors: c.includeSourceColors,
-    alphaValues: c.alphaValues,
+    // Guards the exact bug this harness exists to catch drift on: a .wand
+    // file with alphaValues as a comma-separated string instead of number[]
+    // (see normalizeAlphaValues in src/figma/config.ts).
+    alphaValues: normalizeAlphaValues(c.alphaValues),
     includeColorScalesCollection: config.pluginMode === "direct" ? config.includeColorScalesCollection : c.includeColorScalesCollection,
     includeDescriptions: c.includeDescriptions,
   };
@@ -126,12 +129,15 @@ function runFixture(fixture: Fixture): FixtureRunSummary {
     mkdirSync(join(fullPath, ".."), { recursive: true });
     writeFileSync(fullPath, file.content, "utf-8");
     // Multi-file formats live under a "{fmt}/" top-level folder; single-file
-    // exports (csv/json/wand) use the flat "{project}_{fmt}_{timestamp}.ext"
-    // naming. Matched against the leading path segment / naming token exactly
-    // (not a substring anywhere in the path) — "css" is a substring of "scss",
-    // so a loose .includes(`${f}/`) check misclassifies every scss file as css.
+    // exports (csv/json/wand/wand-backup) use the flat
+    // "{project}_{namingToken}_{timestamp}.ext" naming — wand-backup's naming
+    // token is "backup", not "wand-backup" (see bundler.ts), so it can't
+    // reuse the same `_${f}_` check as the other flat formats. Matched
+    // against the leading path segment / naming token exactly (not a
+    // substring anywhere in the path) — "css" is a substring of "scss", so a
+    // loose .includes(`${f}/`) check misclassifies every scss file as css.
     const firstSegment = file.path.split("/")[0];
-    const fmt = ALL_FORMATS.find((f) => firstSegment === f || firstSegment.includes(`_${f}_`));
+    const fmt = ALL_FORMATS.find((f) => firstSegment === f || firstSegment.includes(`_${f}_`) || (f === "wand-backup" && firstSegment.includes("_backup_")));
     if (fmt) filesByFormat[fmt]++;
     else console.warn(`    (unmatched format for path: ${file.path})`);
   }

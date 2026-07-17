@@ -4,7 +4,7 @@
 // This file is bundled by esbuild into dist/scripts.js.
 // It runs in the Figma plugin sandbox (not the UI iframe).
 
-import { translateConfig, resolveTokenRefBgs, buildVariableRenameMap, type PluginConfig } from "./config";
+import { translateConfig, resolveTokenRefBgs, buildVariableRenameMap, normalizeAlphaValues, type PluginConfig } from "./config";
 import { VariableManager, saveUiState } from "./figmaVars";
 import { variableMaker, type EngineResult } from "../shared/engine/clrEngine.js";
 import { ExportFormatter } from "./docGen";
@@ -62,7 +62,12 @@ function applyExportOverrides(config: PluginConfig, projectStore: ProjectStore):
     useShorthandVariations: c.useShorthandVariations,
     useShorthandSteps: c.useShorthandSteps,
     includeSourceColors: c.includeSourceColors,
-    alphaValues: c.alphaValues,
+    // Same guard as translateConfig's own alphaValues read: a hand-edited or
+    // legacy .wand file can carry this as a comma-separated string instead of
+    // number[], which crashed downstream .map() calls with
+    // "alphaValues.map is not a function" (see normalizeAlphaValues's comment
+    // in config.ts for the full story — the CLI hit this in the wild).
+    alphaValues: normalizeAlphaValues(c.alphaValues),
     // Direct mode never has scale data regardless of this override — only
     // meaningful (and only shown in the Export Settings tab) in Scale mode.
     includeColorScalesCollection: config.pluginMode === "direct" ? config.includeColorScalesCollection : c.includeColorScalesCollection,

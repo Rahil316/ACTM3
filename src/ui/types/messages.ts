@@ -180,7 +180,7 @@ export type UiToPluginMessage = RunCreatorMessage | CheckCollectionsMessage | Re
 
 export type SyncScope = "all" | "scale" | "roles";
 
-export type ExportFormat = "json" | "css" | "csv" | "scss" | "tailwind" | "dtcg" | "style-dictionary" | "ios-swift" | "android" | "rn-ts" | "wand";
+export type ExportFormat = "json" | "css" | "csv" | "scss" | "tailwind" | "dtcg" | "style-dictionary" | "ios-swift" | "android" | "rn-ts" | "wand" | "wand-backup";
 
 export interface SyncTally {
   created: number;

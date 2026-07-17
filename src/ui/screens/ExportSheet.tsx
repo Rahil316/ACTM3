@@ -28,9 +28,16 @@ const EXPORT_FORMATS: FormatDef[] = [
   {
     format: "wand",
     label: "Token Wand Config",
-    description: "Full plugin config — reimportable",
+    description: "Current config only — reimportable",
     ext: "wand",
     Icon: Package,
+  },
+  {
+    format: "wand-backup",
+    label: "Full Plugin Backup",
+    description: "Current config + every saved version's history",
+    ext: "wand",
+    Icon: PackageOpen,
   },
   {
     format: "css",
