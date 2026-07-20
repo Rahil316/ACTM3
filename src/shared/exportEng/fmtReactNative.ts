@@ -1,5 +1,5 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, _camel, _eachSourceColor } from './helpers';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegmentsTyped, _variationDefs, _slug, _camel, _setNested, _renderTsLiteralLines, _eachSourceColor } from './helpers';
 
 export const fmtReactNative = {
   theme(result: EngineResult, config: ExportConfig, themeName: string): string {
@@ -42,31 +42,30 @@ export const fmtReactNative = {
       lines.push("  },");
     }
     if (themeTokens) {
-      lines.push("  tokens: {");
+      const tree: Record<string, unknown> = {};
       const colorNames = Object.keys(themeTokens);
       for (let ci2 = 0; ci2 < colorNames.length; ci2++) {
         const colorName2 = colorNames[ci2];
         const cLabel2 = _colorLabel(colorName2, config);
-        lines.push("    " + _camel([cLabel2]) + ": {");
         const roles = themeTokens[colorName2] as Record<string, Record<string, import("./types").TokenEntry>>;
         const roleIds = Object.keys(roles);
         for (let ri = 0; ri < roleIds.length; ri++) {
           const roleId = roleIds[ri];
           const roleObj = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
           const rLabel = _roleLabel(roleObj, config);
-          lines.push("      " + _camel([rLabel]) + ": {");
           const varDefs = _variationDefs(roleObj, config);
           const variations = roles[roleId];
           for (let vi = 0; vi < varDefs.length; vi++) {
             const token = variations[String(vi)];
             if (!token) continue;
             const vLabel = _varLabel(varDefs[vi], config);
-            lines.push("        " + JSON.stringify(_slug(vLabel)) + ": " + JSON.stringify(token.value) + " as string,");
+            const segs = _tokenSegmentsTyped(cLabel2, rLabel, vLabel, config);
+            _setNested(tree, segs, token.value, (s) => s.type === "variation" ? _slug(s.label) : _camel([s.label]));
           }
-          lines.push("      },");
         }
-        lines.push("    },");
       }
+      lines.push("  tokens: {");
+      lines.push(..._renderTsLiteralLines(tree, "    "));
       lines.push("  },");
     }
     lines.push("} as const;\n");

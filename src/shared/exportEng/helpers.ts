@@ -38,12 +38,21 @@ export function _stepLabel(stepName: string, config: ExportConfig): string {
 }
 
 export function _tokenSegments(colorLabel: string, roleLabel: string, varLabel: string, config: ExportConfig): string[] {
+  return _tokenSegmentsTyped(colorLabel, roleLabel, varLabel, config).map((s) => s.label);
+}
+
+// Same ordering/omission as _tokenSegments, but keeps each segment's type
+// tagged alongside its label — lets a caller apply a per-type key convention
+// (e.g. React Native's camelCase color/role keys vs. slugged variation keys)
+// independent of where tokenNameSegments places that segment in the nesting.
+export function _tokenSegmentsTyped(colorLabel: string, roleLabel: string, varLabel: string, config: ExportConfig): { type: "color" | "role" | "variation"; label: string }[] {
   const order = config.tokenNameSegments || ["color", "role", "variation"];
   const parts: Record<string, string> = { color: colorLabel, role: roleLabel, variation: varLabel };
-  const out: string[] = [];
+  const out: { type: "color" | "role" | "variation"; label: string }[] = [];
   for (let i = 0; i < order.length; i++) {
-    const p = parts[order[i]];
-    if (p) out.push(p);
+    const type = order[i] as "color" | "role" | "variation";
+    const p = parts[type];
+    if (p) out.push({ type, label: p });
   }
   return out;
 }
@@ -94,6 +103,24 @@ export function _snake(parts: string[]): string {
   return parts.map(function(p) { return _slug(p).replace(/-/g, "_"); }).join("_");
 }
 
+// Renders a tree built by _setNested into indented "key: value as string,"
+// lines (React Native's TS object literal syntax) — leaves are the string
+// values assigned via _setNested, branches recurse one indent level deeper.
+export function _renderTsLiteralLines(node: Record<string, unknown>, indent: string): string[] {
+  const lines: string[] = [];
+  for (const key of Object.keys(node)) {
+    const value = node[key];
+    if (typeof value === "string") {
+      lines.push(indent + JSON.stringify(key) + ": " + JSON.stringify(value) + " as string,");
+    } else {
+      lines.push(indent + JSON.stringify(key) + ": {");
+      lines.push(...(_renderTsLiteralLines(value as Record<string, unknown>, indent + "  ")));
+      lines.push(indent + "},");
+    }
+  }
+  return lines;
+}
+
 export function _hexComponents(hex: string): { r: number; g: number; b: number } {
   let h = hex.replace(/^#/, "");
   if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
@@ -107,6 +134,31 @@ export function _hexComponents(hex: string): { r: number; g: number; b: number }
 export function _splitTokenRef(ref: string): { color: string; step: string } {
   const last = ref.lastIndexOf("-");
   return { color: ref.substring(0, last), step: ref.substring(last + 1) };
+}
+
+// Nests `leaf` into `root` following `segs` (from _tokenSegmentsTyped: the
+// color/role/variation labels in tokenNameSegments order) — so nested-object
+// formats (DTCG, Style Dictionary, React Native) honor the same segment
+// order/omission as the flat, string-joined formats (CSS, SCSS, Android,
+// Tailwind) instead of hardcoding color->role->variation. `keyFn` picks the
+// object key for a given segment — DTCG/Style Dictionary use _slug for every
+// type; React Native uses _camel for color/role but _slug for variation (see
+// fmtReactNative.ts), so keyFn is given the segment's type alongside its
+// label rather than assuming one convention for all three. A 2-segment
+// config (role omitted) nests one level shallower, same as the flat formats
+// dropping that segment entirely.
+export function _setNested(root: Record<string, unknown>, segs: { type: "color" | "role" | "variation"; label: string }[], leaf: unknown, keyFn: (s: { type: "color" | "role" | "variation"; label: string }) => string): void {
+  let node = root;
+  for (let i = 0; i < segs.length - 1; i++) {
+    const key = keyFn(segs[i]);
+    if (typeof node[key] !== "object" || node[key] === null) node[key] = {};
+    node = node[key] as Record<string, unknown>;
+  }
+  node[keyFn(segs[segs.length - 1])] = leaf;
+}
+
+export function _setNestedSlug(root: Record<string, unknown>, segs: { type: "color" | "role" | "variation"; label: string }[], leaf: unknown): void {
+  _setNested(root, segs, leaf, (s) => _slug(s.label));
 }
 
 export interface SourceColorEntry {

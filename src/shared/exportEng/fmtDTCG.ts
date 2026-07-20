@@ -1,5 +1,5 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _variationDefs, _slug, _splitTokenRef, _eachSourceColor } from './helpers';
+import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegmentsTyped, _variationDefs, _slug, _setNestedSlug, _splitTokenRef, _eachSourceColor } from './helpers';
 
 export const fmtDTCG = {
   source(config: ExportConfig): string {
@@ -45,25 +45,23 @@ export const fmtDTCG = {
   theme(result: EngineResult, config: ExportConfig, themeName: string): string {
     const themeTokens = result.tokens && result.tokens[themeName];
     if (!themeTokens) return "{}";
-    const out: Record<string, Record<string, Record<string, Record<string, string>>>> = {};
+    const out: Record<string, unknown> = {};
     const colorNames = Object.keys(themeTokens);
     for (let ci = 0; ci < colorNames.length; ci++) {
       const colorName = colorNames[ci];
-      const cLabel = _slug(_colorLabel(colorName, config));
-      if (!out[cLabel]) out[cLabel] = {};
+      const cLabel = _colorLabel(colorName, config);
       const roles = themeTokens[colorName] as Record<string, Record<string, import("./types").TokenEntry>>;
       const roleIds = Object.keys(roles);
       for (let ri = 0; ri < roleIds.length; ri++) {
         const roleId = roleIds[ri];
         const roleObj = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
-        const rLabel = _slug(_roleLabel(roleObj, config));
-        if (!out[cLabel][rLabel]) out[cLabel][rLabel] = {};
+        const rLabel = _roleLabel(roleObj, config);
         const varDefs = _variationDefs(roleObj, config);
         const variations = roles[roleId];
         for (let vi = 0; vi < varDefs.length; vi++) {
           const token = variations[String(vi)];
           if (!token) continue;
-          const vLabel = _slug(_varLabel(varDefs[vi], config));
+          const vLabel = _varLabel(varDefs[vi], config);
           let dtcgValue: string;
           if (token.tokenRef) {
             const parts = _splitTokenRef(token.tokenRef);
@@ -73,7 +71,8 @@ export const fmtDTCG = {
           }
           const node: Record<string, string> = { "$value": dtcgValue, "$type": "color" };
           if (token.isAdjusted) node["$description"] = "⚠ Adjusted for contrast";
-          out[cLabel][rLabel][vLabel] = node;
+          const segs = _tokenSegmentsTyped(cLabel, rLabel, vLabel, config);
+          _setNestedSlug(out, segs, node);
         }
       }
     }
