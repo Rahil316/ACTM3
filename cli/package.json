@@ -1,6 +1,6 @@
 {
   "name": "@rahil316/token-wand",
-  "version": "0.1.0-canary.1",
+  "version": "1.0.0",
   "description": "Generate design token files (CSS, SCSS, Android, React Native, and more) from a Token Wand .wand file, without opening Figma.",
   "type": "commonjs",
   "bin": {
@@ -14,7 +14,7 @@
   ],
   "publishConfig": {
     "access": "public",
-    "tag": "canary"
+    "tag": "latest"
   },
   "scripts": {
     "build": "tsc && node scripts/prune-dist.js",
