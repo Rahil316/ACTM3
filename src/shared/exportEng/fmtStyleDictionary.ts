@@ -1,5 +1,6 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegmentsTyped, _variationDefs, _slug, _setNestedSlug, _splitTokenRef, _eachSourceColor } from './helpers';
+import { _slug, _roleLabel, _setNestedSlug, _splitTokenRef, _eachSourceColor } from './helpers';
+import { resolveScaleSteps, type ResolvedToken } from './resolve';
 
 export const fmtStyleDictionary = {
   global(result: EngineResult, config: ExportConfig): string {
@@ -20,63 +21,37 @@ export const fmtStyleDictionary = {
         }
       }
     }
-    const scales = result.scales ?? {};
-    const scaleNames = Object.keys(scales);
-    for (let ci = 0; ci < scaleNames.length; ci++) {
-      const colorName = scaleNames[ci];
-      const cLabel = _slug(_colorLabel(colorName, config));
-      out.color[cLabel] = {};
-      const scale = scales[colorName];
-      const steps = Object.keys(scale);
-      for (let si = 0; si < steps.length; si++) {
-        const step = steps[si];
-        const entry = scale[step];
-        const stepKey = _slug(_stepLabel(step, config));
-        out.color[cLabel][stepKey] = {
-          value: entry.value,
-          type: "color",
-          attributes: { category: "color", scale: cLabel, step: stepKey },
-        };
-      }
+    for (const step of resolveScaleSteps(result, config)) {
+      const cLabel = _slug(step.cLabel);
+      if (!out.color[cLabel]) out.color[cLabel] = {};
+      const stepKey = _slug(step.stepKey);
+      out.color[cLabel][stepKey] = {
+        value: step.value,
+        type: "color",
+        attributes: { category: "color", scale: cLabel, step: stepKey },
+      };
     }
     return JSON.stringify(out, null, 2);
   },
 
-  theme(result: EngineResult, config: ExportConfig, themeName: string): string {
-    const themeTokens = result.tokens && result.tokens[themeName];
-    if (!themeTokens) return "{}";
+  theme(result: EngineResult, tokens: ResolvedToken[], config: ExportConfig, themeName: string): string {
+    if (!result.tokens || !result.tokens[themeName]) return "{}";
     const out: Record<string, unknown> = { color: {} };
-    const colorNames = Object.keys(themeTokens);
-    for (let ci = 0; ci < colorNames.length; ci++) {
-      const colorName = colorNames[ci];
-      const cLabel = _colorLabel(colorName, config);
-      const roles = themeTokens[colorName] as Record<string, Record<string, import("./types").TokenEntry>>;
-      const roleIds = Object.keys(roles);
-      for (let ri = 0; ri < roleIds.length; ri++) {
-        const roleId = roleIds[ri];
-        const roleObj = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
-        const rLabel = _roleLabel(roleObj, config);
-        const varDefs = _variationDefs(roleObj, config);
-        const variations = roles[roleId];
-        for (let vi = 0; vi < varDefs.length; vi++) {
-          const token = variations[String(vi)];
-          if (!token) continue;
-          const vLabel = _varLabel(varDefs[vi], config);
-          let sdValue: string;
-          if (token.tokenRef) {
-            const parts = _splitTokenRef(token.tokenRef);
-            sdValue = "{color." + _slug(parts.color) + "." + _slug(parts.step) + "}";
-          } else {
-            sdValue = token.value;
-          }
-          const segs = _tokenSegmentsTyped(cLabel, rLabel, vLabel, config);
-          _setNestedSlug(out.color as Record<string, unknown>, segs, {
-            value: sdValue,
-            type: "color",
-            attributes: { category: "color", role: _slug(rLabel), theme: themeName },
-          });
-        }
+    for (const token of tokens) {
+      if (token.theme !== themeName) continue;
+      let sdValue: string;
+      if (token.tokenRef) {
+        const parts = _splitTokenRef(token.tokenRef);
+        sdValue = "{color." + _slug(parts.color) + "." + _slug(parts.step) + "}";
+      } else {
+        sdValue = token.value;
       }
+      const roleObj = (config.roles && config.roles[token.roleId]) || { name: token.roleId, shorthand: token.roleId };
+      _setNestedSlug(out.color as Record<string, unknown>, token.segs, {
+        value: sdValue,
+        type: "color",
+        attributes: { category: "color", role: _slug(_roleLabel(roleObj, config)), theme: themeName },
+      });
     }
     return JSON.stringify(out, null, 2);
   },

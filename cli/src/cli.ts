@@ -48,6 +48,10 @@ function main() {
 
     const result = runBuild(projectStore, config, { dryRun });
 
+    for (const w of result.warnings) {
+      console.warn(`  ⚠ ${w.message}`);
+    }
+
     // Status verbs flip to their would-be form under --dry-run, since nothing
     // is actually written in that mode — "created"/"updated" would otherwise
     // read as claims about what already happened on disk.

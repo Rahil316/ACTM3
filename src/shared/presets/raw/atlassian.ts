@@ -112,6 +112,7 @@ const presets: Preset[] = [
         {
           name: "background/brand",
           shorthand: "background/brand",
+          scopedColorIds: ["brand"],
           variations: [
             { name: "subtlest", shorthand: "subtlest", target: 1.05 }, // color.background.brand.subtlest
             { name: "subtlest/hovered", shorthand: "subtlest/hovered", target: 1.1 },
@@ -130,6 +131,7 @@ const presets: Preset[] = [
         {
           name: "background/neutral",
           shorthand: "background/neutral",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "subtle", shorthand: "subtle", target: 1.05 }, // color.background.neutral.subtle
             { name: "subtle/hovered", shorthand: "subtle/hovered", target: 1.1 },
@@ -148,6 +150,7 @@ const presets: Preset[] = [
         {
           name: "background/success",
           shorthand: "background/success",
+          scopedColorIds: ["success"],
           variations: [
             { name: "default", shorthand: "default", target: 1.1 }, // color.background.success
             { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
@@ -163,6 +166,7 @@ const presets: Preset[] = [
         {
           name: "background/warning",
           shorthand: "background/warning",
+          scopedColorIds: ["warning"],
           variations: [
             { name: "default", shorthand: "default", target: 1.1 }, // color.background.warning
             { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
@@ -178,6 +182,7 @@ const presets: Preset[] = [
         {
           name: "background/danger",
           shorthand: "background/danger",
+          scopedColorIds: ["danger"],
           variations: [
             { name: "default", shorthand: "default", target: 1.1 }, // color.background.danger
             { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
@@ -193,6 +198,7 @@ const presets: Preset[] = [
         {
           name: "background/information",
           shorthand: "background/information",
+          scopedColorIds: ["information"],
           variations: [
             { name: "default", shorthand: "default", target: 1.1 }, // color.background.information
             { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
@@ -208,6 +214,7 @@ const presets: Preset[] = [
         {
           name: "background/discovery",
           shorthand: "background/discovery",
+          scopedColorIds: ["discovery"],
           variations: [
             { name: "default", shorthand: "default", target: 1.1 }, // color.background.discovery
             { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
@@ -223,6 +230,7 @@ const presets: Preset[] = [
         {
           name: "background/selected",
           shorthand: "background/selected",
+          scopedColorIds: ["brand"],
           variations: [
             { name: "default", shorthand: "default", target: 1.1 }, // color.background.selected
             { name: "default/hovered", shorthand: "default/hovered", target: 1.2 },
@@ -238,6 +246,7 @@ const presets: Preset[] = [
         {
           name: "background/input",
           shorthand: "background/input",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 1.0 }, // color.background.input
             { name: "default/hovered", shorthand: "default/hovered", target: 1.05 },
@@ -254,6 +263,7 @@ const presets: Preset[] = [
         {
           name: "text",
           shorthand: "text",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 7.0 }, // color.text
             { name: "subtle", shorthand: "subtle", target: 4.5 }, // color.text.subtle
@@ -269,6 +279,7 @@ const presets: Preset[] = [
         {
           name: "text/brand",
           shorthand: "text/brand",
+          scopedColorIds: ["brand"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // color.text.brand
           ],
@@ -277,6 +288,7 @@ const presets: Preset[] = [
         {
           name: "text/success",
           shorthand: "text/success",
+          scopedColorIds: ["success"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // color.text.success
           ],
@@ -285,6 +297,7 @@ const presets: Preset[] = [
         {
           name: "text/warning",
           shorthand: "text/warning",
+          scopedColorIds: ["warning"],
           variations: [
             { name: "default", shorthand: "default", target: 3.0 }, // color.text.warning
             { name: "inverse", shorthand: "inverse", target: 14.0 }, // color.text.warning.inverse
@@ -294,6 +307,7 @@ const presets: Preset[] = [
         {
           name: "text/danger",
           shorthand: "text/danger",
+          scopedColorIds: ["danger"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // color.text.danger
           ],
@@ -302,6 +316,7 @@ const presets: Preset[] = [
         {
           name: "text/information",
           shorthand: "text/information",
+          scopedColorIds: ["information"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // color.text.information
           ],
@@ -310,6 +325,7 @@ const presets: Preset[] = [
         {
           name: "text/discovery",
           shorthand: "text/discovery",
+          scopedColorIds: ["discovery"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // color.text.discovery
           ],
@@ -323,6 +339,7 @@ const presets: Preset[] = [
         {
           name: "icon",
           shorthand: "icon",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // color.icon
             { name: "subtle", shorthand: "subtle", target: 3.0 }, // color.icon.subtle
@@ -335,18 +352,21 @@ const presets: Preset[] = [
         {
           name: "icon/brand",
           shorthand: "icon/brand",
+          scopedColorIds: ["brand"],
           variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.brand",
         },
         {
           name: "icon/success",
           shorthand: "icon/success",
+          scopedColorIds: ["success"],
           variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.success",
         },
         {
           name: "icon/warning",
           shorthand: "icon/warning",
+          scopedColorIds: ["warning"],
           variations: [
             { name: "default", shorthand: "default", target: 3.0 }, // color.icon.warning
             { name: "inverse", shorthand: "inverse", target: 14.0 }, // color.icon.warning.inverse
@@ -356,18 +376,21 @@ const presets: Preset[] = [
         {
           name: "icon/danger",
           shorthand: "icon/danger",
+          scopedColorIds: ["danger"],
           variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.danger",
         },
         {
           name: "icon/information",
           shorthand: "icon/information",
+          scopedColorIds: ["information"],
           variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.information",
         },
         {
           name: "icon/discovery",
           shorthand: "icon/discovery",
+          scopedColorIds: ["discovery"],
           variations: [{ name: "default", shorthand: "default", target: 4.5 }],
           description: "color.icon.discovery",
         },
@@ -379,6 +402,7 @@ const presets: Preset[] = [
         {
           name: "border",
           shorthand: "border",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 2.5 }, // color.border
             { name: "bold", shorthand: "bold", target: 4.5 }, // color.border.bold
@@ -393,36 +417,42 @@ const presets: Preset[] = [
         {
           name: "border/brand",
           shorthand: "border/brand",
+          scopedColorIds: ["brand"],
           variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.brand",
         },
         {
           name: "border/success",
           shorthand: "border/success",
+          scopedColorIds: ["success"],
           variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.success",
         },
         {
           name: "border/warning",
           shorthand: "border/warning",
+          scopedColorIds: ["warning"],
           variations: [{ name: "default", shorthand: "default", target: 2.5 }],
           description: "color.border.warning",
         },
         {
           name: "border/danger",
           shorthand: "border/danger",
+          scopedColorIds: ["danger"],
           variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.danger",
         },
         {
           name: "border/information",
           shorthand: "border/information",
+          scopedColorIds: ["information"],
           variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.information",
         },
         {
           name: "border/discovery",
           shorthand: "border/discovery",
+          scopedColorIds: ["discovery"],
           variations: [{ name: "default", shorthand: "default", target: 3.0 }],
           description: "color.border.discovery",
         },
@@ -434,6 +464,7 @@ const presets: Preset[] = [
         {
           name: "link",
           shorthand: "link",
+          scopedColorIds: ["brand"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // color.link
             { name: "pressed", shorthand: "pressed", target: 7.0 }, // color.link.pressed
@@ -442,22 +473,78 @@ const presets: Preset[] = [
           description: "color.link — default · pressed · visited link colors",
         },
 
-        // color.text.accent — highlighted text, e.g. search matches
+        // color.text.accent — highlighted text for tags/lozenges/search highlights.
+        // Each named hue is a real ADS accent color, not one of this preset's 7
+        // seed colors — split into one role per hue (rather than a single
+        // multi-color role, which scopedColorIds can't express — see the
+        // material-3 preset's "surface" split for the same pattern) and scoped
+        // to the seed color that's the closest hue match. teal and magenta have
+        // no close seed-color match (ADS's real accent palette has dedicated
+        // teal/magenta swatches this preset doesn't define); scoped to discovery
+        // (purple, the nearest available hue) as the least-wrong available
+        // choice rather than left unscoped and colliding with every other color.
         {
-          name: "text/accent",
-          shorthand: "text/accent",
-          variations: [
-            { name: "blue", shorthand: "blue", target: 4.5 }, // color.text.accent.blue
-            { name: "red", shorthand: "red", target: 4.5 }, // color.text.accent.red
-            { name: "orange", shorthand: "orange", target: 4.5 }, // color.text.accent.orange
-            { name: "yellow", shorthand: "yellow", target: 3.0 }, // color.text.accent.yellow (light hue)
-            { name: "green", shorthand: "green", target: 4.5 }, // color.text.accent.green
-            { name: "purple", shorthand: "purple", target: 4.5 }, // color.text.accent.purple
-            { name: "teal", shorthand: "teal", target: 4.5 }, // color.text.accent.teal
-            { name: "magenta", shorthand: "magenta", target: 4.5 }, // color.text.accent.magenta
-            { name: "gray", shorthand: "gray", target: 4.5 }, // color.text.accent.gray
-          ],
-          description: "color.text.accent — colored label text for tags, lozenges, and search highlights",
+          name: "text/accent/blue",
+          shorthand: "text/accent/blue",
+          scopedColorIds: ["brand"],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }], // color.text.accent.blue
+          description: "color.text.accent.blue — blue accent label text",
+        },
+        {
+          name: "text/accent/red",
+          shorthand: "text/accent/red",
+          scopedColorIds: ["danger"],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }], // color.text.accent.red
+          description: "color.text.accent.red — red accent label text",
+        },
+        {
+          name: "text/accent/orange",
+          shorthand: "text/accent/orange",
+          scopedColorIds: ["warning"],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }], // color.text.accent.orange
+          description: "color.text.accent.orange — orange accent label text",
+        },
+        {
+          name: "text/accent/yellow",
+          shorthand: "text/accent/yellow",
+          scopedColorIds: ["warning"],
+          variations: [{ name: "default", shorthand: "default", target: 3.0 }], // color.text.accent.yellow (light hue)
+          description: "color.text.accent.yellow — yellow accent label text",
+        },
+        {
+          name: "text/accent/green",
+          shorthand: "text/accent/green",
+          scopedColorIds: ["success"],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }], // color.text.accent.green
+          description: "color.text.accent.green — green accent label text",
+        },
+        {
+          name: "text/accent/purple",
+          shorthand: "text/accent/purple",
+          scopedColorIds: ["discovery"],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }], // color.text.accent.purple
+          description: "color.text.accent.purple — purple accent label text",
+        },
+        {
+          name: "text/accent/teal",
+          shorthand: "text/accent/teal",
+          scopedColorIds: ["success"],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }], // color.text.accent.teal — no dedicated teal seed color; success (green) is the nearest available hue
+          description: "color.text.accent.teal — teal accent label text (approximated from the success/green seed color — no dedicated teal seed exists in this preset)",
+        },
+        {
+          name: "text/accent/magenta",
+          shorthand: "text/accent/magenta",
+          scopedColorIds: ["discovery"],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }], // color.text.accent.magenta — no dedicated magenta seed color; discovery (purple) is the nearest available hue
+          description: "color.text.accent.magenta — magenta accent label text (approximated from the discovery/purple seed color — no dedicated magenta seed exists in this preset)",
+        },
+        {
+          name: "text/accent/gray",
+          shorthand: "text/accent/gray",
+          scopedColorIds: ["neutral"],
+          variations: [{ name: "default", shorthand: "default", target: 4.5 }], // color.text.accent.gray
+          description: "color.text.accent.gray — gray accent label text",
         },
 
         // ══════════════════════════════════════════════════════════════════════
@@ -467,6 +554,7 @@ const presets: Preset[] = [
         {
           name: "elevation/surface",
           shorthand: "elevation/surface",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "sunken", shorthand: "sunken", target: 1.05 }, // elevation.surface.sunken
             { name: "default", shorthand: "default", target: 1.0 }, // elevation.surface
@@ -489,11 +577,22 @@ const presets: Preset[] = [
         {
           name: "blanket",
           shorthand: "blanket",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 14.0 }, // color.blanket
-            { name: "selected", shorthand: "selected", target: 10.0 }, // color.blanket.selected (blue-tinted)
           ],
-          description: "color.blanket — modal overlay and selection overlay",
+          description: "color.blanket — modal overlay",
+        },
+        // blanket/selected — split from "blanket" above: this slot is blue
+        // (brand-tinted) per the original comment, not neutral like "default".
+        {
+          name: "blanket/selected",
+          shorthand: "blanket/selected",
+          scopedColorIds: ["brand"],
+          variations: [
+            { name: "default", shorthand: "default", target: 10.0 }, // color.blanket.selected (blue-tinted)
+          ],
+          description: "color.blanket.selected — selection overlay, brand-blue tinted",
         },
 
         // ══════════════════════════════════════════════════════════════════════
@@ -503,6 +602,7 @@ const presets: Preset[] = [
         {
           name: "skeleton",
           shorthand: "skeleton",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 1.15 }, // color.skeleton
             { name: "subtle", shorthand: "subtle", target: 1.05 }, // color.skeleton.subtle
@@ -517,6 +617,7 @@ const presets: Preset[] = [
         {
           name: "interaction",
           shorthand: "interaction",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "hovered", shorthand: "hovered", target: 1.1 }, // color.interaction.hovered
             { name: "pressed", shorthand: "pressed", target: 1.2 }, // color.interaction.pressed

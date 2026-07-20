@@ -110,6 +110,7 @@ const presets: Preset[] = [
         {
           name: "primary",
           shorthand: "primary",
+          scopedColorIds: ["primary"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // --md-sys-color-primary
             { name: "on", shorthand: "on", target: 14.0 }, // --md-sys-color-on-primary
@@ -126,6 +127,7 @@ const presets: Preset[] = [
         {
           name: "secondary",
           shorthand: "secondary",
+          scopedColorIds: ["secondary"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // --md-sys-color-secondary
             { name: "on", shorthand: "on", target: 14.0 }, // --md-sys-color-on-secondary
@@ -140,6 +142,7 @@ const presets: Preset[] = [
         {
           name: "tertiary",
           shorthand: "tertiary",
+          scopedColorIds: ["tertiary"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // --md-sys-color-tertiary
             { name: "on", shorthand: "on", target: 14.0 }, // --md-sys-color-on-tertiary
@@ -154,6 +157,7 @@ const presets: Preset[] = [
         {
           name: "error",
           shorthand: "error",
+          scopedColorIds: ["error"],
           variations: [
             { name: "default", shorthand: "default", target: 4.5 }, // --md-sys-color-error
             { name: "on", shorthand: "on", target: 14.0 }, // --md-sys-color-on-error
@@ -164,25 +168,42 @@ const presets: Preset[] = [
         },
 
         // ── SURFACE ─────────────────────────────────────────────────────────────
-        // Color source: neutral (#605D62) for fills; neutral-variant (#7D7279) for on/variant slots.
+        // Color source: neutral (#605D62) for fills/on; neutral-variant (#7D7279)
+        // for variant/on-variant. Split into two roles (rather than one role
+        // scoped to a single color) because scopedColorIds scopes an entire
+        // role to one color — it can't express "these 4 variations use one
+        // color, these other 2 use a different one" within a single role.
         {
           name: "surface",
           shorthand: "surface",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 1.0 }, // --md-sys-color-surface
             { name: "dim", shorthand: "dim", target: 1.07 }, // --md-sys-color-surface-dim
             { name: "bright", shorthand: "bright", target: 1.0 }, // --md-sys-color-surface-bright
             { name: "on", shorthand: "on", target: 10.0 }, // --md-sys-color-on-surface
-            { name: "variant", shorthand: "variant", target: 1.2 }, // --md-sys-color-surface-variant
-            { name: "on-variant", shorthand: "on-variant", target: 4.5 }, // --md-sys-color-on-surface-variant
           ],
-          description: "Surface states and text · default · dim · bright · on · variant · on-variant",
+          description: "Surface states and text · default · dim · bright · on",
+        },
+
+        // surface/variant and surface/on-variant — split from "surface" above
+        // because these two slots are Neutral-Variant sourced, not Neutral.
+        {
+          name: "surface/variant",
+          shorthand: "surface/variant",
+          scopedColorIds: ["neutral-variant"],
+          variations: [
+            { name: "default", shorthand: "default", target: 1.2 }, // --md-sys-color-surface-variant
+            { name: "on", shorthand: "on", target: 4.5 }, // --md-sys-color-on-surface-variant
+          ],
+          description: "Surface variant · chip/input fill and its on-color text (Neutral Variant sourced)",
         },
 
         // surface/container/* — 5-step container stack nested under surface
         {
           name: "surface/container",
           shorthand: "surface/container",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "lowest", shorthand: "lowest", target: 1.0 }, // --md-sys-color-surface-container-lowest
             { name: "low", shorthand: "low", target: 1.07 }, // --md-sys-color-surface-container-low
@@ -198,6 +219,7 @@ const presets: Preset[] = [
         {
           name: "background",
           shorthand: "background",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 1.0 }, // --md-sys-color-background
             { name: "on", shorthand: "on", target: 10.0 }, // --md-sys-color-on-background
@@ -210,6 +232,7 @@ const presets: Preset[] = [
         {
           name: "inverse",
           shorthand: "inverse",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "surface", shorthand: "surface", target: 12.0 }, // --md-sys-color-inverse-surface
             { name: "on-surface", shorthand: "on-surface", target: 1.1 }, // --md-sys-color-inverse-on-surface
@@ -222,6 +245,7 @@ const presets: Preset[] = [
         {
           name: "scrim",
           shorthand: "scrim",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 16.0 }, // --md-sys-color-scrim
           ],
@@ -233,6 +257,7 @@ const presets: Preset[] = [
         {
           name: "shadow",
           shorthand: "shadow",
+          scopedColorIds: ["neutral"],
           variations: [
             { name: "default", shorthand: "default", target: 16.0 }, // --md-sys-color-shadow
           ],
@@ -243,6 +268,7 @@ const presets: Preset[] = [
         {
           name: "outline",
           shorthand: "outline",
+          scopedColorIds: ["neutral-variant"],
           variations: [
             { name: "default", shorthand: "default", target: 3.0 }, // --md-sys-color-outline
             { name: "variant", shorthand: "variant", target: 1.5 }, // --md-sys-color-outline-variant

@@ -1,11 +1,12 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _stepLabel, _camel, _hexComponents, _eachToken, _eachSourceColor } from './helpers';
+import { _camel, _hexComponents, _eachSourceColor } from './helpers';
+import type { ResolvedToken, ResolvedScaleStep } from './resolve';
 
 // Each theme gets its own namespace enum so static members never collide when
 // multiple theme files are added to the same Xcode target.
 // Usage: UIColor.Light.brandPrimaryFillDefault, Color.Dark.brandNeutralTextSubtle
 export const fmtSwift = {
-  file(result: EngineResult, config: ExportConfig, themeName: string): string {
+  file(result: EngineResult, tokens: ResolvedToken[], scaleSteps: ResolvedScaleStep[], config: ExportConfig, themeName: string): string {
     const themeTokens = result.tokens && result.tokens[themeName];
     const lines: string[] = [];
     const systemName = config.name || "Tokens";
@@ -16,9 +17,7 @@ export const fmtSwift = {
     lines.push("import UIKit");
     lines.push("import SwiftUI");
     lines.push("");
-    const scales = config.includeColorScalesCollection !== false ? (result.scales ?? {}) : {};
-    const scaleNames = Object.keys(scales);
-    const hasScales = scaleNames.length > 0;
+    const hasScales = scaleSteps.length > 0;
 
     // Declare the namespace enum once — re-declaring it in the same module is a Swift error.
     // Both UIColor.{Theme} and Color.{Theme} enums are declared here, then extended below.
@@ -29,39 +28,31 @@ export const fmtSwift = {
     if (hasScales) {
       lines.push("// MARK: - UIColor Scale (" + themeName + ")");
       lines.push("extension UIColor." + themeEnum + " {");
-      for (let ci = 0; ci < scaleNames.length; ci++) {
-        const colorName = scaleNames[ci];
-        const cLabel = _colorLabel(colorName, config);
-        const scale = scales[colorName];
-        const steps = Object.keys(scale);
-        for (let si = 0; si < steps.length; si++) {
-          const step = steps[si];
-          const entry = scale[step];
-          const varName = _camel([cLabel, "scale", _stepLabel(step, config)]);
-          const rgb = _hexComponents(entry.value);
-          lines.push("  static let " + varName + " = UIColor(red: " + (rgb.r / 255).toFixed(4) + ", green: " + (rgb.g / 255).toFixed(4) + ", blue: " + (rgb.b / 255).toFixed(4) + ", alpha: 1)");
-        }
+      for (const step of scaleSteps) {
+        const varName = _camel([step.cLabel, "scale", step.stepKey]);
+        const rgb = _hexComponents(step.value);
+        lines.push("  static let " + varName + " = UIColor(red: " + (rgb.r / 255).toFixed(4) + ", green: " + (rgb.g / 255).toFixed(4) + ", blue: " + (rgb.b / 255).toFixed(4) + ", alpha: 1)");
       }
       lines.push("}\n");
     }
     if (themeTokens) {
       lines.push("// MARK: - UIColor Semantic Tokens (" + themeName + ")");
       lines.push("extension UIColor." + themeEnum + " {");
-      _eachToken(result, config, function(theme, _colorName, _roleObj, _varDef, token, _cLabel, _rLabel, _vLabel, segs) {
-        if (theme !== themeName) return;
-        const varName = _camel(segs);
+      for (const token of tokens) {
+        if (token.theme !== themeName) continue;
+        const varName = _camel(token.segs.map((s) => s.label));
         const rgb = _hexComponents(token.value);
         lines.push("  static let " + varName + " = UIColor(red: " + (rgb.r / 255).toFixed(4) + ", green: " + (rgb.g / 255).toFixed(4) + ", blue: " + (rgb.b / 255).toFixed(4) + ", alpha: 1)");
-      });
+      }
       lines.push("}\n");
       lines.push("// MARK: - SwiftUI Color Semantic Tokens (" + themeName + ")");
       lines.push("extension Color." + themeEnum + " {");
-      _eachToken(result, config, function(theme, _colorName, _roleObj, _varDef, token, _cLabel, _rLabel, _vLabel, segs) {
-        if (theme !== themeName) return;
-        const varName = _camel(segs);
+      for (const token of tokens) {
+        if (token.theme !== themeName) continue;
+        const varName = _camel(token.segs.map((s) => s.label));
         const rgb = _hexComponents(token.value);
         lines.push("  static let " + varName + " = Color(red: " + (rgb.r / 255).toFixed(4) + ", green: " + (rgb.g / 255).toFixed(4) + ", blue: " + (rgb.b / 255).toFixed(4) + ")");
-      });
+      }
       lines.push("}");
     }
     const sourceColors = _eachSourceColor(config);

@@ -1,5 +1,6 @@
 import type { EngineResult, ExportConfig, ExportFile } from "./types";
 import { _slug, _projectSlug, _exportTimestamp } from "./helpers";
+import { resolveExport, resolveScaleSteps } from "./resolve";
 import { fmtCSS } from "./fmtCSS";
 import { fmtSCSS } from "./fmtSCSS";
 import { fmtTailwind } from "./fmtTailwind";
@@ -58,8 +59,9 @@ export function buildExportBundle(
     if (fmt === "css") {
       if (hasSource) files.push({ path: `${pre("css")}source.css`, content: fmtCSS.source(config), role: "source" });
       if (hasScales) files.push({ path: `${pre("css")}scale.css`, content: fmtCSS.scale(result, config), role: "scale" });
+      const { tokens: cssTokens } = resolveExport(result, config);
       for (let ti = 0; ti < themeKeys.length; ti++) {
-        files.push({ path: `${pre("css")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, config, themeKeys[ti], ti === 0), role: themeKeys[ti] });
+        files.push({ path: `${pre("css")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, cssTokens, config, themeKeys[ti], ti === 0), role: themeKeys[ti] });
       }
     }
 
@@ -75,31 +77,36 @@ export function buildExportBundle(
       // tokens.css is the scale/source companion — only include what applies
       if (hasSource) files.push({ path: `${pre("tailwind")}source.css`, content: fmtCSS.source(config), role: "source" });
       if (hasScales) files.push({ path: `${pre("tailwind")}tokens.css`, content: fmtCSS.scale(result, config), role: "scale" });
+      const { tokens: twTokens } = resolveExport(result, config);
       for (let ti = 0; ti < themeKeys.length; ti++) {
-        files.push({ path: `${pre("tailwind")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, config, themeKeys[ti], ti === 0), role: themeKeys[ti] });
+        files.push({ path: `${pre("tailwind")}${_slug(themeKeys[ti])}.css`, content: fmtCSS.theme(result, twTokens, config, themeKeys[ti], ti === 0), role: themeKeys[ti] });
       }
     }
 
     if (fmt === "dtcg") {
       if (hasSource) files.push({ path: `${pre("dtcg")}source.json`, content: fmtDTCG.source(config), role: "source" });
       if (hasScales) files.push({ path: `${pre("dtcg")}scale.json`, content: fmtDTCG.scale(result, config), role: "scale" });
+      const { tokens: dtcgTokens } = resolveExport(result, config);
       for (const theme of themeKeys) {
-        files.push({ path: `${pre("dtcg")}${_slug(theme)}.json`, content: fmtDTCG.theme(result, config, theme), role: theme });
+        files.push({ path: `${pre("dtcg")}${_slug(theme)}.json`, content: fmtDTCG.theme(result, dtcgTokens, config, theme), role: theme });
       }
     }
 
     if (fmt === "style-dictionary") {
       // global.json holds scale + source; skip only when both are empty
       if (hasScales || hasSource) files.push({ path: `${pre("style-dictionary")}global.json`, content: fmtStyleDictionary.global(result, config), role: "global" });
+      const { tokens: sdTokens } = resolveExport(result, config);
       for (const theme of themeKeys) {
-        files.push({ path: `${pre("style-dictionary")}${_slug(theme)}.json`, content: fmtStyleDictionary.theme(result, config, theme), role: theme });
+        files.push({ path: `${pre("style-dictionary")}${_slug(theme)}.json`, content: fmtStyleDictionary.theme(result, sdTokens, config, theme), role: theme });
       }
     }
 
     if (fmt === "ios-swift") {
+      const { tokens: swiftTokens } = resolveExport(result, config);
+      const swiftScaleSteps = resolveScaleSteps(result, config);
       for (const theme of themeKeys) {
         const name = theme.charAt(0).toUpperCase() + theme.slice(1) + "Colors.swift";
-        files.push({ path: `${pre("ios-swift")}${name}`, content: fmtSwift.file(result, config, theme), role: theme });
+        files.push({ path: `${pre("ios-swift")}${name}`, content: fmtSwift.file(result, swiftTokens, swiftScaleSteps, config, theme), role: theme });
       }
     }
 
@@ -110,18 +117,22 @@ export function buildExportBundle(
       // to remap (colors.xml itself is a fixed Android convention, not
       // something to rename).
       const qualifiers = _androidQualifiers(themeKeys);
+      const { tokens: androidTokens } = resolveExport(result, config);
+      const androidScaleSteps = resolveScaleSteps(result, config);
       for (let ti = 0; ti < themeKeys.length; ti++) {
         const themeName = themeKeys[ti];
         const qualifier = qualifiers[ti];
         const isNonStandard = qualifier !== "values" && qualifier !== "values-night";
-        files.push({ path: `${pre("android")}res/${qualifier}/colors.xml`, content: fmtAndroid.file(result, config, themeName, isNonStandard), role: themeName });
+        files.push({ path: `${pre("android")}res/${qualifier}/colors.xml`, content: fmtAndroid.file(result, androidTokens, androidScaleSteps, config, themeName, isNonStandard), role: themeName });
       }
     }
 
     if (fmt === "rn-ts") {
       files.push({ path: `${pre("rn-ts")}tokens/index.ts`, content: fmtReactNative.index(result, config), role: "index" });
+      const { tokens: rnTokens } = resolveExport(result, config);
+      const rnScaleSteps = resolveScaleSteps(result, config);
       for (const theme of themeKeys) {
-        files.push({ path: `${pre("rn-ts")}tokens/${_slug(theme)}.ts`, content: fmtReactNative.theme(result, config, theme), role: theme });
+        files.push({ path: `${pre("rn-ts")}tokens/${_slug(theme)}.ts`, content: fmtReactNative.theme(result, rnTokens, rnScaleSteps, config, theme), role: theme });
       }
     }
 

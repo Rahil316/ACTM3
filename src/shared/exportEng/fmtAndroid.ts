@@ -1,5 +1,6 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _snake, _hexComponents, _eachSourceColor } from './helpers';
+import { _snake, _hexComponents, _eachSourceColor } from './helpers';
+import type { ResolvedToken, ResolvedScaleStep } from './resolve';
 
 function _toHex2(n: number): string { const s = n.toString(16).toUpperCase(); return s.length === 1 ? "0" + s : s; }
 
@@ -9,7 +10,7 @@ function _toARGB(hex: string, alpha01 = 1): string {
 }
 
 export const fmtAndroid = {
-  file(result: EngineResult, config: ExportConfig, themeName: string, isNonStandardQualifier = false): string {
+  file(result: EngineResult, tokens: ResolvedToken[], scaleSteps: ResolvedScaleStep[], config: ExportConfig, themeName: string, isNonStandardQualifier = false): string {
     const themeTokens = result.tokens && result.tokens[themeName];
     const lines: string[] = [];
     lines.push("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
@@ -31,51 +32,30 @@ export const fmtAndroid = {
       }
       lines.push("");
     }
-    const scales = config.includeColorScalesCollection !== false ? (result.scales ?? {}) : {};
-    const scaleNames = Object.keys(scales);
-    if (scaleNames.length > 0) {
+    if (scaleSteps.length > 0) {
       lines.push("    <!-- Color Scales -->");
-      for (let ci = 0; ci < scaleNames.length; ci++) {
-        const colorName = scaleNames[ci];
-        const cLabel = _colorLabel(colorName, config);
-        const scale = scales[colorName];
-        const steps = Object.keys(scale);
-        lines.push("    <!-- " + colorName + " -->");
-        for (let si = 0; si < steps.length; si++) {
-          const step = steps[si];
-          const entry = scale[step];
-          const resName = _snake([cLabel, _stepLabel(step, config)]);
-          const argb = _toARGB(entry.value);
-          lines.push("    <color name=\"" + resName + "\">" + argb + "</color>");
+      let lastScaleColor: string | null = null;
+      for (const step of scaleSteps) {
+        if (step.colorName !== lastScaleColor) {
+          lines.push("    <!-- " + step.colorName + " -->");
+          lastScaleColor = step.colorName;
         }
+        const resName = _snake([step.cLabel, step.stepKey]);
+        lines.push("    <color name=\"" + resName + "\">" + _toARGB(step.value) + "</color>");
       }
       lines.push("");
     }
     if (themeTokens) {
       lines.push("    <!-- Semantic Tokens — " + themeName + " -->");
-      const colorNames = Object.keys(themeTokens);
-      for (let ci2 = 0; ci2 < colorNames.length; ci2++) {
-        const colorName2 = colorNames[ci2];
-        const cLabel2 = _colorLabel(colorName2, config);
-        lines.push("    <!-- " + colorName2 + " -->");
-        const roles = themeTokens[colorName2] as Record<string, Record<string, import("./types").TokenEntry>>;
-        const roleIds = Object.keys(roles);
-        for (let ri = 0; ri < roleIds.length; ri++) {
-          const roleId = roleIds[ri];
-          const roleObj = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
-          const rLabel = _roleLabel(roleObj, config);
-          const varDefs = _variationDefs(roleObj, config);
-          const variations = roles[roleId];
-          for (let vi = 0; vi < varDefs.length; vi++) {
-            const token = variations[String(vi)];
-            if (!token) continue;
-            const vLabel = _varLabel(varDefs[vi], config);
-            const segs = _tokenSegments(cLabel2, rLabel, vLabel, config);
-            const resName2 = _snake(segs);
-            const argb2 = _toARGB(token.value);
-            lines.push("    <color name=\"" + resName2 + "\">" + argb2 + "</color>");
-          }
+      let lastColor: string | null = null;
+      for (const token of tokens) {
+        if (token.theme !== themeName) continue;
+        if (token.colorName !== lastColor) {
+          lines.push("    <!-- " + token.colorName + " -->");
+          lastColor = token.colorName;
         }
+        const resName = _snake(token.segs.map((s) => s.label));
+        lines.push("    <color name=\"" + resName + "\">" + _toARGB(token.value) + "</color>");
       }
       lines.push("");
     }

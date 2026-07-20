@@ -5,6 +5,7 @@ import { translateLocalBg } from "../shared/engine/clrUtils";
 import type { ProjectStore, TokenNameSegment } from "../ui/types/state";
 import type { EngineInput } from "../shared/engine/clrEngine";
 import type { Color, Role, Theme, Variation } from "../shared/types";
+import type { ExportConfig } from "../shared/exportEng/types";
 export interface StepNames {
   name: string;
   shorthand: string;
@@ -45,6 +46,52 @@ export function normalizeAlphaValues(raw: unknown): number[] {
       .filter((v) => !isNaN(v) && v >= 0 && v <= 100);
   }
   return Array.isArray(raw) ? raw : [];
+}
+
+// Converts a PluginConfig (translateConfig's output) into the shape
+// buildExportBundle expects — roles as an id-keyed Record instead of an
+// array. Single source of truth for all three export call sites (Figma
+// sandbox, CLI, export-test harness), which previously each hand-copied this
+// and applyExportOverrides below, kept in sync by hand per comments that used
+// to live at each call site.
+export function toExportConfig(config: PluginConfig): ExportConfig {
+  const rolesRecord: Record<string, Role> = {};
+  (config.roles || []).forEach((r, idx) => {
+    rolesRecord[String(idx)] = r;
+  });
+  return {
+    ...config,
+    roles: rolesRecord,
+    variations: config.variations ?? undefined,
+  };
+}
+
+// Export Settings tab (SettingsOverlay.tsx) lets a project define naming/
+// shorthand/section overrides that apply ONLY to file exports, never to Figma
+// sync or canvas preview — those two always use `config` as translateConfig
+// built it. When exportSettings.matchFigma is true (default, and true for any
+// project saved before this feature existed), this is a no-op passthrough.
+export function applyExportOverrides(config: PluginConfig, projectStore: ProjectStore): PluginConfig {
+  const exportSettings = projectStore.exportSettings;
+  if (!exportSettings || exportSettings.matchFigma) return config;
+  const c = exportSettings.custom;
+  return {
+    ...config,
+    tokenNameSegments: c.tokenNameSegments,
+    useShorthandColors: c.useShorthandColors,
+    useShorthandRoles: c.useShorthandRoles,
+    useShorthandVariations: c.useShorthandVariations,
+    useShorthandSteps: c.useShorthandSteps,
+    includeSourceColors: c.includeSourceColors,
+    // Guards a bug hit in the wild: a .wand file with alphaValues as a
+    // comma-separated string instead of number[] (see normalizeAlphaValues
+    // above for the full story — the CLI hit this in the wild).
+    alphaValues: normalizeAlphaValues(c.alphaValues),
+    // Direct mode never has scale data regardless of this override — only
+    // meaningful (and only shown in the Export Settings tab) in Scale mode.
+    includeColorScalesCollection: config.pluginMode === "direct" ? config.includeColorScalesCollection : c.includeColorScalesCollection,
+    includeDescriptions: c.includeDescriptions,
+  };
 }
 
 export function translateConfig(projectStore: ProjectStore): PluginConfig {

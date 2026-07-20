@@ -1,16 +1,4 @@
-import type { ExportConfig, EngineResult, TokenEntry, Role, Variation } from './types';
-
-export type EachTokenCallback = (
-  theme: string,
-  colorName: string,
-  roleObj: Role,
-  varDef: Variation,
-  token: TokenEntry,
-  cLabel: string,
-  rLabel: string,
-  vLabel: string,
-  segs: string[],
-) => void;
+import type { ExportConfig, Role, Variation } from './types';
 
 export function _colorLabel(colorName: string, config: ExportConfig): string {
   if (!config.useShorthandColors) return colorName;
@@ -37,11 +25,7 @@ export function _stepLabel(stepName: string, config: ExportConfig): string {
   return sh ? sh : stepName;
 }
 
-export function _tokenSegments(colorLabel: string, roleLabel: string, varLabel: string, config: ExportConfig): string[] {
-  return _tokenSegmentsTyped(colorLabel, roleLabel, varLabel, config).map((s) => s.label);
-}
-
-// Same ordering/omission as _tokenSegments, but keeps each segment's type
+// Same ordering/omission as a flat tokenNameSegments join, but keeps each segment's type
 // tagged alongside its label — lets a caller apply a per-type key convention
 // (e.g. React Native's camelCase color/role keys vs. slugged variation keys)
 // independent of where tokenNameSegments places that segment in the nesting.
@@ -161,7 +145,7 @@ export function _setNestedSlug(root: Record<string, unknown>, segs: { type: "col
   _setNested(root, segs, leaf, (s) => _slug(s.label));
 }
 
-export interface SourceColorEntry {
+interface SourceColorEntry {
   colorName: string;
   cLabel: string;
   hex: string;
@@ -195,32 +179,3 @@ export function _eachSourceColor(config: ExportConfig): SourceColorEntry[] {
   });
 }
 
-export function _eachToken(result: EngineResult, config: ExportConfig, cb: EachTokenCallback): void {
-  const themeKeys = Object.keys(result.tokens || {});
-  for (let ti = 0; ti < themeKeys.length; ti++) {
-    const theme = themeKeys[ti];
-    const themeTokens = result.tokens[theme];
-    if (!themeTokens) continue;
-    const colorNames = Object.keys(themeTokens);
-    for (let ci = 0; ci < colorNames.length; ci++) {
-      const colorName = colorNames[ci];
-      const cLabel = _colorLabel(colorName, config);
-      const roles = themeTokens[colorName] as Record<string, Record<string, TokenEntry>>;
-      const roleIds = Object.keys(roles);
-      for (let ri = 0; ri < roleIds.length; ri++) {
-        const roleId = roleIds[ri];
-        const roleObj: Role = (config.roles && config.roles[roleId]) || { _id: roleId, name: roleId, shorthand: roleId, variations: null };
-        const rLabel = _roleLabel(roleObj, config);
-        const varDefs = _variationDefs(roleObj, config);
-        const variations = roles[roleId];
-        for (let vi = 0; vi < varDefs.length; vi++) {
-          const token = variations[String(vi)];
-          if (!token) continue;
-          const vLabel = _varLabel(varDefs[vi], config);
-          const segs = _tokenSegments(cLabel, rLabel, vLabel, config);
-          cb(theme, colorName, roleObj, varDefs[vi], token, cLabel, rLabel, vLabel, segs);
-        }
-      }
-    }
-  }
-}

@@ -3,79 +3,29 @@
 //
 // This mirrors exactly what src/figma/index.ts's "request-export-bundle"
 // handler does (translateConfig -> variableMaker -> applyExportOverrides ->
-// toExportConfig -> buildExportBundle), reimplemented standalone here since
-// index.ts is Figma-sandbox code (references the `figma` global) and can't be
-// imported directly into a plain Node/tsx script.
+// toExportConfig -> buildExportBundle) — those middle two now live in
+// src/figma/config.ts (no Figma-sandbox dependency) and are imported
+// directly rather than reimplemented; only variableMaker's caller
+// (index.ts's message-router entry point) is sandbox-only and can't be
+// imported here.
 //
-// Run: npx tsx export-test/scripts/run-export-test.ts             # all fixtures
-//      npx tsx export-test/scripts/run-export-test.ts scale-basic # one fixture
+// Run: npx tsx export-test/scripts/run-export-test.ts                    # all fixtures
+//      npx tsx export-test/scripts/run-export-test.ts scale-basic        # one fixture by exact id
+//      npx tsx export-test/scripts/run-export-test.ts --batch segments   # every fixture whose id starts with "segments/"
 
 import { writeFileSync, mkdirSync, rmSync } from "fs";
 import { join } from "path";
-import { translateConfig, normalizeAlphaValues, type PluginConfig } from "../../src/figma/config";
+import { translateConfig, toExportConfig, applyExportOverrides, type PluginConfig } from "../../src/figma/config";
 import { variableMaker, type EngineResult } from "../../src/shared/engine/clrEngine";
 import { resolveTokenRefBgs } from "../../src/shared/engine/clrUtils";
 import { buildExportBundle } from "../../src/shared/exportEng/bundler";
+import { resolveExport, type ResolveWarning } from "../../src/shared/exportEng/resolve";
 import { ExportFormatter } from "../../src/figma/docGen";
-import type { ExportConfig } from "../../src/shared/exportEng/types";
-import type { Role } from "../../src/shared/types";
+import type { ProjectStore } from "../../src/ui/types/state";
 import { buildFixtures, type Fixture } from "./fixtures";
 
 const ALL_FORMATS = ["css", "scss", "tailwind", "dtcg", "style-dictionary", "ios-swift", "android", "rn-ts", "csv", "json", "wand", "wand-backup"];
 const RESULTS_DIR = join(__dirname, "..", "results");
-
-// ── Reimplements src/figma/index.ts's toExportConfig + applyExportOverrides ──
-// (private functions there — kept in sync by hand since this harness's whole
-// point is to catch drift between "what Figma sync would do" and "what
-// exports actually produce", not to import sandbox-only code).
-
-function toExportConfig(config: PluginConfig): ExportConfig {
-  const rolesRecord: Record<string, Role> = {};
-  (config.roles || []).forEach((r, idx) => {
-    rolesRecord[String(idx)] = r;
-  });
-  return {
-    ...config,
-    roles: rolesRecord,
-    variations: config.variations ?? undefined,
-  };
-}
-
-interface ExportSettingsLike {
-  matchFigma: boolean;
-  custom: {
-    tokenNameSegments: string[];
-    useShorthandColors: boolean;
-    useShorthandRoles: boolean;
-    useShorthandVariations: boolean;
-    useShorthandSteps: boolean;
-    includeSourceColors: boolean;
-    alphaValues: number[];
-    includeColorScalesCollection: boolean;
-    includeDescriptions: boolean;
-  };
-}
-
-function applyExportOverrides(config: PluginConfig, projectStore: Record<string, unknown>): PluginConfig {
-  const exportSettings = projectStore.exportSettings as ExportSettingsLike | undefined;
-  if (!exportSettings || exportSettings.matchFigma) return config;
-  const c = exportSettings.custom;
-  return {
-    ...config,
-    tokenNameSegments: c.tokenNameSegments as PluginConfig["tokenNameSegments"],
-    useShorthandColors: c.useShorthandColors,
-    useShorthandRoles: c.useShorthandRoles,
-    useShorthandVariations: c.useShorthandVariations,
-    useShorthandSteps: c.useShorthandSteps,
-    includeSourceColors: c.includeSourceColors,
-    // Guards the exact bug this harness exists to catch drift on: a .wand
-    // file with alphaValues as a comma-separated string instead of number[]
-    // (see normalizeAlphaValues in src/figma/config.ts).
-    alphaValues: normalizeAlphaValues(c.alphaValues),
-    includeColorScalesCollection: config.pluginMode === "direct" ? config.includeColorScalesCollection : c.includeColorScalesCollection,
-    includeDescriptions: c.includeDescriptions,
-  };
-}
 
 function runEngine(config: PluginConfig): EngineResult {
   const pass1 = variableMaker(config);
@@ -93,6 +43,15 @@ interface FixtureRunSummary {
   fileCount: number;
   filesByFormat: Record<string, number>;
   errors: string[];
+  // resolveExport()'s own naming-anomaly detector (empty-theme, an explicit
+  // empty variations list, or two tokens colliding on the same output name)
+  // — buildExportBundle() computes these internally per format but discards
+  // them (see cli/src/build.ts for its one real consumer), so this harness
+  // calls resolveExport() a second, separate time purely to surface them for
+  // fixtures specifically designed to trigger one (see naming-collisions/,
+  // scoping/role-empty-variations). Also written to warnings.json alongside
+  // each fixture's format folders for easy scanning without re-deriving it.
+  resolveWarnings: ResolveWarning[];
 }
 
 function runFixture(fixture: Fixture): FixtureRunSummary {
@@ -101,11 +60,21 @@ function runFixture(fixture: Fixture): FixtureRunSummary {
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const config = translateConfig(fixture.projectStore as any);
+  // Fixtures are hand-built partial objects, not full ProjectStore instances —
+  // this cast (also used by translateConfig below) is the harness's one
+  // deliberate type escape, not a workaround for a mismatch with the real
+  // applyExportOverrides/toExportConfig (which now come from src/figma/config.ts
+  // unmodified, same as every other caller).
+  const projectStore = fixture.projectStore as unknown as ProjectStore;
+  const config = translateConfig(projectStore);
   const result = runEngine(config);
-  const exportConfig = applyExportOverrides(config, fixture.projectStore);
+  const exportConfig = applyExportOverrides(config, projectStore);
   const finalExportConfig = toExportConfig(exportConfig);
+
+  const { warnings: resolveWarnings } = resolveExport(result, finalExportConfig);
+  if (resolveWarnings.length > 0) {
+    writeFileSync(join(outDir, "warnings.json"), JSON.stringify(resolveWarnings, null, 2), "utf-8");
+  }
 
   const timestamp = Date.now();
   const files = buildExportBundle(result, finalExportConfig, ALL_FORMATS, fixture.projectStore, timestamp);
@@ -156,16 +125,36 @@ function runFixture(fixture: Fixture): FixtureRunSummary {
     fileCount: files.length,
     filesByFormat,
     errors,
+    resolveWarnings,
   };
 }
 
 export function main() {
-  const selectors = process.argv.slice(2);
+  const args = process.argv.slice(2);
   const all = buildFixtures();
-  const selected = selectors.length > 0 ? all.filter((f) => selectors.includes(f.id)) : all;
+
+  // Batch fixtures use "{batch}/{name}" ids (e.g. "segments/2seg-drop-role")
+  // purely so their results land in export-test/results/{batch}/{name}/ —
+  // join()'s recursive mkdirSync already handles the nested path, no extra
+  // wiring needed there. --batch <name> selects every fixture whose id
+  // starts with "{name}/", so a single dimension (e.g. all segment-shape
+  // fixtures) can be regenerated/reviewed without re-running everything else.
+  const batchIndex = args.indexOf("--batch");
+  let selected: Fixture[];
+  if (batchIndex !== -1) {
+    const batchName = args[batchIndex + 1];
+    if (!batchName) {
+      console.error("--batch requires a name, e.g. --batch segments");
+      process.exit(1);
+    }
+    selected = all.filter((f) => f.id.startsWith(`${batchName}/`));
+  } else {
+    const selectors = args;
+    selected = selectors.length > 0 ? all.filter((f) => selectors.includes(f.id)) : all;
+  }
 
   if (selected.length === 0) {
-    console.error(selectors.length ? `No fixture matched: ${selectors.join(", ")}` : "No fixtures defined.");
+    console.error(args.length ? `No fixture matched: ${args.join(" ")}` : "No fixtures defined.");
     process.exit(1);
   }
 
@@ -178,6 +167,9 @@ export function main() {
     const summary = runFixture(fixture);
     if (summary.errors.length > 0) {
       console.log(`    ⚠ ${summary.errors.length} critical engine error(s)`);
+    }
+    if (summary.resolveWarnings.length > 0) {
+      console.log(`    ⚠ ${summary.resolveWarnings.length} resolveExport warning(s) — see warnings.json`);
     }
     return summary;
   });

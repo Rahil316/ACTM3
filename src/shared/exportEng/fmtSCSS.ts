@@ -1,5 +1,6 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _splitTokenRef, _eachSourceColor } from './helpers';
+import { _slug, _splitTokenRef, _eachSourceColor } from './helpers';
+import { resolveExport, resolveScaleSteps } from './resolve';
 
 export const fmtSCSS = {
   source(config: ExportConfig): string {
@@ -16,71 +17,56 @@ export const fmtSCSS = {
 
   scale(result: EngineResult, config: ExportConfig): string {
     const lines = ["// " + (config.name || "tokens") + " — color scale variables", "// Do not edit manually.\n"];
-    const scales = result.scales ?? {};
-    const scaleNames = Object.keys(scales);
-    for (let ci = 0; ci < scaleNames.length; ci++) {
-      const colorName = scaleNames[ci];
-      const cLabel = _colorLabel(colorName, config);
-      const scale = scales[colorName];
-      lines.push("// " + colorName);
-      const steps = Object.keys(scale);
-      for (let si = 0; si < steps.length; si++) {
-        const step = steps[si];
-        const entry = scale[step];
-        if (!entry || !entry.value) continue;
-        lines.push("$" + _slug(cLabel) + "-" + _slug(_stepLabel(step, config)) + ": " + entry.value + ";");
-      }
-      lines.push("$scale-" + _slug(cLabel) + ": (");
-      for (let si2 = 0; si2 < steps.length; si2++) {
-        const step2 = steps[si2];
-        const entry2 = scale[step2];
-        if (!entry2 || !entry2.value) continue;
-        lines.push("  " + _slug(_stepLabel(step2, config)) + ": $" + _slug(cLabel) + "-" + _slug(_stepLabel(step2, config)) + ",");
+    const steps = resolveScaleSteps(result, config);
+    let lastColor: string | null = null;
+    let colorSteps: typeof steps = [];
+    const flush = () => {
+      if (colorSteps.length === 0) return;
+      lines.push("$scale-" + _slug(colorSteps[0].cLabel) + ": (");
+      for (const s of colorSteps) {
+        lines.push("  " + _slug(s.stepKey) + ": $" + _slug(s.cLabel) + "-" + _slug(s.stepKey) + ",");
       }
       lines.push(");\n");
+    };
+    for (const step of steps) {
+      if (step.colorName !== lastColor) {
+        flush();
+        lines.push("// " + step.colorName);
+        colorSteps = [];
+        lastColor = step.colorName;
+      }
+      lines.push("$" + _slug(step.cLabel) + "-" + _slug(step.stepKey) + ": " + step.value + ";");
+      colorSteps.push(step);
     }
+    flush();
     return lines.join("\n");
   },
 
   tokens(result: EngineResult, config: ExportConfig): string {
     const hasScales = Object.keys(result.scales || {}).length > 0;
     const lines = ["// " + (config.name || "tokens") + " — semantic token maps", "@use 'sass:map';\n", ...(hasScales ? ["@forward 'scale';\n"] : [])];
+    const { tokens } = resolveExport(result, config);
     const themeKeys = Object.keys(result.tokens || {});
-    for (let ti = 0; ti < themeKeys.length; ti++) {
-      const theme = themeKeys[ti];
-      const themeTokens = result.tokens[theme];
-      if (!themeTokens) continue;
+    for (const theme of themeKeys) {
+      if (!result.tokens[theme]) continue;
       lines.push("$tokens-" + _slug(theme) + ": (");
-      const colorNames = Object.keys(themeTokens);
-      for (let ci = 0; ci < colorNames.length; ci++) {
-        const colorName = colorNames[ci];
-        const cLabel = _colorLabel(colorName, config);
-        lines.push("  // " + colorName);
-        const roles = themeTokens[colorName] as Record<string, Record<string, import("./types").TokenEntry>>;
-        const roleIds = Object.keys(roles);
-        for (let ri = 0; ri < roleIds.length; ri++) {
-          const roleId = roleIds[ri];
-          const roleObj = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
-          const rLabel = _roleLabel(roleObj, config);
-          const varDefs = _variationDefs(roleObj, config);
-          const variations = roles[roleId];
-          for (let vi = 0; vi < varDefs.length; vi++) {
-            const token = variations[String(vi)];
-            if (!token) continue;
-            const vLabel = _varLabel(varDefs[vi], config);
-            const segs = _tokenSegments(cLabel, rLabel, vLabel, config);
-            const key = segs.map(_slug).join("-");
-            let ref: string;
-            if (token.tokenRef) {
-              const parts = _splitTokenRef(token.tokenRef);
-              ref = "$" + _slug(parts.color) + "-" + _slug(parts.step);
-            } else {
-              ref = token.value;
-            }
-            const note = token.isAdjusted ? " /* ⚠ adjusted */" : "";
-            lines.push("  \"" + key + "\": " + ref + "," + note);
-          }
+      let lastColor: string | null = null;
+      for (const token of tokens) {
+        if (token.theme !== theme) continue;
+        if (token.colorName !== lastColor) {
+          lines.push("  // " + token.colorName);
+          lastColor = token.colorName;
         }
+        const key = token.segs.map((s) => _slug(s.label)).join("-");
+        let ref: string;
+        if (token.tokenRef) {
+          const parts = _splitTokenRef(token.tokenRef);
+          ref = "$" + _slug(parts.color) + "-" + _slug(parts.step);
+        } else {
+          ref = token.value;
+        }
+        const note = token.isAdjusted ? " /* ⚠ adjusted */" : "";
+        lines.push("  \"" + key + "\": " + ref + "," + note);
       }
       lines.push(");\n");
     }

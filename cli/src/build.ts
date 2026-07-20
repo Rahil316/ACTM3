@@ -5,53 +5,20 @@
 // toExportConfig -> buildExportBundle) and what export-test/scripts/
 // run-export-test.ts reimplements standalone for the same reason: index.ts is
 // Figma-sandbox code (references the `figma` global) and can't be imported
-// into a plain Node CLI. toExportConfig/applyExportOverrides are private
-// there, so they're duplicated here too — keep in sync by hand if that
-// pipeline's shape ever changes.
+// into a plain Node CLI. toExportConfig/applyExportOverrides themselves now
+// live in src/figma/config.ts (which has no Figma-sandbox dependency) and are
+// imported here rather than hand-copied.
 
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from "fs";
 import { join, dirname } from "path";
-import { translateConfig, normalizeAlphaValues, type PluginConfig } from "../../src/figma/config";
+import { translateConfig, toExportConfig, applyExportOverrides, type PluginConfig } from "../../src/figma/config";
 import { variableMaker, type EngineResult } from "../../src/shared/engine/clrEngine";
 import { resolveTokenRefBgs } from "../../src/shared/engine/clrUtils";
 import { buildExportBundle } from "../../src/shared/exportEng/bundler";
-import type { ExportConfig, ExportFile } from "../../src/shared/exportEng/types";
-import type { Role } from "../../src/shared/types";
+import { resolveExport, type ResolveWarning } from "../../src/shared/exportEng/resolve";
+import type { ExportFile } from "../../src/shared/exportEng/types";
 import type { ProjectStore } from "../../src/ui/types/state";
 import type { TokenWandConfig } from "./loadConfig";
-
-function toExportConfig(config: PluginConfig): ExportConfig {
-  const rolesRecord: Record<string, Role> = {};
-  (config.roles || []).forEach((r, idx) => {
-    rolesRecord[String(idx)] = r;
-  });
-  return {
-    ...config,
-    roles: rolesRecord,
-    variations: config.variations ?? undefined,
-  };
-}
-
-function applyExportOverrides(config: PluginConfig, projectStore: ProjectStore): PluginConfig {
-  const exportSettings = projectStore.exportSettings;
-  if (!exportSettings || exportSettings.matchFigma) return config;
-  const c = exportSettings.custom;
-  return {
-    ...config,
-    tokenNameSegments: c.tokenNameSegments,
-    useShorthandColors: c.useShorthandColors,
-    useShorthandRoles: c.useShorthandRoles,
-    useShorthandVariations: c.useShorthandVariations,
-    useShorthandSteps: c.useShorthandSteps,
-    includeSourceColors: c.includeSourceColors,
-    // Guards the exact crash this CLI hit in the wild: a .wand file with
-    // alphaValues stored as a comma-separated string instead of number[]
-    // (see normalizeAlphaValues in src/figma/config.ts for the full story).
-    alphaValues: normalizeAlphaValues(c.alphaValues),
-    includeColorScalesCollection: config.pluginMode === "direct" ? config.includeColorScalesCollection : c.includeColorScalesCollection,
-    includeDescriptions: c.includeDescriptions,
-  };
-}
 
 function runEngine(config: PluginConfig): EngineResult {
   const pass1 = variableMaker(config);
@@ -76,12 +43,21 @@ export interface BuildResult {
   // itself touching token-wand.config.json (that's cli.ts's job; build.ts
   // stays scoped to "generate files").
   rolesByTargetIndex: Array<{ role: string; defaultFileName: string }[]>;
+  // Naming anomalies resolveExport() detects (empty theme, a role with an
+  // explicit empty variations list, two tokens colliding on the same output
+  // name) — independent of which formats/targets are configured, since
+  // they're properties of the resolved token set itself, not of any one
+  // format's output. cli.ts prints these; every other buildExportBundle()
+  // caller (Figma sandbox, standalone UI, export-test) doesn't yet, so this
+  // is the first real consumer of ResolveResult.warnings.
+  warnings: ResolveWarning[];
 }
 
 export function runBuild(projectStore: ProjectStore, config: TokenWandConfig, options: { dryRun: boolean }): BuildResult {
   const pluginConfig = translateConfig(projectStore);
   const result = runEngine(pluginConfig);
   const exportConfig = toExportConfig(applyExportOverrides(pluginConfig, projectStore));
+  const { warnings } = resolveExport(result, exportConfig);
 
   // buildExportBundle is called once per format (not once for every format
   // together) specifically so its internal "multi" flag is always false and
@@ -128,7 +104,7 @@ export function runBuild(projectStore: ProjectStore, config: TokenWandConfig, op
     }
   });
 
-  return { written, rolesByTargetIndex };
+  return { written, rolesByTargetIndex, warnings };
 }
 
 function basenameOf(path: string): string {

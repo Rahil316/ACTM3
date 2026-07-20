@@ -4,7 +4,7 @@
 // This file is bundled by esbuild into dist/scripts.js.
 // It runs in the Figma plugin sandbox (not the UI iframe).
 
-import { translateConfig, resolveTokenRefBgs, buildVariableRenameMap, normalizeAlphaValues, type PluginConfig } from "./config";
+import { translateConfig, resolveTokenRefBgs, buildVariableRenameMap, toExportConfig, applyExportOverrides, type PluginConfig } from "./config";
 import { VariableManager, saveUiState } from "./figmaVars";
 import { variableMaker, type EngineResult } from "../shared/engine/clrEngine.js";
 import { ExportFormatter } from "./docGen";
@@ -12,8 +12,6 @@ import { buildExportBundle } from "../shared/exportEng/bundler";
 import { runPrePublishAnalysis } from "./variableTracker";
 import { generateCanvasPreview, wasPreviewInterrupted, markPreviewInterrupted } from "./canvasPreview";
 import type { ExportConfig } from "../shared/exportEng/types";
-import type { Role } from "../shared/types";
-import type { ProjectStore } from "../ui/types/state";
 import { _eachSourceColor } from "../shared/exportEng/helpers";
 
 function jsonExportPayload(result: EngineResult, exportConfig: ExportConfig): string {
@@ -29,50 +27,6 @@ function jsonExportPayload(result: EngineResult, exportConfig: ExportConfig): st
     null,
     2,
   );
-}
-
-function toExportConfig(config: PluginConfig): ExportConfig {
-  const rolesRecord: Record<string, Role> = {};
-  if (config.roles) {
-    config.roles.forEach((r, idx) => {
-      rolesRecord[String(idx)] = r;
-    });
-  }
-  return {
-    ...config,
-    roles: rolesRecord,
-    variations: config.variations ?? undefined,
-  };
-}
-
-// Export Settings tab (SettingsOverlay.tsx) lets a project define naming/
-// shorthand/section overrides that apply ONLY to file exports, never to Figma
-// sync or canvas preview — those two always use `config` as translateConfig
-// built it. When exportSettings.matchFigma is true (default, and true for any
-// project saved before this feature existed), this is a no-op passthrough.
-function applyExportOverrides(config: PluginConfig, projectStore: ProjectStore): PluginConfig {
-  const exportSettings = projectStore.exportSettings;
-  if (!exportSettings || exportSettings.matchFigma) return config;
-  const c = exportSettings.custom;
-  return {
-    ...config,
-    tokenNameSegments: c.tokenNameSegments,
-    useShorthandColors: c.useShorthandColors,
-    useShorthandRoles: c.useShorthandRoles,
-    useShorthandVariations: c.useShorthandVariations,
-    useShorthandSteps: c.useShorthandSteps,
-    includeSourceColors: c.includeSourceColors,
-    // Same guard as translateConfig's own alphaValues read: a hand-edited or
-    // legacy .wand file can carry this as a comma-separated string instead of
-    // number[], which crashed downstream .map() calls with
-    // "alphaValues.map is not a function" (see normalizeAlphaValues's comment
-    // in config.ts for the full story — the CLI hit this in the wild).
-    alphaValues: normalizeAlphaValues(c.alphaValues),
-    // Direct mode never has scale data regardless of this override — only
-    // meaningful (and only shown in the Export Settings tab) in Scale mode.
-    includeColorScalesCollection: config.pluginMode === "direct" ? config.includeColorScalesCollection : c.includeColorScalesCollection,
-    includeDescriptions: c.includeDescriptions,
-  };
 }
 
 function runEngine(config: PluginConfig): EngineResult {
