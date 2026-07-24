@@ -66,15 +66,45 @@ export function SummaryTab({
   return (
     <div className="flex flex-col gap-3">
 
-      {/* ── Name conflicts — surfaced first: blocks Sync until resolved, so it
-          shouldn't be buried below Health/Scope/Configuration where a user has
-          to scroll to find out why the button won't enable. ──────────────── */}
+      {/* ── Warnings — surfaced first, above What Will Change/Health/Scope/
+          Configuration. Several of these (conflicts, structural changes) block
+          Sync until resolved, and none of them should require scrolling past
+          three other sections to find out why the button won't enable. ──── */}
       {conflicts.length > 0 && (
         <Callout
           variant="warning"
           title={`${conflicts.length} name conflict${conflicts.length !== 1 ? "s" : ""} need review`}
           action={{ label: "Review →", onClick: onOpenConflicts }}
         />
+      )}
+
+      {structuralChanges.map((sc) => {
+        const isOrphaning = !!sc.orphanedCollection || ORPHANING_KINDS.has(sc.kind);
+        return (
+          <Callout key={sc.kind} variant={isOrphaning ? "warning" : "info"} title={STRUCTURAL_TITLE[sc.kind] ?? sc.kind}>
+            {sc.detail}
+            {sc.orphanedCollection && <Mono className="block mt-1 opacity-70">{sc.orphanedCollection}</Mono>}
+          </Callout>
+        );
+      })}
+
+      {!multiMode && themes.length > 1 && (
+        <Callout variant="warning" title="Only 1 theme will be applied">
+          Your Figma plan supports only 1 mode per collection. Only <strong>{themes[0]?.name}</strong> will be written.
+          {themes.slice(1).length > 0 && (
+            <> Skipped: {themes.slice(1).map((t) => t.name).join(", ")}.</>
+          )}{" "}
+          Upgrade to a paid Figma plan to apply all themes.
+        </Callout>
+      )}
+
+      {previewWasInterrupted && (
+        <Callout variant="warning" title="Previous preview interrupted">
+          The plugin was closed mid-render. Re-run preview to restore the canvas.{" "}
+          <button type="button" className="underline cursor-pointer hover:opacity-80" onClick={() => setPreviewWasInterrupted(false)}>
+            Dismiss
+          </button>
+        </Callout>
       )}
 
       {/* ── What will change ────────────────────────────────────────── */}
@@ -179,37 +209,6 @@ export function SummaryTab({
           <HelperText className="text-n-tx-dim px-0.5">Only the first theme will be written — Figma Starter supports 1 mode per collection.</HelperText>
         )}
       </div>
-
-      {/* ── Warnings ────────────────────────────────────────────────── */}
-
-      {structuralChanges.map((sc) => {
-        const isOrphaning = !!sc.orphanedCollection || ORPHANING_KINDS.has(sc.kind);
-        return (
-          <Callout key={sc.kind} variant={isOrphaning ? "warning" : "info"} title={STRUCTURAL_TITLE[sc.kind] ?? sc.kind}>
-            {sc.detail}
-            {sc.orphanedCollection && <Mono className="block mt-1 opacity-70">{sc.orphanedCollection}</Mono>}
-          </Callout>
-        );
-      })}
-
-      {!multiMode && themes.length > 1 && (
-        <Callout variant="warning" title="Only 1 theme will be applied">
-          Your Figma plan supports only 1 mode per collection. Only <strong>{themes[0]?.name}</strong> will be written.
-          {themes.slice(1).length > 0 && (
-            <> Skipped: {themes.slice(1).map((t) => t.name).join(", ")}.</>
-          )}{" "}
-          Upgrade to a paid Figma plan to apply all themes.
-        </Callout>
-      )}
-
-      {previewWasInterrupted && (
-        <Callout variant="warning" title="Previous preview interrupted">
-          The plugin was closed mid-render. Re-run preview to restore the canvas.{" "}
-          <button type="button" className="underline cursor-pointer hover:opacity-80" onClick={() => setPreviewWasInterrupted(false)}>
-            Dismiss
-          </button>
-        </Callout>
-      )}
     </div>
   );
 }
