@@ -126,8 +126,13 @@ export const VariableManager = {
         }
       }
       await this.upsertVariables(scaleCol, modeId, allScaleVars, scaleMetadataMap, decisions, driftDecisions);
-    } else {
-      // If scale collection is not active, build mapping directly
+    } else if (!skipScales) {
+      // If scale collection is not active (but scales were still computed —
+      // Scale mode with includeColorScalesCollection: false), build mapping
+      // directly. Direct mode has no result.scales at all (see clrEngine.ts —
+      // it's absent, not empty), so skipScales must gate this branch the same
+      // way it already gates the scaleCol/needsScaleCol path above; otherwise
+      // Object.entries(undefined) throws in every Direct-mode sync.
       for (const [colorName, scale] of Object.entries(result.scales as Record<string, AnyObj>)) {
         const cLabel = colorLabel(colorName);
         for (const [step, entry] of Object.entries(scale as Record<string, AnyObj>)) {

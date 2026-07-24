@@ -66,6 +66,17 @@ export function SummaryTab({
   return (
     <div className="flex flex-col gap-3">
 
+      {/* ── Name conflicts — surfaced first: blocks Sync until resolved, so it
+          shouldn't be buried below Health/Scope/Configuration where a user has
+          to scroll to find out why the button won't enable. ──────────────── */}
+      {conflicts.length > 0 && (
+        <Callout
+          variant="warning"
+          title={`${conflicts.length} name conflict${conflicts.length !== 1 ? "s" : ""} need review`}
+          action={{ label: "Review →", onClick: onOpenConflicts }}
+        />
+      )}
+
       {/* ── What will change ────────────────────────────────────────── */}
       <div className="flex flex-col gap-1.5">
         <SectionLabel className="text-n-tx-secondary px-0.5">What Will Change</SectionLabel>
@@ -170,14 +181,6 @@ export function SummaryTab({
       </div>
 
       {/* ── Warnings ────────────────────────────────────────────────── */}
-
-      {conflicts.length > 0 && (
-        <Callout
-          variant="warning"
-          title={`${conflicts.length} name conflict${conflicts.length !== 1 ? "s" : ""} need review`}
-          action={{ label: "Review →", onClick: onOpenConflicts }}
-        />
-      )}
 
       {structuralChanges.map((sc) => {
         const isOrphaning = !!sc.orphanedCollection || ORPHANING_KINDS.has(sc.kind);

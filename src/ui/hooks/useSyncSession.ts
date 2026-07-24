@@ -13,14 +13,29 @@ export function useSyncSession(projectStore: ProjectStore, savedState: ProjectSt
   const [driftItems, setDriftItems] = useState<ValueDriftItem[]>([]);
   const [driftDecisions, setDriftDecisions] = useState<Record<string, DriftDecision>>({});
 
+  // Replaces the conflict list wholesale on every check-collections response
+  // (including the debounced re-check that fires on any unrelated projectStore
+  // edit while this dialog is open) — mirrors loadValueDrift below. A decision
+  // the user already made for a tokenRef still present in the new list is
+  // preserved rather than reset to its default; only a genuinely new conflict
+  // (not seen before) gets defaultNameConflictDecision's fallback. Without this,
+  // an explicit "conflict"-kind decision (which has no safe default — see
+  // defaultNameConflictDecision) was wiped back to undecided by the very next
+  // re-check, re-disabling Sync until the user picked the same decision again.
   const loadConflicts = useCallback((list: NameConflict[]) => {
     setConflicts(list || []);
-    const initialDecisions: Record<string, SyncDecision> = {};
-    (list || []).forEach((c) => {
-      const def = defaultNameConflictDecision(c.kind);
-      if (def) initialDecisions[c.tokenRef] = def;
+    setDecisions((prev) => {
+      const next: Record<string, SyncDecision> = {};
+      (list || []).forEach((c) => {
+        if (prev[c.tokenRef]) {
+          next[c.tokenRef] = prev[c.tokenRef];
+          return;
+        }
+        const def = defaultNameConflictDecision(c.kind);
+        if (def) next[c.tokenRef] = def;
+      });
+      return next;
     });
-    setDecisions(initialDecisions);
   }, []);
 
   const setDecision = useCallback((ref: string, val: SyncDecision) => {
