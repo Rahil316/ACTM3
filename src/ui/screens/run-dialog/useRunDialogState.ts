@@ -1,13 +1,8 @@
-import { useState, useCallback, useEffect, useRef, useDeferredValue } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { sendToPlugin, type SyncScope, type SyncTally, type PerCollectionTally, type ExistingCollection, type CollectionCheckResultMessage } from "../../types/messages";
 import type { SyncPreview, StructuralChange, SyncPreviewItem } from "../../types/messages";
 import type { ProjectStore } from "../../types/state";
 import { useSyncSession } from "../../hooks/useSyncSession";
-
-// Re-check debounce: how long to wait after the user stops editing before
-// re-sending check-collections. The sandbox round trip reads the whole Figma
-// variable document (100-300ms), so this must not fire on every keystroke.
-const RECHECK_DEBOUNCE_MS = 600;
 
 // If the sandbox doesn't respond to check-collections within this window,
 // something went wrong on the sandbox side (e.g. an uncaught exception before
@@ -60,12 +55,6 @@ export function useRunDialogState(
 
   const { conflicts, decisions, loadConflicts, setDecision, driftItems, driftDecisions, loadValueDrift, setDriftDecision, runSync } = useSyncSession(projectStore, savedState);
 
-  // Tracks whether the last check-collections response still reflects the
-  // current projectStore. Set true the moment projectStore changes after an
-  // initial check; cleared once a fresh response comes back.
-  const [isStale, setIsStale] = useState(false);
-  const hasCheckedOnce = useRef(false);
-
   // Pending sandbox-round-trip timeout handles — cleared when the matching
   // response arrives, fired (as an onError) if the sandbox never replies.
   const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,6 +66,29 @@ export function useRunDialogState(
   // a slower, stale response can't overwrite newer diff results in the UI.
   const latestCheckRequestId = useRef(0);
 
+  // Set once a check-collections response for the CURRENT dialog session has
+  // landed. There is no automatic re-check on open or on edit — the user
+  // triggers it explicitly (the "Compare Changes with Figma" button in
+  // Summary's What Will Change section, which becomes a refresh icon once
+  // this is true), and it's forced once more, silently, right before an
+  // actual sync (see handleConfirmRun) so a stale review can't be published
+  // against unreviewed drift.
+  const [hasChecked, setHasChecked] = useState(false);
+  // True only while the pre-publish silent re-check (not a user-initiated
+  // click) is in flight — lets the footer button show a distinct "Verifying…"
+  // state instead of reusing isChecking's "not checked yet" messaging.
+  const [isPrePublishChecking, setIsPrePublishChecking] = useState(false);
+  // Wall-clock time of the last check-collections response, so the UI can show
+  // "checked Xs ago" near the refresh icon — otherwise a stale-but-hasChecked
+  // state (user checked, then walked away and edited a lot) looks identical to
+  // a fresh one until they actually click Sync and hit the pre-publish gate.
+  const [lastCheckedAt, setLastCheckedAt] = useState<number | null>(null);
+  // Set (with a reason) when the silent pre-publish re-check finds something
+  // new and reroutes the user to a different tab — surfaced as a one-shot
+  // banner (RunDialog.tsx) so the jump doesn't look unexplained. Cleared once
+  // shown; not part of persistent state.
+  const [prePublishReroute, setPrePublishReroute] = useState<"conflict" | "drift" | null>(null);
+
   useEffect(() => {
     return () => {
       if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
@@ -85,7 +97,7 @@ export function useRunDialogState(
   }, []);
 
   const sendCheck = useCallback(
-    (store: ProjectStore, checkValueDrift = false) => {
+    (store: ProjectStore) => {
       if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
       const requestId = ++latestCheckRequestId.current;
       checkTimeoutRef.current = setTimeout(() => {
@@ -93,7 +105,11 @@ export function useRunDialogState(
         setErrorMsg("Figma didn't respond to the collection check in time. Close this dialog and try again.");
         setPhase("error");
       }, SANDBOX_TIMEOUT_MS);
-      sendToPlugin({ type: "check-collections", requestId, state: store, savedState: savedState ?? null, checkValueDrift });
+      // Always requests value-drift together with the collection/conflict
+      // check — one user action (or the silent pre-publish check) answers
+      // both "what will change" and "did Figma drift" in a single round trip,
+      // rather than requiring two separate clicks across two tabs.
+      sendToPlugin({ type: "check-collections", requestId, state: store, savedState: savedState ?? null, checkValueDrift: true });
     },
     [savedState],
   );
@@ -110,17 +126,25 @@ export function useRunDialogState(
       setStructuralChanges([]);
       setPreviewWasInterrupted(false);
       setScope(skipScales ? "roles" : "all");
-      setIsStale(false);
       setValueDriftChecked(false);
-      hasCheckedOnce.current = true;
-
-      // Value-drift stays on-demand even on dialog open — see the "Figma Edits"
-      // tab's "Check for Figma Edits" button and handleConfirmRun's mandatory
-      // pre-sync check for the two places it actually runs.
-      sendCheck(projectStore);
+      setHasChecked(false);
+      setLastCheckedAt(null);
+      setPrePublishReroute(null);
+      // No automatic check here — the user must click "Compare Changes with
+      // Figma" in Summary (or Sync, which forces it first). Nothing is sent
+      // to the sandbox just from opening the dialog.
     },
-    [projectStore, sendCheck],
+    [],
   );
+
+  const clearPrePublishReroute = useCallback(() => setPrePublishReroute(null), []);
+
+  // User-triggered (or programmatically re-triggered) check — the only way
+  // syncPreview/conflicts/structuralChanges/driftItems get populated now that
+  // there's no auto-check on open or on edit.
+  const checkNow = useCallback(() => {
+    sendCheck(projectStore);
+  }, [projectStore, sendCheck]);
 
   const onCollectionCheckResult = useCallback(
     (msg: CollectionCheckResultMessage) => {
@@ -144,29 +168,64 @@ export function useRunDialogState(
       loadValueDrift(msg.valueDrift ?? []);
       setValueDriftChecked(!!msg.valueDriftChecked);
       setIsCheckingValueDrift(false);
-      setIsStale(false);
+      setHasChecked(true);
+      setLastCheckedAt(Date.now());
+
+      // If this response landed while a silent pre-publish re-check was in
+      // flight (see handleConfirmRun), decide right here whether it's safe to
+      // proceed straight to sync, or whether the fresh data surfaced something
+      // new that needs the user's attention first.
+      if (prePublishCheckRef.current) {
+        prePublishCheckRef.current = false;
+        setIsPrePublishChecking(false);
+        const freshConflicts = msg.conflicts ?? [];
+        const freshDrift = msg.valueDrift ?? [];
+        // Mirror allNameConflictsDecided/allDriftDecided exactly, but against
+        // the FRESH response rather than the (possibly stale-by-one-render)
+        // decisions/driftDecisions closures — loadConflicts/loadValueDrift
+        // above preserve a decision for any tokenRef still present in the new
+        // list, so decisionsRef/driftDecisionsRef (captured just before this
+        // check fired, see handleConfirmRun) already reflect what survives.
+        const hasBlockingConflict = freshConflicts.some((c) => c.kind === "conflict" && !decisionsRef.current[c.tokenRef]);
+        const hasUndecidedDrift = freshDrift.some((d) => !driftDecisionsRef.current[d.tokenRef]);
+        if (hasBlockingConflict || hasUndecidedDrift) {
+          // Something changed on Figma's side between the user's last review
+          // and this very moment — never silently overwrite it. Land the user
+          // on whichever tab has the new thing to resolve, and record why so
+          // RunDialog can explain the jump instead of it looking unexplained.
+          setActiveTab(hasUndecidedDrift ? "value-drift" : "changes");
+          setPrePublishReroute(hasUndecidedDrift ? "drift" : "conflict");
+          return;
+        }
+        proceedToSyncRef.current?.();
+      }
     },
     [loadConflicts, loadValueDrift],
   );
 
-  // Re-check debounced: whenever projectStore changes while the dialog is
-  // sitting in the config phase (the only phase the user can still edit
-  // colors/roles/themes from underneath), mark the current syncPreview/
-  // conflicts/structuralChanges as stale and re-send check-collections after
-  // a short debounce. Without this, Summary/Changes tabs silently show
-  // counts computed against a project state the user has since changed.
-  const deferredProjectStore = useDeferredValue(projectStore);
+  // Kept in sync via effect below so onCollectionCheckResult's pre-publish
+  // branch (above) can read the latest decisions/driftDecisions without
+  // needing them in its own dependency array (which would recreate the
+  // callback — and thus risk detaching/reattaching the bridge listener —
+  // every time the user makes an unrelated decision elsewhere in the dialog).
+  const decisionsRef = useRef(decisions);
+  const driftDecisionsRef = useRef(driftDecisions);
   useEffect(() => {
-    if (phase !== "config" || !hasCheckedOnce.current) return;
-    setIsStale(true);
-    // Any edit invalidates a prior value-drift check — it was computed against
-    // a config that no longer matches what's about to be synced.
-    setValueDriftChecked(false);
-    const timer = setTimeout(() => {
-      sendCheck(deferredProjectStore);
-    }, RECHECK_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [deferredProjectStore, phase, sendCheck]);
+    decisionsRef.current = decisions;
+  }, [decisions]);
+  useEffect(() => {
+    driftDecisionsRef.current = driftDecisions;
+  }, [driftDecisions]);
+
+  // Set just before sendCheck fires for the pre-publish gate (handleConfirmRun),
+  // cleared as soon as that response is handled above — distinguishes "this
+  // response is the silent final check" from "this response is a normal
+  // user-triggered checkNow()", since both flow through the same message type.
+  const prePublishCheckRef = useRef(false);
+  // Holds the "actually run doSync" closure so onCollectionCheckResult (above)
+  // can call it once the fresh pre-publish check comes back clean, without
+  // onCollectionCheckResult needing doSync/validate/scope in its own deps.
+  const proceedToSyncRef = useRef<(() => void) | null>(null);
 
   const doSync = useCallback(
     (syncScope: SyncScope) => {
@@ -185,27 +244,18 @@ export function useRunDialogState(
   const allDriftDecided = driftItems.every((item) => !!driftDecisions[item.tokenRef]);
   const allNameConflictsDecided = conflicts.every((c) => c.kind !== "conflict" || !!decisions[c.tokenRef]);
 
-  // Value-drift is on-demand (see sendCheck's checkValueDrift param) to avoid
-  // recomputing it on every debounced edit — but Sync must never proceed
-  // against a stale or never-run drift check, or a Figma-side edit made after
-  // the last check could be silently clobbered. First click on an unchecked
-  // config only runs the forced check and reveals its results (new drift items
-  // load undecided, per useSyncSession's loadValueDrift) — it deliberately does
-  // NOT auto-continue into sync once the response lands, since that would mean
-  // reasoning about whether React state has settled from an async postMessage
-  // reply. The user reviews/decides on the Figma Edits tab, then clicks Sync
-  // again; by then valueDriftChecked is true and it proceeds normally.
+  // Re-check triggered from the "Figma Edits" tab's own button — same combined
+  // check as checkNow, kept as a separate name since existing callers expect
+  // this signature (no args) and isCheckingValueDrift's distinct loading state.
   const checkValueDrift = useCallback(() => {
     setIsCheckingValueDrift(true);
-    sendCheck(projectStore, true);
+    sendCheck(projectStore);
   }, [projectStore, sendCheck]);
 
-  const handleConfirmRun = useCallback(() => {
-    if (!valueDriftChecked) {
-      checkValueDrift();
-      return;
-    }
-    if (!allDriftDecided || !allNameConflictsDecided) return;
+  // Runs the actual validate → doSync sequence. Split out so both the normal
+  // path and the post-pre-publish-check path (via proceedToSyncRef, see
+  // onCollectionCheckResult above) can reach it identically.
+  const runValidateAndSync = useCallback(() => {
     const validationIssues = validate();
     if (validationIssues && validationIssues.length > 0) {
       setIssues(validationIssues);
@@ -213,7 +263,37 @@ export function useRunDialogState(
       return;
     }
     doSync(scope);
-  }, [valueDriftChecked, checkValueDrift, allDriftDecided, allNameConflictsDecided, validate, doSync, scope]);
+  }, [validate, doSync, scope]);
+
+  useEffect(() => {
+    proceedToSyncRef.current = runValidateAndSync;
+  }, [runValidateAndSync]);
+
+  const handleConfirmRun = useCallback(() => {
+    // Never checked this session — the first click only runs the combined
+    // check (collections + value-drift) and reveals results; it deliberately
+    // does NOT auto-continue into sync once the response lands, since that
+    // would mean reasoning about whether React state has settled from an
+    // async postMessage reply. The user reviews/decides, then clicks again.
+    if (!hasChecked) {
+      checkNow();
+      return;
+    }
+    if (!allDriftDecided || !allNameConflictsDecided) return;
+
+    // Everything the user has seen is decided — but Figma's own state could
+    // have drifted in the time since that last check (someone editing the
+    // variables panel directly, another session syncing the same file, etc).
+    // Run one more check, silently, right before the real write. If it comes
+    // back clean, onCollectionCheckResult's prePublishCheckRef branch calls
+    // proceedToSyncRef straight through. If it finds something new, that same
+    // branch routes the user to resolve it instead of proceeding — this
+    // handleConfirmRun call ends here either way; the follow-through happens
+    // from onCollectionCheckResult once the response actually arrives.
+    prePublishCheckRef.current = true;
+    setIsPrePublishChecking(true);
+    sendCheck(projectStore);
+  }, [hasChecked, checkNow, allDriftDecided, allNameConflictsDecided, projectStore, sendCheck]);
 
   const handleStartPreview = useCallback(() => {
     setPreviewWasInterrupted(false);
@@ -280,7 +360,12 @@ export function useRunDialogState(
     syncPreview,
     previewItems,
     structuralChanges,
-    isStale,
+    hasChecked,
+    isPrePublishChecking,
+    checkNow,
+    lastCheckedAt,
+    prePublishReroute,
+    clearPrePublishReroute,
     previewWasInterrupted,
     setPreviewWasInterrupted: (v: boolean) => setPreviewWasInterrupted(v),
     // conflict resolution (from useSyncSession)

@@ -2,7 +2,6 @@ import { EmptyState } from "../../../components/EmptyState";
 import { Callout } from "../../../components/Callout";
 import { SegmentedControl } from "../../../components/SegmentedControl";
 import { Badge } from "../../../components/Badge";
-import { Button } from "../../../components/Button";
 import { Mono, MicroText, Caption } from "../../../components/typography";
 import { LucideCheck, IconLayers } from "../../../components/icons";
 import type { ValueDriftItem, DriftDecision } from "../../../types/messages";
@@ -16,14 +15,14 @@ interface ValueDriftTabProps {
   // Value-drift detection is on-demand — see useRunDialogState's sendCheck —
   // since it re-runs the engine against the baseline and walks the full tree
   // twice, real cost that shouldn't run on every debounced edit. checked is
-  // false until the user clicks "Check for Figma Edits" or hits Sync (which
-  // forces the check first), distinct from "checked, found nothing".
+  // false until the user checks from Summary or hits Sync (which forces the
+  // check first), distinct from "checked, found nothing".
   checked: boolean;
   isCheckingDrift: boolean;
-  onCheck: () => void;
+  onGoToSummary: () => void;
 }
 
-export function ValueDriftTab({ items, decisions, setDecision, isChecking, checked, isCheckingDrift, onCheck }: ValueDriftTabProps) {
+export function ValueDriftTab({ items, decisions, setDecision, isChecking, checked, isCheckingDrift, onGoToSummary }: ValueDriftTabProps) {
   if (isChecking || isCheckingDrift) {
     return (
       <div className="flex flex-col gap-0 animate-pulse">
@@ -41,13 +40,16 @@ export function ValueDriftTab({ items, decisions, setDecision, isChecking, check
     );
   }
 
+  // Points back to Summary's "What Will Change" section (the single canonical
+  // place to trigger a check now that both check-collections and value-drift
+  // travel together) instead of duplicating its own check button here.
   if (!checked) {
     return (
       <EmptyState
         icon={<IconLayers className="w-5 h-5" />}
         title="Not checked yet"
-        description="See whether any variable was edited directly in Figma's panel since the last sync."
-        action={<Button variant="secondary" size="sm" label="Check for Figma Edits" onClick={onCheck} />}
+        description="Compare against Figma from the Summary tab to see whether anything was edited directly in Figma's panel."
+        action={<button type="button" className="text-[11px] font-semibold underline cursor-pointer hover:opacity-80" onClick={onGoToSummary}>Go to Summary →</button>}
       />
     );
   }

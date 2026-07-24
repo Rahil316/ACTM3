@@ -1,7 +1,7 @@
 import { SyncPreviewItemList, type FilterAction } from "../SyncPreviewItemList";
 import { EmptyState } from "../../../components/EmptyState";
 import { Callout } from "../../../components/Callout";
-import { LucideCheck } from "../../../components/icons";
+import { LucideCheck, IconLayers } from "../../../components/icons";
 import type { SyncPreviewItem, NameConflict, SyncDecision } from "../../../types/messages";
 
 interface ChangesTabProps {
@@ -11,11 +11,13 @@ interface ChangesTabProps {
   setDecision: (ref: string, val: SyncDecision) => void;
   total: number;
   isChecking: boolean;
+  hasChecked: boolean;
+  onGoToSummary: () => void;
   initialFilter?: FilterAction;
   onOpenConflicts: () => void;
 }
 
-export function ChangesTab({ previewItems, conflicts, decisions, setDecision, total, isChecking, initialFilter, onOpenConflicts }: ChangesTabProps) {
+export function ChangesTab({ previewItems, conflicts, decisions, setDecision, total, isChecking, hasChecked, onGoToSummary, initialFilter, onOpenConflicts }: ChangesTabProps) {
   if (isChecking) {
     return (
       <div className="flex flex-col gap-0 animate-pulse">
@@ -30,6 +32,21 @@ export function ChangesTab({ previewItems, conflicts, decisions, setDecision, to
           </div>
         ))}
       </div>
+    );
+  }
+
+  // Points back to Summary's "What Will Change" section rather than
+  // duplicating its own "Compare Changes with Figma" button here — that
+  // section is the canonical place to trigger a check; this tab just reflects
+  // whatever it last found, so there's one button to look for, not two.
+  if (!hasChecked) {
+    return (
+      <EmptyState
+        icon={<IconLayers className="w-5 h-5" />}
+        title="Not compared yet"
+        description="Compare against Figma from the Summary tab to see what will change."
+        action={<button type="button" className="text-[11px] font-semibold underline cursor-pointer hover:opacity-80" onClick={onGoToSummary}>Go to Summary →</button>}
+      />
     );
   }
 
