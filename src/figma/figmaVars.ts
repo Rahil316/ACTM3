@@ -164,7 +164,7 @@ export const VariableManager = {
           const cLabel = colorLabel(colorName);
 
           for (const [roleId, variations] of Object.entries(roles as Record<string, AnyObj>)) {
-            const roleObj = (config.roles && config.roles[roleId]) || {};
+            const roleObj = (config.roles && config.roles[parseInt(roleId, 10)]) || {};
             const roleIdStr = roleObj._id || roleId;
             const rName = roleObj.name || roleId;
             const rLabel = roleLabel(rName, parseInt(roleId, 10));
