@@ -3,8 +3,27 @@ import { parseArgs } from "util";
 import { writeFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname, resolve } from "path";
 import { loadWandFile, WandFileError } from "./loadWand";
-import { loadConfigFile, backfillFileNames, resolveConfigPath, DEFAULT_CONFIG_NAME, ConfigFileError } from "./loadConfig";
+import { loadConfigFile, backfillFileNames, resolveConfigPath, DEFAULT_CONFIG_NAME, ConfigFileError, FORMATS } from "./loadConfig";
 import { runBuild } from "./build";
+
+// Right-pads a string with spaces to width `w` (assumes s.length <= w).
+function padEnd(s: string, w: number): string {
+  return s + " ".repeat(w - s.length);
+}
+
+// Renders FORMATS as a box-drawn table so the help text can never drift out
+// of sync with the actual accepted format list — column widths are computed
+// from the real data, not hand-measured.
+function renderFormatTable(): string {
+  const header = ["format", "short", "description"];
+  const rows = FORMATS.map((f) => [f.full, f.short, f.description]);
+  const widths = header.map((h, col) => Math.max(h.length, ...rows.map((r) => r[col].length)));
+
+  const line = (l: string, m: string, r: string) => l + widths.map((w) => "─".repeat(w + 2)).join(m) + r;
+  const row = (cells: string[]) => "  │ " + cells.map((c, i) => padEnd(c, widths[i])).join(" │ ") + " │";
+
+  return ["  " + line("┌", "┬", "┐"), row(header), "  " + line("├", "┼", "┤"), ...rows.map(row), "  " + line("└", "┴", "┘")].join("\n");
+}
 
 const USAGE = `Usage: token-wand <command> [options]
 
@@ -20,7 +39,10 @@ Options for "build":
 Options for "init":
   --config <path>    Where to write the starter config (default: ./${DEFAULT_CONFIG_NAME})
 
-  -h, --help         Show this help`;
+  -h, --help         Show this help
+
+Export formats (targets[].format accepts either spelling below):
+${renderFormatTable()}`;
 
 const STARTER_CONFIG = {
   wandFile: "./design/project.wand",

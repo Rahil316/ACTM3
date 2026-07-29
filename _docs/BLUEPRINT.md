@@ -871,7 +871,7 @@ for each fmt in formats:
     // later ones get a numeric suffix ("-2", "-3", …) so no theme's colors.xml is silently dropped.
     files += {pre}res/{qualifier}/colors.xml        // one per theme
 
-  'rn-ts':
+  'react-native':
     files += {pre}tokens/index.ts                   // TypeScript barrel
     files += {pre}tokens/{slug(themeName)}.ts        // per-theme typed color object
 

@@ -42,8 +42,45 @@ export function resolveConfigPath(cwd: string, configFlag: string | undefined): 
 // excluded — csv/json need extra content-filling normally done by Figma-
 // sandbox-only code (ExportFormatter.toCSV, see src/figma/index.ts), and
 // re-exporting a .wand from a .wand doesn't make sense as a CLI output.
-export const SUPPORTED_FORMATS = ["css", "scss", "tailwind", "dtcg", "style-dictionary", "ios-swift", "android", "rn-ts"] as const;
-export type SupportedFormat = (typeof SUPPORTED_FORMATS)[number];
+//
+// Each format has exactly two accepted spellings in targets[].format: its
+// full name (the canonical value, shared with the plugin's ExportFormat
+// type) and one short alias. No other spelling is accepted. Where the full
+// name is already short (css, scss, dtcg, android) the alias is identical
+// to the full name, not omitted — it's still "two accepted spellings," they
+// just happen to collide.
+export interface FormatInfo {
+  full: SupportedFormat;
+  short: string;
+  description: string;
+}
+
+export const FORMATS: FormatInfo[] = [
+  { full: "css", short: "css", description: "CSS custom properties (:root variables)" },
+  { full: "scss", short: "scss", description: "SCSS variables + maps" },
+  { full: "tailwind", short: "tw", description: "Tailwind config + CSS variables" },
+  { full: "dtcg", short: "dtcg", description: "W3C Design Tokens Community Group JSON" },
+  { full: "style-dictionary", short: "sd", description: "Amazon Style Dictionary JSON tokens" },
+  { full: "ios-swift", short: "swift", description: "UIColor + SwiftUI Color static extensions" },
+  { full: "android", short: "android", description: "values/ + values-night/ color resources" },
+  { full: "react-native", short: "rn", description: "Typed token objects with useTokens() helper" },
+];
+
+export const SUPPORTED_FORMATS = FORMATS.map((f) => f.full) as SupportedFormat[];
+export type SupportedFormat = "css" | "scss" | "tailwind" | "dtcg" | "style-dictionary" | "ios-swift" | "android" | "react-native";
+
+const FORMAT_BY_SPELLING = new Map<string, SupportedFormat>(FORMATS.flatMap((f) => [
+  [f.full, f.full],
+  [f.short, f.full],
+] as [string, SupportedFormat][]));
+
+// Resolves either accepted spelling (full name or short alias) to the
+// canonical full name used everywhere past config-loading. Returns undefined
+// for anything else — including partial matches or casing variants — so
+// callers can produce one clear error rather than guessing at intent.
+export function resolveFormat(spelling: string): SupportedFormat | undefined {
+  return FORMAT_BY_SPELLING.get(spelling);
+}
 
 export interface ExportTarget {
   format: SupportedFormat;
@@ -133,9 +170,15 @@ export function loadConfigFile(path: string): TokenWandConfig {
       throw new ConfigFileError(`targets[${i}] in ${path} must be an object with "format" and "outDir".`);
     }
     const t = target as Partial<ExportTarget>;
-    if (typeof t.format !== "string" || !SUPPORTED_FORMATS.includes(t.format as SupportedFormat)) {
+    if (typeof t.format !== "string") {
       throw new ConfigFileError(`targets[${i}].format in ${path} must be one of: ${SUPPORTED_FORMATS.join(", ")} (got ${JSON.stringify(t.format)}).`);
     }
+    const resolvedFormat = resolveFormat(t.format);
+    if (!resolvedFormat) {
+      const spellings = FORMATS.map((f) => (f.full === f.short ? f.full : `${f.full} (or ${f.short})`)).join(", ");
+      throw new ConfigFileError(`targets[${i}].format in ${path} must be one of: ${spellings} (got ${JSON.stringify(t.format)}).`);
+    }
+    t.format = resolvedFormat; // normalize to the canonical full name for everything downstream
     if (typeof t.outDir !== "string" || t.outDir.length === 0) {
       throw new ConfigFileError(`targets[${i}].outDir in ${path} must be a non-empty string.`);
     }

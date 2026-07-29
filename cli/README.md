@@ -23,7 +23,7 @@ exist — see "Naming and locating the config file" below.
      "wandFile": "./design/project.wand",
      "targets": [
        { "format": "css", "outDir": "./src/styles/tokens" },
-       { "format": "rn-ts", "outDir": "./mobile/src/tokens" },
+       { "format": "react-native", "outDir": "./mobile/src/tokens" },
        { "format": "android", "outDir": "./android/app/src/main/res" }
      ]
    }
@@ -33,8 +33,18 @@ exist — see "Naming and locating the config file" below.
    if you need the same output in multiple places (e.g. `css` for both a web
    app and a docs site).
 
-   Supported `format` values: `css`, `scss`, `tailwind`, `dtcg`,
-   `style-dictionary`, `ios-swift`, `android`, `rn-ts`.
+   Supported `format` values (either the full name or its short alias):
+
+   | Format             | Short alias |
+   | ------------------ | ----------- |
+   | `css`              | `css`       |
+   | `scss`             | `scss`      |
+   | `tailwind`         | `tw`        |
+   | `dtcg`              | `dtcg`      |
+   | `style-dictionary` | `sd`        |
+   | `ios-swift`        | `swift`     |
+   | `android`          | `android`   |
+   | `react-native`     | `rn`        |
 
 3. Run it:
 
@@ -114,7 +124,7 @@ Common roles by format:
 | `css`, `tailwind`, `dtcg`, `style-dictionary` | `scale`, `source` (if enabled), plus one per theme name |
 | `scss`                                        | `scale`, `source` (if enabled), `tokens`, `index`       |
 | `ios-swift`, `android`                        | one per theme name                                      |
-| `rn-ts`                                       | `index`, plus one per theme name                        |
+| `react-native`                                | `index`, plus one per theme name                        |
 
 (`tailwind` also has a `config` role for `tailwind.config.js`, which has no
 sensible per-theme alternative and is rarely worth renaming.)

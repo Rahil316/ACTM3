@@ -89,7 +89,7 @@ const EXPORT_FORMATS: FormatDef[] = [
     Icon: Smartphone,
   },
   {
-    format: "rn-ts",
+    format: "react-native",
     label: "React Native",
     description: "Typed token objects with useTokens() helper",
     ext: "ts",
