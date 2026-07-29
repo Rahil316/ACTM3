@@ -8,16 +8,16 @@ dist-release/
 # Generated preset bundle — built from src/ui/presets/raw/*.ts
 src/ui/presets/presets.json
 
-# Stress-test harness output — regenerated via `npx tsx test-data/run.ts`,
-# can reach 100MB+ at full test density. Keep the harness code (test-data/scripts/,
-# test-data/run.ts) tracked; never the generated results.
-test-data/results/
+# Stress-test harness output — regenerated via `npx tsx test-lab/test-data/run.ts`,
+# can reach 100MB+ at full test density. Keep the harness code (test-lab/test-data/scripts/,
+# test-lab/test-data/run.ts) tracked; never the generated results.
+test-lab/test-data/results/
 
-# Preset-verification dashboard output — regenerated via `npx tsx preset-data/run.ts`.
-# Keep the harness code (preset-data/scripts/, preset-data/run.ts) tracked;
+# Preset-verification dashboard output — regenerated via `npx tsx test-lab/preset-data/run.ts`.
+# Keep the harness code (test-lab/preset-data/scripts/, test-lab/preset-data/run.ts) tracked;
 # never the generated results (much smaller than test-data/'s, since it runs
 # real presets rather than a synthetic seed grid, but still regenerated data).
-preset-data/results/
+test-lab/preset-data/results/
 
 # Export-format test harness output — regenerated via `npx tsx export-test/run.ts`.
 # Keep the harness code (export-test/scripts/, export-test/run.ts) tracked;

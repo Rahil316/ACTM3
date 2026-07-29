@@ -73,7 +73,7 @@ Source: direct code audit of `src/ui/`, `src/figma/`, `src/shared/` at HEAD (bra
 
 - `npm run build` — typecheck + lint + presets + Vite UI bundle + esbuild figma bundle → `dist/scripts.js` + `dist/ui.html`.
 - `npm run build:release` — same, release mode: dev-only presets (`src/shared/presets/raw/dev/*`) excluded, `console.log` stripped, `manifest.json` written → `dist-release/`.
-- No test suite exists (`test`/`test:watch` are not wired in `package.json`; the `tests/` directory that once existed for `clrEngine.ts` was removed in a later cleanup pass). QA is `typecheck` (tsc) + `lint` (eslint) only. A separate, unrelated `test-data/` harness exists for engine stress-testing (config-matrix generation, run, analyze, HTML dashboard) — not a unit test suite, and excluded from `npm run check`.
+- No test suite exists (`test`/`test:watch` are not wired in `package.json`; the `tests/` directory that once existed for `clrEngine.ts` was removed in a later cleanup pass). QA is `typecheck` (tsc) + `lint` (eslint) only. A separate, unrelated `test-lab/test-data/` harness exists for engine stress-testing (config-matrix generation, run, analyze, HTML dashboard) — not a unit test suite, and excluded from `npm run check`.
 
 ---
 

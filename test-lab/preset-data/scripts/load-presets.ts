@@ -10,9 +10,9 @@
 import fs from "fs";
 import path from "path";
 import { pathToFileURL } from "url";
-import type { Preset } from "../../src/shared/presets/themeShop";
+import type { Preset } from "../../../src/shared/presets/themeShop";
 
-const RAW_DIR = path.resolve(__dirname, "../../src/shared/presets/raw");
+const RAW_DIR = path.resolve(__dirname, "../../../src/shared/presets/raw");
 
 export interface DiscoveredPreset {
   filePath: string; // absolute path, for error messages

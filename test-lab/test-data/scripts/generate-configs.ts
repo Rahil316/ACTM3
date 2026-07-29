@@ -8,8 +8,8 @@
 // analyze-results.ts and build-report.ts break anomalies down by coverage
 // intent instead of just by raw hex value.
 
-import type { Color, Theme, Role, Variation, ScaleAlgorithm, SolverMode } from "../../src/shared/types";
-import type { EngineInput } from "../../src/shared/engine/clrEngine";
+import type { Color, Theme, Role, Variation, ScaleAlgorithm, SolverMode } from "../../../src/shared/types";
+import type { EngineInput } from "../../../src/shared/engine/clrEngine";
 
 export type SeedGroup = "grid" | "warm-hue-cluster" | "low-chroma-cluster" | "edge-case";
 

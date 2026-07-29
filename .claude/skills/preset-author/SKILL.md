@@ -831,7 +831,7 @@ ceiling on what's possible.
 
 ## 13. Testing a preset's export output, not just its engine output
 
-`preset-data/run.ts` (color-master's tool, see that skill) runs every preset through
+`test-lab/preset-data/run.ts` (color-master's tool, see that skill) runs every preset through
 `variableMaker()` directly — it proves the *colors* are correct (contrast, harmony) but
 never touches `buildExportBundle()`, so it cannot catch naming/export defects like the
 token-path collision above. **`export-test/scripts/run-presets-export-test.ts`** is the
@@ -849,7 +849,7 @@ npx tsx export-test/scripts/run-presets-export-test.ts nmobile       # one, by i
 ```
 
 **Run this against your preset before calling it done**, the same way you'd run
-`preset-data/run.ts` — a preset with zero `preset-data` anomalies can still have a
+`test-lab/preset-data/run.ts` — a preset with zero `preset-data` anomalies can still have a
 `duplicate-token-name` problem this catches and `preset-data` never will, precisely
 because the two tools check different layers (engine output vs. export-naming output).
 Zero entries in `warnings.json` (or no file at all) is the bar to clear.

@@ -3,12 +3,12 @@
 // JSONL dataset (one record per case) that's flat enough for bulk analysis
 // (pandas/jq/etc), then writes an anomaly-flagged summary.
 //
-// Run: npx tsx test-data/scripts/run-stress-test.ts
+// Run: npx tsx test-lab/test-data/scripts/run-stress-test.ts
 
 import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
-import { variableMaker } from "../../src/shared/engine/clrEngine";
-import type { EngineResult, TokenEntry } from "../../src/shared/engine/clrEngine";
+import { variableMaker } from "../../../src/shared/engine/clrEngine";
+import type { EngineResult, TokenEntry } from "../../../src/shared/engine/clrEngine";
 import { generateAllCases, type GeneratedCase, type SeedGroup } from "./generate-configs";
 
 const RESULTS_DIR = join(__dirname, "..", "results");

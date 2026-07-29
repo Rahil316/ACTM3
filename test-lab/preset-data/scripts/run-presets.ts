@@ -1,23 +1,23 @@
 // Runs every discovered preset through the real engine (variableMaker, with
 // the same two-pass localBg resolution buildEngineConfig()/the live plugin
 // use — see src/ui/store/engineStore.ts and color-master skill §8), and
-// writes one flat JSONL record per preset to preset-data/results/.
+// writes one flat JSONL record per preset to test-lab/preset-data/results/.
 //
-// Unlike the stress-test harness (test-data/), this does NOT generate
+// Unlike the stress-test harness (test-lab/test-data/), this does NOT generate
 // synthetic seeds — it runs each preset's own real colors/roles/variations/
 // scopedColorIds/localBg exactly as authored, which is the only way to catch
 // preset-specific defects (e.g. a localBg chain demanding an unreachable
 // contrast target — see color-master skill §8.1).
 //
-// Run: npx tsx preset-data/scripts/run-presets.ts [selector ...]
-//   npx tsx preset-data/scripts/run-presets.ts            # all presets
-//   npx tsx preset-data/scripts/run-presets.ts nmobile     # just nmobile
+// Run: npx tsx test-lab/preset-data/scripts/run-presets.ts [selector ...]
+//   npx tsx test-lab/preset-data/scripts/run-presets.ts            # all presets
+//   npx tsx test-lab/preset-data/scripts/run-presets.ts nmobile     # just nmobile
 
 import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
-import { variableMaker } from "../../src/shared/engine/clrEngine";
-import type { EngineInput, EngineResult, TokenEntry } from "../../src/shared/engine/clrEngine";
-import { resolveTokenRefBgs, translateLocalBg } from "../../src/shared/engine/clrUtils";
+import { variableMaker } from "../../../src/shared/engine/clrEngine";
+import type { EngineInput, EngineResult, TokenEntry } from "../../../src/shared/engine/clrEngine";
+import { resolveTokenRefBgs, translateLocalBg } from "../../../src/shared/engine/clrUtils";
 import { discoverPresetFiles, filterPresets } from "./load-presets";
 
 const RESULTS_DIR = join(__dirname, "..", "results");

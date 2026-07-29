@@ -1,6 +1,6 @@
 ---
 name: color-master
-description: Make a Token Wand preset's actual color output harmonic, vivid, and contrast-reliable — by running the engine's own tools (test-data/ stress-test harness, Preview screen, contrast math) and by knowing the exact formula behind every scale algorithm and solver mode, rather than eyeballing swatches. This is the "color master" role — quality/harmony of the token collection, not design-system structure. Use after a preset's roles/variations/architecture exist (see preset-author skill) and you need to pick/verify the algorithm or solver mode, diagnose why a color looks wrong, or prove a preset is production-ready across real seed colors.
+description: Make a Token Wand preset's actual color output harmonic, vivid, and contrast-reliable — by running the engine's own tools (test-lab/test-data/ stress-test harness, Preview screen, contrast math) and by knowing the exact formula behind every scale algorithm and solver mode, rather than eyeballing swatches. This is the "color master" role — quality/harmony of the token collection, not design-system structure. Use after a preset's roles/variations/architecture exist (see preset-author skill) and you need to pick/verify the algorithm or solver mode, diagnose why a color looks wrong, or prove a preset is production-ready across real seed colors.
 ---
 
 # Color Master — proving a preset's color output is good, with tools not eyes
@@ -24,7 +24,7 @@ is the formula working as designed, not a bug."
 
 ## Your instruments
 
-1. **The stress-test harness** (`test-data/`) — runs `variableMaker()` against 42,752
+1. **The stress-test harness** (`test-lab/test-data/`) — runs `variableMaker()` against 42,752
    generated seed/algorithm/target combinations (see §1 for the exact matrix) and
    produces both a queryable dashboard and raw per-token JSONL you can `jq`/script
    directly. Use this to validate an algorithm/solver choice *in general*, and to check
@@ -63,12 +63,12 @@ already diagnosed there; build on it.
 ## 1. The stress-test harness, exactly
 
 ```
-npx tsx test-data/run.ts
+npx tsx test-lab/test-data/run.ts
 ```
 
 Runs, in order: `generate-configs.ts` → `run-stress-test.ts` → `analyze-results.ts` →
 `build-report.ts`. Each stage is also runnable standalone
-(`npx tsx test-data/scripts/<stage>.ts`) if you only need to re-run analysis after
+(`npx tsx test-lab/test-data/scripts/<stage>.ts`) if you only need to re-run analysis after
 tweaking a threshold. Not wired into `npm run check` — run it explicitly. There is no
 CI gate here; you are the gate.
 
@@ -100,7 +100,7 @@ cite, now superseded, in `color-algorithm-roadmap.md`.)
 ### Where the results actually live
 
 ```
-test-data/results/
+test-lab/test-data/results/
   run-meta.json        tiny — case counts, generation timestamp
   run-records.jsonl     ~170MB — one full RunRecord per case, every token's contrast detail
   anomalies.jsonl        ~2.5MB — one flagged issue per line
@@ -115,18 +115,18 @@ a specific, narrow question. Prefer this over the browser for anything scriptabl
 
 ```bash
 # How many critical/high anomalies right now, by type
-jq -s 'group_by(.type) | map({type: .[0].type, n: length})' test-data/results/anomalies.jsonl
+jq -s 'group_by(.type) | map({type: .[0].type, n: length})' test-lab/test-data/results/anomalies.jsonl
 
 # Every case for a specific scale algorithm with any warning/fail
 jq 'select(.scaleAlgorithm == "Linear" and (.warningCount > 0 or .failRatingCount > 0)) | .caseId' \
-  test-data/results/run-records.jsonl
+  test-lab/test-data/results/run-records.jsonl
 
 # Worst contrast shortfall across the whole run
 jq -s 'map(select(.minContrastDelta != null)) | min_by(.minContrastDelta) | {caseId, minContrastDelta}' \
-  test-data/results/run-records.jsonl
+  test-lab/test-data/results/run-records.jsonl
 
 # All tokens for one specific case (paste a caseId from anomaly-report.md)
-jq 'select(.caseId == "scale_h60_s90_l50_Linear_len5") | .tokens' test-data/results/run-records.jsonl
+jq 'select(.caseId == "scale_h60_s90_l50_Linear_len5") | .tokens' test-lab/test-data/results/run-records.jsonl
 ```
 
 `anomaly-report.md` is the fastest sanity check of all — read it directly with no
@@ -135,7 +135,7 @@ tooling when you just need "is anything broken right now."
 ### Real numbers from an actual run — read before forming any opinion
 
 These are not illustrative — this is what a full run of this exact harness produced
-(`test-data/results/anomaly-report.md`, `dashboard-data.json`, generated 2026-07-15,
+(`test-lab/test-data/results/anomaly-report.md`, `dashboard-data.json`, generated 2026-07-15,
 post-`hue-locked`-removal). Anchor your reasoning to numbers like these, not intuition:
 
 **Anomaly severity, whole run**: 0 critical, 3,233 high, 16,283 medium, out of 42,752
@@ -383,7 +383,7 @@ seems to require one of those, report the finding and let preset-author decide.
 ## 7. Closing the loop
 
 After any algorithm/solver change, re-run the relevant stress-test stage (or the full
-`npx tsx test-data/run.ts` if the change is global) and re-check Preview for the actual
+`npx tsx test-lab/test-data/run.ts` if the change is global) and re-check Preview for the actual
 preset. A harmony fix isn't done until the numbers — not just the swatch you're looking
 at — confirm it.
 

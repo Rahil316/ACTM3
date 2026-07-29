@@ -1,7 +1,7 @@
 // Runs the full stress-test pipeline in one command:
 //   generate configs -> run engine -> flag anomalies -> build dashboard
 //
-// Run: npx tsx test-data/run.ts
+// Run: npx tsx test-lab/test-data/run.ts
 
 import { main as runStressTest } from "./scripts/run-stress-test";
 import { main as analyzeResults } from "./scripts/analyze-results";
@@ -17,7 +17,7 @@ function main() {
   console.log("\n── 3/3: building dashboard ──");
   buildReport();
 
-  console.log("\nDone. Open test-data/results/dashboard.html to view it.");
+  console.log("\nDone. Open test-lab/test-data/results/dashboard.html to view it.");
 }
 
 main();
