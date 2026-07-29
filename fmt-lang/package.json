@@ -1,0 +1,21 @@
+{
+  "name": "@rahil316/fmt-lang",
+  "version": "0.1.0",
+  "description": "Standalone, general-purpose text-generation engine for Token Wand color/token data — the custom export format engine used by the token-wand CLI's \"custom\" format.",
+  "type": "commonjs",
+  "main": "dist/fmt-lang/src/index.js",
+  "types": "dist/fmt-lang/src/index.d.ts",
+  "scripts": {
+    "build": "tsc && node scripts/copy-fixtures.js",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test dist/fmt-lang/test/unit/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  },
+  "author": "",
+  "license": "MIT"
+}

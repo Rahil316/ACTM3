@@ -9,6 +9,7 @@
   "files": [
     "bin",
     "dist",
+    "scripts/postinstall.js",
     "README.md",
     "LICENSE"
   ],
@@ -18,7 +19,8 @@
   },
   "scripts": {
     "build": "tsc && node scripts/prune-dist.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "node scripts/postinstall.js"
   },
   "engines": {
     "node": ">=18"

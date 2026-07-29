@@ -40,7 +40,7 @@ export interface BuildResult {
   // Every {role, defaultFileName} this run actually produced, per target
   // index in config.targets — lets the caller (cli.ts) backfill a target's
   // missing fileNames map with today's default names, without build.ts
-  // itself touching token-wand.config.json (that's cli.ts's job; build.ts
+  // itself touching wand.config.json (that's cli.ts's job; build.ts
   // stays scoped to "generate files").
   rolesByTargetIndex: Array<{ role: string; defaultFileName: string }[]>;
   // Naming anomalies resolveExport() detects (empty theme, a role with an

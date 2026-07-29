@@ -1,9 +1,41 @@
-// Reads and validates token-wand.config.json — the repo-local config that
+// Reads and validates wand.config.json — the repo-local config that
 // says which .wand file to read and where each export format should be
 // written. Plain JSON on purpose: no runtime TS/JS execution, no extra
 // dependency, no "what does this config file actually do" trust question.
 
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
+import { resolve } from "path";
+
+export const DEFAULT_CONFIG_NAME = "wand.config.json";
+
+// Resolves which config path to use, in order:
+// 1. --config <path> (explicit CLI flag — always wins)
+// 2. "token-wand": { "config": "<path>" } in the caller's package.json,
+//    read from cwd so a team can commit the config's name/location once
+//    instead of passing --config on every invocation
+// 3. ./wand.config.json (default)
+// configFlag is undefined when the user didn't pass --config at all (as
+// opposed to passing it with an empty value, which parseArgs won't produce
+// for a `type: "string"` option).
+export function resolveConfigPath(cwd: string, configFlag: string | undefined): string {
+  if (configFlag !== undefined) return resolve(cwd, configFlag);
+
+  const pkgPath = resolve(cwd, "package.json");
+  if (existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as { "token-wand"?: { config?: string } };
+      const configuredPath = pkg["token-wand"]?.config;
+      if (typeof configuredPath === "string" && configuredPath.length > 0) {
+        return resolve(cwd, configuredPath);
+      }
+    } catch {
+      // Malformed package.json isn't this function's problem to report —
+      // fall through to the default and let normal config loading proceed.
+    }
+  }
+
+  return resolve(cwd, DEFAULT_CONFIG_NAME);
+}
 
 // Must match the format keys buildExportBundle() switches on in
 // src/shared/exportEng/bundler.ts. "wand" and "csv"/"json" are intentionally
@@ -71,7 +103,7 @@ export function loadConfigFile(path: string): TokenWandConfig {
     raw = readFileSync(path, "utf-8");
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
-    if (code === "ENOENT") throw new ConfigFileError(`Config file not found: ${path}\nCreate a token-wand.config.json in your project root — see the CLI README.`);
+    if (code === "ENOENT") throw new ConfigFileError(`Config file not found: ${path}\nRun "npx token-wand init" to create one, or create a wand.config.json in your project root — see the CLI README.`);
     throw new ConfigFileError(`Could not read config file at ${path}: ${(err as Error).message}`);
   }
 

@@ -1,12 +1,42 @@
 #!/usr/bin/env node
 import { parseArgs } from "util";
-import { writeFileSync } from "fs";
-import { resolve, join } from "path";
+import { writeFileSync, existsSync, mkdirSync } from "fs";
+import { join, dirname, resolve } from "path";
 import { loadWandFile, WandFileError } from "./loadWand";
-import { loadConfigFile, backfillFileNames, ConfigFileError } from "./loadConfig";
+import { loadConfigFile, backfillFileNames, resolveConfigPath, DEFAULT_CONFIG_NAME, ConfigFileError } from "./loadConfig";
 import { runBuild } from "./build";
 
-const USAGE = "Usage: token-wand build [--config <path>] [--dry-run]\n\nOptions:\n  --config <path>  Path to token-wand.config.json (default: ./token-wand.config.json)\n  --dry-run        Preview what would be generated without writing files\n  -h, --help       Show this help";
+const USAGE = `Usage: token-wand <command> [options]
+
+Commands:
+  build              Read the config and .wand file, write export files
+  init               Create a starter ${DEFAULT_CONFIG_NAME} in the current directory
+
+Options for "build":
+  --config <path>    Path to the config file (default: ./${DEFAULT_CONFIG_NAME}, or the
+                     "token-wand.config" field in package.json — see README)
+  --dry-run          Preview what would be generated without writing files
+
+Options for "init":
+  --config <path>    Where to write the starter config (default: ./${DEFAULT_CONFIG_NAME})
+
+  -h, --help         Show this help`;
+
+const STARTER_CONFIG = {
+  wandFile: "./design/project.wand",
+  targets: [{ format: "css", outDir: "./src/styles/tokens" }],
+};
+
+function runInit(configPath: string): void {
+  if (existsSync(configPath)) {
+    console.error(`✖ ${configPath} already exists — not overwriting it.`);
+    process.exit(1);
+  }
+  mkdirSync(dirname(configPath), { recursive: true });
+  writeFileSync(configPath, JSON.stringify(STARTER_CONFIG, null, 2) + "\n", "utf-8");
+  console.log(`Created ${configPath}`);
+  console.log(`\nEdit "wandFile" and "targets", then run:\n  npx token-wand build`);
+}
 
 function main() {
   // util.parseArgs defaults to strict mode, which throws a raw, unhandled
@@ -21,7 +51,7 @@ function main() {
     allowPositionals: true,
     strict: false,
     options: {
-      config: { type: "string", default: "token-wand.config.json" },
+      config: { type: "string" },
       "dry-run": { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
@@ -33,12 +63,18 @@ function main() {
   }
 
   const command = positionals[0];
+  const configPath = resolveConfigPath(process.cwd(), values.config as string | undefined);
+
+  if (command === "init") {
+    runInit(configPath);
+    return;
+  }
+
   if (command !== "build") {
     console.error(`${USAGE}\n\nGot: ${process.argv.slice(2).join(" ") || "(nothing)"}`);
     process.exit(1);
   }
 
-  const configPath = resolve(process.cwd(), values.config as string);
   const dryRun = values["dry-run"] as boolean;
 
   try {

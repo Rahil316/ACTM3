@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "..",
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["src/ui/*"]
+    },
+    "types": ["node"]
+  },
+  // rootDir is the repo root (not fmt-lang/), same reasoning as cli/tsconfig.json:
+  // this package's only touch-point with the rest of the repo is a read-only
+  // import of src/shared/exportEng/{resolve,helpers,types}.ts from
+  // fmt-lang/src/data/adapter.ts (see Part A of the plan). The whole src/shared/
+  // tree is included (not just exportEng/) because resolve.ts/types.ts pull in
+  // src/shared/engine/clrEngine.ts and src/shared/types.ts transitively —
+  // same whole-tree include cli/tsconfig.json already uses for this reason,
+  // which is also why the "@/*" path mapping below is needed (src/shared's
+  // presets pull a type from src/ui/types/state.ts via that alias). No
+  // Figma-sandbox code or Figma type dependency is needed here otherwise —
+  // unlike cli/, this package never touches src/figma/ or the rest of src/ui/.
+  "include": ["src", "test", "../src/shared"]
+}

@@ -10,8 +10,13 @@ changes (e.g. after a re-export).
 
 ## Setup
 
+Installing this package (`npm install token-wand`) automatically creates a
+starter `wand.config.json` in your project root, if one doesn't already
+exist — see "Naming and locating the config file" below.
+
 1. Put a `.wand` file somewhere in your repo (e.g. `./design/project.wand`).
-2. Create `token-wand.config.json` in your project root:
+2. Edit `wand.config.json` in your project root (or run `npx token-wand init`
+   to (re)generate this starter file):
 
    ```json
    {
@@ -44,9 +49,31 @@ changes (e.g. after a re-export).
    content), or `unchanged` (existed, identical content — not rewritten).
 
    The first real (non-`--dry-run`) build also adds a `fileNames` entry to
-   `token-wand.config.json` for every file it generated, using today's
+   your config file for every file it generated, using today's
    default names — see "Renaming output files" below. This is the only way
    the CLI writes to its own config file; it never happens under `--dry-run`.
+
+## Naming and locating the config file
+
+By default the CLI looks for `wand.config.json` in the current directory.
+Two ways to use a different name or location instead:
+
+- **One-off**: `npx token-wand build --config path/to/name.json`
+- **Committed to the project**: add a `token-wand.config` field to your
+  project's own `package.json`:
+
+  ```json
+  {
+    "token-wand": {
+      "config": "design/wand.config.json"
+    }
+  }
+  ```
+
+  so the whole team gets the same path without passing `--config` every run.
+
+Resolution order: `--config` flag > `package.json`'s `token-wand.config`
+field > `./wand.config.json`.
 
 ## Renaming output files
 
@@ -82,28 +109,35 @@ still controls the directory. The one exception is Android: its
 
 Common roles by format:
 
-| Format | Roles |
-|---|---|
+| Format                                        | Roles                                                   |
+| --------------------------------------------- | ------------------------------------------------------- |
 | `css`, `tailwind`, `dtcg`, `style-dictionary` | `scale`, `source` (if enabled), plus one per theme name |
-| `scss` | `scale`, `source` (if enabled), `tokens`, `index` |
-| `ios-swift`, `android` | one per theme name |
-| `rn-ts` | `index`, plus one per theme name |
+| `scss`                                        | `scale`, `source` (if enabled), `tokens`, `index`       |
+| `ios-swift`, `android`                        | one per theme name                                      |
+| `rn-ts`                                       | `index`, plus one per theme name                        |
 
 (`tailwind` also has a `config` role for `tailwind.config.js`, which has no
 sensible per-theme alternative and is rarely worth renaming.)
 
 ## Commands
 
+### `token-wand init`
+
+Creates a starter `wand.config.json` (or the path given by `--config`) in
+the current directory, with placeholder `wandFile`/`targets` values to edit.
+Refuses to run if the target file already exists, so it's always safe to
+run again. This is also what runs automatically after `npm install`.
+
 ### `token-wand build`
 
-Reads `token-wand.config.json` (or the path given by `--config`), reads the
+Reads the config file (resolved as described above), reads the
 `.wand` file it points to, and writes every configured format to disk.
 
-| Flag | Default | What it does |
-|---|---|---|
-| `--config <path>` | `token-wand.config.json` | Use a different config file. |
-| `--dry-run` | off | Print what would be written without touching disk. Use this the first time you point the CLI at a new repo, to confirm `outDir` is correct before anything is overwritten. |
-| `-h`, `--help` | off | Print usage and exit. |
+| Flag              | Default            | What it does                                                                                                                                                               |
+| ----------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--config <path>` | `wand.config.json` | Use a different config file.                                                                                                                                               |
+| `--dry-run`       | off                | Print what would be written without touching disk. Use this the first time you point the CLI at a new repo, to confirm `outDir` is correct before anything is overwritten. |
+| `-h`, `--help`    | off                | Print usage and exit.                                                                                                                                                      |
 
 ### Naming warnings
 
@@ -139,7 +173,6 @@ if you're curious why it's set up this way.
 
 ## Not implemented (yet)
 
-- `token-wand init` — scaffolding a starter config interactively.
 - `--watch` — re-run automatically when the `.wand` file changes.
 - CSV/JSON export formats (these need extra plugin-side glue not yet ported
   here — use the Figma plugin's Export sheet for those two formats today).
