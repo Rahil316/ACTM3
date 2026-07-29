@@ -8,13 +8,18 @@
   "scripts": {
     "build": "tsc && node scripts/copy-fixtures.js",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test dist/fmt-lang/test/unit/*.test.js"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "npm run build && node --test dist/fmt-lang/test/unit/*.test.js dist/fmt-lang/test/acceptance/*.test.js"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "@eslint/js": "^9.39.4",
+    "eslint": "^10.8.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.59.4"
   },
   "author": "",
   "license": "MIT"

@@ -64,10 +64,11 @@ export const FORMATS: FormatInfo[] = [
   { full: "ios-swift", short: "swift", description: "UIColor + SwiftUI Color static extensions" },
   { full: "android", short: "android", description: "values/ + values-night/ color resources" },
   { full: "react-native", short: "rn", description: "Typed token objects with useTokens() helper" },
+  { full: "custom", short: "custom", description: "User-authored fmt-lang template — see custom/customFile" },
 ];
 
 export const SUPPORTED_FORMATS = FORMATS.map((f) => f.full) as SupportedFormat[];
-export type SupportedFormat = "css" | "scss" | "tailwind" | "dtcg" | "style-dictionary" | "ios-swift" | "android" | "react-native";
+export type SupportedFormat = "css" | "scss" | "tailwind" | "dtcg" | "style-dictionary" | "ios-swift" | "android" | "react-native" | "custom";
 
 const FORMAT_BY_SPELLING = new Map<string, SupportedFormat>(FORMATS.flatMap((f) => [
   [f.full, f.full],
@@ -95,6 +96,15 @@ export interface ExportTarget {
   // directory (except Android, whose res/{qualifier}/colors.xml structure
   // is fixed by platform convention and can't be renamed here).
   fileNames?: Record<string, string>;
+  // Only used when format is "custom" — exactly one of these two is
+  // required. `custom` is the fmt-lang document (defs + files[]) written
+  // inline, as text, directly in this config file. `customFile` is a path
+  // to a standalone fmt-lang document file, resolved relative to this
+  // config file's own directory (same convention as wandFile). Either way,
+  // the text is handed to fmt-lang's own JSON5 parser unchanged — this repo
+  // never interprets it itself. See fmt-lang/README.md and the plan's Part G.
+  custom?: string;
+  customFile?: string;
 }
 
 export interface TokenWandConfig {
@@ -193,6 +203,13 @@ export function loadConfigFile(path: string): TokenWandConfig {
         if (name.includes("/") || name.includes("\\")) {
           throw new ConfigFileError(`targets[${i}].fileNames["${role}"] in ${path} must be a filename, not a path (got ${JSON.stringify(name)}) — outDir already controls the directory.`);
         }
+      }
+    }
+    if (t.format === "custom") {
+      const hasCustom = typeof t.custom === "string" && t.custom.length > 0;
+      const hasCustomFile = typeof t.customFile === "string" && t.customFile.length > 0;
+      if (hasCustom === hasCustomFile) {
+        throw new ConfigFileError(`targets[${i}] in ${path} has format "custom" — exactly one of "custom" (inline fmt-lang document) or "customFile" (a path to one) is required (got ${hasCustom ? "both" : "neither"}).`);
       }
     }
   });

@@ -16,14 +16,42 @@ import { variableMaker, type EngineResult } from "../../src/shared/engine/clrEng
 import { resolveTokenRefBgs } from "../../src/shared/engine/clrUtils";
 import { buildExportBundle } from "../../src/shared/exportEng/bundler";
 import { resolveExport, type ResolveWarning } from "../../src/shared/exportEng/resolve";
-import type { ExportFile } from "../../src/shared/exportEng/types";
+import type { ExportFile, ExportConfig } from "../../src/shared/exportEng/types";
 import type { ProjectStore } from "../../src/ui/types/state";
-import type { TokenWandConfig } from "./loadConfig";
+import { ConfigFileError, type TokenWandConfig, type ExportTarget } from "./loadConfig";
+import { buildDataset, parseFmtLangDocument, generate } from "../../fmt-lang/src/index";
 
 function runEngine(config: PluginConfig): EngineResult {
   const pass1 = variableMaker(config);
   if (resolveTokenRefBgs(config, pass1)) return variableMaker(config);
   return pass1;
+}
+
+// The one bridge into fmt-lang (Part G of the plan) — each "custom" target
+// carries its own fmt-lang document (inline text via `custom`, or a path via
+// `customFile`, resolved the same way wandFile already is). Unlike the 8
+// built-in formats (one shared filesByFormat[format] across every target
+// using that format), a custom target's document is per-target, since two
+// different "custom" targets can be two entirely different documents.
+function renderCustomTarget(target: ExportTarget, configDir: string, result: EngineResult, exportConfig: ExportConfig): ExportFile[] {
+  const source = target.custom !== undefined
+    ? target.custom
+    : readFileSync(join(configDir, target.customFile!), "utf-8");
+
+  const { doc, diagnostics: parseDiagnostics } = parseFmtLangDocument(source);
+  const errors = parseDiagnostics.filter((d) => d.severity === "error");
+  if (!doc || errors.length > 0) {
+    throw new ConfigFileError(`Custom target failed to parse:\n${errors.map((d) => `  ✖ [${d.category}] ${d.message}`).join("\n")}`);
+  }
+
+  const dataset = buildDataset(result, exportConfig);
+  const { files, diagnostics } = generate(doc, dataset);
+  const genErrors = diagnostics.filter((d) => d.severity === "error");
+  if (genErrors.length > 0) {
+    throw new ConfigFileError(`Custom target failed to generate:\n${genErrors.map((d) => `  ✖ [${d.category}] ${d.message}`).join("\n")}`);
+  }
+
+  return files;
 }
 
 export type FileWriteStatus = "created" | "updated" | "unchanged";
@@ -53,23 +81,29 @@ export interface BuildResult {
   warnings: ResolveWarning[];
 }
 
-export function runBuild(projectStore: ProjectStore, config: TokenWandConfig, options: { dryRun: boolean }): BuildResult {
+export function runBuild(projectStore: ProjectStore, config: TokenWandConfig, options: { dryRun: boolean; configDir: string }): BuildResult {
   const pluginConfig = translateConfig(projectStore);
   const result = runEngine(pluginConfig);
   const exportConfig = toExportConfig(applyExportOverrides(pluginConfig, projectStore));
   const { warnings } = resolveExport(result, exportConfig);
 
-  // buildExportBundle is called once per format (not once for every format
-  // together) specifically so its internal "multi" flag is always false and
-  // it never adds a "{tech}/" namespacing folder — see bundler.ts's `pre()`.
-  // That folder exists to keep formats apart inside a single zip download;
-  // it's not wanted here because each format already has its own chosen
-  // outDir. The single-format path still gets a "{project}_{tech}_{ts}/"
-  // prefix instead (bundler.ts's `pre()` again) — stripped below with the
-  // same leading-segment logic, since we always know which format a given
-  // call's files belong to.
+  // buildExportBundle is called once per BUILT-IN format (not once for
+  // every format together) specifically so its internal "multi" flag is
+  // always false and it never adds a "{tech}/" namespacing folder — see
+  // bundler.ts's `pre()`. That folder exists to keep formats apart inside a
+  // single zip download; it's not wanted here because each format already
+  // has its own chosen outDir. The single-format path still gets a
+  // "{project}_{tech}_{ts}/" prefix instead (bundler.ts's `pre()` again) —
+  // stripped below with the same leading-segment logic, since we always
+  // know which format a given call's files belong to.
+  //
+  // "custom" is deliberately excluded from this shared, once-per-format
+  // pass — buildExportBundle doesn't know how to produce it (Part G of the
+  // plan), and unlike the 8 built-ins, two different "custom" targets can
+  // be two entirely different fmt-lang documents, so it's resolved
+  // per-target below instead of shared across every target with that format.
   const written: BuildResult["written"] = [];
-  const formats = Array.from(new Set(config.targets.map((t) => t.format)));
+  const formats = Array.from(new Set(config.targets.map((t) => t.format))).filter((f) => f !== "custom");
   const filesByFormat: Record<string, ExportFile[]> = {};
   for (const format of formats) {
     const files = buildExportBundle(result, exportConfig, [format], projectStore as unknown as Record<string, unknown>, Date.now());
@@ -79,7 +113,7 @@ export function runBuild(projectStore: ProjectStore, config: TokenWandConfig, op
   const rolesByTargetIndex: BuildResult["rolesByTargetIndex"] = config.targets.map(() => []);
 
   config.targets.forEach((target, targetIndex) => {
-    const formatFiles = filesByFormat[target.format] ?? [];
+    const formatFiles = target.format === "custom" ? renderCustomTarget(target, options.configDir, result, exportConfig) : (filesByFormat[target.format] ?? []);
     for (const file of formatFiles) {
       if (file.role) {
         rolesByTargetIndex[targetIndex].push({ role: file.role, defaultFileName: basenameOf(file.path) });

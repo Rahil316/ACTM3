@@ -104,7 +104,7 @@ function main() {
     const wandPath = resolve(process.cwd(), config.wandFile);
     const projectStore = loadWandFile(wandPath);
 
-    const result = runBuild(projectStore, config, { dryRun });
+    const result = runBuild(projectStore, config, { dryRun, configDir: dirname(configPath) });
 
     for (const w of result.warnings) {
       console.warn(`  ⚠ ${w.message}`);
