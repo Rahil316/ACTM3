@@ -40,7 +40,7 @@ export interface ResolveResult {
 // Single place that turns raw EngineResult + ExportConfig into fully-labeled,
 // segment-ordered records — every formatter in fmt*.ts reads from this
 // instead of independently calling _colorLabel/_roleLabel/_varLabel/
-// _tokenSegmentsTyped itself. See Documentations knowledge on the
+// _tokenSegmentsTyped itself. See _docs knowledge on the
 // tokenNameSegments bug this replaced: three formatters used to silently
 // ignore segment order because each formatter re-derived naming on its own.
 export function resolveExport(result: EngineResult, config: ExportConfig): ResolveResult {

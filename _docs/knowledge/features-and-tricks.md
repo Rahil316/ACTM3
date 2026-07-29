@@ -20,7 +20,7 @@ There is only one mapping method: for each role/variation, `_mapByScaleContrast`
 
 ### Algorithm Scoping
 
-By default (`useUniformAlgorithm: true`), all colors use the single global algorithm/solver. When disabled, `algorithmScopeLevel` (`"color"` or `"role"`) controls whether **Direct mode's solver** is read from `color.solverMode` or `role.solverMode`. **This only applies to Direct mode.** In Scale mode, `_generateScales` reads `color.scaleAlgorithm` only — `role.scaleAlgorithm` is never consulted anywhere in the pipeline, so setting `algorithmScopeLevel: "role"` has no effect on which scale algorithm is used, even though a live per-role Algorithm dropdown exists in the UI. See `Documentations/knowledge/color-algorithm-roadmap.md`'s "Confirmed issues" section for the full root cause.
+By default (`useUniformAlgorithm: true`), all colors use the single global algorithm/solver. When disabled, `algorithmScopeLevel` (`"color"` or `"role"`) controls whether **Direct mode's solver** is read from `color.solverMode` or `role.solverMode`. **This only applies to Direct mode.** In Scale mode, `_generateScales` reads `color.scaleAlgorithm` only — `role.scaleAlgorithm` is never consulted anywhere in the pipeline, so setting `algorithmScopeLevel: "role"` has no effect on which scale algorithm is used, even though a live per-role Algorithm dropdown exists in the UI. See `_docs/knowledge/color-algorithm-roadmap.md`'s "Confirmed issues" section for the full root cause.
 
 ### Alpha Tints
 

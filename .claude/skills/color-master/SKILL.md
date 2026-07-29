@@ -52,7 +52,7 @@ is the formula working as designed, not a bug."
    `text/onBrand` bug (§8) was actually caught, and Preview/harness alone would not have
    caught it.
 
-Read `Documentations/knowledge/color-algorithm-roadmap.md` in full before starting
+Read `_docs/knowledge/color-algorithm-roadmap.md` in full before starting
 nontrivial harmony work — it documents, with root causes and numeric evidence, every
 known color-math defect and quirk in this engine (hue-uniformity bias, gamut-envelope
 cliffs, and the now-removed `hue-locked` mode's history). Don't rediscover what's
@@ -367,7 +367,7 @@ checks for harmony:
 Color-master's toolbox for *fixing* an issue, once diagnosed:
 
 - Swap `scaleAlgorithm`/`solverMode` (global, per-color, or per-role — see engine
-  scoping rules in `Documentations/knowledge/how-it-works.md`'s Algorithm Scoping
+  scoping rules in `_docs/knowledge/how-it-works.md`'s Algorithm Scoping
   section, including the dead per-role Scale-mode scoping gotcha).
 - Adjust `scaleLength` (Scale mode) if a gamut cliff is crowding too many steps into a
   narrow lightness band.

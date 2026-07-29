@@ -278,7 +278,7 @@ for each color:
 
 ### `_solveDirectMode` (`src/shared/engine/clrEngine.ts:351`)
 
-> **Path update (2026-07-15):** the engine was split — `src/shared/clrEngine.ts` no longer exists. Scale algorithms and the mode-dispatch functions below (`_generateScales`, `_getSolverMode`, `_solveDirectMode`, `_processScaleMode`, `_mapByScaleContrast`) stayed in `src/shared/engine/clrEngine.ts`. `solveColorForContrast` and its solver-mode machinery (`_targetChroma`, `_searchL`, `SOLVER_MODES`) moved to a new `src/shared/engine/solverEngine.ts`. `SolverMode` also grew from 5 to 7 values — `gamut-cusp` and `apca-natural` were added (see the Solver modes list below and `Documentations/knowledge/color-algorithm-roadmap.md`'s 2026-07-15 status update for the full mechanism).
+> **Path update (2026-07-15):** the engine was split — `src/shared/clrEngine.ts` no longer exists. Scale algorithms and the mode-dispatch functions below (`_generateScales`, `_getSolverMode`, `_solveDirectMode`, `_processScaleMode`, `_mapByScaleContrast`) stayed in `src/shared/engine/clrEngine.ts`. `solveColorForContrast` and its solver-mode machinery (`_targetChroma`, `_searchL`, `SOLVER_MODES`) moved to a new `src/shared/engine/solverEngine.ts`. `SolverMode` also grew from 5 to 7 values — `gamut-cusp` and `apca-natural` were added (see the Solver modes list below and `_docs/knowledge/color-algorithm-roadmap.md`'s 2026-07-15 status update for the full mechanism).
 
 ```
 for each role in config.roles:

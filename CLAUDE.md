@@ -19,7 +19,7 @@ npm run lint / lint:fix
 npm run check              # typecheck + lint — run before committing
 ```
 
-There is no test suite (`test`/`test:watch` are not wired up despite being mentioned in `Documentations/COMMANDS.md` — that doc is stale on this point).
+There is no test suite (`test`/`test:watch` are not wired up despite being mentioned in `_docs/COMMANDS.md` — that doc is stale on this point).
 
 To load the plugin in Figma: run `build` or `watch`, then import `manifest.json` via Figma Desktop → Plugins → Development → Import plugin from manifest.
 
@@ -29,7 +29,7 @@ A Figma plugin has no shared memory between its two JS contexts — everything c
 
 - **UI thread** (`src/ui/`) — React app in an iframe, built by Vite → `dist/ui.html`. Owns all application state (Zustand stores), renders the interface, posts messages to the sandbox to trigger a sync/preview/export.
 - **Figma sandbox thread** (`src/figma/`) — built by esbuild → `dist/scripts.js`. Entry point `src/figma/index.ts` is a message router (`figma.ui.onmessage`) over `msg.type`. Has Figma API access; the UI does not.
-- **`src/shared/`** — pure, framework-agnostic color engine and export formatters used by both threads.
+- **`src/shared/`** — pure, framework-agnostic color engine and export formatters used by both threads: `engine/` (tonal-scale + Direct-mode solver), `exportEng/` (per-format export bundlers), `colorMath/` (color-space conversions), `presets/` (compiled preset data), and top-level `types.ts`.
 
 When running via `npm run dev`, there is no Figma sandbox — `src/ui/hooks/useFigmaBridge.ts` detects `window.parent === window` ("standalone mode") and mocks sandbox responses, persisting state to `localStorage` instead of `figma.clientStorage`/`figma.root.setPluginData`. Keep this mock in sync when adding new message types.
 
@@ -49,23 +49,33 @@ UI code (`src/ui/**`, except `src/ui/types/**` and `src/ui/utils/**`) may **not*
 - `figma.root.setPluginData("tw_state", ...)` — last state that was actually synced to Figma variables; used as the rename-detection baseline.
 - `figma.clientStorage` — UI window size/prefs (`uiPrefs`, `uiPrefsMeta`), not document-scoped.
 
-## The color engine (`src/shared/clrEngine.ts`)
+## The color engine (`src/shared/engine/`)
 
-`variableMaker(config) → { scales, tokens, errors }` is pure and stateless — same input always produces the same output, no Figma calls. Two modes, selected by config, share the same output contract:
+`variableMaker(config) → { scales, tokens, errors }` (`engine/clrEngine.ts`) is pure and stateless — same input always produces the same output, no Figma calls. Two modes, selected by config, share the same output contract:
 
 - **Scale mode**: `scaleMaker(hex, length, algo)` builds an N-step tonal scale per seed color. Roles/variations then map onto scale steps either by walking for the first step meeting a contrast target (`_mapByScaleContrast`, default) or by pinning to an explicit index (`_mapByIndex`).
-- **Direct mode**: no tonal scale. `solveColorForContrast()` binary-searches OKLCH lightness per role/variation until it meets the target WCAG contrast against the theme background, per one of six chroma-shaping solver modes (`natural`, `constant-chroma`, `symmetric`, `max-chroma`, `gamut-cusp`, `apca-natural`).
+- **Direct mode**: no tonal scale. `solveColorForContrast()` — in `engine/solverEngine.ts`, split out from `clrEngine.ts` — binary-searches OKLCH lightness per role/variation until it meets the target WCAG contrast against the theme background, per one of six chroma-shaping solver modes (`natural`, `constant-chroma`, `symmetric`, `max-chroma`, `gamut-cusp`, `apca-natural`).
 
-Full pipeline detail, the alias-chain Figma writes (`_scale` collection → `color tokens` collection), the three-stage `VariableManager.sync()` write order, and the `_id`-based rename-safety system are documented in `Documentations/knowledge/how-it-works.md` — read it before touching `clrEngine.ts`, `figmaVars.ts`, or `variableTracker.ts`.
+Full pipeline detail, the alias-chain Figma writes (`_scale` collection → `color tokens` collection), the three-stage `VariableManager.sync()` write order, and the `_id`-based rename-safety system are documented in `_docs/knowledge/how-it-works.md` — read it before touching `engine/clrEngine.ts`, `engine/solverEngine.ts`, `figmaVars.ts`, or `variableTracker.ts`.
 
 Color-space conversions live in `src/shared/colorMath/`: `oklch.ts` (used by Direct mode's solver) and `hct.ts`, which wraps the vendored Google Material `hct-vendor/` implementation (CAM16 + HCT solver, ported from the `material-color-utilities` reference source — treat `hct-vendor/*` as third-party and prefer changing `hct.ts`'s thin wrapper over editing it).
+
+## The export engine (`src/shared/exportEng/`)
+
+Turns an `EngineResult` (the color engine's output) plus an `ExportConfig` (naming/shorthand/scope settings) into downloadable files — CSS, SCSS, Tailwind, DTCG, Style Dictionary, iOS Swift, Android XML, React Native/TS, and the `.wand`/`.wand-backup` project-state formats. Used identically by the plugin's Export sheet (`src/figma/index.ts`, `src/ui/screens/ExportSheet.tsx`) and by the standalone `cli/` package.
+
+- **`resolve.ts`** — `resolveExport()` is the single place that turns raw tokens into fully-labeled, segment-ordered records (name shorthand, segment order/omission, scale-step labels). Every `fmt*.ts` formatter reads from its output instead of re-deriving labels itself; don't add a formatter that calls `_colorLabel`/`_roleLabel`/`_varLabel` directly.
+- **`bundler.ts`** — `buildExportBundle(result, config, formats, projectStore, timestamp) → ExportFile[]` dispatches per format string, one `if` block per format, each pushing `{ path, content, role }` entries. This is the switchboard to extend when adding a new export format or a new file within an existing format.
+- **`fmt*.ts`** — one file per target format (`fmtCSS.ts`, `fmtSCSS.ts`, `fmtTailwind.ts`, `fmtDTCG.ts`, `fmtStyleDictionary.ts`, `fmtSwift.ts`, `fmtAndroid.ts`, `fmtReactNative.ts`), each exporting `source`/`scale`/`theme`/`index`/`config` functions as applicable to that format.
+- **`types.ts`** — `ExportConfig`/`ExportFile` contracts; `helpers.ts` — shared slug/label/timestamp utilities.
+- CSV/JSON exports are filled in separately by `src/figma/docGen.ts` (`bundler.ts` only reserves their `ExportFile` entry with empty content).
 
 ## Other repo-specific conventions
 
 - **Rename safety**: every color/role/theme has a stable `_id` (`generateId()` in `src/ui/store/projectStore.ts`). Renames are tracked by `_id`, not array position or name, via `buildVariableRenameMap()` — don't reintroduce position-based diffing.
 - **Presets**: authored as typed `.ts` files in `src/shared/presets/raw/*.ts`, compiled by `scripts/build-presets.ts` into the gitignored `src/shared/presets/presets.json`. Files under `raw/dev/` are picked up automatically and excluded from `--release` builds — no registration list to edit.
 - **Dev-only code** gated by the `__RELEASE__` global (injected by `vite.config.ts`) is tree-shaken out of release builds; release builds also strip `console.log` (not `warn`/`error`) via a Rollup plugin.
-- Project-specific design/domain knowledge (color role naming, contrast target conventions, algorithm selection guidance, feature status, outstanding todos) lives in `Documentations/knowledge/` — check `Documentations/knowledge/MEMORY.md` for the index before starting nontrivial feature or design work.
+- Project-specific design/domain knowledge (color role naming, contrast target conventions, algorithm selection guidance, feature status, outstanding todos) lives in `_docs/knowledge/` — check `_docs/knowledge/MEMORY.md` for the index before starting nontrivial feature or design work.
 - **`test-lab/test-data/`** — a standalone stress-test harness for the color engine (`scripts/generate-configs.ts`, `run-stress-test.ts`, `analyze-results.ts`, `build-report.ts`), separate from the plugin build; not covered by `npm run check` and excluded from ESLint.
 - **`test-lab/preset-data/`** — a sibling harness to `test-data/`, but for verifying real, hand-authored presets (`src/shared/presets/raw/**/*.ts`) instead of a synthetic seed/algorithm grid. Run `npx tsx test-lab/preset-data/run.ts [preset-id ...]` (no args = every discovered preset) to run each preset's actual colors/roles/variations/`scopedColorIds`/`localBg` through `variableMaker()` and produce `test-lab/preset-data/results/dashboard.html` — a self-contained, filterable dashboard (by preset/color/role/theme, plus adjusted-token and missed-target toggles), `anomaly-report.md`, and `anomalies.jsonl`. This is the only tool that catches preset-specific defects (e.g. a `localBg` chain demanding a target its fixed background can't reach — see the color-master skill's §8.1) rather than general algorithm/solver quality. Same exclusions as `test-data/`: not covered by `npm run check`, excluded from ESLint, results gitignored. `.want`-file import is a planned but not-yet-implemented extension point — no `.want` format exists anywhere in this codebase yet, so don't assume support for it.
-- **`cli/`** — a standalone npm package (`token-wand`, published separately) that reads a `.wand` file + a `token-wand.config.json` and writes export files (CSS/SCSS/Android/RN/etc.) directly into a code repo, without Figma. It's a thin wrapper around `variableMaker()`, `translateConfig()`, and `buildExportBundle()` — imported by relative path from `src/shared/` and `src/figma/config.ts` (no separate `@token-wand/core` package exists). Has its own `package.json`/`node_modules`/`tsconfig.json`/build step; excluded from root ESLint and `npm run check`, same as `test-lab/test-data/`/`test-lab/preset-data/`/`export-test/`. See `cli/README.md` for its own commands.
+- **`cli/`** — a standalone npm package (`token-wand`, published separately) that reads a `.wand` file + a `token-wand.config.json` and writes export files (CSS/SCSS/Android/RN/etc.) directly into a code repo, without Figma. It's a thin wrapper around `variableMaker()`, `translateConfig()`, and `buildExportBundle()` — imported by relative path from `src/shared/` and `src/figma/config.ts` (no separate `@token-wand/core` package exists). Has its own `package.json`/`node_modules`/`tsconfig.json`/build step; excluded from root ESLint and `npm run check`, same as `test-lab/test-data/`/`test-lab/preset-data/`. See `cli/README.md` for its own commands.

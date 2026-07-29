@@ -27,8 +27,8 @@ supports five. A "godly" preset is one that reaches for the right tool from the 
 set below, not just the patterns you've seen copied elsewhere.
 
 Full design philosophy, WCAG target tables, algorithm/solver selection guidance, and
-common mistakes live in `Documentations/knowledge/color-system-guidelines.md` and
-`Documentations/knowledge/cheatsheet.md` — **read both before designing a new preset**;
+common mistakes live in `_docs/knowledge/color-system-guidelines.md` and
+`_docs/knowledge/cheatsheet.md` — **read both before designing a new preset**;
 this file covers the complete schema and every structural mechanism, including several
 not documented anywhere else.
 
@@ -150,7 +150,7 @@ Three load-bearing gotchas, easy to miss:
   HCT tone) and don't inherit the skew.
 - **`hue-locked` no longer exists as a solver mode** (removed from `SolverMode` as of
   2026-07-15 — it was a no-op alias for `natural`, hardcoding the same `natural`-taper
-  chroma curve; see `Documentations/knowledge/color-algorithm-roadmap.md`'s history and
+  chroma curve; see `_docs/knowledge/color-algorithm-roadmap.md`'s history and
   the color-master skill's numeric proof from the last run that included it). There is
   no successor value — if you want a mode that actually maximizes chroma relative to
   the seed's own gamut envelope, use `gamut-cusp`.
@@ -776,7 +776,7 @@ Don't start from a blank object — copy the closest existing preset and adapt:
 | HCT/Material You tonal palette                        | `src/shared/presets/raw/material.ts`            |
 | Every feature at once, for reference                  | `src/shared/presets/raw/dev/showcase.ts`        |
 
-Read `Documentations/knowledge/features-and-tricks.md`'s "Preset Quick Reference" table
+Read `_docs/knowledge/features-and-tricks.md`'s "Preset Quick Reference" table
 for the full inventory (mode, algorithm, color/role/theme counts) before picking. Note
 that even `showcase.ts` — the widest feature-coverage dev preset — still doesn't touch
 `role.scopes` or custom `scaleSteps`; don't assume "the reference preset does it" is a
@@ -798,7 +798,7 @@ ceiling on what's possible.
 3. Give every color/role/variation a stable `_id` if you want rename-safety from the
    start (not required for a first draft, but required before this preset is used to
    sync a real Figma file that will later be edited — see the rename-safety system in
-   `Documentations/knowledge/how-it-works.md`).
+   `_docs/knowledge/how-it-works.md`).
 4. Run `npm run build` (or `npm run watch` while iterating) — this runs
    `scripts/build-presets.ts`, which auto-formats your raw file with Prettier and runs
    `validateAndFixPreset()` (`src/shared/presets/validatePreset.ts`) against it.

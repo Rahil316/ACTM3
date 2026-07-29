@@ -5,14 +5,14 @@ type: project
 ---
 
 Last updated: 2026-07-15
-Source: full rewrite against current code (branch `edit/ColorLibraries`) — the 2026-05-22 version described a vanilla-JS codebase that no longer exists; most of its items were already resolved (rename tracking, `tokenGrouping` UI, alpha tints, project name) or superseded by later architectural changes. See `Documentations/knowledge/project_features.md` for the full feature registry this list is derived from.
+Source: full rewrite against current code (branch `edit/ColorLibraries`) — the 2026-05-22 version described a vanilla-JS codebase that no longer exists; most of its items were already resolved (rename tracking, `tokenGrouping` UI, alpha tints, project name) or superseded by later architectural changes. See `_docs/knowledge/project_features.md` for the full feature registry this list is derived from.
 
 ---
 
 ## 🔴 High priority — blocks other work or visible to user
 
 - [ ] **`role.scaleAlgorithm` is dead in Scale mode**
-      `_generateScales` (`src/shared/engine/clrEngine.ts:313`) reads `color.scaleAlgorithm` only — never `role.scaleAlgorithm` — even though a live per-role Algorithm dropdown exists in the UI (`RoleGroupCard.tsx`, shown when Scale mode + "Uniform Algorithm" off + scope = "Per Role"), is persisted, and is exported through `figma/config.ts`. Users can set it believing it does something; it's silently ignored. Either implement real per-role scale algorithms (non-trivial — a scale is currently generated once per color; two roles sharing that color's scale can't each get a different ramp under the current data model) or grey out / hide the control in Scale mode and explain why. Full root cause in `Documentations/knowledge/color-algorithm-roadmap.md`.
+      `_generateScales` (`src/shared/engine/clrEngine.ts:313`) reads `color.scaleAlgorithm` only — never `role.scaleAlgorithm` — even though a live per-role Algorithm dropdown exists in the UI (`RoleGroupCard.tsx`, shown when Scale mode + "Uniform Algorithm" off + scope = "Per Role"), is persisted, and is exported through `figma/config.ts`. Users can set it believing it does something; it's silently ignored. Either implement real per-role scale algorithms (non-trivial — a scale is currently generated once per color; two roles sharing that color's scale can't each get a different ramp under the current data model) or grey out / hide the control in Scale mode and explain why. Full root cause in `_docs/knowledge/color-algorithm-roadmap.md`.
 
 - [x] **`hue-locked` solver mode doesn't do what it says** — resolved 2026-07-15
       Deprecated and removed entirely rather than fixed or repointed — it hardcoded `_targetChroma(..., "natural")` regardless of the mode passed in, with output byte-identical to `natural`'s. `SolverMode` is now 6 modes, not 7; no successor value. `gamut-cusp` remains the mode that does what `hue-locked`'s description used to promise.
@@ -46,7 +46,7 @@ Source: full rewrite against current code (branch `edit/ColorLibraries`) — the
       `tests/` was removed entirely in a past cleanup pass; there is currently zero automated coverage for `clrEngine.ts`/`solverEngine.ts`/the color-math primitives. This directly contributed to how long-lived some of the bugs in `color-algorithm-roadmap.md`'s confirmed-issues list were (multiple hand-rolled CAM16/OKLCH bugs, the `hue-locked` mode, the HSL-luminance hue-skew issue) — all were found by manual numerical investigation rather than a failing test. `test-lab/test-data/`'s stress-test harness (config-matrix + dashboard) is a useful complement but isn't a substitute for unit tests on the core math.
 
 - [ ] **Color algorithm equalizer** (customizer/knob UI over the scale + solver algorithms)
-      Full brainstorm in `Documentations/knowledge/color-algorithm-roadmap.md` §3. Explicitly dropped from scope once the "ultimate algorithm" idea shipped twice — as `Fidelity` for Scale mode, and as `gamut-cusp`/`apca-natural` for Direct mode. Pinned, not scheduled, unless there's a specific reason to revisit the full equalizer UI.
+      Full brainstorm in `_docs/knowledge/color-algorithm-roadmap.md` §3. Explicitly dropped from scope once the "ultimate algorithm" idea shipped twice — as `Fidelity` for Scale mode, and as `gamut-cusp`/`apca-natural` for Direct mode. Pinned, not scheduled, unless there's a specific reason to revisit the full equalizer UI.
 
 ---
 
