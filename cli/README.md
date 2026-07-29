@@ -105,6 +105,23 @@ Reads `token-wand.config.json` (or the path given by `--config`), reads the
 | `--dry-run` | off | Print what would be written without touching disk. Use this the first time you point the CLI at a new repo, to confirm `outDir` is correct before anything is overwritten. |
 | `-h`, `--help` | off | Print usage and exit. |
 
+### Naming warnings
+
+Before writing anything, the CLI checks the `.wand` file's resolved token
+names for problems and prints a `⚠` line for each one it finds:
+
+- Two different tokens resolve to the identical output name (usually because
+  `tokenNameSegments` omits a segment, or two colors/roles/variations share a
+  shorthand) — whichever format keys tokens by name (DTCG, Style Dictionary,
+  React Native, Android, Swift) will silently let one overwrite the other.
+- A role has an explicitly empty variation list.
+- A theme resolved zero tokens.
+
+These are warnings, not errors — the build still runs and writes files. If
+you see one, it usually means the `.wand` file's Token Name Format setting
+(or a preset's role/color scoping) needs adjusting in the Figma plugin so
+every token gets a unique name.
+
 ## How this works
 
 This CLI is a thin wrapper around the same color engine and export

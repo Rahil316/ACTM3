@@ -66,16 +66,34 @@ export function RunDialog() {
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [healthMetric, setHealthMetric] = useState<MetricKey>("adjustments");
 
+  // Explains the otherwise-unexplained tab jump when the silent pre-publish
+  // re-check (right before an actual sync) finds something new that wasn't
+  // there at the user's last review — without this, clicking Sync and landing
+  // on a different tab with no write happening looks like a bug.
+  const { prePublishReroute, clearPrePublishReroute } = dialog;
+  useEffect(() => {
+    if (!prePublishReroute) return;
+    banner.info(
+      prePublishReroute === "drift"
+        ? "Figma changed since your last check — review the new edit below before syncing."
+        : "A naming conflict changed since your last check — review it below before syncing.",
+      { autoClose: 6000 },
+    );
+    clearPrePublishReroute();
+  }, [prePublishReroute, clearPrePublishReroute]);
+
   if (!isOpen) return null;
 
-  const { syncPreview, previewItems, structuralChanges, conflicts, decisions, existingCollections, isStale, driftItems, driftDecisions, setDriftDecision, allDriftDecided, allNameConflictsDecided, valueDriftChecked, isCheckingValueDrift, checkValueDrift } = dialog;
+  const { syncPreview, previewItems, structuralChanges, conflicts, decisions, existingCollections, hasChecked, isPrePublishChecking, checkNow, lastCheckedAt, driftItems, driftDecisions, setDriftDecision, allDriftDecided, allNameConflictsDecided, valueDriftChecked, isCheckingValueDrift } = dialog;
 
-  // isChecking: no result yet at all (initial load). isStale: we have a
-  // result, but the project has changed since and a re-check is pending —
-  // both states render the same "checking" skeleton and disable sync so the
-  // user never acts on counts that no longer match the live config.
-  const isChecking = syncPreview === null;
-  const isCheckingOrStale = isChecking || isStale;
+  // isChecking: a check round trip is genuinely in flight right now — either
+  // the user clicked "Compare Changes with Figma"/the refresh icon
+  // (isCheckingValueDrift, reused here as the general in-flight flag since
+  // both check-collections and value-drift travel in the same request/response
+  // now), or the silent pre-publish re-check handleConfirmRun fires right
+  // before syncing (isPrePublishChecking). There is no more implicit
+  // "isChecking on dialog open" — see onDialogOpen, which sends nothing.
+  const isChecking = isCheckingValueDrift || isPrePublishChecking;
 
   // A "modify" item whose ONLY changed field is name, decided "keep" (i.e. the
   // user is keeping Figma's existing name), writes nothing — figmaVars.ts's
@@ -93,9 +111,19 @@ export function RunDialog() {
   // before nothingToSync's value even matters), so decisions[tokenRef] is always
   // populated here — a real pending write is anything other than "keep".
   const pendingConflicts = conflicts.filter((c) => decisions[c.tokenRef] !== "keep");
-  const nothingToSync = !isCheckingOrStale && allNameConflictsDecided && syncPreview!.items.every(isNameOnlyKept) && pendingConflicts.length === 0;
+  const nothingToSync = hasChecked && !isChecking && !!syncPreview && allNameConflictsDecided && syncPreview.items.every(isNameOnlyKept) && pendingConflicts.length === 0;
 
-  const syncLabel = isCheckingOrStale ? "Checking…" : isCheckingValueDrift ? "Checking Figma Edits…" : !valueDriftChecked ? "Check for Figma Edits" : nothingToSync ? "Up to Date" : getSyncLabel(syncPreview!);
+  const syncLabel = isPrePublishChecking
+    ? "Verifying…"
+    : isCheckingValueDrift
+      ? "Checking…"
+      : !hasChecked
+        ? "Compare Changes with Figma"
+        : nothingToSync
+          ? "Up to Date"
+          : syncPreview
+            ? getSyncLabel(syncPreview)
+            : "Sync Variables";
 
   const configSummary = `${projectStore.colors.length} color${projectStore.colors.length !== 1 ? "s" : ""} · ${projectStore.roles.length} role${projectStore.roles.length !== 1 ? "s" : ""} · ${projectStore.themes.length} theme${projectStore.themes.length !== 1 ? "s" : ""} · ${projectStore.pluginMode} mode`;
 
@@ -156,11 +184,20 @@ export function RunDialog() {
             {dialog.activeTab === "summary" && (
               <SummaryTab
                 syncPreview={syncPreview}
-                isChecking={isCheckingOrStale}
+                isChecking={isChecking}
+                hasChecked={hasChecked}
+                onCheckNow={checkNow}
+                lastCheckedAt={lastCheckedAt}
                 nothingToSync={nothingToSync}
                 structuralChanges={structuralChanges}
                 existingCollections={existingCollections}
                 conflicts={conflicts}
+                decisions={decisions}
+                onKeepAllConflicts={() => conflicts.forEach((c) => dialog.setDecision(c.tokenRef, "keep"))}
+                onOverrideAllConflicts={() => conflicts.forEach((c) => dialog.setDecision(c.tokenRef, "revert"))}
+                allDriftDecided={allDriftDecided}
+                allNameConflictsDecided={allNameConflictsDecided}
+                driftItemCount={driftItems.length}
                 multiMode={multiMode}
                 themes={projectStore.themes}
                 pluginMode={projectStore.pluginMode || "scale"}
@@ -176,10 +213,23 @@ export function RunDialog() {
               />
             )}
 
-            {dialog.activeTab === "changes" && <ChangesTab previewItems={previewItems} conflicts={conflicts} decisions={decisions} setDecision={dialog.setDecision} total={syncPreview?.total ?? 0} isChecking={isCheckingOrStale} initialFilter={changesFilter} onOpenConflicts={() => setConflictsOpen(true)} />}
+            {dialog.activeTab === "changes" && (
+              <ChangesTab
+                previewItems={previewItems}
+                conflicts={conflicts}
+                decisions={decisions}
+                setDecision={dialog.setDecision}
+                total={syncPreview?.total ?? 0}
+                isChecking={isChecking}
+                hasChecked={hasChecked}
+                onGoToSummary={() => dialog.setActiveTab("summary")}
+                initialFilter={changesFilter}
+                onOpenConflicts={() => setConflictsOpen(true)}
+              />
+            )}
 
             {dialog.activeTab === "value-drift" && (
-              <ValueDriftTab items={driftItems} decisions={driftDecisions} setDecision={setDriftDecision} isChecking={isCheckingOrStale} checked={valueDriftChecked} isCheckingDrift={isCheckingValueDrift} onCheck={checkValueDrift} />
+              <ValueDriftTab items={driftItems} decisions={driftDecisions} setDecision={setDriftDecision} isChecking={isChecking} checked={valueDriftChecked} isCheckingDrift={isCheckingValueDrift} onGoToSummary={() => dialog.setActiveTab("summary")} />
             )}
 
             {dialog.activeTab === "health" && <HealthTab initialMetric={healthMetric} />}
@@ -193,14 +243,14 @@ export function RunDialog() {
               size="xl"
               label={syncLabel}
               onClick={dialog.handleConfirmRun}
-              disabled={isCheckingOrStale || isCheckingValueDrift || (valueDriftChecked && (nothingToSync || !allDriftDecided || !allNameConflictsDecided))}
+              disabled={isChecking || (hasChecked && (nothingToSync || !allDriftDecided || !allNameConflictsDecided))}
               title={
-                isCheckingOrStale
-                  ? "Checking Figma collections…"
+                isPrePublishChecking
+                  ? "Confirming nothing changed in Figma since your last check…"
                   : isCheckingValueDrift
-                    ? "Checking for edits made directly in Figma…"
-                    : !valueDriftChecked
-                      ? "Checks whether any variable was edited directly in Figma since the last sync, then lets you sync"
+                    ? "Comparing against Figma…"
+                    : !hasChecked
+                      ? "Compares your current configuration against Figma's variables, then lets you sync"
                       : nothingToSync
                         ? "All variables are already up to date in Figma"
                         : !allDriftDecided

@@ -1,24 +1,44 @@
+import { useState, useEffect } from "react";
 import { useProjectStore } from "../../../store/projectStore";
 import { useHealthReport } from "./health/useHealthReport";
 import { MetricTileRow, type MetricKey } from "./health/HealthTab";
 import { SettingsCard, SmallRow, CollectionRow } from "../../../components/SettingsCard";
 import { Callout } from "../../../components/Callout";
 import { Badge } from "../../../components/Badge";
+import { Button } from "../../../components/Button";
 import { EmptyState } from "../../../components/EmptyState";
-import { SectionLabel, HelperText, Mono, Caption, PageTitle } from "../../../components/typography";
-import { IconCheck } from "../../../components/icons";
+import { SectionLabel, HelperText, Mono, Caption, PageTitle, MicroText } from "../../../components/typography";
+import { IconCheck, IconLayers, IconReset } from "../../../components/icons";
 import { Input } from "../../../components/Input";
-import type { SyncPreview, StructuralChange, ExistingCollection, SyncScope } from "../../../types/messages";
+import type { SyncPreview, StructuralChange, ExistingCollection, SyncScope, SyncDecision } from "../../../types/messages";
 import type { RunDialogTab } from "../useRunDialogState";
 import { STRUCTURAL_TITLE, ORPHANING_KINDS, CHIP_BG, type ChipVariant } from "../changeDisplay";
+import { defaultNameConflictDecision } from "../../../utils/nameConflicts";
 
 interface SummaryTabProps {
   syncPreview: SyncPreview | null;
+  // True only while a check round trip is actually in flight (user-triggered
+  // checkNow, or the silent pre-publish re-check) — distinct from "never
+  // checked yet", which is syncPreview === null && !isChecking.
   isChecking: boolean;
+  hasChecked: boolean;
+  onCheckNow: () => void;
+  // Wall-clock time of the last completed check, for the "checked Xs ago"
+  // caption next to the refresh icon — null until the first check lands.
+  lastCheckedAt: number | null;
   nothingToSync: boolean;
   structuralChanges: StructuralChange[];
   existingCollections: ExistingCollection[];
-  conflicts: { tokenRef: string }[];
+  conflicts: { tokenRef: string; kind: "drift" | "conflict" }[];
+  decisions: Record<string, SyncDecision>;
+  onKeepAllConflicts: () => void;
+  onOverrideAllConflicts: () => void;
+  // Gate state, mirrored from RunDialog's footer button so the "why is Sync
+  // disabled" explanation lives inline (not just in a hover tooltip that's
+  // easy to miss on a disabled button).
+  allDriftDecided: boolean;
+  allNameConflictsDecided: boolean;
+  driftItemCount: number;
   multiMode: boolean;
   themes: { name: string }[];
   pluginMode: string;
@@ -33,13 +53,34 @@ interface SummaryTabProps {
   onOpenConflicts: () => void;
 }
 
+// Same relative-time shape a "checked Xs ago" caption needs — short, no
+// external date library, matches the plugin's existing lightweight style.
+function timeAgo(fromMs: number, nowMs: number): string {
+  const seconds = Math.round((nowMs - fromMs) / 1000);
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  return `${hours}h ago`;
+}
+
 export function SummaryTab({
   syncPreview,
   isChecking,
+  hasChecked,
+  onCheckNow,
+  lastCheckedAt,
   nothingToSync,
   structuralChanges,
   existingCollections,
   conflicts,
+  decisions,
+  onKeepAllConflicts,
+  onOverrideAllConflicts,
+  allDriftDecided,
+  allNameConflictsDecided,
+  driftItemCount,
   multiMode,
   themes,
   pluginMode,
@@ -63,12 +104,128 @@ export function SummaryTab({
   // when only Source has any diffs), which overstates the "across N collections" claim.
   const changedCollectionCount = syncPreview ? new Set(syncPreview.items.map((i) => i.collection)).size : 0;
 
+  const notCheckedYet = !hasChecked && !isChecking;
+
+  // Mirrors ConflictList's own bulkValue computation exactly — same
+  // decisionFor fallback (an explicit decision, else the kind's safe default,
+  // else undecided) — so the inline buttons below reflect what's ACTUALLY
+  // decided (and which one, if any, is uniformly applied) rather than always
+  // looking like two equally-live options regardless of current state.
+  const decisionFor = (c: { tokenRef: string; kind: "drift" | "conflict" }): "keep" | "revert" | null => (decisions[c.tokenRef] as "keep" | "revert" | undefined) ?? defaultNameConflictDecision(c.kind);
+  const allKeepFigma = conflicts.length > 0 && conflicts.every((c) => decisionFor(c) === "keep");
+  const allUseSystem = conflicts.length > 0 && conflicts.every((c) => decisionFor(c) === "revert");
+
+  // Explains why the Sync button is disabled, INLINE — not just in the
+  // footer's hover tooltip, which is easy to miss on a disabled button.
+  // Ordered to match handleConfirmRun's own gating precedence in
+  // useRunDialogState.ts (drift blocks before name conflicts do).
+  const disabledReason = !hasChecked
+    ? null // "not checked yet" already has its own empty-state messaging below
+    : !allDriftDecided
+      ? { text: `${driftItemCount} Figma edit${driftItemCount !== 1 ? "s" : ""} need a decision before syncing.`, tab: "value-drift" as RunDialogTab }
+      : !allNameConflictsDecided
+        ? { text: "Some naming conflicts still need a decision before syncing.", tab: "changes" as RunDialogTab }
+        : null;
+
   return (
     <div className="flex flex-col gap-3">
 
+      {/* ── Warnings — surfaced first, above What Will Change/Health/Scope/
+          Configuration. Several of these (conflicts, structural changes) block
+          Sync until resolved, and none of them should require scrolling past
+          three other sections to find out why the button won't enable. ──── */}
+      {conflicts.length > 0 && (
+        <Callout variant="warning" title={`${conflicts.length} name conflict${conflicts.length !== 1 ? "s" : ""} found`}>
+          <div className="flex items-center flex-wrap gap-1.5 mt-0.5">
+            <button type="button" className="underline cursor-pointer hover:opacity-80 font-semibold" onClick={onOpenConflicts}>
+              Review
+            </button>
+            <span className="opacity-50">|</span>
+            <button
+              type="button"
+              className={`underline cursor-pointer hover:opacity-80 ${allUseSystem ? "font-semibold" : ""}`}
+              aria-pressed={allUseSystem}
+              onClick={onOverrideAllConflicts}
+            >
+              Use System Names for All{allUseSystem ? " ✓" : ""}
+            </button>
+            <span className="opacity-50">|</span>
+            <button
+              type="button"
+              className={`underline cursor-pointer hover:opacity-80 ${allKeepFigma ? "font-semibold" : ""}`}
+              aria-pressed={allKeepFigma}
+              onClick={onKeepAllConflicts}
+            >
+              Keep Figma Names for All{allKeepFigma ? " ✓" : ""}
+            </button>
+          </div>
+        </Callout>
+      )}
+
+      {disabledReason && (
+        <Callout variant="danger" title="Sync is blocked">
+          {disabledReason.text}{" "}
+          <button type="button" className="underline cursor-pointer hover:opacity-80 font-semibold" onClick={() => setActiveTab(disabledReason.tab)}>
+            Resolve →
+          </button>
+        </Callout>
+      )}
+
+      {structuralChanges.map((sc) => {
+        const isOrphaning = !!sc.orphanedCollection || ORPHANING_KINDS.has(sc.kind);
+        return (
+          <Callout key={sc.kind} variant={isOrphaning ? "warning" : "info"} title={STRUCTURAL_TITLE[sc.kind] ?? sc.kind}>
+            {sc.detail}
+            {sc.orphanedCollection && <Mono className="block mt-1 opacity-70">{sc.orphanedCollection}</Mono>}
+          </Callout>
+        );
+      })}
+
+      {!multiMode && themes.length > 1 && (
+        <Callout variant="warning" title="Only 1 theme will be applied">
+          Your Figma plan supports only 1 mode per collection. Only <strong>{themes[0]?.name}</strong> will be written.
+          {themes.slice(1).length > 0 && (
+            <> Skipped: {themes.slice(1).map((t) => t.name).join(", ")}.</>
+          )}{" "}
+          Upgrade to a paid Figma plan to apply all themes.
+        </Callout>
+      )}
+
+      {previewWasInterrupted && (
+        <Callout variant="warning" title="Previous preview interrupted">
+          The plugin was closed mid-render. Re-run preview to restore the canvas.{" "}
+          <button type="button" className="underline cursor-pointer hover:opacity-80" onClick={() => setPreviewWasInterrupted(false)}>
+            Dismiss
+          </button>
+        </Callout>
+      )}
+
       {/* ── What will change ────────────────────────────────────────── */}
       <div className="flex flex-col gap-1.5">
-        <SectionLabel className="text-n-tx-secondary px-0.5">What Will Change</SectionLabel>
+        <div className="flex items-center justify-between px-0.5">
+          <SectionLabel className="text-n-tx-secondary">What Will Change</SectionLabel>
+          {/* Manual-only: no auto check on open or on edit — see
+              useRunDialogState's onDialogOpen/checkNow. A refresh icon replaces
+              the initial button once a check has actually run, so the user can
+              re-compare on demand without leaving this section. The "checked
+              Xs ago" caption makes the silent pre-publish safety net visible —
+              otherwise a stale-but-hasChecked review looks identical to a
+              fresh one until Sync is actually clicked. */}
+          {hasChecked && !isChecking && (
+            <div className="flex items-center gap-1.5">
+              {lastCheckedAt !== null && <LastCheckedCaption checkedAt={lastCheckedAt} />}
+              <button
+                type="button"
+                onClick={onCheckNow}
+                title="Re-check against Figma"
+                aria-label="Re-check against Figma"
+                className="text-n-tx-dim hover:text-n-tx-primary transition-colors cursor-pointer p-0.5 -m-0.5"
+              >
+                <IconReset className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
         <SettingsCard className="!space-y-0">
           {isChecking ? (
             <div className="flex flex-col gap-2 py-1 animate-pulse">
@@ -80,6 +237,13 @@ export function SummaryTab({
               </div>
               <div className="h-[10px] w-40 rounded bg-n-sf-hover" />
             </div>
+          ) : notCheckedYet ? (
+            <EmptyState
+              icon={<IconLayers className="w-5 h-5" />}
+              title="Not compared yet"
+              description="See what will be created, updated, or removed in Figma before syncing."
+              action={<Button variant="secondary" size="sm" label="Compare Changes with Figma" onClick={onCheckNow} />}
+            />
           ) : nothingToSync || !syncPreview ? (
             <EmptyState icon={<IconCheck className="w-5 h-5" />} title="Up to date" description="Figma variables already match the current configuration — nothing to sync." />
           ) : (
@@ -168,45 +332,6 @@ export function SummaryTab({
           <HelperText className="text-n-tx-dim px-0.5">Only the first theme will be written — Figma Starter supports 1 mode per collection.</HelperText>
         )}
       </div>
-
-      {/* ── Warnings ────────────────────────────────────────────────── */}
-
-      {conflicts.length > 0 && (
-        <Callout
-          variant="warning"
-          title={`${conflicts.length} name conflict${conflicts.length !== 1 ? "s" : ""} need review`}
-          action={{ label: "Review →", onClick: onOpenConflicts }}
-        />
-      )}
-
-      {structuralChanges.map((sc) => {
-        const isOrphaning = !!sc.orphanedCollection || ORPHANING_KINDS.has(sc.kind);
-        return (
-          <Callout key={sc.kind} variant={isOrphaning ? "warning" : "info"} title={STRUCTURAL_TITLE[sc.kind] ?? sc.kind}>
-            {sc.detail}
-            {sc.orphanedCollection && <Mono className="block mt-1 opacity-70">{sc.orphanedCollection}</Mono>}
-          </Callout>
-        );
-      })}
-
-      {!multiMode && themes.length > 1 && (
-        <Callout variant="warning" title="Only 1 theme will be applied">
-          Your Figma plan supports only 1 mode per collection. Only <strong>{themes[0]?.name}</strong> will be written.
-          {themes.slice(1).length > 0 && (
-            <> Skipped: {themes.slice(1).map((t) => t.name).join(", ")}.</>
-          )}{" "}
-          Upgrade to a paid Figma plan to apply all themes.
-        </Callout>
-      )}
-
-      {previewWasInterrupted && (
-        <Callout variant="warning" title="Previous preview interrupted">
-          The plugin was closed mid-render. Re-run preview to restore the canvas.{" "}
-          <button type="button" className="underline cursor-pointer hover:opacity-80" onClick={() => setPreviewWasInterrupted(false)}>
-            Dismiss
-          </button>
-        </Callout>
-      )}
     </div>
   );
 }
@@ -307,6 +432,20 @@ function ScopeChecklist({ scope, setScope, showScaleRow }: { scope: SyncScope; s
       />
     </SettingsCard>
   );
+}
+
+// ── Last-checked caption ─────────────────────────────────────────────────────
+// Ticks once a minute — no need for a snappier interval on a caption whose
+// finest unit is "Xs ago" for the first minute anyway, and a slow tick keeps
+// this from being a real re-render cost while the dialog sits open.
+
+function LastCheckedCaption({ checkedAt }: { checkedAt: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  return <MicroText className="text-n-tx-dim whitespace-nowrap">Checked {timeAgo(checkedAt, now)}</MicroText>;
 }
 
 // ── Stat chip ──────────────────────────────────────────────────────────────────

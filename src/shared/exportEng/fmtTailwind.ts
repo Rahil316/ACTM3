@@ -1,5 +1,6 @@
 import type { EngineResult, ExportConfig } from './types';
-import { _colorLabel, _roleLabel, _varLabel, _stepLabel, _tokenSegments, _variationDefs, _slug, _eachSourceColor } from './helpers';
+import { _slug, _eachSourceColor } from './helpers';
+import { resolveExport, resolveScaleSteps } from './resolve';
 
 export const fmtTailwind = {
   config(result: EngineResult, config: ExportConfig): string {
@@ -10,22 +11,19 @@ export const fmtTailwind = {
     lines.push("  theme: {");
     lines.push("    extend: {");
     lines.push("      colors: {");
-    const scales = config.includeColorScalesCollection !== false ? (result.scales ?? {}) : {};
-    const scaleNames = Object.keys(scales);
-    for (let ci = 0; ci < scaleNames.length; ci++) {
-      const colorName = scaleNames[ci];
-      const cLabel = _colorLabel(colorName, config);
-      const scale = scales[colorName];
-      const steps = Object.keys(scale);
-      lines.push("        " + JSON.stringify(_slug(cLabel)) + ": {");
-      for (let si = 0; si < steps.length; si++) {
-        const step = steps[si];
-        const stepSlug = _slug(_stepLabel(step, config));
-        const varName = "--" + _slug(cLabel) + "-" + stepSlug;
-        lines.push("          " + JSON.stringify(stepSlug) + ": \"var(" + varName + ")\",");
+    const scaleSteps = resolveScaleSteps(result, config);
+    let lastScaleColor: string | null = null;
+    for (const step of scaleSteps) {
+      if (step.colorName !== lastScaleColor) {
+        if (lastScaleColor !== null) lines.push("        },");
+        lines.push("        " + JSON.stringify(_slug(step.cLabel)) + ": {");
+        lastScaleColor = step.colorName;
       }
-      lines.push("        },");
+      const stepSlug = _slug(step.stepKey);
+      const varName = "--" + _slug(step.cLabel) + "-" + stepSlug;
+      lines.push("          " + JSON.stringify(stepSlug) + ": \"var(" + varName + ")\",");
     }
+    if (lastScaleColor !== null) lines.push("        },");
     const sourceColors = _eachSourceColor(config);
     if (sourceColors.length > 0) {
       lines.push("        // Source colors (CSS var references)");
@@ -41,31 +39,14 @@ export const fmtTailwind = {
     const themeKeys = Object.keys(result.tokens || {});
     if (themeKeys.length > 0) {
       const firstTheme = themeKeys[0];
-      const themeTokens = result.tokens[firstTheme];
-      if (themeTokens) {
+      if (result.tokens[firstTheme]) {
         lines.push("        // Semantic tokens (CSS var references)");
-        const colorNames = Object.keys(themeTokens);
-        for (let ci2 = 0; ci2 < colorNames.length; ci2++) {
-          const colorName2 = colorNames[ci2];
-          const cLabel2 = _colorLabel(colorName2, config);
-          const roles = themeTokens[colorName2] as Record<string, Record<string, import("./types").TokenEntry>>;
-          const roleIds = Object.keys(roles);
-          for (let ri = 0; ri < roleIds.length; ri++) {
-            const roleId = roleIds[ri];
-            const roleObj = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
-            const rLabel = _roleLabel(roleObj, config);
-            const varDefs = _variationDefs(roleObj, config);
-            const variations = roles[roleId];
-            for (let vi = 0; vi < varDefs.length; vi++) {
-              const token = variations[String(vi)];
-              if (!token) continue;
-              const vLabel = _varLabel(varDefs[vi], config);
-              const segs = _tokenSegments(cLabel2, rLabel, vLabel, config);
-              const tokenKey = segs.map(_slug).join("-");
-              const varRef = "--" + tokenKey;
-              lines.push("        " + JSON.stringify(tokenKey) + ": \"var(" + varRef + ")\",");
-            }
-          }
+        const { tokens } = resolveExport(result, config);
+        for (const token of tokens) {
+          if (token.theme !== firstTheme) continue;
+          const tokenKey = token.segs.map((s) => _slug(s.label)).join("-");
+          const varRef = "--" + tokenKey;
+          lines.push("        " + JSON.stringify(tokenKey) + ": \"var(" + varRef + ")\",");
         }
       }
     }

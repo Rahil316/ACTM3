@@ -32,6 +32,14 @@ interface BannerStore {
   _delete: (id: string) => void;  // immediate delete, used internally
   clear:   () => void;
   has:     (id: string) => boolean;
+  // Pauses/resumes a banner's auto-close countdown — lives here, not in the
+  // component, so the timer keeps running (or stays correctly paused) for
+  // EVERY banner regardless of whether BannerSlot currently renders it.
+  // BannerSlot caps how many banners are visible at once (see Banner.tsx's
+  // MAX_VISIBLE_BANNERS); a timer that only existed on the visible component
+  // would mean a banner queued behind that cap never auto-closes at all.
+  pauseAutoClose:  (id: string) => void;
+  resumeAutoClose: (id: string) => void;
   warn:    (message: string, opts?: BannerOpts) => string;
   error:   (message: string, opts?: BannerOpts) => string;
   info:    (message: string, opts?: BannerOpts) => string;
@@ -39,6 +47,19 @@ interface BannerStore {
 }
 
 let _uid = 0;
+
+// Per-banner auto-close bookkeeping, keyed by id — deliberately kept OUTSIDE
+// Zustand state since it's pure timer plumbing, not anything a component
+// needs to re-render on. remainingMs is decremented on pause and re-armed on
+// resume, so a hovered/focused banner's countdown genuinely stops rather than
+// just looking paused while still counting down underneath.
+const autoCloseTimers = new Map<string, { remainingMs: number; startedAt: number | null; timeoutId: ReturnType<typeof setTimeout> | null }>();
+
+function clearAutoCloseTimer(id: string): void {
+  const t = autoCloseTimers.get(id);
+  if (t?.timeoutId) clearTimeout(t.timeoutId);
+  autoCloseTimers.delete(id);
+}
 
 export const useBannerStore = create<BannerStore>((set, get) => ({
   banners: [],
@@ -60,12 +81,14 @@ export const useBannerStore = create<BannerStore>((set, get) => ({
     const banner: Banner = { dismissable: true, ...cfg, id };
     set((s) => ({ banners: [...s.banners, banner] }));
     if (banner.autoClose && banner.autoClose > 0) {
-      setTimeout(() => get().remove(id), banner.autoClose);
+      const timeoutId = setTimeout(() => get().remove(id), banner.autoClose);
+      autoCloseTimers.set(id, { remainingMs: banner.autoClose, startedAt: Date.now(), timeoutId });
     }
     return id;
   },
 
   remove(id) {
+    clearAutoCloseTimer(id);
     // Mark as exiting — component plays slide-out, then calls _delete
     const exiting = new Set(get().exiting);
     exiting.add(id);
@@ -83,12 +106,29 @@ export const useBannerStore = create<BannerStore>((set, get) => ({
   },
 
   clear() {
+    for (const id of autoCloseTimers.keys()) clearAutoCloseTimer(id);
     // Immediately wipe everything — no animation (e.g. story cleanup)
     set({ banners: [], exiting: new Set() });
   },
 
   has(id) {
     return get().banners.some((b) => b.id === id);
+  },
+
+  pauseAutoClose(id) {
+    const t = autoCloseTimers.get(id);
+    if (!t || t.startedAt === null) return; // no autoClose set, or already paused
+    if (t.timeoutId) clearTimeout(t.timeoutId);
+    t.remainingMs -= Date.now() - t.startedAt;
+    t.startedAt = null;
+    t.timeoutId = null;
+  },
+
+  resumeAutoClose(id) {
+    const t = autoCloseTimers.get(id);
+    if (!t || t.startedAt !== null) return; // no autoClose set, or already running
+    t.startedAt = Date.now();
+    t.timeoutId = setTimeout(() => get().remove(id), Math.max(0, t.remainingMs));
   },
 
   warn:    (msg, opts) => get().show({ ...opts, type: 'warning', message: msg }),

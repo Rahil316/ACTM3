@@ -126,8 +126,13 @@ export const VariableManager = {
         }
       }
       await this.upsertVariables(scaleCol, modeId, allScaleVars, scaleMetadataMap, decisions, driftDecisions);
-    } else {
-      // If scale collection is not active, build mapping directly
+    } else if (!skipScales) {
+      // If scale collection is not active (but scales were still computed —
+      // Scale mode with includeColorScalesCollection: false), build mapping
+      // directly. Direct mode has no result.scales at all (see clrEngine.ts —
+      // it's absent, not empty), so skipScales must gate this branch the same
+      // way it already gates the scaleCol/needsScaleCol path above; otherwise
+      // Object.entries(undefined) throws in every Direct-mode sync.
       for (const [colorName, scale] of Object.entries(result.scales as Record<string, AnyObj>)) {
         const cLabel = colorLabel(colorName);
         for (const [step, entry] of Object.entries(scale as Record<string, AnyObj>)) {
@@ -159,7 +164,7 @@ export const VariableManager = {
           const cLabel = colorLabel(colorName);
 
           for (const [roleId, variations] of Object.entries(roles as Record<string, AnyObj>)) {
-            const roleObj = (config.roles && config.roles[roleId]) || {};
+            const roleObj = (config.roles && config.roles[parseInt(roleId, 10)]) || {};
             const roleIdStr = roleObj._id || roleId;
             const rName = roleObj.name || roleId;
             const rLabel = roleLabel(rName, parseInt(roleId, 10));
@@ -469,6 +474,15 @@ export const VariableManager = {
   async upsertVariables(collection: VariableCollection, modeId: string, vars: [string, string, AnyObj, string, string, VariableScope[]?][], metadataMap: Map<string, Variable>, decisions: Record<string, "keep" | "revert"> = {}, driftDecisions: Record<string, "keep-figma" | "use-plugin"> = {}): Promise<void> {
     for (const [varName, varType, varValue, varDescription, tokenRef, targetScopes] of vars) {
       try {
+        // A metadataMap hit means this variable was already tagged with this exact
+        // tokenRef on a prior sync (or earlier in this one) — its pluginData is
+        // provably already correct, so the getPluginData/setPluginData check below
+        // (lines ~514) is redundant work in this case. Only the slow name-scan
+        // fallback inside findVariable can discover a variable that still needs
+        // its tokenRef verified/written. Captured before the call since findVariable
+        // itself populates the map on a fallback match, which would make this check
+        // always true if read afterward.
+        const wasAlreadyTagged = metadataMap.has(tokenRef);
         let variable = findVariable(collection, tokenRef, varName, metadataMap, this.cache.variables);
 
         if (variable && variable.resolvedType !== varType) {
@@ -506,7 +520,7 @@ export const VariableManager = {
               }
             }
           }
-          if (variable.getPluginData("tokenRef") !== tokenRef) {
+          if (!wasAlreadyTagged && variable.getPluginData("tokenRef") !== tokenRef) {
             variable.setPluginData("tokenRef", tokenRef);
           }
         }

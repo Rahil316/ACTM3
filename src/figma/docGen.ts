@@ -50,7 +50,7 @@ export const ExportFormatter = {
       if (!themeTokens) continue;
       for (const [colorName, roles] of Object.entries(themeTokens)) {
         for (const [roleId, variations] of Object.entries(roles as TokenVariations)) {
-          const roleObj: Role = (config.roles && config.roles[roleId]) || { name: roleId, shorthand: "" };
+          const roleObj: Role = (config.roles && config.roles[parseInt(roleId, 10)]) || { name: roleId, shorthand: "" };
           const roleName = roleObj.name || roleId;
           const variationDefs = roleObj.variations ?? config.variations ?? [];
           for (let i = 0; i < variationDefs.length; i++) {

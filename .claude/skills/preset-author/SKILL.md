@@ -12,7 +12,7 @@ the `Preset` schema exposes. You decide what the system *is made of*. You are no
 responsible for making the resulting colors look harmonic or maximally vivid/consistent
 — that is the **color-master** skill's job, and it does that job by running the
 engine's own tools (the stress-test harness, Preview, contrast math), not by eyeballing
-swatches. Hand off to color-master once the structure is in place (§13).
+swatches. Hand off to color-master once the structure is in place (§14).
 
 A preset is a **constraint structure**, not a color library. Its job is to make the
 right token easy to reach and the wrong one hard to reach. Design the constraints
@@ -444,6 +444,44 @@ shared ladder and each color still contributes a distinct first segment; the ris
 concentrated in `["role", "variation"]` (color omitted) or any custom subset that drops
 the one segment that would have kept two otherwise-identical triples apart.
 
+**Confirmed real, not hypothetical — this exact defect existed in two shipped
+presets (`atlassian.ts`, `material.ts`) until it was found and fixed.** Both use
+`tokenNameSegments: ["role", "variation"]` and encode the color identity into the
+*role name itself* (`background/brand`, `primary`, `outline`) with the expectation
+that Figma's folder nesting — not the joined path string — disambiguates which color a
+role belongs to. Because neither preset scoped those roles with `scopedColorIds`, every
+role applied to **every** color in the file (not just its intended one), so
+`background/brand.bold` computed once per color and every instance but one silently
+overwrote the last at file-export time (nesting-based disambiguation only exists for
+Figma sync, not for CSS/DTCG/Style Dictionary/etc., which key purely by the joined
+name string). 1,500 and 370 collisions respectively, all fixed by adding
+`scopedColorIds: [thatOneColor]` to every color-specific role — see git history on
+`atlassian.ts`/`material.ts` for the exact mapping. **The generalizable lesson: if a
+role's *name* implies a specific color (a color name appears in the role name, or the
+role only makes sense for one semantic color per the design system's own spec — check
+the file's own header-comment "color source" table if one exists, both `atlassian.ts`
+and `material.ts` already had one), that role needs `scopedColorIds` pinning it to
+that one color — "the role name already says which color" is not something the engine
+infers for you; every role still applies to every unscoped color by default.**
+
+**A role can also have *mixed* color sources across its own variations** — e.g.
+Material 3's `surface` role's `default`/`dim`/`bright`/`on` slots are Neutral-sourced
+but its `variant`/`on-variant` slots are Neutral-Variant-sourced (both per the file's
+own header comment). `scopedColorIds` scopes an entire role to one set of colors, so it
+cannot express "these 4 variations use color A, these other 2 use color B" within a
+single role — the fix is to **split the role in two**, one per color source, each with
+only the variations that actually belong to that source (see `material.ts`'s
+`surface`/`surface/variant` split, and `atlassian.ts`'s `blanket`/`blanket/selected`
+split, both applied when this defect was fixed). Check every role's variations against
+its own header-comment "color source" line before scoping — don't assume a role is
+single-sourced just because it has one name.
+
+**How this class of defect is actually caught**: none of the three validation layers
+above check for it (per this section's own opening paragraph) — it was found by
+running every shipped preset through the *full file-export pipeline* (not just
+`variableMaker()`) and checking for the resolver's own `duplicate-token-name` warning.
+See "Testing a preset's export output" below.
+
 ### Monotonicity is checked, but never blocks anything
 
 A dedicated function for this exists — `validateVariationContrasts()`
@@ -515,6 +553,16 @@ roles so you don't get a `status/success` token rendered against the error-red s
 too. Every color not in the list is simply skipped for that role (`_solveDirectMode`
 and `_processScaleMode` both check `role.scopedColorIds` first thing and `continue` if
 the current color isn't in it).
+
+**This isn't just about avoiding a wrong-seed render — an unscoped, color-named role
+silently breaks file export.** If a role's name already implies one specific color
+(`background/brand`, `text/danger`) but the role has no `scopedColorIds`, the engine
+still computes it against every color in the preset — each computation produces a
+different hex, but under a naming scheme that doesn't include the color as its own
+segment (`tokenNameSegments: ["role", "variation"]`, common when color identity is
+meant to live in Figma's folder nesting instead), every one of those computations
+collapses onto the identical exported token name. See "Token-path collisions" below —
+this is the confirmed, shipped-preset version of that risk, not a hypothetical.
 
 ---
 
@@ -781,7 +829,38 @@ ceiling on what's possible.
    or remove a `/` segment, immediately re-check its shorthand in the same edit — don't
    rely on the build to catch it later, because it won't.
 
-## 13. After the first draft: hand off to color-master
+## 13. Testing a preset's export output, not just its engine output
+
+`preset-data/run.ts` (color-master's tool, see that skill) runs every preset through
+`variableMaker()` directly — it proves the *colors* are correct (contrast, harmony) but
+never touches `buildExportBundle()`, so it cannot catch naming/export defects like the
+token-path collision above. **`export-test/scripts/run-presets-export-test.ts`** is the
+one that does: it runs every discovered preset through the exact same
+`translateConfig → variableMaker → applyExportOverrides → toExportConfig →
+buildExportBundle` pipeline a real file-export uses, writing output to
+`export-test/results/presets/<preset-id>/<format>/...` plus a `warnings.json` per
+preset (only written if non-empty) containing every anomaly `resolveExport()` detected
+(`empty-theme`, `role-no-variations`, `duplicate-token-name` — the exact check that
+caught the `atlassian.ts`/`material.ts` defect above).
+
+```
+npx tsx export-test/scripts/run-presets-export-test.ts              # every preset
+npx tsx export-test/scripts/run-presets-export-test.ts nmobile       # one, by id/basename/relative path
+```
+
+**Run this against your preset before calling it done**, the same way you'd run
+`preset-data/run.ts` — a preset with zero `preset-data` anomalies can still have a
+`duplicate-token-name` problem this catches and `preset-data` never will, precisely
+because the two tools check different layers (engine output vs. export-naming output).
+Zero entries in `warnings.json` (or no file at all) is the bar to clear.
+
+The sibling `export-test/scripts/run-export-test.ts` (synthetic fixtures, not real
+presets) also supports `--batch <name>` to run only fixtures whose id starts with
+`{name}/` (e.g. `--batch segments` for every `tokenNameSegments`-shape fixture) — useful
+if you're checking a specific mechanism (scoping, segment omission, shorthand) against
+the synthetic grid rather than your own preset.
+
+## 14. After the first draft: hand off to color-master
 
 A preset that builds cleanly and looks right in Preview for one seed color is not
 proven — you've fixed the *structure* (roles, variations, targets, naming, contrast
