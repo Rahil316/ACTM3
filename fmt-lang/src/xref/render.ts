@@ -9,7 +9,32 @@ import type { Dataset } from "../data/dataset";
 import type { AnyRecord } from "../data/shapes";
 import type { FileEntry, RenderedFileInstance } from "./fileEntry";
 import { planGeneration, type ExpandedNode } from "./resolveOrder";
-import { renderFile } from "../pipeline/stages";
+import { renderFile, type RenderFileInput } from "../pipeline/stages";
+import type { SegmentKind } from "../lang/defs/naming";
+import { interpolateTemplate } from "../lang/expr";
+import { buildBlockSet } from "../lang/blocks";
+
+// A real gap found closing the document schema against the plan: B.3/B.7's
+// "$segments" (a naming/arrange def tracking the project's own declared
+// tokenNameSegments order, instead of the template author hand-listing
+// color/role/variation again) can only be resolved against a real Dataset —
+// but document.ts's parseFmtLangDocument() runs before any Dataset exists
+// (Part E: syntax/semantic validation is deliberately Dataset-agnostic).
+// This is the one place in the pipeline that legitimately has both the
+// still-unresolved def AND the real Dataset at the same time, so it's where
+// the substitution actually happens — document.ts only ever preserves the
+// literal "$segments" marker through parsing, never guesses a fallback for it.
+function resolveDatasetSegments(render: NonNullable<FileEntry["render"]>, dataset: Dataset): NonNullable<FileEntry["render"]> {
+  const declaredSegments = dataset.tokenNameSegments as SegmentKind[];
+  const resolveSegments: RenderFileInput["compose"]["resolveSegments"] = (def) => {
+    if (def.segments === "$segments") return declaredSegments;
+    return Array.isArray(def.segments) ? def.segments : declaredSegments;
+  };
+  const arrange = render.arrange.groupBy === "$segments"
+    ? { ...render.arrange, groupBy: declaredSegments as string[] }
+    : render.arrange;
+  return { ...render, arrange, compose: { ...render.compose, resolveSegments } };
+}
 
 function recordsForShape(dataset: Dataset, shape: FileEntry["shape"], loopValue: string | undefined): readonly AnyRecord[] {
   switch (shape) {
@@ -59,7 +84,15 @@ export function renderAllFiles(entries: FileEntry[], dataset: Dataset): Rendered
     const pathWithRefs = substituteFileRefs(node.entry.path, renderedByRole);
     const path = node.loopValue !== undefined ? pathWithRefs.replace(/\$\{theme\}/g, node.loopValue) : pathWithRefs;
 
-    const content = renderFile({ ...node.entry.render, records });
+    // B.8's easy path — a whole-file literal template with ${tokens.*}-
+    // style block interpolation — is mutually exclusive with the expert
+    // path's select+sort+arrange+entryFormat combination (Part G's
+    // "content" field, see fileEntry.ts). Block objects are only ever built
+    // here (render time), never at parse time, for the same reason
+    // "$segments" resolution lives here — they need the real Dataset.
+    const content = node.entry.contentTemplate !== undefined
+      ? interpolateTemplate(node.entry.contentTemplate, { vars: buildBlockSet(dataset) })
+      : renderFile({ ...resolveDatasetSegments(node.entry.render!, dataset), records });
     const contentWithRefs = substituteFileRefs(content, renderedByRole);
 
     const instance: RenderedFileInstance = { role: node.role, loopValue: node.loopValue, path, content: contentWithRefs };

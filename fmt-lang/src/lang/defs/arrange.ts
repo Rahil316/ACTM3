@@ -12,10 +12,19 @@ export interface ArrangeDef {
   kind: ArrangeKind;
   join?: string; // "flat" only — default "\n"
   // "nested" only. Either an explicit ordered list of raw-field dot-paths to
-  // group by, or "$segments" (resolved by the caller against the Dataset's
-  // live tokenNameSegments before this module ever sees it — see B.7/B.3).
-  groupBy?: string[];
+  // group by, or the literal string "$segments" (resolved against the real
+  // Dataset's own tokenNameSegments at RENDER time — see xref/render.ts's
+  // resolveDatasetSegments — parse time has no Dataset yet). arrangeRecords()
+  // itself only ever receives the already-resolved array form.
+  groupBy?: string[] | "$segments";
   indent?: number; // spaces per nesting level, default 2
+  // B.11's group-header/footer hooks, document-facing: a template string
+  // (entryFormat.template's same `${...}`-interpolation mechanism) with an
+  // implicit `group` variable exposing the group's own raw key — e.g.
+  // "/* ${group} */" for a "// Primary"-style comment before each color's
+  // block. Only meaningful for kind: "nested"; ignored for "flat".
+  groupHeaderTemplate?: string;
+  groupFooterTemplate?: string;
 }
 
 export const DEFAULT_ARRANGE: ArrangeDef = { kind: "flat", join: "\n" };
@@ -63,6 +72,14 @@ function groupByField(records: AnyRecord[], field: string): NestedGroup[] {
 export function arrangeRecords(records: AnyRecord[], def: ArrangeDef): ArrangedTree {
   if (def.kind === "flat") {
     return { kind: "flat", records, join: def.join ?? "\n" };
+  }
+  // "$segments" must already be resolved to a real array by the time this
+  // runs (see xref/render.ts's resolveDatasetSegments) — this module has no
+  // Dataset to resolve it against itself. Caught here rather than silently
+  // misbehaving (a bare string would otherwise be iterated character-by-
+  // character below, since strings have a numeric .length too).
+  if (def.groupBy === "$segments") {
+    throw new Error(`arrangeRecords: groupBy "$segments" was never resolved against a real Dataset before reaching arrangeRecords — this is an engine-internal ordering bug, not a user config error.`);
   }
   const fields = def.groupBy ?? [];
   const indent = def.indent ?? 2;

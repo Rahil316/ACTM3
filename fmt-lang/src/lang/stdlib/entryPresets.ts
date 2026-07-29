@@ -61,10 +61,27 @@ export function markdownTableRow(e: FormattedEntry): string {
   return `| ${e.name} | ${e.value} | ${desc} |`;
 }
 
+// A JS/TS object-literal property — B.8's `tokensJs`/`tokensTs` block
+// default. Distinct from jsonKeyValue's nested {value,description} shape
+// (that one matches DTCG-style output); this is the flatter
+// `key: "value",` line real object-literal exports (fmtReactNative.ts-style)
+// actually use.
+export function jsObjectProperty(e: FormattedEntry): string {
+  return `  ${e.name}: ${JSON.stringify(e.value)},`;
+}
+
+// A flat JSON key-value line — B.8's `tokensJson` block default. Distinct
+// from jsonKeyValue (nested object per entry); this is `"key": "value",`.
+export function jsonKeyValueFlat(e: FormattedEntry): string {
+  return `  ${JSON.stringify(e.name)}: ${JSON.stringify(e.value)},`;
+}
+
 export const ENTRY_PRESETS = {
   cssKeyValue,
   scssMapEntry,
   jsonKeyValue,
+  jsonKeyValueFlat,
+  jsObjectProperty,
   xmlElement,
   xmlAttribute,
   swiftStaticLet,

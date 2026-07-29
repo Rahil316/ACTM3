@@ -60,6 +60,26 @@ function blankStringLiterals(text: string): string {
   return text.replace(STRING_LITERAL_RE, (m) => m[0] + " ".repeat(m.length - 2) + m[0]);
 }
 
+// A sort key's `by` is a single dot-path (not a boolean expression), so it's
+// checked directly against the shape's field schema rather than through
+// checkWhereFields's expression-oriented regex scan — same underlying
+// enforcement (§1: a field that doesn't exist for this shape is a semantic
+// error, never a silent no-op sort), simpler mechanism for a simpler input.
+export function checkSortKeyField(by: string, shape: ShapeTag, fieldPath: string): Diagnostic[] {
+  const schema = fieldSchemaFor(shape);
+  const outer = by.split(".")[0];
+  if (schema[outer]) return [];
+  return [
+    diagnostic(
+      "semantic",
+      "error",
+      "unknown-field",
+      `"${outer}" is not a field on shape "${shape}" (at ${fieldPath}: sort key "${by}").`,
+      fieldPath
+    ),
+  ];
+}
+
 export function checkWhereFields(where: string, shape: ShapeTag, fieldPath: string): Diagnostic[] {
   const schema = fieldSchemaFor(shape);
   const scanTarget = blankStringLiterals(where);

@@ -10,6 +10,6 @@ const outDir = path.join(__dirname, "..", "dist", "fmt-lang", "test", "fixtures"
 
 fs.mkdirSync(outDir, { recursive: true });
 for (const name of fs.readdirSync(srcDir)) {
-  if (!name.endsWith(".json")) continue;
+  if (!name.endsWith(".json") && !name.endsWith(".txt")) continue;
   fs.copyFileSync(path.join(srcDir, name), path.join(outDir, name));
 }

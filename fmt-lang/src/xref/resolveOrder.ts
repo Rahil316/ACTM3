@@ -33,9 +33,12 @@ export function expandFileEntries(entries: FileEntry[], dataset: Dataset): Expan
 // rendering template (before/after content, which is where render.ts's
 // substituteFileRefs actually looks for {{files.<role>.*}}) — scanning only
 // `path` would miss the common case (an aggregator's {{files.*.each}} lives
-// in `render.before`/`render.after`, never in its own output path).
+// in `render.before`/`render.after`, never in its own output path). B.8's
+// contentTemplate (the easy path) is its own separate text source — an
+// aggregator built from `${tokens.*}` blocks can still reference other
+// files by role via the same {{files.*}} syntax inside that template.
 function scanEntryRefs(entry: FileEntry): ReturnType<typeof scanFileRefs> {
-  const texts = [entry.path, entry.render.before ?? "", entry.render.after ?? ""];
+  const texts = [entry.path, entry.render?.before ?? "", entry.render?.after ?? "", entry.contentTemplate ?? ""];
   return texts.flatMap((t) => scanFileRefs(t));
 }
 

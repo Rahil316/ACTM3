@@ -164,13 +164,28 @@ class Parser {
 
   private parsePostfix(): unknown {
     let value = this.parsePrimary();
-    // dot-path field access, and function-call syntax for named builtins
-    // already resolved at parsePrimary (identifiers followed by "(" there).
+    // dot-path field access, PLUS method-call syntax (B.8's chainable
+    // getEntriesByColor('x') etc.) — a dotted name immediately followed by
+    // "(" calls that method on the current value rather than reading a
+    // field named after it. Function-call syntax for named BUILTINS (not
+    // methods on a value) is already resolved at parsePrimary, for bare
+    // (non-dotted) calls like slug(x).
     while (this.peek().kind === "punct" && this.peek().value === ".") {
       this.next();
       const field = this.next();
       if (field.kind !== "ident") throw new ExprSyntaxError(`Expected a field name after '.' at position ${field.pos}`, field.pos);
-      value = getField(value, field.value);
+      if (this.peek().kind === "punct" && this.peek().value === "(") {
+        this.next();
+        const args: unknown[] = [];
+        if (!(this.peek().kind === "punct" && this.peek().value === ")")) {
+          args.push(this.parseTernary());
+          while (this.peek().kind === "punct" && this.peek().value === ",") { this.next(); args.push(this.parseTernary()); }
+        }
+        this.expectPunct(")");
+        value = callMethod(value, field.value, args, field.pos);
+      } else {
+        value = getField(value, field.value);
+      }
     }
     return value;
   }
@@ -203,6 +218,22 @@ class Parser {
     }
     throw new ExprSyntaxError(`Unexpected token '${t.value || "<eof>"}' at position ${t.pos}`, t.pos);
   }
+}
+
+// Calls a real method on an already-resolved value (B.8's chaining —
+// getEntriesByColor('primary').getEntriesByRole('text')). Deliberately
+// narrow: only a genuine function-valued property is callable this way; a
+// null/undefined target (B.1a's propagation) or a non-function field of
+// that name throws a clear ExprSyntaxError rather than a raw TypeError, so
+// the error still looks like every other expression-evaluation failure a
+// document author might see.
+function callMethod(target: unknown, methodName: string, args: unknown[], pos: number): unknown {
+  if (target === null || target === undefined) return null;
+  const fn = (target as Record<string, unknown>)[methodName];
+  if (typeof fn !== "function") {
+    throw new ExprSyntaxError(`'${methodName}' is not a method on this value (at position ${pos}).`, pos);
+  }
+  return (fn as (...a: unknown[]) => unknown).apply(target, args);
 }
 
 function resolveIdent(name: string, ctx: ExprContext): unknown {
@@ -288,4 +319,41 @@ export function evaluate(src: string, ctx: ExprContext): unknown {
 export function evaluateString(src: string, ctx: ExprContext): string {
   const result = evaluate(src, ctx);
   return result === null || result === undefined ? "" : String(result);
+}
+
+// A real gap found closing the document schema against the plan: B.5
+// ("per-entry formatting... must be fully user-authorable, not fixed to a
+// small set of presets") and B.11 (conditional composition via ordinary
+// expressions embedded in template text) both require a TEMPLATE STRING —
+// literal text with `${expr}` spans interpolated — not a single bare
+// expression the way `where`/sort's `by` are. evaluate()/evaluateString()
+// only ever handled the latter. This is the former: finds each `${...}`
+// span, evaluates its contents against ctx, and substitutes the stringified
+// result back into the surrounding literal text.
+const INTERPOLATION_RE = /\$\{([^}]*)\}/g;
+
+export function interpolateTemplate(template: string, ctx: ExprContext): string {
+  return template.replace(INTERPOLATION_RE, (_match, exprSrc: string) => evaluateString(exprSrc, ctx));
+}
+
+// Scans a template string for `${...}` spans and validates each span's
+// CONTENTS as an expression (never the literal text around them) — the
+// interpolation-aware check syntax.ts's own comment anticipated but never
+// built. Position reported is within the template string (offset by the
+// span's own start), not global to the document, since callers already
+// track which document field this template came from.
+export function checkTemplateExpressionSyntax(template: string): ExprSyntaxError[] {
+  const errors: ExprSyntaxError[] = [];
+  let m: RegExpExecArray | null;
+  INTERPOLATION_RE.lastIndex = 0;
+  while ((m = INTERPOLATION_RE.exec(template)) !== null) {
+    try {
+      evaluate(m[1], {});
+    } catch (err) {
+      if (err instanceof ExprSyntaxError) {
+        errors.push(new ExprSyntaxError(err.message, m.index));
+      }
+    }
+  }
+  return errors;
 }

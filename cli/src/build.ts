@@ -38,7 +38,7 @@ function renderCustomTarget(target: ExportTarget, configDir: string, result: Eng
     ? target.custom
     : readFileSync(join(configDir, target.customFile!), "utf-8");
 
-  const { doc, diagnostics: parseDiagnostics } = parseFmtLangDocument(source);
+  const { doc, diagnostics: parseDiagnostics } = parseFmtLangDocument(source, configDir);
   const errors = parseDiagnostics.filter((d) => d.severity === "error");
   if (!doc || errors.length > 0) {
     throw new ConfigFileError(`Custom target failed to parse:\n${errors.map((d) => `  ✖ [${d.category}] ${d.message}`).join("\n")}`);

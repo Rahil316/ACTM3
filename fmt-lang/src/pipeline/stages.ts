@@ -19,6 +19,7 @@ import { arrangeRecords } from "../lang/defs/arrange";
 import type { ComposeOptions } from "./composeBlock";
 import { composeBlock } from "./composeBlock";
 import type { ExprContext } from "../lang/expr";
+import { interpolateTemplate } from "../lang/expr";
 
 export interface RenderFileInput {
   records: readonly AnyRecord[]; // already scoped to the right shape by the caller (Dataset access)
@@ -44,6 +45,23 @@ export function renderFile(input: RenderFileInput): string {
   // 3. ARRANGE
   const tree = arrangeRecords(sorted, input.arrange);
 
+  // B.11's group-header/footer hooks — derived here from the arrange def's
+  // OWN template fields (groupHeaderTemplate/groupFooterTemplate) into the
+  // real callbacks composeBlock (stage 6) calls, since ArrangeDef is where
+  // a document author declares them (they're conceptually "this nesting's
+  // own decoration"), but ComposeOptions is where the pipeline actually
+  // consumes a group-header hook. `group` is the implicit variable exposed
+  // inside the template, per B.11's own wording.
+  const compose: ComposeOptions = { ...input.compose };
+  if (input.arrange.groupHeaderTemplate) {
+    const tpl = input.arrange.groupHeaderTemplate;
+    compose.onGroupStart = (group: string) => interpolateTemplate(tpl, { vars: { group } });
+  }
+  if (input.arrange.groupFooterTemplate) {
+    const tpl = input.arrange.groupFooterTemplate;
+    compose.onGroupEnd = (group: string) => interpolateTemplate(tpl, { vars: { group } });
+  }
+
   // 4/5/6. FORMAT + COMPOSE-ENTRY + COMPOSE-BLOCK
-  return composeBlock(tree, input.compose, input.before, input.after);
+  return composeBlock(tree, compose, input.before, input.after);
 }

@@ -21,10 +21,11 @@ export interface ComposeOptions {
   entryFormat: EntryFormatFn;
   outputKind?: OutputKind;
   referenceStyle?: ReferenceStyle;
-  // B.11's group-header hook — called once per new group at each nesting
-  // level, with the raw group key; returns text to insert before that
-  // group's own entries (e.g. "/* {colorName} */"). Absent = no header.
+  // B.11's group-header hooks — called once per new group at each nesting
+  // level, with the raw group key; return text to insert before/after that
+  // group's own entries (e.g. "/* {colorName} */"). Absent = no header/footer.
   onGroupStart?: (groupKey: string, depth: number) => string;
+  onGroupEnd?: (groupKey: string, depth: number) => string;
 }
 
 function composeRecords(records: AnyRecord[], opts: ComposeOptions): string[] {
@@ -44,10 +45,11 @@ function composeTree(tree: ArrangedTree, opts: ComposeOptions, depth: number): s
   const parts: string[] = [];
   for (const group of tree.groups) {
     const header = opts.onGroupStart ? opts.onGroupStart(group.key, depth) : "";
+    const footer = opts.onGroupEnd ? opts.onGroupEnd(group.key, depth) : "";
     const childText = composeTree(group.children, opts, depth + 1);
     const indented = indentLines(childText, 0); // children already at their own level; indent applied per nesting level below
-    const block = header ? `${header}\n${indented}` : indented;
-    parts.push(block);
+    const pieces = [header, indented, footer].filter((p) => p.length > 0);
+    parts.push(pieces.join("\n"));
   }
   const joined = parts.join("\n");
   return depth === 0 ? joined : indentLines(joined, 1, " ".repeat(tree.indent));

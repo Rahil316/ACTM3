@@ -7,7 +7,8 @@ import type { FileEntry } from "../xref/fileEntry";
 import { renderAllFiles } from "../xref/render";
 import { checkCycles } from "../validate/runtime";
 import type { Diagnostic } from "../validate/diagnostics";
-import { hasErrors } from "../validate/diagnostics";
+import { diagnostic, hasErrors } from "../validate/diagnostics";
+import { BlockRuntimeError } from "../lang/blocks";
 
 export interface GeneratedFile {
   path: string;
@@ -37,7 +38,20 @@ export function generate(doc: ParsedDocument, dataset: Dataset): GenerateResult 
     return { files: [], diagnostics: cycleDiagnostics };
   }
 
-  const rendered = renderAllFiles(doc.files, dataset);
-  const files: GeneratedFile[] = rendered.map((r) => ({ path: r.path, content: r.content, role: r.role }));
-  return { files, diagnostics: cycleDiagnostics };
+  // B.8's block-level runtime errors (a nonexistent shape, an unmatched
+  // getEntriesBy* query) are thrown DURING template interpolation, deep
+  // inside expression evaluation — caught here, at the one place that
+  // orchestrates all rendering, and converted into a real `runtime`-
+  // category Diagnostic (Part E), never left as an uncaught exception or
+  // silently swallowed into empty output.
+  try {
+    const rendered = renderAllFiles(doc.files, dataset);
+    const files: GeneratedFile[] = rendered.map((r) => ({ path: r.path, content: r.content, role: r.role }));
+    return { files, diagnostics: cycleDiagnostics };
+  } catch (err) {
+    if (err instanceof BlockRuntimeError) {
+      return { files: [], diagnostics: [...cycleDiagnostics, diagnostic("runtime", "error", "block-runtime-error", err.message)] };
+    }
+    throw err;
+  }
 }

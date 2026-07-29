@@ -46,21 +46,22 @@ export function parseDocument(src: string): { value: unknown; diagnostics: Diagn
 }
 
 // Recursively finds every string value in a parsed document that LOOKS like
-// an expression-bearing field (where/join/template-adjacent keys) and
-// attempts to parse it with the expression grammar — surfacing an
-// ExprSyntaxError as a syntax diagnostic rather than letting it throw later
-// at render time. Deliberately conservative: only checks fields named
-// "where" (the one field that's ALWAYS a pure expression, never a template
-// string with embedded expressions) — template/join strings can embed
-// literal text around expressions and need the interpolation-aware scan
-// used elsewhere (kept out of scope here to avoid false positives on plain
-// text that merely contains "${...}"-looking substrings).
+// an expression-bearing field (where/join) and attempts to parse it with the
+// expression grammar — surfacing an ExprSyntaxError as a syntax diagnostic
+// rather than letting it throw later at render time. Deliberately
+// conservative: only checks fields named "where" or "join" (naming's
+// case:"custom" join expression, B.3) — both are ALWAYS a pure expression,
+// never a template string with embedded expressions. Template/entryFormat
+// strings can embed literal text around expressions and need the
+// interpolation-aware scan used elsewhere (checkTemplateExpressionSyntax,
+// kept out of scope here to avoid false positives on plain text that merely
+// contains "${...}"-looking substrings).
 export function checkExpressionSyntax(doc: unknown, path = ""): Diagnostic[] {
   const out: Diagnostic[] = [];
   if (doc === null || typeof doc !== "object") return out;
   for (const [key, value] of Object.entries(doc as Record<string, unknown>)) {
     const fieldPath = path ? `${path}.${key}` : key;
-    if (key === "where" && typeof value === "string") {
+    if ((key === "where" || key === "join") && typeof value === "string") {
       try {
         evaluate(value, {});
       } catch (err) {

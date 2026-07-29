@@ -66,6 +66,36 @@ test("preferShorthand falls back to the raw name when no shorthand is set", () =
   assert.equal(renderName(segs, def), "primary");
 });
 
+test("case:\"custom\" join expression — reproduces the plan's own worked example's actual BEHAVIOR (first join empty, every later one '__') via a per-gap expression with an implicit `index`, since the plan's literal .map()/.join() syntax isn't expressible in this deliberately array/lambda-free grammar — a real gap: `join` was declared in the plan/NamingDef comments but never implemented at all before this", () => {
+  const def: NamingDef = { ...DEFAULT_NAMING, case: "custom", join: "index == 0 ? '' : '__'" };
+  const segs = [
+    { kind: "role" as const, identity: id("text") },
+    { kind: "color" as const, identity: id("primary") },
+    { kind: "variation" as const, identity: id("default") },
+  ];
+  // role+color joined directly (index 0 -> ''), color+variation joined
+  // with '__' (index 1 -> '__') — matches the plan's own stated intent.
+  assert.equal(renderName(segs, def), "textprimary__default");
+});
+
+test("case:\"custom\" join expression overrides `separator` when both are set", () => {
+  const def: NamingDef = { ...DEFAULT_NAMING, case: "custom", separator: "-", join: "'::'" };
+  const segs = [
+    { kind: "color" as const, identity: id("primary") },
+    { kind: "role" as const, identity: id("text") },
+  ];
+  assert.equal(renderName(segs, def), "primary::text");
+});
+
+test("case:\"custom\" with no `join` at all still falls back to `separator` unchanged (regression: adding join support must not affect the existing separator-only path)", () => {
+  const def: NamingDef = { ...DEFAULT_NAMING, case: "custom", separator: "_" };
+  const segs = [
+    { kind: "color" as const, identity: id("primary") },
+    { kind: "role" as const, identity: id("text") },
+  ];
+  assert.equal(renderName(segs, def), "primary_text");
+});
+
 test("camelCase naming for JS-flavored blocks", () => {
   const def: NamingDef = { ...DEFAULT_NAMING, case: "camel" };
   const segs = [

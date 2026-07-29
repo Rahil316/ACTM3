@@ -19,7 +19,12 @@ export interface FileEntry {
   // loop variable, e.g. "src/tokens/${theme}.css") — resolved the same way
   // content is (Part C is agnostic to which string it's rendering).
   path: string;
-  render: Omit<RenderFileInput, "records">; // records supplied by the orchestrator per-shape/per-repetition
+  // Exactly one of `render` (the expert path: select/sort/arrange/
+  // entryFormat) or `contentTemplate` (B.8's easy path: a whole-file
+  // literal template with `${tokens.*}`/`${tokensJs.*}`/etc. block
+  // interpolation, see lang/blocks.ts) is set — never both, never neither.
+  render?: Omit<RenderFileInput, "records">; // records supplied by the orchestrator per-shape/per-repetition
+  contentTemplate?: string;
   shape: "token" | "scaleStep" | "sourceColor" | "sourceAlpha";
   // A files['role'] cross-reference this entry's path/content templates
   // contain, if any — populated by a static scan (graph.ts) before

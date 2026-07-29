@@ -5,17 +5,30 @@
 // match.
 import type { ShapeTag, IdentityLabel } from "../../data/shapes";
 import { applyCase, ensureNotLeadingDigit, type CaseStyle } from "../stdlib/casing";
+import { evaluateString } from "../expr";
 
 export type SegmentKind = "color" | "role" | "variation" | "step";
 
 export interface NamingDef {
   appliesTo: ShapeTag | ShapeTag[];
-  // Either an explicit ordered list, or "$segments" (resolved by the caller
-  // against Dataset.tokenNameSegments before this function ever sees it —
-  // see pipeline/formatValue.ts).
-  segments: SegmentKind[];
+  // Either an explicit ordered list, or the literal string "$segments"
+  // (resolved against the real Dataset's own tokenNameSegments at RENDER
+  // time — see xref/render.ts's resolveDatasetSegments — since parse time,
+  // where documents/defs are otherwise resolved, has no Dataset yet).
+  // renderName() itself only ever receives the already-resolved array form;
+  // "$segments" only appears in a def as originally authored/parsed.
+  segments: SegmentKind[] | "$segments";
   case: CaseStyle | "custom";
   separator?: string; // only meaningful for case: "custom" with no `join`
+  // "custom" only. An expression, evaluated once per GAP between two
+  // adjacent segments (not once for the whole array — the embedded
+  // expression language deliberately has no array methods/lambdas, B.1's
+  // trust/validation rationale), with an implicit `index` variable (the
+  // 0-based position of that gap). Its stringified result becomes the
+  // separator at that one position. Overrides `separator` when set —
+  // e.g. "index == 0 ? '' : '__'" joins the first two segments directly,
+  // every later pair with "__".
+  join?: string;
   // B.3's expandSlashSegments — splice each segment's own "/"-split identity
   // into the final list, in place, rather than treating the whole segment
   // as one atomic (possibly slash-containing) string.
@@ -60,7 +73,12 @@ export function renderName(
   const allStrings = segmentIdentities.flatMap((s) => resolveSegmentStrings(s.kind, s.identity, def));
   let out: string;
   if (def.case === "custom") {
-    out = allStrings.join(def.separator ?? "-");
+    if (def.join) {
+      const joinExpr = def.join;
+      out = allStrings.reduce((acc, seg, i) => (i === 0 ? seg : `${acc}${evaluateString(joinExpr, { vars: { index: i - 1 } })}${seg}`), "");
+    } else {
+      out = allStrings.join(def.separator ?? "-");
+    }
   } else {
     out = applyCase(def.case, allStrings);
   }
