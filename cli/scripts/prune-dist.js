@@ -14,6 +14,20 @@
 // package.json's "files"/.npmignore can't express this exclusion themselves:
 // when "files" is set, .npmignore is ignored entirely, and "files" doesn't
 // reliably support negated globs — hence a real prune step instead.
+//
+// state.js itself (not just themeShop.js/validatePreset.js) is pruned too,
+// which is why state.d.ts's own `export { PRESETS } from "./themeShop"`
+// value re-export is harmless despite themeShop.js/.d.ts both being deleted
+// below — nothing can ever require() state.js (it doesn't exist), so that
+// dangling value export is never actually reachable at runtime. state.d.ts
+// ITSELF is kept — real code imports ProjectStore's type from it.
+//
+// declaration: true (added alongside the "script" format's own published
+// types, see cli/package.json's "./script" export) started emitting .d.ts
+// files for themeShop.ts/validatePreset.ts too, alongside the .js files
+// this list already pruned — dead weight in the published tarball with no
+// real consumer (confirmed: nothing imports a type from either file
+// directly, only through state.ts's own already-covered re-export).
 
 const { rmSync, existsSync } = require("fs");
 const { join } = require("path");
@@ -25,7 +39,9 @@ const toRemove = [
   "src/shared/presets/presets.json",
   "src/shared/presets/raw",
   "src/shared/presets/themeShop.js",
+  "src/shared/presets/themeShop.d.ts",
   "src/shared/presets/validatePreset.js",
+  "src/shared/presets/validatePreset.d.ts",
 ];
 
 for (const rel of toRemove) {
