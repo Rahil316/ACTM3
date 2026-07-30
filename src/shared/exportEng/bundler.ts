@@ -127,12 +127,12 @@ export function buildExportBundle(
       }
     }
 
-    if (fmt === "rn-ts") {
-      files.push({ path: `${pre("rn-ts")}tokens/index.ts`, content: fmtReactNative.index(result, config), role: "index" });
+    if (fmt === "react-native") {
+      files.push({ path: `${pre("react-native")}tokens/index.ts`, content: fmtReactNative.index(result, config), role: "index" });
       const { tokens: rnTokens } = resolveExport(result, config);
       const rnScaleSteps = resolveScaleSteps(result, config);
       for (const theme of themeKeys) {
-        files.push({ path: `${pre("rn-ts")}tokens/${_slug(theme)}.ts`, content: fmtReactNative.theme(result, rnTokens, rnScaleSteps, config, theme), role: theme });
+        files.push({ path: `${pre("react-native")}tokens/${_slug(theme)}.ts`, content: fmtReactNative.theme(result, rnTokens, rnScaleSteps, config, theme), role: theme });
       }
     }
 

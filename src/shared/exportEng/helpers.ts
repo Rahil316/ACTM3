@@ -145,7 +145,7 @@ export function _setNestedSlug(root: Record<string, unknown>, segs: { type: "col
   _setNested(root, segs, leaf, (s) => _slug(s.label));
 }
 
-interface SourceColorEntry {
+export interface SourceColorEntry {
   colorName: string;
   cLabel: string;
   hex: string;
