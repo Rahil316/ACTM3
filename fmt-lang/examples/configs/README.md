@@ -20,6 +20,13 @@ Zero `defs` needed. Every token, pre-formatted via the `tokensCss` block,
 wrapped in a hand-written `:root { }` + `@media (prefers-color-scheme:
 dark)` structure — the shape a real hand-written CSS tokens file takes.
 
+Also demonstrates that `"format"` is optional on a target: this one has no
+`format` key at all — just `customFile`. `format: "custom"` is inferred
+automatically whenever `custom`/`customFile` is present and `format` is
+omitted. A target using a stock format (`css`, `scss`, etc.) still needs
+`format` set explicitly — the inference only ever fires for the two fields
+that are only meaningful for a fmt-lang target in the first place.
+
 ## `templates/expert-js.fmtlang.json5` — the expert path
 
 A camelCase JS object literal: `select` (light theme only), `sort`

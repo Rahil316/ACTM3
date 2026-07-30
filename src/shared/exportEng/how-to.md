@@ -64,13 +64,22 @@ npx token-wand build
 That's the whole mechanism. Everything below is about what `ctx` contains
 and the handful of rules your function needs to follow.
 
-## Only `.js` / `.cjs` files — not `.ts`
+## `.ts` support depends on your Node version
 
-The CLI is a plain, `tsc`-compiled Node package with no `ts-node`/`tsx`
-dependency of its own, so it can only `require()` a file Node itself
-understands natively. If `scriptFile` ends in `.ts`, the CLI stops with a
-clear error rather than trying (and silently failing) to load it. Two ways
-around this, both entirely under your own control:
+The CLI doesn't ship `ts-node`/`tsx` or any TypeScript loader of its own —
+it just calls `require()` on `scriptFile` and reports whatever actually
+happens. Whether that succeeds for a `.ts` file depends entirely on the
+Node runtime actually running the CLI, not on this package:
+
+- **Node 22.6+** (unflagged by default on newer versions) has built-in
+  TypeScript support — a `.ts` script with real type annotations,
+  `interface`s, etc. just works, with zero setup on your end.
+- **Older Node**, with no loader registered, can't parse real TypeScript
+  syntax — you'll get a clear error naming the problem and your options,
+  not a silent failure or a confusing raw stack trace.
+
+If you're on older Node, two ways around it, both entirely under your own
+control:
 
 - **Compile your `.ts` file to `.js`** before running the build (e.g. with
   `tsc` in your own project, or your existing build tooling), and point
@@ -81,6 +90,9 @@ around this, both entirely under your own control:
   ```
   (requires `ts-node` — or `tsx`, or any other loader — as a dependency in
   *your* project; this package deliberately doesn't ship one.)
+
+Either way, plain `.js`/`.cjs` scripts always work, on every supported Node
+version, with no caveats.
 
 Either way, you can still **write** the script in TypeScript for your own
 editing experience — `import type { ScriptExportContext } from
@@ -234,8 +246,11 @@ header).
 Before your function ever runs, and after it returns, the CLI catches the
 mistakes that would otherwise silently produce a broken or empty file:
 
-- **`scriptFile` doesn't exist**, or is a `.ts` file → a clear config error,
-  build stops before touching the project's data.
+- **`scriptFile` doesn't exist** → a clear config error, build stops before
+  touching the project's data.
+- **`scriptFile` is a `.ts` file your Node runtime can't parse** (real
+  TypeScript syntax, no built-in support, no loader registered) → a clear
+  error naming your Node version and the fix, not a raw `SyntaxError`.
 - **The file has no usable default export** (wrong file, or you used a
   named export instead of `export default`/`module.exports =`) → a clear
   error naming the problem.

@@ -62,18 +62,18 @@ function renderCustomTarget(target: ExportTarget, configDir: string, result: Eng
 // genuinely runs the target file as TypeScript/JavaScript — see
 // src/shared/exportEng/how-to.md.
 //
-// .ts files are NOT supported directly — Node can require() a .js/.cjs file
-// with zero setup, but not a raw .ts file without a TypeScript loader
-// registered (this CLI has no ts-node/tsx dependency, deliberately, to stay
-// a plain tsc-compiled package). A user with a .ts script either compiles it
-// to .js first, or registers their own loader (e.g. `node --require
-// ts-node/register`) before invoking this CLI — both are documented in
-// how-to.md, neither requires anything from this package.
+// .ts support is NOT guaranteed — it depends entirely on the Node version
+// actually running this CLI, not on anything this package ships. Node 22.6+
+// (unflagged by default on newer versions) can require() a .ts file
+// natively via its own built-in type-stripping; older Node can't, unless
+// the user has registered their own loader (ts-node/tsx via `node --require
+// .../register`) before invoking the CLI. This function doesn't pre-check
+// any of that by file extension — it just attempts require() and reports
+// whatever actually happens, since Node's own resolution behavior can't be
+// predicted from here (a registered loader transparently changes how
+// require() behaves before this code ever runs).
 function renderScriptTarget(target: ExportTarget, configDir: string, result: EngineResult, exportConfig: ExportConfig): ExportFile[] {
   const scriptPath = join(configDir, target.scriptFile!);
-  if (/\.tsx?$/.test(scriptPath)) {
-    throw new ConfigFileError(`targets[].scriptFile "${target.scriptFile}" is a .ts file — this CLI can only require() plain .js/.cjs files directly. Compile it to .js first, or register a TypeScript loader (e.g. "node --require ts-node/register") before running this CLI. See src/shared/exportEng/how-to.md.`);
-  }
   if (!existsSync(scriptPath)) {
     throw new ConfigFileError(`targets[].scriptFile "${target.scriptFile}" was not found at ${scriptPath}.`);
   }
@@ -83,6 +83,21 @@ function renderScriptTarget(target: ExportTarget, configDir: string, result: Eng
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     scriptModule = require(scriptPath);
   } catch (err) {
+    // A .ts file with real TypeScript-only syntax (type annotations,
+    // `interface`, etc.), on a Node version with no built-in stripping and
+    // no loader registered, fails as a plain SyntaxError — confirmed
+    // directly (Node treats an unrecognized extension as a require()
+    // candidate at all, then just tries to parse it as JS; there's no
+    // distinct "unknown extension" error code for this case, despite that
+    // being the intuitive guess). Detected by extension + error type,
+    // rather than message text (wording isn't stable across Node versions),
+    // and only used to add a more actionable hint — the original error is
+    // still included, since a SyntaxError can also mean a real bug in a
+    // plain .js file that has nothing to do with TypeScript at all.
+    const isTs = /\.tsx?$/.test(scriptPath);
+    if (isTs && err instanceof SyntaxError) {
+      throw new ConfigFileError(`targets[].scriptFile "${target.scriptFile}" is a .ts file, and this Node runtime (${process.version}) couldn't parse it — likely TypeScript-only syntax with no built-in stripping available and no loader registered. Either upgrade to a Node version with built-in TypeScript support (22.6+), compile it to .js first, or register a loader (e.g. "node --require ts-node/register") before running this CLI. See src/shared/exportEng/how-to.md.\n\nOriginal error: ${err.message}`);
+    }
     throw new ConfigFileError(`Script target "${target.scriptFile}" threw while loading:\n${(err as Error).stack ?? (err as Error).message}`);
   }
 

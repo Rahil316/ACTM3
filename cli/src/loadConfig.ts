@@ -191,6 +191,19 @@ export function loadConfigFile(path: string): TokenWandConfig {
       throw new ConfigFileError(`targets[${i}] in ${path} must be an object with "format" and "outDir".`);
     }
     const t = target as Partial<ExportTarget>;
+
+    // `format` can be omitted entirely when `custom`/`customFile` is set —
+    // their presence is only ever meaningful for a fmt-lang target, so
+    // there's nothing else `format` could legitimately mean here. This is
+    // presence-based inference only (never string-sniffing `format`'s own
+    // value) — a target that DOES set `format` still goes through the exact
+    // same strict spelling check as before, so a stock-format typo still
+    // produces today's clear "must be one of: ..." error rather than being
+    // silently reinterpreted as something else.
+    if (t.format === undefined && (typeof t.custom === "string" || typeof t.customFile === "string")) {
+      t.format = "custom";
+    }
+
     if (typeof t.format !== "string") {
       throw new ConfigFileError(`targets[${i}].format in ${path} must be one of: ${SUPPORTED_FORMATS.join(", ")} (got ${JSON.stringify(t.format)}).`);
     }

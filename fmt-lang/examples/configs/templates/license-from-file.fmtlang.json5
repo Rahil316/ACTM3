@@ -1,0 +1,20 @@
+// Demonstrates defs.static's `file` form — pulling static text in from a
+// SEPARATE file on disk, instead of writing it inline as `text`. The path
+// is resolved relative to THIS document's own directory, read once per
+// generation run (not once per entry).
+{
+  "defs": {
+    "static": {
+      "license": { "file": "./LICENSE-HEADER.txt" }
+    }
+  },
+  "files": [
+    {
+      "role": "tokens",
+      "shape": "token",
+      "path": "tokens.css",
+      "before": "license",
+      "content": ":root {\n${tokensCss.theme.light}\n}\n"
+    }
+  ]
+}
