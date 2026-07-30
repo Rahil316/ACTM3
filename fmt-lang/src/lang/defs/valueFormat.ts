@@ -9,6 +9,15 @@ export type ValueKind = "hex" | "hexa" | "argbHex" | "rgba" | "hsla";
 export interface ValueFormatDef {
   appliesTo: ShapeTag | ShapeTag[];
   kind: ValueKind;
+  // §2's "Reference vs. literal values" — only meaningful for shape "token".
+  // When set AND the token is an alias into a scale step (tokenRef !=
+  // null), the token renders via this reference template instead of `kind`'s
+  // literal formatting. A token with no tokenRef always renders literally,
+  // regardless of whether this is set. A real gap closed here: this was
+  // fully implemented through the pipeline (composeEntry/formatValue) but
+  // had no document-facing field at all — a document author could not
+  // reach it.
+  referenceStyle?: ReferenceStyle;
 }
 
 export const DEFAULT_VALUE_FORMAT: ValueFormatDef = {

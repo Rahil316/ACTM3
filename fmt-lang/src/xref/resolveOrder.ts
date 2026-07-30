@@ -11,6 +11,12 @@ export interface ExpandedNode {
   role: string;
   entry: FileEntry;
   loopValue?: string; // e.g. a theme name, when entry.repeatFor is set
+  // The 0-based position of `loopValue` within Dataset.themeNames — needed
+  // for path expressions like Android's real qualifier-directory convention
+  // ("the FIRST declared theme gets no suffix at all, regardless of its
+  // name" — a rule that can't be expressed by matching the theme's name
+  // alone). Undefined when entry.repeatFor is unset, same as loopValue.
+  loopIndex?: number;
 }
 
 // One entry with repeatFor: "themes" becomes one node per Dataset.themeNames
@@ -19,9 +25,9 @@ export function expandFileEntries(entries: FileEntry[], dataset: Dataset): Expan
   const out: ExpandedNode[] = [];
   for (const entry of entries) {
     if (entry.repeatFor) {
-      for (const themeName of dataset.themeNames) {
-        out.push({ id: nodeId(entry.role, themeName), role: entry.role, entry, loopValue: themeName });
-      }
+      dataset.themeNames.forEach((themeName, loopIndex) => {
+        out.push({ id: nodeId(entry.role, themeName), role: entry.role, entry, loopValue: themeName, loopIndex });
+      });
     } else {
       out.push({ id: nodeId(entry.role), role: entry.role, entry });
     }

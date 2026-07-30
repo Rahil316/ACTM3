@@ -39,6 +39,7 @@ design discussion.
 - [Validation and diagnostics](#validation-and-diagnostics)
 - [The rendering pipeline, stage by stage](#the-rendering-pipeline-stage-by-stage)
 - [Public API (`src/index.ts`)](#public-api-srcindexts)
+- [Known limitations](#known-limitations)
 - [Package structure](#package-structure)
 - [Developing this package](#developing-this-package)
 
@@ -391,6 +392,28 @@ A `sourceColor`'s base value is always literal hex regardless of
 `valueFormat`, matching every real built-in formatter's own convention —
 only alpha variants and tokens go through the selected `kind`.
 
+**Reference vs. literal values.** A `token` that's an alias into a scale
+step (its `tokenRef` field is set) still renders its literal resolved value
+by default. Set `referenceStyle` on the `valueFormat` to render it as a
+reference expression instead:
+
+```json5
+"valueFormat": {
+  "appliesTo": "token", "kind": "hex",
+  "referenceStyle": { "kind": "reference", "template": "scale.${refColor}.${refStep}" }
+}
+```
+
+```
+No referenceStyle:    --primary-text-default: #0f998a;
+With referenceStyle:  --primary-text-default: scale.Primary.500;
+```
+
+`${refColor}`/`${refStep}` inside the template are substituted from the
+token's own `tokenRef` (Token Wand's internal `"{colorName}-{stepName}"`
+format), not the general expression language. A token with no `tokenRef`
+always renders literally, regardless of whether `referenceStyle` is set.
+
 ### `entryFormat`
 
 Either a named/dotted reference, or inline:
@@ -519,20 +542,35 @@ declared.
 ## Multi-file documents and cross-file references
 
 One `files[]` entry with `repeatFor` produces one file **per theme**,
-automatically, without hand-authoring each repetition:
+automatically, without hand-authoring each repetition. The loop variable
+(named by `as`) is available as a real expression inside `path` and
+`content` alike, alongside `<as>Index` — its 0-based position among the
+project's declared themes:
 
 ```json5
 {
   "role": "theme-file",
   "repeatFor": { "over": "themes", "as": "theme" },
   "path": "tokens/${theme}.css",
-  "content": "${tokens.theme.light}"
+  "content": "${tokens.getEntriesByTheme(theme)}"
 }
 ```
 
-(Note: inside `path`, `${theme}` is the loop variable's literal
-substitution, not the expression language — it always matches the current
-repetition's theme name.)
+`path` goes through the exact same expression-interpolation engine as
+`content`/`before`/`after`/`entryFormat.template` — not just a literal
+`${theme}` substitution — so conditional path logic is expressible
+directly. For example, Android's real resource-qualifier convention (the
+first declared theme gets no suffix at all, `"dark"` gets `values-night`,
+anything else gets `values-<name>`) is one `path` expression:
+
+```json5
+{
+  "role": "res",
+  "repeatFor": { "over": "themes", "as": "theme" },
+  "path": "res/${theme == 'dark' ? 'values-night' : (themeIndex == 0 ? 'values' : 'values-' + theme)}/colors.xml",
+  "content": "${tokensCss.getEntriesByTheme(theme)}"
+}
+```
 
 A separate, non-repeated entry can reference another entry's real, finally
 resolved output by role, using `{{files.<role>.*}}`:
@@ -683,6 +721,38 @@ const results = write(files, { outDir: "src/tokens", dryRun: false });
 `GeneratedFile` (`{ path, content, role? }`) deliberately mirrors the main
 plugin's own `ExportFile` shape structurally (not by import), so the CLI
 bridge stays a thin, obvious mapping.
+
+## Known limitations
+
+Honest, current gaps — small, and each either structurally moot today or a
+documented scope boundary rather than a silently-broken promise:
+
+- **`repeatFor` only supports `{ "over": "themes" }`.** There's no way to
+  repeat a file once per an arbitrary named `select` result — themes are
+  currently the only project-declared enumerable dimension the Dataset
+  exposes, so this is moot in practice today.
+- **Upstream `ResolveWarning`s (`empty-theme`, `role-no-variations`,
+  `duplicate-token-name`) don't automatically reach `generate()`'s
+  diagnostics.** They're available if you call `buildDatasetWithWarnings()`
+  yourself instead of `buildDataset()`, but a document run through the
+  normal `parseFmtLangDocument` → `generate` flow (including via the CLI)
+  won't see them as `Diagnostic`s today.
+- **No `arrange kind: "custom"`.** Only `"flat"` and `"nested"` (fixed
+  field-list or `"$segments"` grouping) exist — no arbitrary recursive
+  structural-composition expression for nesting shapes those two don't
+  cover.
+- **No "unused `defs.*` entry" or "select matches zero records" warnings.**
+  Both would be non-fatal `warning`-category diagnostics; neither exists
+  yet.
+- **The expert path's `select`/`where` can't reference a `repeatFor` loop
+  variable.** `path` and `content` both can (see
+  [Multi-file documents](#multi-file-documents-and-cross-file-references)),
+  but a `repeatFor` entry using `select`/`sort`/`arrange`/`entryFormat`
+  instead of `content` has no way to write `"where": "theme == theme"` (or
+  similar) referencing its own loop variable — only the `token` shape gets
+  automatic per-theme scoping (via the entry's `shape` alone), and
+  `scaleStep`/`sourceColor`/`sourceAlpha` don't have a theme dimension in
+  the data model at all, so this is narrow in practice.
 
 ## Package structure
 

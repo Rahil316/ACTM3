@@ -49,19 +49,34 @@ export function parseDocument(src: string): { value: unknown; diagnostics: Diagn
 // an expression-bearing field (where/join) and attempts to parse it with the
 // expression grammar — surfacing an ExprSyntaxError as a syntax diagnostic
 // rather than letting it throw later at render time. Deliberately
-// conservative: only checks fields named "where" or "join" (naming's
-// case:"custom" join expression, B.3) — both are ALWAYS a pure expression,
-// never a template string with embedded expressions. Template/entryFormat
-// strings can embed literal text around expressions and need the
-// interpolation-aware scan used elsewhere (checkTemplateExpressionSyntax,
-// kept out of scope here to avoid false positives on plain text that merely
-// contains "${...}"-looking substrings).
+// conservative: only checks `where`, and `join` when its containing object
+// also has a `case` sibling field (NamingDef's own required discriminant —
+// see lang/defs/naming.ts). Both are ALWAYS a pure expression, never a
+// template string with embedded expressions. Template/entryFormat strings
+// can embed literal text around expressions and need the interpolation-aware
+// scan used elsewhere (checkTemplateExpressionSyntax, kept out of scope here
+// to avoid false positives on plain text that merely contains
+// "${...}"-looking substrings).
+//
+// A real bug found running actual templates through the CLI: `join` isn't
+// unique to naming defs — ArrangeDef.join (arrange.ts) is a plain separator
+// STRING (e.g. "\n"), never an expression, but shares the field name with
+// NamingDef's real join expression (B.3). The original version of this
+// function checked the key name alone, so a perfectly valid
+// `"arrange": { "join": "\n" }` failed to parse with a bogus
+// "Unexpected token '<eof>'" syntax error. ArrangeDef has no `case` field at
+// all, so gating on the sibling `case` field's presence disambiguates the
+// two without needing to track "which def kind is this nested under"
+// through the recursion.
 export function checkExpressionSyntax(doc: unknown, path = ""): Diagnostic[] {
   const out: Diagnostic[] = [];
   if (doc === null || typeof doc !== "object") return out;
-  for (const [key, value] of Object.entries(doc as Record<string, unknown>)) {
+  const record = doc as Record<string, unknown>;
+  const isNamingDef = typeof record.case === "string";
+  for (const [key, value] of Object.entries(record)) {
     const fieldPath = path ? `${path}.${key}` : key;
-    if ((key === "where" || key === "join") && typeof value === "string") {
+    const isExpressionField = key === "where" || (key === "join" && isNamingDef);
+    if (isExpressionField && typeof value === "string") {
       try {
         evaluate(value, {});
       } catch (err) {

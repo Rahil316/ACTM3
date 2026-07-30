@@ -1,0 +1,28 @@
+// Template 4 — a non-token output: a plain-language Markdown palette
+// report, sorted by contrast ratio descending, proving the engine has no
+// hidden assumption that output must look like a design-token config file.
+{
+  "defs": {
+    "sort": {
+      "byContrastDesc": { "keys": [{ "by": "contrast.ratio", "order": "numeric", "direction": "desc" }] }
+    },
+    "arrange": {
+      "flat": { "kind": "flat", "join": "\n" }
+    },
+    "entryFormat": {
+      "row": { "preset": "markdownTableRow" }
+    }
+  },
+  "files": [
+    {
+      "role": "report",
+      "shape": "token",
+      "path": "palette-report.md",
+      "select": { "shape": "token", "where": "theme == 'light'" },
+      "sort": "byContrastDesc",
+      "arrange": "flat",
+      "entryFormat": "row",
+      "before": "# nMobile — Light Theme Palette Report\n\nEvery light-theme token, sorted by contrast ratio (highest first).\n\n| Token | Color | Notes |\n|---|---|---|"
+    }
+  ]
+}

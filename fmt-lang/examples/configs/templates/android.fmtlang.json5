@@ -1,0 +1,26 @@
+// Template 5 — Android resource-qualifier directory routing via a `path`
+// expression: the first declared theme gets the default `values/`
+// directory (no suffix), "Dark" gets `values-night`, anything else would
+// fall through to `values-<name>`.
+{
+  "defs": {
+    "naming": {
+      "snakeToken": { "appliesTo": "token", "segments": ["color", "role", "variation"], "case": "snake" }
+    },
+    "entryFormat": {
+      "androidColor": { "preset": "kotlinAndroidResource" }
+    }
+  },
+  "files": [
+    {
+      "role": "colors",
+      "shape": "token",
+      "repeatFor": { "over": "themes", "as": "theme" },
+      "path": "res/${theme == 'dark' ? 'values-night' : (themeIndex == 0 ? 'values' : 'values-' + theme)}/colors.xml",
+      "naming": "snakeToken",
+      "entryFormat": "androidColor",
+      "before": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>",
+      "after": "</resources>"
+    }
+  ]
+}

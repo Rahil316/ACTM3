@@ -117,12 +117,40 @@ class Block {
 // The `.theme.<name>` / `.theme[0]`-style scoping surface — a plain object
 // whose OWN properties are theme names (so `tokens.theme.light` is real
 // property access, not a method call), each already a themed Block.
+//
+// A real bug found running an actual template: `${tokens.theme.Light}`
+// (wrong case — this project's real theme is "light", not "Light") rendered
+// as silent EMPTY TEXT, not the runtime error B.8 explicitly requires ("an
+// unmatched query is a runtime error, never silently empty"). Root cause:
+// expr.ts's getField() is one shared function serving BOTH plain record
+// field access (where B.1a's rule correctly wants silent null-propagation
+// for a missing/optional field) and, incidentally, traversal into this very
+// object — a missing theme name looked exactly like a missing optional
+// field to that shared code path, so it silently propagated null instead of
+// erroring. Wrapping this object in a Proxy (rather than touching
+// getField()'s general B.1a semantics, which are correct for real record
+// data) closes the gap at its actual source: only THIS object's own
+// property access needs different behavior.
 function themeScope(dataset: Dataset, flavor: BlockFlavor): Record<string, Block> {
   const out: Record<string, Block> = {};
   for (const themeName of dataset.themeNames) {
     out[themeName] = new Block(dataset, flavor, "token", [{ kind: "theme", query: themeName }]);
   }
-  return out;
+  // expr.ts's getField() (the shared record-field accessor every `.`-chain
+  // in the expression language goes through) checks `field in rec` BEFORE
+  // ever reading `rec[field]` — so the `has` trap, not `get`, is the one
+  // that actually determines the outcome for a call site shaped like
+  // getField()'s. Throwing from `get` alone would never fire, since
+  // getField() short-circuits to its own `null` return the moment `has`
+  // says "no" without ever calling the property getter.
+  return new Proxy(out, {
+    has(target, prop) {
+      if (typeof prop !== "string") return prop in target;
+      if (prop in target) return true;
+      if (prop === "data" || prop === "then") return false; // getField()'s own ".data" probe, and thenable-checks — never real theme names
+      throw new BlockRuntimeError(`"tokens.theme.${prop}" was referenced, but "${prop}" is not a real theme in this project. Declared themes: ${dataset.themeNames.map((t) => `"${t}"`).join(", ")}.`);
+    },
+  });
 }
 
 // The top-level block object exposed to the expression language as a bare

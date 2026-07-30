@@ -1,0 +1,14 @@
+// Template 1 — the easy path. Zero `defs` needed: every light/dark token,
+// pre-formatted, wrapped in plain CSS custom-property blocks with a
+// dark-mode media-query fallback, the same shape a hand-written CSS
+// tokens file would actually take.
+{
+  "files": [
+    {
+      "role": "tokens",
+      "shape": "token",
+      "path": "tokens.css",
+      "content": ":root {\n${tokensCss.theme.light}\n}\n\n@media (prefers-color-scheme: dark) {\n  :root {\n${tokensCss.theme.dark}\n  }\n}\n"
+    }
+  ]
+}

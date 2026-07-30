@@ -20,6 +20,7 @@ import type { ExportFile, ExportConfig } from "../../src/shared/exportEng/types"
 import type { ProjectStore } from "../../src/ui/types/state";
 import { ConfigFileError, type TokenWandConfig, type ExportTarget } from "./loadConfig";
 import { buildDataset, parseFmtLangDocument, generate } from "../../fmt-lang/src/index";
+import { buildScriptExportContext, runScriptExport, ScriptExportError } from "../../src/shared/exportEng/scriptExport";
 
 function runEngine(config: PluginConfig): EngineResult {
   const pass1 = variableMaker(config);
@@ -52,6 +53,56 @@ function renderCustomTarget(target: ExportTarget, configDir: string, result: Eng
   }
 
   return files;
+}
+
+// The other bridge into a user-authored export — a plain .ts/.js file whose
+// default export is a function receiving the same pre-resolved data every
+// built-in fmt*.ts formatter gets (scriptExport.ts's ScriptExportContext).
+// Unlike "custom" (fmt-lang's JSON5 document, never executed as code), this
+// genuinely runs the target file as TypeScript/JavaScript — see
+// src/shared/exportEng/how-to.md.
+//
+// .ts files are NOT supported directly — Node can require() a .js/.cjs file
+// with zero setup, but not a raw .ts file without a TypeScript loader
+// registered (this CLI has no ts-node/tsx dependency, deliberately, to stay
+// a plain tsc-compiled package). A user with a .ts script either compiles it
+// to .js first, or registers their own loader (e.g. `node --require
+// ts-node/register`) before invoking this CLI — both are documented in
+// how-to.md, neither requires anything from this package.
+function renderScriptTarget(target: ExportTarget, configDir: string, result: EngineResult, exportConfig: ExportConfig): ExportFile[] {
+  const scriptPath = join(configDir, target.scriptFile!);
+  if (/\.tsx?$/.test(scriptPath)) {
+    throw new ConfigFileError(`targets[].scriptFile "${target.scriptFile}" is a .ts file — this CLI can only require() plain .js/.cjs files directly. Compile it to .js first, or register a TypeScript loader (e.g. "node --require ts-node/register") before running this CLI. See src/shared/exportEng/how-to.md.`);
+  }
+  if (!existsSync(scriptPath)) {
+    throw new ConfigFileError(`targets[].scriptFile "${target.scriptFile}" was not found at ${scriptPath}.`);
+  }
+
+  let scriptModule: unknown;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    scriptModule = require(scriptPath);
+  } catch (err) {
+    throw new ConfigFileError(`Script target "${target.scriptFile}" threw while loading:\n${(err as Error).stack ?? (err as Error).message}`);
+  }
+
+  const ctx = buildScriptExportContext(result, exportConfig);
+  let output: string | { path: string; content: string }[];
+  try {
+    output = runScriptExport(scriptModule, ctx);
+  } catch (err) {
+    if (err instanceof ScriptExportError) throw new ConfigFileError(`Script target "${target.scriptFile}" failed: ${err.message}`);
+    throw err; // a bug in the user's OWN script logic — propagate with its real stack trace, don't disguise it
+  }
+
+  if (typeof output === "string") {
+    return [{ path: "output", content: output, role: "output" }];
+  }
+  // Each returned file's own basename doubles as its `role` — gives
+  // fileNames[] overrides something to target, and gets the same
+  // repeated-role collision protection as any other multi-file format
+  // (see the repeatedRoles logic in runBuild) if two files ever share a name.
+  return output.map((f) => ({ path: f.path, content: f.content, role: basenameOf(f.path) }));
 }
 
 export type FileWriteStatus = "created" | "updated" | "unchanged";
@@ -97,13 +148,15 @@ export function runBuild(projectStore: ProjectStore, config: TokenWandConfig, op
   // stripped below with the same leading-segment logic, since we always
   // know which format a given call's files belong to.
   //
-  // "custom" is deliberately excluded from this shared, once-per-format
-  // pass — buildExportBundle doesn't know how to produce it (Part G of the
-  // plan), and unlike the 8 built-ins, two different "custom" targets can
-  // be two entirely different fmt-lang documents, so it's resolved
-  // per-target below instead of shared across every target with that format.
+  // "custom"/"script" are deliberately excluded from this shared,
+  // once-per-format pass — buildExportBundle doesn't know how to produce
+  // either (Part G of the plan; scriptExport.ts's own bridge), and unlike
+  // the 8 built-ins, two different targets using the SAME one of these two
+  // formats can be two entirely different documents/script files, so each
+  // is resolved per-target below instead of shared across every target
+  // with that format.
   const written: BuildResult["written"] = [];
-  const formats = Array.from(new Set(config.targets.map((t) => t.format))).filter((f) => f !== "custom");
+  const formats = Array.from(new Set(config.targets.map((t) => t.format))).filter((f) => f !== "custom" && f !== "script");
   const filesByFormat: Record<string, ExportFile[]> = {};
   for (const format of formats) {
     const files = buildExportBundle(result, exportConfig, [format], projectStore as unknown as Record<string, unknown>, Date.now());
@@ -113,13 +166,37 @@ export function runBuild(projectStore: ProjectStore, config: TokenWandConfig, op
   const rolesByTargetIndex: BuildResult["rolesByTargetIndex"] = config.targets.map(() => []);
 
   config.targets.forEach((target, targetIndex) => {
-    const formatFiles = target.format === "custom" ? renderCustomTarget(target, options.configDir, result, exportConfig) : (filesByFormat[target.format] ?? []);
+    const formatFiles = target.format === "custom" ? renderCustomTarget(target, options.configDir, result, exportConfig)
+      : target.format === "script" ? renderScriptTarget(target, options.configDir, result, exportConfig)
+      : (filesByFormat[target.format] ?? []);
+
+    // fileNames[role] (both applying an existing override and the
+    // auto-backfill below) assumes one role produces exactly one file per
+    // target run — true for all 8 built-in formats, but false for a custom
+    // fmt-lang target using repeatFor, where a single role (e.g.
+    // "theme-file") legitimately produces multiple GeneratedFile instances
+    // (one per theme). A real bug found running an actual repeatFor
+    // template through the CLI: once cli.ts's auto-backfill wrote a single
+    // fileNames["theme-file"] string into wand.config.json, every future
+    // build collapsed EVERY repeated instance of that role onto the same
+    // literal filename, silently clobbering all but one (dark.css and
+    // light.css both landing at the same path). A role that appears more
+    // than once in this target's own output is exactly the repeatFor
+    // signal — fileNames intentionally does nothing for it; the document's
+    // own `path` templating (${theme}/themeIndex, etc.) is the real,
+    // expressive way to control each repeated instance's name.
+    const roleCounts = new Map<string, number>();
     for (const file of formatFiles) {
-      if (file.role) {
+      if (file.role) roleCounts.set(file.role, (roleCounts.get(file.role) ?? 0) + 1);
+    }
+    const repeatedRoles = new Set([...roleCounts].filter(([, count]) => count > 1).map(([role]) => role));
+
+    for (const file of formatFiles) {
+      if (file.role && !repeatedRoles.has(file.role)) {
         rolesByTargetIndex[targetIndex].push({ role: file.role, defaultFileName: basenameOf(file.path) });
       }
 
-      const renamedPath = applyFileNameOverride(file.path, file.role, target.fileNames);
+      const renamedPath = file.role && repeatedRoles.has(file.role) ? file.path : applyFileNameOverride(file.path, file.role, target.fileNames);
       const fullPath = join(target.outDir, renamedPath);
 
       let status: FileWriteStatus;

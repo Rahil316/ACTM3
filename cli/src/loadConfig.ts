@@ -65,10 +65,11 @@ export const FORMATS: FormatInfo[] = [
   { full: "android", short: "android", description: "values/ + values-night/ color resources" },
   { full: "react-native", short: "rn", description: "Typed token objects with useTokens() helper" },
   { full: "custom", short: "custom", description: "User-authored fmt-lang template — see custom/customFile" },
+  { full: "script", short: "script", description: "User-authored plain TS/JS export function — see scriptFile" },
 ];
 
 export const SUPPORTED_FORMATS = FORMATS.map((f) => f.full) as SupportedFormat[];
-export type SupportedFormat = "css" | "scss" | "tailwind" | "dtcg" | "style-dictionary" | "ios-swift" | "android" | "react-native" | "custom";
+export type SupportedFormat = "css" | "scss" | "tailwind" | "dtcg" | "style-dictionary" | "ios-swift" | "android" | "react-native" | "custom" | "script";
 
 const FORMAT_BY_SPELLING = new Map<string, SupportedFormat>(FORMATS.flatMap((f) => [
   [f.full, f.full],
@@ -105,6 +106,16 @@ export interface ExportTarget {
   // never interprets it itself. See fmt-lang/README.md and the plan's Part G.
   custom?: string;
   customFile?: string;
+  // Only used when format is "script" — required. A path (resolved relative
+  // to this config file's own directory, same convention as wandFile/
+  // customFile) to a plain .ts/.js file whose default export is a function
+  // receiving the SAME pre-resolved data every built-in formatter gets
+  // (see src/shared/exportEng/scriptExport.ts's ScriptExportContext) and
+  // returning either one file's content (a string) or several files at
+  // once (a ScriptExportFile[]). Unlike "custom" (a JSON5 config document,
+  // never executed as code), a "script" file genuinely runs as TypeScript/
+  // JavaScript — see src/shared/exportEng/how-to.md before using this.
+  scriptFile?: string;
 }
 
 export interface TokenWandConfig {
@@ -211,6 +222,9 @@ export function loadConfigFile(path: string): TokenWandConfig {
       if (hasCustom === hasCustomFile) {
         throw new ConfigFileError(`targets[${i}] in ${path} has format "custom" — exactly one of "custom" (inline fmt-lang document) or "customFile" (a path to one) is required (got ${hasCustom ? "both" : "neither"}).`);
       }
+    }
+    if (t.format === "script" && (typeof t.scriptFile !== "string" || t.scriptFile.length === 0)) {
+      throw new ConfigFileError(`targets[${i}] in ${path} has format "script" — a non-empty "scriptFile" path is required.`);
     }
   });
 

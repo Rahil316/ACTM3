@@ -385,6 +385,29 @@ test("public API: referencing tokens.scale on a Direct-mode project (no scale co
   assert.match(errors[0].message, /no scale collection/);
 });
 
+test("public API: ${tokens.theme.<nonexistent>} is a runtime error, never silently empty text — a real bug found running an actual template (wrong-case \"Light\" instead of the project's real \"light\") that silently produced an EMPTY :root block with zero diagnostics. Root cause: getField() (B.1a's shared record-field accessor) treated a missing theme-scope property exactly like a missing optional record field, silently propagating null instead of raising the runtime error B.8 requires — fixed via a Proxy on themeScope() so a missing key throws BlockRuntimeError specifically for this object, without touching B.1a's correct null-propagation for real record data", () => {
+  const dataset = buildDataset(fixture.result, fixture.exportConfig);
+  assert.deepEqual(dataset.themeNames, ["dark", "light"], "sanity check: the fixture's real theme names are lowercase");
+  const doc = parseFmtLangDocument(`{"files":[{"role":"t","shape":"token","path":"t.css","content":"\${tokens.theme.Light}"}]}`).doc!;
+  const { files, diagnostics } = generate(doc, dataset);
+  assert.equal(files.length, 0, "must abort generation, never emit a silently-empty file");
+  const errors = diagnostics.filter((d) => d.severity === "error");
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].category, "runtime");
+  assert.equal(errors[0].code, "block-runtime-error");
+  assert.match(errors[0].message, /Light/);
+  assert.match(errors[0].message, /"dark", "light"/, "the error should list the real declared theme names to help the user spot the mistake");
+});
+
+test("public API: a real theme reference (correct case) inside tokens.theme.* still works exactly as before — proving the Proxy fix doesn't break legitimate access", () => {
+  const dataset = buildDataset(fixture.result, fixture.exportConfig);
+  const doc = parseFmtLangDocument(`{"files":[{"role":"t","shape":"token","path":"t.css","content":"\${tokens.theme.light}"}]}`).doc!;
+  const { files, diagnostics } = generate(doc, dataset);
+  assert.equal(diagnostics.filter((d) => d.severity === "error").length, 0);
+  assert.equal(files.length, 1);
+  assert.ok(files[0].content.length > 0);
+});
+
 test("public API: an unmatched getEntriesByColor query (a color that doesn't exist, by either name or shorthand) is a runtime error, never silently empty", () => {
   const dataset = buildDataset(fixture.result, fixture.exportConfig);
   const doc = parseFmtLangDocument(`{"files":[{"role":"t","shape":"token","path":"t.css","content":"\${tokens.theme.light.getEntriesByColor('DoesNotExist')}"}]}`).doc!;
@@ -532,4 +555,115 @@ test("public API: a token-only field (contrast.ratio) referenced in a scaleStep-
   assert.equal(errors.length, 1);
   assert.equal(errors[0].category, "semantic");
   assert.equal(errors[0].code, "unknown-field");
+});
+
+test("public API: valueFormat.referenceStyle — an aliased token renders as a reference expression instead of its literal value, document-facing — a real gap: fully implemented through the pipeline (formatValue/composeEntry) but no RawDoc field ever exposed it", () => {
+  // The nmobile fixture is Direct mode (tokenRef always null) — a real
+  // tokenRef only exists in Scale mode, so a minimal inline Scale-mode
+  // EngineResult/ExportConfig is built here, same approach used by
+  // style-dictionary-global.test.ts's acceptance test.
+  const scaleModeResult: EngineResult = {
+    tokens: {
+      light: {
+        Primary: {
+          "0": {
+            "0": { tokenName: "primary-text-default", color: "Primary", role: "text", variation: "default", roleDescription: "", tokenRef: "Primary-500", value: "#0f998a", contrast: { ratio: null, rating: null } },
+          },
+        },
+      },
+    },
+    errors: { critical: [], warnings: [], notices: [] },
+    scales: { Primary: { "500": { value: "#0f998a", stepName: "500", shorthand: "500", description: "", contrast: {} } } },
+  };
+  const scaleModeConfig: ExportConfig = {
+    name: "Scale Test",
+    colors: [{ name: "Primary", shorthand: "pr", value: "#0f998a" }],
+    variations: [{ name: "default", shorthand: "default" }],
+    includeColorScalesCollection: true,
+    includeSourceColors: false,
+  };
+
+  const literalDoc = parseFmtLangDocument(`{"files":[{"role":"t","shape":"token","path":"t.css"}]}`).doc!;
+  const referenceDocSrc = `{
+    "defs": {
+      "valueFormat": {
+        "aliasAware": { "appliesTo": "token", "kind": "hex",
+          "referenceStyle": { "kind": "reference", "template": "scale.\${refColor}.\${refStep}" } }
+      }
+    },
+    "files": [{ "role": "t", "shape": "token", "path": "t.css", "valueFormat": "aliasAware" }]
+  }`;
+  const { doc: referenceDoc, diagnostics } = parseFmtLangDocument(referenceDocSrc);
+  assert.equal(diagnostics.length, 0);
+  assert.ok(referenceDoc);
+
+  const dataset = buildDataset(scaleModeResult, scaleModeConfig);
+  const literal = generate(literalDoc, dataset).files[0].content;
+  const reference = generate(referenceDoc!, dataset).files[0].content;
+
+  assert.match(literal, /#0f998a/i, "with no referenceStyle set, an aliased token still renders its literal resolved value");
+  assert.match(reference, /scale\.Primary\.500/, "with referenceStyle set, the SAME aliased token renders as a reference expression instead");
+  assert.doesNotMatch(reference, /#0f998a/i, "the reference form must replace the literal value entirely, not just append to it");
+});
+
+test("public API: files[].path supports full expression interpolation, not just a literal ${theme} substitution — a real gap: real Android output uses conditional qualifier-directory logic (first declared theme -> no suffix, 'dark' -> 'values-night', anything else -> 'values-<name>') that a hardcoded regex-replace couldn't express at all", () => {
+  // This fixture's declared theme order is ["dark", "light"] (dark first) —
+  // deliberately NOT alphabetical or "light first", so this test proves the
+  // rule is genuinely "whichever theme is declared first" (themeIndex == 0),
+  // not a name-based special case for "light".
+  const docSrc = `{
+    "files": [{
+      "role": "res", "shape": "token",
+      "repeatFor": { "over": "themes", "as": "theme" },
+      "path": "res/\${theme == 'dark' ? 'values-night' : (themeIndex == 0 ? 'values' : 'values-' + theme)}/colors.xml",
+      "content": "\${tokensCss.theme.dark}"
+    }]
+  }`;
+  const { doc, diagnostics } = parseFmtLangDocument(docSrc);
+  assert.equal(diagnostics.length, 0);
+  assert.ok(doc);
+
+  const dataset = buildDataset(fixture.result, fixture.exportConfig);
+  const { files, diagnostics: genDiagnostics } = generate(doc!, dataset);
+  assert.equal(genDiagnostics.length, 0);
+  assert.equal(files.length, 2);
+
+  const paths = files.map((f) => f.path).sort();
+  // themeNames is ["dark", "light"] here — "dark" (index 0) matches the
+  // name-based rule ("dark" -> values-night); "light" (index 1, NOT index
+  // 0) falls through to the generic "values-<name>" rule, since being
+  // first only helps the THEME THAT IS actually first, not every theme.
+  assert.deepEqual(paths, ["res/values-light/colors.xml", "res/values-night/colors.xml"]);
+});
+
+test("public API: the same path expression's themeIndex-based rule (not a name-based guess) is what actually fires — proven with a synthetic 3-theme dataset where the first theme is NOT named 'dark'", () => {
+  const threeThemeResult: EngineResult = {
+    tokens: {
+      brand: { Primary: { "0": { "0": { tokenName: "primary-text-default", color: "Primary", role: "text", variation: "default", roleDescription: "", tokenRef: null, value: "#111111", contrast: { ratio: null, rating: null } } } } },
+      dark: { Primary: { "0": { "0": { tokenName: "primary-text-default", color: "Primary", role: "text", variation: "default", roleDescription: "", tokenRef: null, value: "#222222", contrast: { ratio: null, rating: null } } } } },
+      sepia: { Primary: { "0": { "0": { tokenName: "primary-text-default", color: "Primary", role: "text", variation: "default", roleDescription: "", tokenRef: null, value: "#333333", contrast: { ratio: null, rating: null } } } } },
+    },
+    errors: { critical: [], warnings: [], notices: [] },
+    scales: {},
+  };
+  const threeThemeConfig: ExportConfig = { name: "Multi", colors: [{ name: "Primary", shorthand: "pr", value: "#111111" }], variations: [{ name: "default", shorthand: "default" }] };
+
+  const docSrc = `{
+    "files": [{
+      "role": "res", "shape": "token",
+      "repeatFor": { "over": "themes", "as": "theme" },
+      "path": "res/\${theme == 'dark' ? 'values-night' : (themeIndex == 0 ? 'values' : 'values-' + theme)}/colors.xml",
+      "content": "\${tokensCss.getEntriesByTheme(theme)}"
+    }]
+  }`;
+  const { doc, diagnostics } = parseFmtLangDocument(docSrc);
+  assert.equal(diagnostics.length, 0);
+
+  const dataset = buildDataset(threeThemeResult, threeThemeConfig);
+  const { files } = generate(doc!, dataset);
+  const paths = files.map((f) => f.path).sort();
+  // "brand" is declared FIRST (themeIndex 0) -> "values", despite not being
+  // named "light"/"default"/anything special. "dark" -> "values-night" via
+  // the name-based rule. "sepia" -> "values-sepia" via the fallback rule.
+  assert.deepEqual(paths, ["res/values-night/colors.xml", "res/values-sepia/colors.xml", "res/values/colors.xml"]);
 });

@@ -55,6 +55,22 @@ test("SYNTAX: a valid expression produces no diagnostics", () => {
   assert.deepEqual(checkExpressionSyntax(doc), []);
 });
 
+test("SYNTAX: arrange.join (a plain separator STRING, e.g. \"\\n\") must never be mistaken for naming's join EXPRESSION — a real bug found running actual templates through the CLI: a valid \"arrange\": { \"kind\": \"flat\", \"join\": \"\\n\" } was failing to parse with a bogus 'Unexpected token' error, because the original check matched any field literally named \"join\" regardless of which def kind it belonged to", () => {
+  const doc = { defs: { arrange: { flat: { kind: "flat", join: "\n" } } } };
+  assert.deepEqual(checkExpressionSyntax(doc), []);
+});
+
+test("SYNTAX: naming's REAL join expression (only present alongside a sibling `case` field, per NamingDef) is still checked as an expression", () => {
+  const validJoin = { defs: { naming: { custom: { case: "custom", join: "index == 0 ? '' : '__'" } } } };
+  assert.deepEqual(checkExpressionSyntax(validJoin), []);
+
+  const invalidJoin = { defs: { naming: { custom: { case: "custom", join: "index ==" } } } };
+  const diags = checkExpressionSyntax(invalidJoin);
+  assert.equal(diags.length, 1);
+  assert.equal(diags[0].category, "syntax");
+  assert.ok(diags[0].loc!.includes("join"));
+});
+
 // ── Category 2: Semantic (shape mismatch + cross-file refs) ────────────────
 
 test("SEMANTIC: a token-shaped entryFormat applied to a scaleStep selection is a shape-mismatch error", () => {

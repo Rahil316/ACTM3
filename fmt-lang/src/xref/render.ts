@@ -82,7 +82,26 @@ export function renderAllFiles(entries: FileEntry[], dataset: Dataset): Rendered
     const records = recordsForShape(dataset, node.entry.shape, node.loopValue);
 
     const pathWithRefs = substituteFileRefs(node.entry.path, renderedByRole);
-    const path = node.loopValue !== undefined ? pathWithRefs.replace(/\$\{theme\}/g, node.loopValue) : pathWithRefs;
+    // A real gap found re-reading §2's "file naming and location must be as
+    // customizable as the file's content": this used to be a hardcoded
+    // "${theme}" regex-replace — no expressions, no conditionals — so a
+    // path pattern needing logic (e.g. Android's REAL qualifier-directory
+    // convention: the first declared theme gets no suffix regardless of its
+    // name, "dark" gets "values-night", everything else gets "values-
+    // <slug>") could not be expressed at all. `path` now goes through the
+    // SAME interpolateTemplate() content/before/after/entryFormat.template
+    // already use, with the repeatFor loop variable (named by `as`, default
+    // "theme") and its 0-based position (`<as>Index`) available as vars.
+    const loopVarName = node.entry.repeatFor?.as ?? "theme";
+    // The repeatFor loop variable (and its 0-based position, "<as>Index")
+    // must be available EVERYWHERE a template can reference it — path,
+    // AND content/before/after — not just path. A real gap found alongside
+    // the path-templating fix above: content's own interpolateTemplate call
+    // only ever passed buildBlockSet(dataset) as vars, so a repeatFor
+    // entry's own loop variable (e.g. "${tokens.getEntriesByTheme(theme)}")
+    // resolved to undefined/null inside its OWN content template.
+    const loopVars = node.loopValue !== undefined ? { [loopVarName]: node.loopValue, [`${loopVarName}Index`]: node.loopIndex } : {};
+    const path = node.loopValue !== undefined ? interpolateTemplate(pathWithRefs, { vars: loopVars }) : pathWithRefs;
 
     // B.8's easy path — a whole-file literal template with ${tokens.*}-
     // style block interpolation — is mutually exclusive with the expert
@@ -91,7 +110,7 @@ export function renderAllFiles(entries: FileEntry[], dataset: Dataset): Rendered
     // here (render time), never at parse time, for the same reason
     // "$segments" resolution lives here — they need the real Dataset.
     const content = node.entry.contentTemplate !== undefined
-      ? interpolateTemplate(node.entry.contentTemplate, { vars: buildBlockSet(dataset) })
+      ? interpolateTemplate(node.entry.contentTemplate, { vars: { ...buildBlockSet(dataset), ...loopVars } })
       : renderFile({ ...resolveDatasetSegments(node.entry.render!, dataset), records });
     const contentWithRefs = substituteFileRefs(content, renderedByRole);
 

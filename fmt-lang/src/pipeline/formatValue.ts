@@ -47,9 +47,14 @@ function formatSourceName(record: SourceColorRecord | SourceAlphaRecord, def: Na
 }
 
 // tokenRefOrLiteral-style conditional valueFormat (B.4) is expressed as an
-// ordinary ValueFormatDef with an optional `reference` escape hatch — a
+// ordinary ValueFormatDef with an optional `referenceStyle` escape hatch — a
 // token whose tokenRef is set renders as a reference expression instead of
-// its literal value, when a ReferenceStyle is supplied.
+// its literal value, when a ReferenceStyle is supplied. The explicit
+// `referenceStyle` parameter (still accepted for callers that build a
+// ResolveNamingSegments-style pipeline directly against pipeline/stages.ts,
+// e.g. the acceptance tests) takes priority when given; otherwise it falls
+// back to valueFormatDef.referenceStyle — the document-facing field a real
+// files[].valueFormat/defs.valueFormat.* entry actually sets.
 export function formatValue(
   record: AnyRecord,
   namingDef: NamingDef,
@@ -57,11 +62,12 @@ export function formatValue(
   resolveSegments: ResolveNamingSegments,
   referenceStyle?: ReferenceStyle
 ): FormattedEntry {
+  const effectiveReferenceStyle = referenceStyle ?? valueFormatDef.referenceStyle;
   switch (record.__shape) {
     case "token": {
       const name = formatTokenName(record, namingDef, resolveSegments);
-      const value = record.data.tokenRef && referenceStyle
-        ? renderReference(record.data.tokenRef, referenceStyle)
+      const value = record.data.tokenRef && effectiveReferenceStyle
+        ? renderReference(record.data.tokenRef, effectiveReferenceStyle)
         : renderLiteralValue(record.data.value, valueFormatDef);
       return { name, value, isAdjusted: record.data.isAdjusted };
     }

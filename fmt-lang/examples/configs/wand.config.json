@@ -1,0 +1,10 @@
+{
+  "wandFile": "./nmobile.wand",
+  "targets": [
+    { "format": "custom", "outDir": "./out/1-easy-css", "customFile": "./templates/easy-css.fmtlang.json5" },
+    { "format": "custom", "outDir": "./out/2-expert-js", "customFile": "./templates/expert-js.fmtlang.json5" },
+    { "format": "custom", "outDir": "./out/3-multi-file", "customFile": "./templates/multi-file.fmtlang.json5" },
+    { "format": "custom", "outDir": "./out/4-report", "customFile": "./templates/report.fmtlang.json5" },
+    { "format": "custom", "outDir": "./out/5-android", "customFile": "./templates/android.fmtlang.json5" }
+  ]
+}
