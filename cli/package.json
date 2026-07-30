@@ -4,7 +4,7 @@
   "description": "Generate design token files (CSS, SCSS, Android, React Native, and more) from a Token Wand .wand file, without opening Figma.",
   "type": "commonjs",
   "bin": {
-    "token-wand": "./bin/token-wand.js"
+    "token-wand": "bin/token-wand.js"
   },
   "exports": {
     ".": "./dist/cli/src/cli.js",
