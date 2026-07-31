@@ -39,6 +39,18 @@ export interface ScriptExportFile {
 
 export type ScriptExportFn = (ctx: ScriptExportContext) => string | ScriptExportFile[];
 
+// A script file's OPTIONAL second export — `module.exports.meta = {...}` (or
+// `export const meta = {...}` compiled from TS/ESM) alongside its default
+// function. Read by cli/src/cli.ts's `add script --script <file>` (see
+// readScriptMeta there) and copied into the new wand.config.json export
+// entry, so a script can prescribe its own outDir/fileNames instead of
+// whoever adds it having to guess. Both fields optional; an absent `meta`
+// export entirely is the common case and changes nothing.
+export interface ScriptMeta {
+  outDir?: string;
+  fileNames?: Record<string, string>;
+}
+
 export function buildScriptExportContext(result: EngineResult, config: ExportConfig): ScriptExportContext {
   const { tokens } = resolveExport(result, config);
   const scaleSteps = resolveScaleSteps(result, config);

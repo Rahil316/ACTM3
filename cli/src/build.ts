@@ -47,10 +47,10 @@ function runEngine(config: PluginConfig): EngineResult {
 // whatever actually happens, since Node's own resolution behavior can't be
 // predicted from here (a registered loader transparently changes how
 // require() behaves before this code ever runs).
-function renderScriptTarget(target: ExportTarget, configDir: string, result: EngineResult, exportConfig: ExportConfig): ExportFile[] {
-  const scriptPath = join(configDir, target.scriptFile!);
+function renderScriptTarget(exp: ExportTarget, configDir: string, result: EngineResult, exportConfig: ExportConfig): ExportFile[] {
+  const scriptPath = join(configDir, exp.scriptFile!);
   if (!existsSync(scriptPath)) {
-    throw new ConfigFileError(`targets[].scriptFile "${target.scriptFile}" was not found at ${scriptPath}.`);
+    throw new ConfigFileError(`exports[].scriptFile "${exp.scriptFile}" was not found at ${scriptPath}.`);
   }
 
   let scriptModule: unknown;
@@ -71,9 +71,9 @@ function renderScriptTarget(target: ExportTarget, configDir: string, result: Eng
     // plain .js file that has nothing to do with TypeScript at all.
     const isTs = /\.tsx?$/.test(scriptPath);
     if (isTs && err instanceof SyntaxError) {
-      throw new ConfigFileError(`targets[].scriptFile "${target.scriptFile}" is a .ts file, and this Node runtime (${process.version}) couldn't parse it — likely TypeScript-only syntax with no built-in stripping available and no loader registered. Either upgrade to a Node version with built-in TypeScript support (22.6+), compile it to .js first, or register a loader (e.g. "node --require ts-node/register") before running this CLI. Run "npx token-wand script-help" for the full guide.\n\nOriginal error: ${err.message}`);
+      throw new ConfigFileError(`exports[].scriptFile "${exp.scriptFile}" is a .ts file, and this Node runtime (${process.version}) couldn't parse it — likely TypeScript-only syntax with no built-in stripping available and no loader registered. Either upgrade to a Node version with built-in TypeScript support (22.6+), compile it to .js first, or register a loader (e.g. "node --require ts-node/register") before running this CLI. Run "npx token-wand script-help" for the full guide.\n\nOriginal error: ${err.message}`);
     }
-    throw new ConfigFileError(`Script target "${target.scriptFile}" threw while loading:\n${(err as Error).stack ?? (err as Error).message}`);
+    throw new ConfigFileError(`Script export "${exp.scriptFile}" threw while loading:\n${(err as Error).stack ?? (err as Error).message}`);
   }
 
   const ctx = buildScriptExportContext(result, exportConfig);
@@ -81,7 +81,7 @@ function renderScriptTarget(target: ExportTarget, configDir: string, result: Eng
   try {
     output = runScriptExport(scriptModule, ctx);
   } catch (err) {
-    if (err instanceof ScriptExportError) throw new ConfigFileError(`Script target "${target.scriptFile}" failed: ${err.message}`);
+    if (err instanceof ScriptExportError) throw new ConfigFileError(`Script export "${exp.scriptFile}" failed: ${err.message}`);
     throw err; // a bug in the user's OWN script logic — propagate with its real stack trace, don't disguise it
   }
 
@@ -98,23 +98,26 @@ function renderScriptTarget(target: ExportTarget, configDir: string, result: Eng
 export type FileWriteStatus = "created" | "updated" | "unchanged";
 
 export interface BuildResult {
-  // One entry per config target — the file it would write/wrote, and which
+  // One entry per config export — the file it would write/wrote, and which
   // outDir it belongs to. Used for both the real write and --dry-run's preview.
   // status is computed by comparing against what's already on disk (even in
   // --dry-run, so the preview is accurate) — "created" = path didn't exist,
   // "updated" = existed with different content, "unchanged" = existed with
   // identical content (still counted so a re-run isn't silently invisible,
   // but never written to disk).
-  written: Array<{ format: string; outDir: string; path: string; status: FileWriteStatus }>;
-  // Every {role, defaultFileName} this run actually produced, per target
-  // index in config.targets — lets the caller (cli.ts) backfill a target's
+  // `role` is undefined for a repeated-role "script" file (see repeatedRoles
+  // below) — those don't get fileNames handling, so there's no single role
+  // key to show either.
+  written: Array<{ format: string; outDir: string; path: string; status: FileWriteStatus; role: string | undefined }>;
+  // Every {role, defaultFileName} this run actually produced, per export
+  // index in config.exports — lets the caller (cli.ts) backfill an export's
   // missing fileNames map with today's default names, without build.ts
-  // itself touching token-wand.config.json (that's cli.ts's job; build.ts
+  // itself touching wand.config.json (that's cli.ts's job; build.ts
   // stays scoped to "generate files").
-  rolesByTargetIndex: Array<{ role: string; defaultFileName: string }[]>;
+  rolesByExportIndex: Array<{ role: string; defaultFileName: string }[]>;
   // Naming anomalies resolveExport() detects (empty theme, a role with an
   // explicit empty variations list, two tokens colliding on the same output
-  // name) — independent of which formats/targets are configured, since
+  // name) — independent of which formats/exports are configured, since
   // they're properties of the resolved token set itself, not of any one
   // format's output. cli.ts prints these; every other buildExportBundle()
   // caller (Figma sandbox, standalone UI, export-test) doesn't yet, so this
@@ -122,17 +125,17 @@ export interface BuildResult {
   warnings: ResolveWarning[];
 }
 
-export function runBuild(projectStore: ProjectStore, config: ResolvedTokenWandConfig, options: { dryRun: boolean; configDir: string; targetIndices?: Set<number> }): BuildResult {
+export function runBuild(projectStore: ProjectStore, config: ResolvedTokenWandConfig, options: { dryRun: boolean; configDir: string; exportIndices?: Set<number> }): BuildResult {
   const pluginConfig = translateConfig(projectStore);
   const result = runEngine(pluginConfig);
   const exportConfig = toExportConfig(applyExportOverrides(pluginConfig, projectStore));
   const { warnings } = resolveExport(result, exportConfig);
 
-  // options.targetIndices, when set, restricts the build to just those
-  // targets[] positions (the same 0-based indices `list` and the interactive
+  // options.exportIndices, when set, restricts the build to just those
+  // exports[] positions (the same 0-based indices `list` and the interactive
   // build picker both show) — cli.ts's selective-build flow. Undefined means
-  // "every target," today's default/only behavior before this option existed.
-  const selectedIndices = options.targetIndices;
+  // "every export," today's default/only behavior before this option existed.
+  const selectedIndices = options.exportIndices;
   const isSelected = (i: number) => selectedIndices === undefined || selectedIndices.has(i);
 
   // buildExportBundle is called once per BUILT-IN format (not once for
@@ -147,15 +150,15 @@ export function runBuild(projectStore: ProjectStore, config: ResolvedTokenWandCo
   //
   // "script" is deliberately excluded from this shared, once-per-format
   // pass — buildExportBundle doesn't know how to produce it (scriptExport.ts's
-  // own bridge), and unlike the 8 built-ins, two different "script" targets
-  // can be two entirely different script files, so it's resolved per-target
-  // below instead of shared across every target with that format.
+  // own bridge), and unlike the 8 built-ins, two different "script" exports
+  // can be two entirely different script files, so it's resolved per-export
+  // below instead of shared across every export with that format.
   //
-  // Only formats actually needed by a SELECTED target are computed at all —
+  // Only formats actually needed by a SELECTED export are computed at all —
   // not just filtered out afterward — so a selective build genuinely skips
-  // the work for deselected targets, not just their file-writing step.
+  // the work for deselected exports, not just their file-writing step.
   const written: BuildResult["written"] = [];
-  const neededFormats = new Set(config.targets.filter((_, i) => isSelected(i)).map((t) => t.format));
+  const neededFormats = new Set(config.exports.filter((_, i) => isSelected(i)).map((t) => t.format));
   const formats = Array.from(neededFormats).filter((f) => f !== "script");
   const filesByFormat: Record<string, ExportFile[]> = {};
   for (const format of formats) {
@@ -163,17 +166,17 @@ export function runBuild(projectStore: ProjectStore, config: ResolvedTokenWandCo
     filesByFormat[format] = files.map((f) => ({ ...f, path: stripLeadingSegment(f.path) }));
   }
 
-  const rolesByTargetIndex: BuildResult["rolesByTargetIndex"] = config.targets.map(() => []);
+  const rolesByExportIndex: BuildResult["rolesByExportIndex"] = config.exports.map(() => []);
 
-  config.targets.forEach((target, targetIndex) => {
-    if (!isSelected(targetIndex)) return;
-    const formatFiles = target.format === "script" ? renderScriptTarget(target, options.configDir, result, exportConfig) : (filesByFormat[target.format] ?? []);
+  config.exports.forEach((exp, exportIndex) => {
+    if (!isSelected(exportIndex)) return;
+    const formatFiles = exp.format === "script" ? renderScriptTarget(exp, options.configDir, result, exportConfig) : (filesByFormat[exp.format] ?? []);
 
     // fileNames[role] (both applying an existing override and the
     // auto-backfill below) assumes one role produces exactly one file per
-    // target run — true for all 8 built-in formats, but false for a
-    // "script" target whose function returns several files sharing a
-    // conceptual role. A role that appears more than once in this target's
+    // export run — true for all 8 built-in formats, but false for a
+    // "script" export whose function returns several files sharing a
+    // conceptual role. A role that appears more than once in this export's
     // own output gets no fileNames handling at all — a single fileNames[role]
     // string can't meaningfully rename N different files; the script's own
     // returned `path` values are the real, expressive way to control each
@@ -186,11 +189,11 @@ export function runBuild(projectStore: ProjectStore, config: ResolvedTokenWandCo
 
     for (const file of formatFiles) {
       if (file.role && !repeatedRoles.has(file.role)) {
-        rolesByTargetIndex[targetIndex].push({ role: file.role, defaultFileName: basenameOf(file.path) });
+        rolesByExportIndex[exportIndex].push({ role: file.role, defaultFileName: basenameOf(file.path) });
       }
 
-      const renamedPath = file.role && repeatedRoles.has(file.role) ? file.path : applyFileNameOverride(file.path, file.role, target.fileNames);
-      const fullPath = join(target.outDir, renamedPath);
+      const renamedPath = file.role && repeatedRoles.has(file.role) ? file.path : applyFileNameOverride(file.path, file.role, exp.fileNames);
+      const fullPath = join(exp.outDir, renamedPath);
 
       let status: FileWriteStatus;
       if (!existsSync(fullPath)) {
@@ -204,11 +207,12 @@ export function runBuild(projectStore: ProjectStore, config: ResolvedTokenWandCo
         mkdirSync(dirname(fullPath), { recursive: true });
         writeFileSync(fullPath, file.content, "utf-8");
       }
-      written.push({ format: target.format, outDir: target.outDir, path: renamedPath, status });
+      const role = file.role && !repeatedRoles.has(file.role) ? file.role : undefined;
+      written.push({ format: exp.format, outDir: exp.outDir, path: renamedPath, status, role });
     }
   });
 
-  return { written, rolesByTargetIndex, warnings };
+  return { written, rolesByExportIndex, warnings };
 }
 
 function basenameOf(path: string): string {

@@ -10,9 +10,9 @@ import { resolve } from "path";
 
 export const DEFAULT_CONFIG_NAME = "wand.config.json";
 
-// The output directory a target falls back to when it sets neither its own
+// The output directory an export falls back to when it sets neither its own
 // `outDir` nor a config-level `outDir` (below) — so a user with one, simple
-// output location doesn't have to repeat it on every target.
+// output location doesn't have to repeat it on every export.
 export const DEFAULT_OUT_DIR = "wand-exports/";
 
 // Resolves which config path to use, in order:
@@ -50,7 +50,7 @@ export function resolveConfigPath(cwd: string, configFlag: string | undefined): 
 // sandbox-only code (ExportFormatter.toCSV, see src/figma/index.ts), and
 // re-exporting a .wand from a .wand doesn't make sense as a CLI output.
 //
-// Each format has exactly two accepted spellings in targets[].format: its
+// Each format has exactly two accepted spellings in exports[].format: its
 // full name (the canonical value, shared with the plugin's ExportFormat
 // type) and one short alias. No other spelling is accepted. Where the full
 // name is already short (css, scss, dtcg, android) the alias is identical
@@ -94,9 +94,9 @@ export interface ExportTarget {
   format: SupportedFormat;
   // Optional — falls back to the config-level `outDir` (TokenWandConfig.outDir),
   // and if THAT'S unset too, to DEFAULT_OUT_DIR ("wand-exports/"). Resolved
-  // onto every target in loadConfigFile() before it's ever returned, so
+  // onto every export in loadConfigFile() before it's ever returned, so
   // nothing downstream (build.ts, cli.ts) needs to know the fallback exists —
-  // by the time a caller sees a TokenWandConfig, every target's outDir is a
+  // by the time a caller sees a TokenWandConfig, every export's outDir is a
   // real, non-empty string.
   outDir?: string;
   // Optional per-file rename map, keyed by that file's ROLE within the
@@ -115,7 +115,7 @@ export interface ExportTarget {
   // SAME pre-resolved data every built-in formatter gets (see
   // src/shared/exportEng/scriptExport.ts's ScriptExportContext) and
   // returning either one file's content (a string) or several files at
-  // once (a ScriptExportFile[]). This genuinely runs the target file as
+  // once (a ScriptExportFile[]). This genuinely runs the export's file as
   // TypeScript/JavaScript — run `npx token-wand script-help` before using
   // this.
   scriptFile?: string;
@@ -123,51 +123,51 @@ export interface ExportTarget {
 
 export interface TokenWandConfig {
   wandFile: string;
-  // Project-wide default output directory — any target that omits its own
+  // Project-wide default output directory — any export that omits its own
   // `outDir` uses this instead. Optional; if this is ALSO unset, DEFAULT_OUT_DIR
   // applies. Set via `npx token-wand outDir <path>` instead of hand-editing.
   outDir?: string;
-  targets: ExportTarget[];
+  exports: ExportTarget[];
 }
 
-// What loadConfigFile() actually returns: every target's `outDir` has
-// already been resolved (target -> config-level -> DEFAULT_OUT_DIR) to a
+// What loadConfigFile() actually returns: every export's `outDir` has
+// already been resolved (export -> config-level -> DEFAULT_OUT_DIR) to a
 // real, non-empty string — so callers past this point (build.ts, cli.ts)
 // never need to know the fallback chain exists or handle `undefined`.
 export interface ResolvedExportTarget extends ExportTarget {
   outDir: string;
 }
 export interface ResolvedTokenWandConfig extends TokenWandConfig {
-  targets: ResolvedExportTarget[];
+  exports: ResolvedExportTarget[];
 }
 
 export class ConfigFileError extends Error {}
 
-// Backfills each target's fileNames map with default-name entries for every
+// Backfills each export's fileNames map with default-name entries for every
 // role this run actually produced, WITHOUT overwriting anything the user
-// already set: a target that already has a fileNames key (even {}) is
+// already set: an export that already has a fileNames key (even {}) is
 // treated as "user is managing this themselves" and only gains entries for
-// roles genuinely missing from it; a target with no fileNames key at all
-// gets one created from scratch. Mutates `config` in place (targets/fileNames
-// objects only — wandFile and target order are untouched) and returns which
-// target/role pairs were newly added, so the caller can print a notice and
+// roles genuinely missing from it; an export with no fileNames key at all
+// gets one created from scratch. Mutates `config` in place (exports/fileNames
+// objects only — wandFile and export order are untouched) and returns which
+// export/role pairs were newly added, so the caller can print a notice and
 // decide whether to persist the change (e.g. skipped entirely under --dry-run).
 export interface FileNamesBackfillEntry {
-  targetIndex: number;
+  exportIndex: number;
   role: string;
   defaultFileName: string;
 }
 
-export function backfillFileNames(config: TokenWandConfig, rolesByTargetIndex: Array<{ role: string; defaultFileName: string }[]>): FileNamesBackfillEntry[] {
+export function backfillFileNames(config: TokenWandConfig, rolesByExportIndex: Array<{ role: string; defaultFileName: string }[]>): FileNamesBackfillEntry[] {
   const added: FileNamesBackfillEntry[] = [];
-  config.targets.forEach((target, targetIndex) => {
-    const roles = rolesByTargetIndex[targetIndex] ?? [];
+  config.exports.forEach((exp, exportIndex) => {
+    const roles = rolesByExportIndex[exportIndex] ?? [];
     if (roles.length === 0) return;
-    if (!target.fileNames) target.fileNames = {};
+    if (!exp.fileNames) exp.fileNames = {};
     for (const { role, defaultFileName } of roles) {
-      if (target.fileNames[role] !== undefined) continue; // never overwrite an existing entry
-      target.fileNames[role] = defaultFileName;
-      added.push({ targetIndex, role, defaultFileName });
+      if (exp.fileNames[role] !== undefined) continue; // never overwrite an existing entry
+      exp.fileNames[role] = defaultFileName;
+      added.push({ exportIndex, role, defaultFileName });
     }
   });
   return added;
@@ -204,42 +204,42 @@ export function loadConfigFile(path: string): ResolvedTokenWandConfig {
     throw new ConfigFileError(`"outDir" in ${path} must be a non-empty string.`);
   }
 
-  if (!Array.isArray(config.targets) || config.targets.length === 0) {
-    throw new ConfigFileError(`Config file at ${path} is missing a non-empty "targets" array.`);
+  if (!Array.isArray(config.exports) || config.exports.length === 0) {
+    throw new ConfigFileError(`Config file at ${path} is missing a non-empty "exports" array.`);
   }
 
-  config.targets.forEach((target, i) => {
-    if (typeof target !== "object" || target === null) {
-      throw new ConfigFileError(`targets[${i}] in ${path} must be an object with "format" and "outDir".`);
+  config.exports.forEach((exp, i) => {
+    if (typeof exp !== "object" || exp === null) {
+      throw new ConfigFileError(`exports[${i}] in ${path} must be an object with "format" and "outDir".`);
     }
-    const t = target as Partial<ExportTarget>;
+    const t = exp as Partial<ExportTarget>;
 
     if (typeof t.format !== "string") {
-      throw new ConfigFileError(`targets[${i}].format in ${path} must be one of: ${SUPPORTED_FORMATS.join(", ")} (got ${JSON.stringify(t.format)}).`);
+      throw new ConfigFileError(`exports[${i}].format in ${path} must be one of: ${SUPPORTED_FORMATS.join(", ")} (got ${JSON.stringify(t.format)}).`);
     }
     const resolvedFormat = resolveFormat(t.format);
     if (!resolvedFormat) {
       const spellings = FORMATS.map((f) => (f.full === f.short ? f.full : `${f.full} (or ${f.short})`)).join(", ");
-      throw new ConfigFileError(`targets[${i}].format in ${path} must be one of: ${spellings} (got ${JSON.stringify(t.format)}).`);
+      throw new ConfigFileError(`exports[${i}].format in ${path} must be one of: ${spellings} (got ${JSON.stringify(t.format)}).`);
     }
     t.format = resolvedFormat; // normalize to the canonical full name for everything downstream
 
     if (t.outDir !== undefined && (typeof t.outDir !== "string" || t.outDir.length === 0)) {
-      throw new ConfigFileError(`targets[${i}].outDir in ${path} must be a non-empty string.`);
+      throw new ConfigFileError(`exports[${i}].outDir in ${path} must be a non-empty string.`);
     }
-    // Resolve the effective outDir NOW (target -> config-level -> default) so
+    // Resolve the effective outDir NOW (export -> config-level -> default) so
     // every consumer past this point (build.ts, cli.ts) always sees a real,
-    // non-empty target.outDir and never has to know the fallback chain exists.
+    // non-empty export.outDir and never has to know the fallback chain exists.
     if (t.outDir === undefined) {
       t.outDir = config.outDir ?? DEFAULT_OUT_DIR;
     }
     if (t.fileNames !== undefined) {
       if (typeof t.fileNames !== "object" || t.fileNames === null || Array.isArray(t.fileNames)) {
-        throw new ConfigFileError(`targets[${i}].fileNames in ${path} must be an object mapping role -> filename.`);
+        throw new ConfigFileError(`exports[${i}].fileNames in ${path} must be an object mapping role -> filename.`);
       }
       for (const [role, name] of Object.entries(t.fileNames)) {
         if (typeof name !== "string" || name.length === 0) {
-          throw new ConfigFileError(`targets[${i}].fileNames["${role}"] in ${path} must be a non-empty string.`);
+          throw new ConfigFileError(`exports[${i}].fileNames["${role}"] in ${path} must be a non-empty string.`);
         }
         // A bare "." or ".." has no "/" in it at all, so the slash/backslash
         // check alone misses it — a real gap found by testing nonsense
@@ -249,12 +249,12 @@ export function loadConfigFile(path: string): ResolvedTokenWandConfig {
         // directory, not a file) crashed with an unhandled EISDIR
         // TypeError instead of a clear config error.
         if (name.includes("/") || name.includes("\\") || name === "." || name === "..") {
-          throw new ConfigFileError(`targets[${i}].fileNames["${role}"] in ${path} must be a filename, not a path (got ${JSON.stringify(name)}) — outDir already controls the directory.`);
+          throw new ConfigFileError(`exports[${i}].fileNames["${role}"] in ${path} must be a filename, not a path (got ${JSON.stringify(name)}) — outDir already controls the directory.`);
         }
       }
     }
     if (t.format === "script" && (typeof t.scriptFile !== "string" || t.scriptFile.length === 0)) {
-      throw new ConfigFileError(`targets[${i}] in ${path} has format "script" — a non-empty "scriptFile" path is required.`);
+      throw new ConfigFileError(`exports[${i}] in ${path} has format "script" — a non-empty "scriptFile" path is required.`);
     }
   });
 
